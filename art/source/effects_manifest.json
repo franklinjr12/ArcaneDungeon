@@ -1,0 +1,19 @@
+{
+  "cell": [
+    32,
+    32
+  ],
+  "columns": 8,
+  "rows": [
+    "fire",
+    "water",
+    "lightning",
+    "orb",
+    "enemy",
+    "arc",
+    "impact",
+    "dodge"
+  ],
+  "frames": 8,
+  "fps": 12
+}

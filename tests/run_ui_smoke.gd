@@ -23,6 +23,20 @@ func _run() -> void:
 	if control.flow == null or not control.flow.initialized:
 		quit(1)
 		return
+	expect(control.guide.message("combat").contains("Lightning"),"M4 onboarding introduces Wet to Lightning")
+	expect(control.tip != null and control.tip.text.contains("TIP"),"M4 context tip visible initially")
+	control._guide(false)
+	expect(control.tip.text.is_empty(),"M4 tips can be dismissed")
+	control._guide(true)
+	expect(control.tip.text.contains("TIP"),"M4 tips can be reopened")
+	expect(not control.flow.experiment.enabled,"M4 local telemetry requires opt-in")
+	control.flow.experiment.configure(true)
+	expect(control.flow.experiment.enabled,"M4 telemetry opt-in enables capture")
+	control._export_metrics()
+	expect(FileAccess.file_exists("user://arcane_m4_experiment.json"),"M4 UI exports local JSON")
+	expect(FileAccess.file_exists("user://arcane_m4_experiment.csv"),"M4 UI exports local CSV")
+	control.flow.experiment.configure(false)
+	expect(control.flow.experiment.summary()["events"]==0,"M4 opt-out clears in-memory records")
 	expect(control.flow.state=="fighting" and control.flow.room.values["id"]=="s1_r1",
 		"new game enters first combat")
 	expect(control.arena_canvas != null and control.arena_canvas.visible,"combat canvas visible")

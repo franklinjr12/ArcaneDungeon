@@ -42,3 +42,6 @@ Record assumptions and options for missing art specifications rather than introd
 - **Future detailed art specification:** a separate approved art workstream can add sprite sizes, palettes, sheets, UI component guidelines and animation requirements while retaining this reference as the shared anchor.
 
 If the reference cannot be opened in the current environment, record that limitation and avoid claiming a faithful style match.
+## Implemented owner-requested first art pass
+
+Art was explicitly commissioned after the M4 engineering milestone. See [ART_IMPLEMENTATION.md](ART_IMPLEMENTATION.md) for generated sprites, effects, tiles, atlas/animation manifests, editable Aseprite originals, runtime bindings, regeneration instructions and acceptance tests. The owner supplied a new reference image whose decoded pixels matched this canonical PNG. This reference has **not been modified**. The pixel art passes are provisional pending visual feedback and do not imply completion of human TASK-054 testing.

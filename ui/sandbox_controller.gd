@@ -1,7 +1,9 @@
 extends Control
+const VisualTheme = preload("res://ui/pixel_theme.gd")
 ## TASK-025 interaction playground, not production M2 player controller.
 const Runner = preload("res://magic/runtime/spell_runner.gd")
 const Canvas = preload("res://ui/sandbox_canvas.gd")
+const Profiler = preload("res://debug/stress_profiler.gd")
 var sim
 var samples: Array = []
 var surface
@@ -18,6 +20,7 @@ var last_notice := ""
 var refresh_count := 0
 
 func _ready() -> void:
+	VisualTheme.apply(self)
 	var file := FileAccess.open("res://magic/data/sandbox_samples_v1.json",FileAccess.READ)
 	if file == null:
 		push_error("M1 samples missing")
@@ -85,7 +88,7 @@ func _build() -> void:
 	var grid := GridContainer.new()
 	grid.columns = 3
 	col.add_child(grid)
-	for entry in [["Reset","reset"],["Mana","mana"],["Pause","pause"],["Step","step"],["Dummy","dummy"],["Moving","moving"],["Stress","stress"],["Export","export"],["Seed+","seed"]]:
+	for entry in [["Reset","reset"],["Mana","mana"],["Pause","pause"],["Step","step"],["Dummy","dummy"],["Moving","moving"],["Stress","stress"],["Profile","profile"],["Export","export"],["Seed+","seed"]]:
 		var b := Button.new()
 		b.text = entry[0]
 		b.custom_minimum_size = Vector2(87,28)
@@ -170,6 +173,11 @@ func _command(command: String) -> void:
 		"stress":
 			var data: Dictionary = sim.stress()
 			last_notice = "Stress: %d / 10000 effects, cap %d" % [data["accepted"],data["cap"]]
+		"profile":
+			var report: Dictionary = Profiler.benchmark(run_seed_value,180,40)
+			last_notice = "M4 40 targets: %.2f mean / %.2f p95 ms, hit %d, drop %d" % [
+				report["mean_tick_ms"],report["p95_tick_ms"],report["hit_records"],report["budget_drop_records"]]
+			print("M4_PROFILE:",JSON.stringify(report))
 		"export":
 			var result: Error = sim.trace.export_json("user://magic_sandbox_trace.json")
 			last_notice = "Trace exported to user://magic_sandbox_trace.json" if result == OK else "Trace export failed"

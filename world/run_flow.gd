@@ -8,6 +8,7 @@ const Merchant = preload("res://world/merchant.gd")
 const Editor = preload("res://magic/editor/spell_editor.gd")
 const Session = preload("res://combat/combat_session.gd")
 const Runner = preload("res://magic/runtime/spell_runner.gd")
+const ExperimentLog = preload("res://debug/experiment_log.gd")
 const CONFIG := "res://world/data/vertical_slice_v1.json"
 const SAMPLES := "res://magic/data/sandbox_samples_v1.json"
 var config: Dictionary = {}
@@ -29,6 +30,8 @@ var edit_policy := "workshop_only"
 var mode := "combat"
 var initialized := false
 var logs: Array = []
+var experiment = ExperimentLog.new()
+var _prior_reactions := 0
 
 func _init(run_seed: int = -1) -> void:
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(CONFIG))
@@ -49,6 +52,7 @@ func start_new(run_seed: int) -> void:
 	transition_count = 0
 	edit_policy = str(config["edit_policy"])
 	logs.clear()
+	experiment.record("run_restart")
 	_enter_current()
 
 func _enter_current() -> Dictionary:
@@ -97,6 +101,8 @@ func _enter_current() -> Dictionary:
 		encounter = Encounter.new()
 		encounter.initialize(room,session,int(config["max_active_enemies"]))
 		state = "fighting"
+	_prior_reactions = 0
+	experiment.record("room_enter",{"room_index":run.sequence_index})
 	logs.append({"kind":"room_enter","id":room.values["id"],"index":run.sequence_index})
 	return {"ok":true}
 
@@ -104,12 +110,22 @@ func step(command: Dictionary = {}) -> Dictionary:
 	if state != "fighting":
 		return {"ok":false,"reason":"NOT_FIGHTING"}
 	if not command.is_empty():
-		session.issue(command)
+		var issued: Dictionary = session.issue(command)
+		if int(command.get("cast",-1)) in [0,1]:
+			var cast_slot: int = int(command["cast"])
+			experiment.record("dungeon_cast",{"room_index":run.sequence_index,"slot":cast_slot,
+				"cast_accepted":bool(issued.get("accepted",false))},run.formulas[cast_slot])
 	session.step()
+	experiment.mark_tick(session.sim.clock.tick)
+	var reactions_now: int = session.sim.trace.filter_records(-1,"","reaction").size()
+	if reactions_now > _prior_reactions:
+		experiment.record("reaction",{"room_index":run.sequence_index,"reaction_count":reactions_now-_prior_reactions})
+	_prior_reactions = reactions_now
 	if encounter != null:
 		encounter.advance()
 	if session.state == "dead":
 		state = "dead"
+		experiment.record("death",{"room_index":run.sequence_index})
 	elif session.state == "cleared" or (room.values["type"] == "boss" and session.alive_enemies() == 0):
 		_finish_combat()
 	return {"ok":true,"state":state}
@@ -134,6 +150,7 @@ func _finish_combat() -> void:
 		reward_collected = true
 	else:
 		reward_options = rewards.choices(run,str(room.values["id"]))
+	experiment.record("room_clear",{"room_index":run.sequence_index})
 	logs.append({"kind":"combat_clear","id":room.values["id"]})
 
 func choose_reward(index: int) -> Dictionary:
@@ -154,6 +171,7 @@ func choose_reward(index: int) -> Dictionary:
 	run.collected.append(id)
 	reward_collected = true
 	session.sim.loadout.unlocked = run.unlocked.duplicate(true)
+	experiment.record("rune_choice",{"room_index":run.sequence_index,"rune_index":index})
 	logs.append({"kind":"reward","room":id,"item":option.duplicate(true)})
 	return outcome
 
@@ -223,7 +241,10 @@ func refill_test_mana() -> Dictionary:
 func test_cast(slot: int, direction: Vector2) -> Dictionary:
 	if mode != "workshop" or range_sim == null:
 		return {"accepted":false,"reason":"TEST_ONLY_WORKSHOP"}
-	return range_sim.try_cast(slot,range_sim.actor.position,direction)
+	var result: Dictionary = range_sim.try_cast(slot,range_sim.actor.position,direction)
+	if slot in [0,1]:
+		experiment.record("test_cast",{"slot":slot,"is_workshop":true,"cast_accepted":result["accepted"]},run.formulas[slot])
+	return result
 
 func open_editor(slot: int) -> Dictionary:
 	if editor != null and editor.allowed:
@@ -236,6 +257,7 @@ func open_editor(slot: int) -> Dictionary:
 	var result: Dictionary = editor.open(slot)
 	if result["ok"]:
 		session.player.modal = true
+		experiment.record("editor_open",{"room_index":run.sequence_index,"slot":slot})
 		logs.append({"kind":"editor_open","slot":slot,"room":room.values["id"]})
 	return result
 
@@ -253,6 +275,7 @@ func close_editor(apply_changes: bool, duration_seconds: float = 0.0) -> Diction
 		session.sim.loadout.allow_edit = false
 		if not equipped["ok"]:
 			return equipped
+		experiment.record("formula_edit",{"room_index":run.sequence_index,"slot":edit_slot},run.formulas[edit_slot])
 		if mode == "workshop":
 			# Reset only test runtime, never the run's HP/currency/progression.
 			enter_test_range()
@@ -263,6 +286,7 @@ func close_editor(apply_changes: bool, duration_seconds: float = 0.0) -> Diction
 	if mode != "workshop":
 		run.quick_edit_count += 1
 	run.edit_seconds += maxf(0,duration_seconds)
+	experiment.record("editor_close",{"room_index":run.sequence_index,"duration_ms":roundi(duration_seconds*1000.0)})
 	logs.append({"kind":"editor_close","applied":apply_changes,"seconds":duration_seconds})
 	return {"ok":true}
 
@@ -271,6 +295,7 @@ func buy(index: int) -> Dictionary:
 		return {"ok":false,"reason":"SHOP_ONLY_WORKSHOP"}
 	var outcome: Dictionary = merchant.purchase(index,run)
 	if outcome["ok"]:
+		experiment.record("purchase",{"room_index":run.sequence_index,"price":int(merchant.stock[index]["price"])})
 		session.sim.loadout.unlocked = run.unlocked.duplicate(true)
 		if outcome["kind"] == "upgrade":
 			session.sim.actor.health.maximum = run.max_hp

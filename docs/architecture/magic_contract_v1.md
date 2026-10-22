@@ -1,6 +1,6 @@
-# ArcaneDungeon — Magic Contract v1.4 (M0–M3)
+# ArcaneDungeon — Magic Contract v1.5 (M0–M4 engineering)
 
-**Contract version:** 1.4, extended during TASK-036–048; formula JSON schema remains version 1. **Status:** provisional prototype implementation contract; does not supersede owner decisions in `docs/Game Design & Project Reference.md`.
+**Contract version:** 1.5, extended during TASK-049–053 implementation; formula JSON schema remains version 1. **Status:** provisional prototype implementation contract; does not supersede owner decisions in `docs/Game Design & Project Reference.md`.
 
 ## Authority and change control
 
@@ -110,3 +110,11 @@ These numeric settings are prototype knobs and must live in `magic/data/` (or ex
 - `RunFlow.enter_test_range` builds an isolated `SpellRunner` using the same compiled plans/elemental semantics. Range casts/health/mana/traces cannot affect the saved dungeon HP, money or progression. The optional prepared Wet cluster is distinct from the default, M1-identical reset preset.
 - The M3 boss uses the shared M2 enemy target/HP/damage/hostile projectile API and alternate finite radial/targeted warning patterns. Rewards and shop are deterministic from seed+room/run inventory, duplicate rune fallback currency and numeric upgrade costs are **PROPOSED**, not approved design.
 - The formula JSON schema remains v1; no migration required. **v1.4 / TASK-036–048** adds run/room/editor interfaces, six room templates, seed-based reward policy and M3 end-to-end test. Existing M0–M2 execution semantics are preserved; no permanent product decisions implied.
+
+## M4 validation extension — contract revision 1.5
+
+- **NO formula JSON schema change**: the v1 rune roster, v1 command/event ordering, budgets and all M0–M3 golden traces remain fixed. TASK-049 adds an independent 3×3 element/form grammar matrix, modifiers/triggers, explicit golden costs and invalid typed diagnostics. TASK-050 covers status expiration semantics, resistance, teams, safe removal, replay traces and boss elemental policy.
+- `StressProfiler.benchmark(seed,ticks,target_count)` runs a deterministic scripted 36–40 target scenario with Split, Pierce, On Hit, Orb and overlapping statuses. It reports wall-clock logic timings and static-memory high-water; it **does not provide reference-hardware rendered FPS or an isolated GC-pause metric**, and cannot authorize balance changes alone.
+- `ExperimentLog.configure(opt_in)` defaults to disabled; when opted in it collects allowlisted local session metrics and hashed stable mechanical formula signatures with no user labels, external upload or free-text source. `export_json/export_csv` writes `user://` on explicit request. Telemetry is independent of spell/collision/state determinism. Editor-to-test timing uses a session-relative monotonic clock. Opting out clears the in-memory buffer; already exported files require manual deletion.
+- `OnboardingPrompts` is nonblocking/dismissible and explains grammar/On Hit payload and Wet→Lightning interactions without adding spells or modifying rules. The M3 workshop already supports a safe Wet cluster setup using common M1 interactions.
+- **TASK-054 human test evidence remains deferred** by owner pending sprite work; **TASK-055 owner approval remains OPEN**. No observed acceptance of the first-use usability hypotheses, formula contract v2 migration or POST feature gate can be inferred. Technical revision v1.5 documents only the M4 instrumentation/API additions, not a design change.

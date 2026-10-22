@@ -11,12 +11,12 @@ func _draw() -> void:
 	var departure: Vector2 = run_flow.room.marker("exit")-offset
 	var gift: Vector2 = run_flow.room.marker("reward")-offset
 	var open: bool = run_flow.state == "cleared"
-	draw_arc(entrance,28,0,TAU,40,Color("#b5c4d7"),2)
-	draw_arc(departure,31,0,TAU,42,Color("#81e2b8") if open else Color("#dc8498"),4)
+	draw_arc(entrance,30,0,TAU,40,Color("#9b855c",0.65),2)
+	Art.portal(self,departure,open,session.sim.clock.tick)
 	draw_string(ThemeDB.fallback_font,departure+Vector2(-28,-39),
 		"EXIT OPEN" if open else "LOCKED",HORIZONTAL_ALIGNMENT_LEFT,-1,13,Color.WHITE)
 	if open and not run_flow.reward_collected and run_flow.room.values["type"] == "combat":
-		draw_circle(gift,19,Color("#e6d591"))
-		draw_arc(gift,23,0,TAU,32,Color.WHITE,2)
+		Art.icon(self,"rune",gift+Vector2(-20,-20),Vector2(40,40))
+		draw_arc(gift,24,0,TAU,32,Color("#f6c46d"),2)
 		draw_string(ThemeDB.fallback_font,gift+Vector2(-43,-35),"RUNE CHOICE",
 			HORIZONTAL_ALIGNMENT_LEFT,-1,13,Color.WHITE)

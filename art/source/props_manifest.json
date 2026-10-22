@@ -1,0 +1,18 @@
+{
+  "cell": [
+    48,
+    48
+  ],
+  "columns": 8,
+  "names": [
+    "brazier",
+    "crystal",
+    "rubble",
+    "moss",
+    "torch",
+    "altar",
+    "fern",
+    "runestone"
+  ],
+  "interactive": false
+}

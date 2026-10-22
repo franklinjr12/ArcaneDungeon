@@ -1,0 +1,33 @@
+{
+  "cell": [
+    32,
+    32
+  ],
+  "columns": 8,
+  "names": [
+    "fire",
+    "water",
+    "lightning",
+    "projectile",
+    "burst",
+    "orb",
+    "homing",
+    "split",
+    "pierce",
+    "on_hit",
+    "health",
+    "mana",
+    "rune",
+    "coin",
+    "dodge",
+    "wet",
+    "burning",
+    "charged",
+    "damage",
+    "door",
+    "shop",
+    "book",
+    "staff",
+    "shield"
+  ]
+}

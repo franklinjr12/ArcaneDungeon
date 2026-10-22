@@ -1,6 +1,6 @@
 # ArcaneDungeon — Documentation Index
 
-Godot 4.7.2 GL Compatibility M0–M3 playable prototypes are implemented for review: magic sandbox, combat arena, and linear dungeon → mini-boss → workshop → stage-two vertical slice. Final art, production progression and M4 player validation remain absent.
+Godot 4.7.2 GL Compatibility M0–M3 playable prototypes are implemented for review: magic sandbox, combat arena, and linear dungeon → mini-boss → workshop → stage-two vertical slice. M4 TASK-049–053 automated validation/telemetry/onboarding is implemented; a first reference-inspired sprite, effects, environment and UI art pass is implemented; human playtesting and owner go/no-go remain absent.
 
 | File | Purpose |
 | --- | --- |
@@ -13,6 +13,10 @@ Godot 4.7.2 GL Compatibility M0–M3 playable prototypes are implemented for rev
 | [M1_magic_sandbox.md](M1_magic_sandbox.md) | M1 controls, magic runtime architecture, reproduction recipes, rules, acceptance testing |
 | [M2_combat.md](M2_combat.md) | M2 combat input, enemy behaviors, HUD, fixed scenarios, replay seed/metrics and open decisions |
 | [M3_vertical_slice.md](M3_vertical_slice.md) | M3 run walkthrough, seeded rewards/rooms, mini-boss, shop, spell editor, safe testing, full-route regression |
+| [M4_validation.md](M4_validation.md) | M4 code, regression/stress/telemetry commands, observability boundaries and deferred acceptance |
+| [ART_IMPLEMENTATION.md](ART_IMPLEMENTATION.md) | First owner-reference-inspired pixel art pass: PNG sprites, Aseprite timelines, VFX and Godot integration. Contact sheet in art/previews/art_overview.png. |
+| [playtests/M4_playtest_protocol.md](playtests/M4_playtest_protocol.md) | Human testing checklist, anonymous observation schema and offline report generation; **not performed** |
+| [playtests/M4_decision_record.md](playtests/M4_decision_record.md) | Unresolved owner review/go-no-go and v2/POST gate; **pending** |
 
 ## External design documents
 
@@ -23,6 +27,6 @@ Godot 4.7.2 GL Compatibility M0–M3 playable prototypes are implemented for rev
 ## Current document rules
 
 - The gameplay backlog is a proposal, not a record of all approved design decisions. Preserve its DECIDED/DIRECTION/PROPOSED/OPEN/OUT OF SCOPE distinctions.
-- Final art production is a separate workstream; future art tasks must consult `assets/art_style_reference.png` and `art_direction.md`. Placeholder visuals are permitted for gameplay prototypes.
-- Follow the milestone gates and task dependency graph in `backlog_v1.md`. M0 TASK-001–010 and the M1 TASK-011–025 sandbox prototype are now implemented for review. M2 TASK-026–035 is also implemented for review; M3 TASK-036–048 is implemented for technical review. M4 begins at TASK-049; real human playtests and gameplay go/no-go are still outstanding.
+- The first asset workstream is now implemented under art/source and assets/pixel; future art tasks must consult `assets/art_style_reference.png` and `art_direction.md`. Placeholder visuals are permitted for gameplay prototypes.
+- Follow the milestone gates and task dependency graph in `backlog_v1.md`. M0 TASK-001–010 and the M1 TASK-011–025 sandbox prototype are now implemented for review. M2 TASK-026–035 is also implemented for review; M3 TASK-036–048 is implemented for technical review. M4 TASK-049–053 code and automation now exist, with owner-reference FPS signoff still open; M4 TASK-054 human sessions are deferred until sprites, TASK-055 approval pending. POST remains gated.
 - Update this index as authoritative documentation is added; avoid listing proposed folders as though they exist.

@@ -1,0 +1,212 @@
+{
+  "mage": {
+    "file": "mage_sheet.png",
+    "frame": [
+      48,
+      56
+    ],
+    "frames": 10,
+    "tags": {
+      "idle": [
+        0,
+        1
+      ],
+      "walk": [
+        2,
+        5
+      ],
+      "cast": [
+        6,
+        7
+      ],
+      "hurt": [
+        8,
+        8
+      ],
+      "dead": [
+        9,
+        9
+      ]
+    },
+    "anchor": [
+      24,
+      49
+    ],
+    "fps": 9
+  },
+  "pursuer": {
+    "file": "pursuer_sheet.png",
+    "frame": [
+      48,
+      56
+    ],
+    "frames": 10,
+    "tags": {
+      "idle": [
+        0,
+        1
+      ],
+      "walk": [
+        2,
+        5
+      ],
+      "cast": [
+        6,
+        7
+      ],
+      "hurt": [
+        8,
+        8
+      ],
+      "dead": [
+        9,
+        9
+      ]
+    },
+    "anchor": [
+      24,
+      49
+    ],
+    "fps": 9
+  },
+  "ranged": {
+    "file": "ranged_sheet.png",
+    "frame": [
+      48,
+      56
+    ],
+    "frames": 10,
+    "tags": {
+      "idle": [
+        0,
+        1
+      ],
+      "walk": [
+        2,
+        5
+      ],
+      "cast": [
+        6,
+        7
+      ],
+      "hurt": [
+        8,
+        8
+      ],
+      "dead": [
+        9,
+        9
+      ]
+    },
+    "anchor": [
+      24,
+      49
+    ],
+    "fps": 9
+  },
+  "flanker": {
+    "file": "flanker_sheet.png",
+    "frame": [
+      48,
+      56
+    ],
+    "frames": 10,
+    "tags": {
+      "idle": [
+        0,
+        1
+      ],
+      "walk": [
+        2,
+        5
+      ],
+      "cast": [
+        6,
+        7
+      ],
+      "hurt": [
+        8,
+        8
+      ],
+      "dead": [
+        9,
+        9
+      ]
+    },
+    "anchor": [
+      24,
+      49
+    ],
+    "fps": 9
+  },
+  "boss": {
+    "file": "boss_sheet.png",
+    "frame": [
+      104,
+      112
+    ],
+    "frames": 10,
+    "tags": {
+      "idle": [
+        0,
+        1
+      ],
+      "walk": [
+        2,
+        5
+      ],
+      "cast": [
+        6,
+        7
+      ],
+      "hurt": [
+        8,
+        8
+      ],
+      "dead": [
+        9,
+        9
+      ]
+    },
+    "anchor": [
+      52,
+      105
+    ],
+    "fps": 9
+  },
+  "dummy": {
+    "file": "dummy_sheet.png",
+    "frame": [
+      48,
+      56
+    ],
+    "frames": 10,
+    "tags": {
+      "idle": [
+        0,
+        1
+      ],
+      "walk": [
+        2,
+        5
+      ],
+      "cast": [
+        6,
+        7
+      ],
+      "hurt": [
+        8,
+        8
+      ],
+      "dead": [
+        9,
+        9
+      ]
+    },
+    "anchor": [
+      24,
+      49
+    ],
+    "fps": 9
+  }
+}

@@ -6,7 +6,7 @@ These instructions apply to the whole repository. Read this file before making c
 
 ArcaneDungeon is a **2D, top-down, pixel-art, combat-first dungeon roguelite** about inventing and combining spells. The core loop is: fight through rooms, earn new runes, defeat a boss, then visit a safe workshop/shop/testing area to revise magic before continuing. Skillful movement, aiming and dodging remain important even when spells become powerful.
 
-M0–M3 are now implemented as proposed **magic debugging sandbox + combat arena + short vertical slice**: deterministic spells, elemental reactions, movement/dodge, three enemies, three rooms, mini-boss, seeded reward choices, merchant, safe workshop, transactional spell editor and stage-two entrance. Read `docs/M3_vertical_slice.md`. Inspect current files before editing. M4 regression/stress/player playtesting and any post-validation features remain gated. Final art and production polish remain absent.
+M0–M3 are now implemented as proposed **magic debugging sandbox + combat arena + short vertical slice**: deterministic spells, elemental reactions, movement/dodge, three enemies, three rooms, mini-boss, seeded reward choices, merchant, safe workshop, transactional spell editor and stage-two entrance. Read `docs/M3_vertical_slice.md`. Inspect current files before editing. M4 TASK-049–053 engineering tests, profiling, opt-in local telemetry and onboarding are implemented; human playtesting TASK-054 is deliberately deferred until separate owner-commissioned sprites, and owner go/no-go TASK-055 remains pending. Read `docs/M4_validation.md` and the pending decision record. An owner-requested reference-guided first art pass (sprites, tiles, effects, UI) is now integrated; production polishing/owner visual approval remain pending. Read `docs/ART_IMPLEMENTATION.md`.
 
 ## Required sources and authority
 
@@ -31,7 +31,7 @@ If sources disagree, avoid quietly changing mechanics. Record the discrepancy an
 - **M1 / TASK-011–025:** implemented prototype magic sandbox, manifestations/modifiers, bounded On Hit, elemental states and cross-spell reactions. `docs/M1_magic_sandbox.md` explains current behavior and how to test.
 - **M2 / TASK-026–035:** implemented movement/dodge, combat damage, enemies, arena, HUD and prototype tuning. Consult `docs/M2_combat.md` and the replay seed fixture.
 - **M3 / TASK-036–048:** implemented proposed linear short run, boss, shop/workshop, spell editor, run state and automated full-route tests. See `docs/M3_vertical_slice.md`.
-- **M4 / TASK-049–055:** regression, stress/telemetry, onboarding, player testing and owner go/no-go.
+- **M4 / TASK-049–055:** TASK-049–053 coding implemented; TASK-051 on-hardware FPS sign-off still pending; TASK-054 human sessions deferred by owner until sprite work; TASK-055 decision unapproved. See `docs/M4_validation.md`.
 - **POST / TASK-056–061:** gated proposals only. Never start without explicit go/no-go approval.
 
 Work on one `TASK-XXX` or a tightly coupled pair per change set. Check dependencies before proceeding. Do not mark an acceptance criterion complete without evidence. Keep implementations as small as possible while providing reproducible behavior.
@@ -45,15 +45,16 @@ Work on one `TASK-XXX` or a tightly coupled pair per change set. Check dependenc
 - **Events and safety:** resolve collisions through typed events, never recursively cast in collision callbacks. Apply configurable per-cast/global effect and event budgets; log `budget_exceeded` without freezing the game.
 - **Interactions:** Fire applies Burning; Water applies Wet and extinguishes Burning; Lightning striking Wet can arc **once** to the nearest other Wet target. Do not hard-code named spell combinations; resolve from target states and elemental payloads.
 - **Determinism:** fixed-tick simulation, run-seeded RNG, stable IDs and tie-breaks, normalized traces. Simulation must not depend on rendering or final art.
-- **Architecture:** respect the backlog's shared API boundaries (`RuneRegistry`, `SpellValidator`, `SpellCompiler`, `SpellRunner`, `MagicEventQueue`, `InteractionResolver`, `RunState`, `SpellCodec`). Suggested locations include `res://game/core/`, `res://magic/{data,compile,runtime}/`, `res://combat/`, `res://world/`, `res://ui/`, `res://debug/`, `res://tests/`. The M0/M1/M2/M3 code directories now exist.
+- **Architecture:** respect the backlog's shared API boundaries (`RuneRegistry`, `SpellValidator`, `SpellCompiler`, `SpellRunner`, `MagicEventQueue`, `InteractionResolver`, `RunState`, `SpellCodec`). Suggested locations include `res://game/core/`, `res://magic/{data,compile,runtime}/`, `res://combat/`, `res://world/`, `res://ui/`, `res://debug/`, `res://tests/`. The M0–M4 code directories now exist.
 
 See `docs/backlog_v1.md` for detailed contracts, examples, legality rules, exact task acceptance criteria, and regression scenarios. Do not rely on this short summary instead of the full task specification.
 
 ## Visuals and art-generation rules
 
+- **Current art implementation:** `docs/ART_IMPLEMENTATION.md`, `art/source/`, `art/aseprite/` and `assets/pixel/`. The first pass is editable/provisional, not final owner art approval.
 - **Single local visual anchor:** `docs/assets/art_style_reference.png` (relative to repo root), supported by `docs/art_direction.md`.
 - Whenever a task includes sprite, tile, character, enemy, icon, animation, effect, or UI-asset creation, **open and study that PNG before generating any assets**. Do not invent a fixed palette, sprite dimensions or aesthetic details that have not been established by the reference or an approved art specification.
-- The **gameplay backlog intentionally excludes final art, animation, VFX and audio production**. Use simple placeholders and readable gameplay feedback when satisfying gameplay tasks. Final asset generation belongs to a separately assigned art task/workstream.
+- The **gameplay backlog intentionally excludes final art, animation, VFX and audio production**. The user has now explicitly assigned the sprite-art workstream; it has generated the first pass. This does **not** authorize launching M4 human playtests, recruitment, contract v2, or the owner go/no-go process. For gameplay-only tasks, retain the existing reference-inspired assets without adding mechanics. Future final art edits belong to explicitly assigned art work. Final asset generation belongs to a separately assigned art task/workstream.
 - When art is explicitly requested, use repeatable source/export workflows (e.g., Aseprite for pixel art when available), preserve editable sources and document export layout, frame sizes, pivots, animations and Godot import settings. Keep visual outputs consistent with the reference.
 - Visual work must not change collision/health/spell semantics. Test at in-game scale. See `docs/art_direction.md`.
 
@@ -62,7 +63,7 @@ See `docs/backlog_v1.md` for detailed contracts, examples, legality rules, exact
 1. Inspect the current repository and source documents. Note missing prerequisites and pre-existing uncommitted work; do not delete or overwrite unrelated work.
 2. Identify the assigned `TASK-XXX` IDs; read full requirements, acceptance criteria and dependencies before editing code.
 3. Implement against shared contracts; avoid duplicate spell models/resolvers, bespoke elemental spell classes, and hidden hardcoded combinations.
-4. Add or update deterministic tests and fixtures with the feature. Run `python scripts/validate_godot.py --godot <path-to-godot>` to check parser, scene navigation, M1 sandbox UI, M2 combat UI, M3 vertical-slice UI and full route, suite, baseline replays, and failure detection; never report tests as passed without running them.
+4. Add or update deterministic tests and fixtures with the feature. Run `python scripts/validate_godot.py --godot <path-to-godot>` to check parser, scene navigation, M1 sandbox UI, M2 combat UI, M3/M4 UI and full route, M4 stress profiler, suite, baseline replays, and failure detection; never report tests as passed without running them.
 5. Provide reproduction/demo steps, parser/runtime errors when applicable, and describe how each acceptance criterion was verified. If you cannot run a test, say why.
 6. In the handoff/PR include: task IDs, changed files, tests/results, schema/API changes, assumptions labelled as proposed, and unresolved owner decisions.
 7. Avoid committing generated runtime caches, temporary harness artifacts, secret tokens, or unrelated files. Do not silently update the GDD, implementation backlog or baseline art reference.

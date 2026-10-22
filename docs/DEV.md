@@ -1,8 +1,8 @@
-# ArcaneDungeon — M0–M3 Developer Guide
+# ArcaneDungeon — M0–M4 Developer Guide
 
 - **Tested local engine:** Godot 4.7.2.stable (official), GL Compatibility renderer; this pin is an M0 working choice pending owner approval.
 - **Entry scene:** `res://scenes/main.tscn`; launcher buttons open `res://scenes/sandbox.tscn` (interactive M1 prototype) and `res://scenes/arena.tscn` (M2 playable combat arena) and `res://scenes/run.tscn` (M3 short vertical slice).
-- **Input actions:** WASD/arrows, Space dodge, left/right mouse cast. M1 Sandbox uses WASD only as a debug caster-positioning aid, with left/right mouse casting two spell slots. M2 Combat Arena uses the shared M1 runner plus directional dodge, HUD and three enemy archetypes. See `docs/M2_combat.md` and `docs/M3_vertical_slice.md`.
+- **Input actions:** WASD/arrows, Space dodge, left/right mouse cast. M1 Sandbox uses WASD only as a debug caster-positioning aid, with left/right mouse casting two spell slots. M2 Combat Arena uses the shared M1 runner plus directional dodge, HUD and three enemy archetypes. See `docs/M2_combat.md`, `docs/M3_vertical_slice.md` and `docs/M4_validation.md`.
 - **Art:** primitive UI elements only; follow `docs/art_direction.md` and the PNG reference before any explicitly assigned asset generation.
 
 ## Local commands
@@ -35,4 +35,4 @@ These export commands require corresponding presets and templates and are exampl
 
 Runtime navigation failures are appended to `user://arcane_errors.log` and printed to stderr. `DebugTrace` stores normalized typed events and can export JSON; disable it without modifying simulation.
 
-Refer to `docs/architecture/magic_contract_v1.md` and `docs/backlog_v1.md` for shared semantics and acceptance tests.
+For opt-in test logs, M4 stress profiling, human-test deferral and owner gate see `docs/M4_validation.md`. The CLI validation wrapper includes the 40-target stress probe; normal-room rendered FPS still requires owner-approved hardware. Refer to `docs/architecture/magic_contract_v1.md` and `docs/backlog_v1.md` for shared semantics and acceptance tests.

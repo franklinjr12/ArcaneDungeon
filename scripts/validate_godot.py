@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify Godot M0-M3 from a clean checkout and fail on engine errors.
+"""Verify Godot M0-M4 from a clean checkout and fail on engine errors.
 
 Godot's CLI can exit 0 even when a GDScript dependency emits SCRIPT ERROR.
 Use this wrapper in CI and locally; do not trust the process code alone.
@@ -28,6 +28,8 @@ def check(godot: str, label: str, args: list[str], should_fail: bool = False) ->
         okay = proc.returncode == 0 and not engine_errors
         if "run_tests.gd" in " ".join(args):
             okay = okay and bool(SUCCESS_SUMMARY.search(combined))
+        if "m4_stress_probe.gd" in " ".join(args):
+            okay = okay and "M4_STRESS:" in combined
         if "sandbox_ui_smoke.gd" in " ".join(args):
             okay = okay and combined.count("M1 UI PASS:") >= 12
         if "run_ui_smoke.gd" in " ".join(args):
@@ -51,6 +53,7 @@ def main() -> int:
         ("M2 combat UI smoke", ["--script", "res://tests/combat_ui_smoke.gd"], False),
         ("M3 vertical slice UI smoke", ["--script", "res://tests/run_ui_smoke.gd"], False),
         ("Deterministic test suite", ["--script", "res://tests/run_tests.gd"], False),
+        ("M4 40-target stress profile", ["--script", "res://tests/m4_stress_probe.gd"], False),
         ("Negative failure probe", ["--script", "res://tests/run_tests.gd", "--", "--self-test-failure"], True),
     ]
     failed = False

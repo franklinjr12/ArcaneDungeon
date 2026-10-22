@@ -1,4 +1,5 @@
 extends Control
+const VisualTheme = preload("res://ui/pixel_theme.gd")
 ## Combat arena scene: input adapter and readable debug/HUD, gameplay lives in CombatSession.
 const Session = preload("res://combat/combat_session.gd")
 const Canvas = preload("res://ui/combat_canvas.gd")
@@ -16,6 +17,7 @@ var starter := 0
 var refresh_counter := 0
 
 func _ready() -> void:
+	VisualTheme.apply(self)
 	session = Session.new(seed,scenario,starter)
 	_build()
 	_refresh()

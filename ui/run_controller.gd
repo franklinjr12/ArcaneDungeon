@@ -1,12 +1,19 @@
 extends Control
+const VisualTheme = preload("res://ui/pixel_theme.gd")
 ## M3 playable vertical slice. This is only input/UI; all rules live in RunFlow.
 const Flow = preload("res://world/run_flow.gd")
 const ArenaCanvas = preload("res://ui/run_canvas.gd")
 const TestCanvas = preload("res://ui/sandbox_canvas.gd")
+const PortraitHUD = preload("res://ui/pixel_hud.gd")
+const RuneAtlas = preload("res://assets/pixel/rune_icons.png")
+const Prompts = preload("res://ui/onboarding_prompts.gd")
 var flow
+var guide = Prompts.new()
+var tip: Label
 var arena_canvas
 var test_canvas
 var sidebar: VBoxContainer
+var portrait_hud
 var info: Label
 var notices: Label
 var context: VBoxContainer
@@ -22,8 +29,11 @@ var refresh_counter := 0
 var editor_open := false
 var scene_key := ""
 var modal_actions: Array = []
+var display_frame_samples: Array = []
+var low_fps := 0.0
 
 func _ready() -> void:
+	VisualTheme.apply(self)
 	flow = Flow.new()
 	_build()
 	_redraw_panel()
@@ -46,9 +56,25 @@ func _build() -> void:
 	sidebar.add_theme_constant_override("separation",8)
 	scroll.add_child(sidebar)
 	_button(sidebar,"Back to Menu",func(): get_tree().change_scene_to_file("res://scenes/main.tscn"))
-	_heading(sidebar,"ARCANE DUNGEON / M3",21)
+	_heading(sidebar,"ARCANE DUNGEON / M4",21)
+	portrait_hud = PortraitHUD.new()
+	portrait_hud.flow = flow
+	sidebar.add_child(portrait_hud)
 	info = Label.new()
 	sidebar.add_child(info)
+	tip = Label.new()
+	tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tip.add_theme_font_size_override("font_size",11)
+	sidebar.add_child(tip)
+	var help_actions := HBoxContainer.new()
+	sidebar.add_child(help_actions)
+	_button(help_actions,"Dismiss tips",func(): _guide(false))
+	_button(help_actions,"Show tips",func(): _guide(true))
+	_button(sidebar,"Opt in / out of local telemetry",func():
+		flow.experiment.configure(not flow.experiment.enabled)
+		current_notice = "Local telemetry "+("ENABLED (export only)" if flow.experiment.enabled else "OFF / cleared")
+		_update_labels())
+	_button(sidebar,"Export opt-in JSON + CSV",func(): _export_metrics())
 	notices = Label.new()
 	notices.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(notices)
@@ -106,6 +132,8 @@ func _heading(parent: Node, title: String, fontsize: int = 15) -> void:
 	var label := Label.new()
 	label.text = title
 	label.add_theme_font_size_override("font_size",fontsize)
+	if fontsize>=14:
+		label.add_theme_color_override("font_color",Color("#efbc65"))
 	parent.add_child(label)
 
 func _button(parent: Node, label: String, action: Callable) -> Button:
@@ -142,6 +170,14 @@ func _input(event: InputEvent) -> void:
 		KEY_F2: _policy()
 		KEY_F3: arena_canvas.show_debug = not arena_canvas.show_debug
 
+func _process(delta: float) -> void:
+	if delta > 0 and delta < 2.0:
+		var fps := 1.0/delta
+		display_frame_samples.append(fps)
+		if display_frame_samples.size() > 120:
+			display_frame_samples.remove_at(0)
+		low_fps = fps if low_fps <= 0.0 else minf(low_fps,fps)
+
 func _physics_process(_delta: float) -> void:
 	if flow == null or not flow.initialized:
 		return
@@ -161,6 +197,7 @@ func _physics_process(_delta: float) -> void:
 			flow.range_sim.step()
 	cast_pending = -1
 	arena_canvas.queue_redraw()
+	portrait_hud.queue_redraw()
 	test_canvas.queue_redraw()
 	refresh_counter += 1
 	if refresh_counter%7 == 0:
@@ -169,6 +206,22 @@ func _physics_process(_delta: float) -> void:
 			_redraw_panel()
 		else:
 			_update_labels()
+
+func _guide(show: bool) -> void:
+	if show:
+		guide.reopen()
+	else:
+		guide.dismiss()
+	_update_labels()
+
+func _export_metrics() -> void:
+	if not flow.experiment.enabled:
+		current_notice = "Opt in first; data are kept locally and never uploaded."
+	else:
+		var a: Error = flow.experiment.export_json()
+		var b: Error = flow.experiment.export_csv()
+		current_notice = "Local files: user://arcane_m4_experiment.{json,csv}" if a == OK and b == OK else "Export failed"
+	_update_labels()
 
 func _clear(container: Node) -> void:
 	for child in container.get_children():
@@ -180,6 +233,8 @@ func _redraw_panel() -> void:
 		return
 	scene_key = str(flow.run.sequence_index)+":"+flow.state+":"+str(flow.reward_collected)
 	arena_canvas.session = flow.session
+	arena_canvas.environment_id = 2 if flow.run.sequence_index>=5 else (1 if flow.room.values["type"]=="boss" else 0)
+	portrait_hud.queue_redraw()
 	arena_canvas.visible = flow.mode != "workshop"
 	test_canvas.visible = flow.mode == "workshop"
 	test_canvas.runner = flow.range_sim
@@ -256,6 +311,8 @@ func _update_labels() -> void:
 		flow.run.max_hp,flow.session.sim.mana,flow.run.currency,flow.run.unlocked.size(),
 		flow.session.player.dodge_cooldown,
 		str(flow.run.formulas[0]["display_name"]),str(flow.run.formulas[1]["display_name"]),flow.edit_policy]
+	info.text += "\nRender FPS %.0f / observed low %.0f" % [
+		Engine.get_frames_per_second(),low_fps]
 	if flow.mode == "workshop" and flow.range_sim != null:
 		var trace = flow.range_sim.trace
 		var reactions: int = trace.filter_records(-1,"","reaction").size()
@@ -270,6 +327,15 @@ func _update_labels() -> void:
 			flow.range_sim.total_hit_count,flow.range_sim.queue.active_effect_count(),flow.range_sim.mana,
 			",".join(statuses),reactions,triggers,caps]
 	notices.text = current_notice
+	if tip != null:
+		var topic := "combat"
+		if editor_open:
+			topic = "editor"
+		elif flow.mode == "workshop":
+			topic = "workshop"
+		elif flow.state == "cleared":
+			topic = "reward" if not flow.reward_collected else "door"
+		tip.text = "TIP: "+guide.message(topic) if not guide.dismissed else ""
 
 func _choose_reward(i: int) -> void:
 	var result: Dictionary = flow.choose_reward(i)
@@ -319,6 +385,7 @@ func _open_editor(index: int) -> void:
 	opened_editor_ms = Time.get_ticks_msec()
 	editor_panel.visible = true
 	_editor_rebuild()
+	_update_labels()
 
 func _editor_rebuild() -> void:
 	_clear(editor_controls)
@@ -375,6 +442,17 @@ func _editor_rebuild() -> void:
 	var apply := _button(editor_controls,"Apply valid formula",func(): _close_editor(true))
 	apply.disabled = not verdict["ok"]
 
+func _rune_icon(rune_id: String) -> Texture2D:
+	var names := ["essence.fire","essence.water","essence.lightning","form.projectile","form.burst","form.orb",
+		"mod.homing","mod.split","mod.pierce","trigger.on_hit"]
+	var index := names.find(rune_id)
+	if index<0:
+		return null
+	var texture := AtlasTexture.new()
+	texture.atlas = RuneAtlas
+	texture.region = Rect2(Vector2(float(index%8*32),float((index/8)*32)),Vector2(32,32))
+	return texture
+
 func _option(parent: Node, list: Array, selection: String) -> OptionButton:
 	var option := OptionButton.new()
 	parent.add_child(option)
@@ -383,6 +461,9 @@ func _option(parent: Node, list: Array, selection: String) -> OptionButton:
 		var item: Dictionary = list[i]
 		option.add_item(str(item["id"])+(" (locked)" if item["locked"] else ""))
 		option.set_item_metadata(i,str(item["id"]))
+		var rune_icon: Texture2D = _rune_icon(str(item["id"]))
+		if rune_icon != null:
+			option.set_item_icon(i,rune_icon)
 		option.set_item_disabled(i,bool(item["locked"]))
 		if str(item["id"]) == selection:
 			current = i
@@ -402,6 +483,6 @@ func _close_editor(apply_changes: bool) -> void:
 		current_notice = "Editor: "+str(result.get("reason","INVALID"))
 		_editor_rebuild()
 		return
-	current_notice = "Formula "+("applied" if apply_changes else "cancelled")+" / %.1f s" % duration
+	current_notice = ("Formula applied" if apply_changes else "Formula cancelled")+" / %.1f s" % duration
 	_close_visual_editor()
 	_redraw_panel()
