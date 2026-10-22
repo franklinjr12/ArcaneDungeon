@@ -1,0 +1,82 @@
+[
+  {
+    "type": "cast_requested",
+    "cast_id": 1,
+    "root_cast_id": 1,
+    "formula_id": "sample.spark_burst",
+    "tick": 0
+  },
+  {
+    "type": "cost_paid",
+    "cast_id": 1,
+    "root_cast_id": 1,
+    "formula_id": "sample.spark_burst",
+    "amount": 28,
+    "tick": 0
+  },
+  {
+    "type": "spawn",
+    "cast_id": 1,
+    "root_cast_id": 1,
+    "formula_id": "sample.spark_burst",
+    "effect_id": 1,
+    "parent_effect_id": 0,
+    "depth": 0,
+    "tick": 0
+  },
+  {
+    "type": "hit",
+    "cast_id": 1,
+    "root_cast_id": 1,
+    "formula_id": "sample.spark_burst",
+    "effect_id": 1,
+    "target_id": 10,
+    "tick": 4
+  },
+  {
+    "type": "status",
+    "cast_id": 1,
+    "root_cast_id": 1,
+    "formula_id": "sample.spark_burst",
+    "target_id": 10,
+    "reason": "burning",
+    "tick": 4
+  },
+  {
+    "type": "trigger",
+    "cast_id": 1,
+    "root_cast_id": 1,
+    "formula_id": "sample.spark_burst",
+    "parent_effect_id": 1,
+    "depth": 1,
+    "tick": 4
+  },
+  {
+    "type": "spawn",
+    "cast_id": 1,
+    "root_cast_id": 1,
+    "formula_id": "sample.spark_burst",
+    "effect_id": 2,
+    "parent_effect_id": 1,
+    "depth": 1,
+    "tick": 4
+  },
+  {
+    "type": "reaction",
+    "cast_id": 1,
+    "root_cast_id": 1,
+    "formula_id": "sample.spark_burst",
+    "source_id": 10,
+    "target_id": 11,
+    "reason": "wet_lightning_arc",
+    "tick": 4
+  },
+  {
+    "type": "cleanup",
+    "cast_id": 1,
+    "root_cast_id": 1,
+    "formula_id": "sample.spark_burst",
+    "effect_id": 2,
+    "tick": 5
+  }
+]

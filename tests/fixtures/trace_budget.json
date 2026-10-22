@@ -1,0 +1,19 @@
+[
+  {
+    "type": "cast_requested",
+    "cast_id": 3,
+    "root_cast_id": 3,
+    "formula_id": "sample.split_water",
+    "tick": 0
+  },
+  {
+    "type": "budget_exceeded",
+    "cast_id": 3,
+    "root_cast_id": 3,
+    "formula_id": "sample.split_water",
+    "parent_effect_id": 0,
+    "reason": "events_per_cast",
+    "limit": 1,
+    "tick": 0
+  }
+]

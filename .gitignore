@@ -9,3 +9,9 @@
 .indiegameharness/project.lock
 .indiegameharness/project.toml
 # Kept in version control: scripts/, tests/, inspection/
+
+# Godot generated import/cache
+.godot/
+
+# Reference images are documentation, not shipped runtime textures
+docs/assets/*.import

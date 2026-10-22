@@ -1,0 +1,17 @@
+[
+  {
+    "type": "cast_requested",
+    "cast_id": 2,
+    "root_cast_id": 2,
+    "formula_id": "sample.invalid_burst_homing",
+    "tick": 0
+  },
+  {
+    "type": "rejected",
+    "cast_id": 2,
+    "root_cast_id": 2,
+    "formula_id": "sample.invalid_burst_homing",
+    "reason": "MODIFIER_INCOMPATIBLE",
+    "tick": 0
+  }
+]

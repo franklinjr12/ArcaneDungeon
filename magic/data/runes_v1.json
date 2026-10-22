@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "runes": [
+    {
+      "id": "essence.fire",
+      "category": "essence",
+      "schema_version": 1,
+      "params": {},
+      "compatibility_tags": [
+        "element.fire"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 5,
+      "cooldown_ticks": 1,
+      "description": "Fire damage and Burning",
+      "display_key": "essence.fire"
+    },
+    {
+      "id": "essence.water",
+      "category": "essence",
+      "schema_version": 1,
+      "params": {},
+      "compatibility_tags": [
+        "element.water"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 4,
+      "cooldown_ticks": 1,
+      "description": "Water damage and Wet",
+      "display_key": "essence.water"
+    },
+    {
+      "id": "essence.lightning",
+      "category": "essence",
+      "schema_version": 1,
+      "params": {},
+      "compatibility_tags": [
+        "element.lightning"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 6,
+      "cooldown_ticks": 2,
+      "description": "Lightning damage and Charged",
+      "display_key": "essence.lightning"
+    },
+    {
+      "id": "form.projectile",
+      "category": "form",
+      "schema_version": 1,
+      "params": {},
+      "compatibility_tags": [
+        "root",
+        "projectile"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 2,
+      "cooldown_ticks": 2,
+      "description": "A traveling hit effect",
+      "display_key": "form.projectile"
+    },
+    {
+      "id": "form.burst",
+      "category": "form",
+      "schema_version": 1,
+      "params": {},
+      "compatibility_tags": [
+        "root",
+        "area"
+      ],
+      "complexity_weight": 2,
+      "mana_cost": 8,
+      "cooldown_ticks": 8,
+      "description": "An instantaneous area effect",
+      "display_key": "form.burst"
+    },
+    {
+      "id": "form.orb",
+      "category": "form",
+      "schema_version": 1,
+      "params": {},
+      "compatibility_tags": [
+        "root",
+        "orbit"
+      ],
+      "complexity_weight": 2,
+      "mana_cost": 9,
+      "cooldown_ticks": 9,
+      "description": "Orbiting persistent contact effect",
+      "display_key": "form.orb"
+    },
+    {
+      "id": "mod.homing",
+      "category": "modifier",
+      "schema_version": 1,
+      "params": {},
+      "compatibility_tags": [
+        "projectile_only"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 3,
+      "cooldown_ticks": 2,
+      "description": "Turn toward a nearby target",
+      "display_key": "mod.homing"
+    },
+    {
+      "id": "mod.split",
+      "category": "modifier",
+      "schema_version": 1,
+      "params": {},
+      "compatibility_tags": [
+        "projectile_only"
+      ],
+      "complexity_weight": 2,
+      "mana_cost": 4,
+      "cooldown_ticks": 3,
+      "description": "Generate multiple projectiles",
+      "display_key": "mod.split"
+    },
+    {
+      "id": "mod.pierce",
+      "category": "modifier",
+      "schema_version": 1,
+      "params": {},
+      "compatibility_tags": [
+        "projectile_only"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 2,
+      "cooldown_ticks": 1,
+      "description": "Hit several distinct targets",
+      "display_key": "mod.pierce"
+    },
+    {
+      "id": "trigger.on_hit",
+      "category": "trigger",
+      "schema_version": 1,
+      "params": {},
+      "compatibility_tags": [
+        "projectile_only"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 5,
+      "cooldown_ticks": 3,
+      "description": "Spawn an explicit Burst payload on valid hit",
+      "display_key": "trigger.on_hit"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"display_name":"Split Water","formula_id":"sample.split_water","root":{"essence_id":"essence.water","manifestation_id":"form.projectile","modifier_ids":["mod.split"],"params":{}},"schema_version":1}

@@ -1,0 +1,1 @@
+{"display_name":"Spark Burst","formula_id":"sample.spark_burst","on_hit":{"payload":{"essence_id":"essence.lightning","manifestation_id":"form.burst","modifier_ids":[],"params":{}},"trigger_id":"trigger.on_hit"},"root":{"essence_id":"essence.fire","manifestation_id":"form.projectile","modifier_ids":["mod.pierce"],"params":{}},"schema_version":1}

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "max_complexity": 12,
+  "max_event_depth": 1,
+  "max_events_per_root_cast": 128,
+  "max_effects_per_cast": 32,
+  "max_active_effects": 256,
+  "max_lifetime_ticks": 600,
+  "max_chain_targets": 4,
+  "min_rehit_delay_ticks": 5
+}

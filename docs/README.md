@@ -1,6 +1,6 @@
 # ArcaneDungeon — Documentation Index
 
-The repository is being initialized for an AI-agent-driven Godot 4.x gameplay prototype. Documentation is present; a runnable Godot project is not yet part of the repository.
+Godot 4.7.2 GL Compatibility M0 bootstrap is present, including a working launcher and headless contract tests. Gameplay and final art are not yet implemented.
 
 | File | Purpose |
 | --- | --- |
@@ -8,7 +8,8 @@ The repository is being initialized for an AI-agent-driven Godot 4.x gameplay pr
 | [backlog_v1.md](backlog_v1.md) | Gameplay implementation proposal, TASK-001 through TASK-061, with dependencies and acceptance criteria |
 | [art_direction.md](art_direction.md) | Mandatory process for reviewing the visual reference and generating future assets |
 | [assets/art_style_reference.png](assets/art_style_reference.png) | Canonical local visual reference image; do not overwrite |
-| `architecture/magic_contract_v1.md` (planned) | Versioned shared spell grammar/API contract; to be created during TASK-003 |
+| [architecture/magic_contract_v1.md](architecture/magic_contract_v1.md) | Versioned prototype spell schema, interfaces, execution phases and owner decisions |
+| [DEV.md](DEV.md) | Godot launch, clean validation, tests, and CI commands |
 
 ## External design documents
 
@@ -20,5 +21,5 @@ The repository is being initialized for an AI-agent-driven Godot 4.x gameplay pr
 
 - The gameplay backlog is a proposal, not a record of all approved design decisions. Preserve its DECIDED/DIRECTION/PROPOSED/OPEN/OUT OF SCOPE distinctions.
 - Final art production is a separate workstream; future art tasks must consult `assets/art_style_reference.png` and `art_direction.md`. Placeholder visuals are permitted for gameplay prototypes.
-- Follow the milestone gates and task dependency graph in `backlog_v1.md`. Implementation starts with TASK-001; TASK-003 creates the architecture contract.
+- Follow the milestone gates and task dependency graph in `backlog_v1.md`. M0 tasks TASK-001–010 are now implemented for review. M1 gameplay starts with TASK-011.
 - Update this index as authoritative documentation is added; avoid listing proposed folders as though they exist.

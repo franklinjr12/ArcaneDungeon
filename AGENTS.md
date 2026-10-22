@@ -6,7 +6,7 @@ These instructions apply to the whole repository. Read this file before making c
 
 ArcaneDungeon is a **2D, top-down, pixel-art, combat-first dungeon roguelite** about inventing and combining spells. The core loop is: fight through rooms, earn new runes, defeat a boss, then visit a safe workshop/shop/testing area to revise magic before continuing. Skillful movement, aiming and dodging remain important even when spells become powerful.
 
-This repository started as a documentation-only skeleton. Do not assume a Godot project, test runner, art pipeline, or playable content exists until you inspect the files. The initial documentation-setup task does **not** authorize gameplay or final-art implementation; subsequent explicitly assigned backlog tasks do.
+The M0 Godot launcher, test runner, rune registry, codec, validator, compiler, event/clock services and trace now exist. Inspect current files before editing; there is still no player, spell casting, enemies, complete art pipeline, or playable combat. Game and final-art implementation requires explicit subsequent backlog tasks.
 
 ## Required sources and authority
 
@@ -14,7 +14,7 @@ This repository started as a documentation-only skeleton. Do not assume a Godot 
 2. **Gameplay implementation plan:** `docs/backlog_v1.md` (v1.0, 2026-10-22). Follow the relevant `TASK-XXX` goal, dependencies, requirements and acceptance criteria. This backlog is a **proposal**, not blanket approval for every design choice.
 3. **Magic system inspiration (not a feature checklist):** [Arcane World — Magic and World Interactions](https://docs.google.com/document/d/13l4Aqtsrp0f47Uuj-7BatHlrwJv7RlUCY2HO92KQCng/edit) and [Arcane World — World Knowledge](https://docs.google.com/document/d/1PSme3lsfFgC6T2nVckuKikEATj0A-CcFZodu8q1Ae4U/edit).
 4. **Visual reference:** `docs/assets/art_style_reference.png`; instructions: `docs/art_direction.md`. **Inspect the image before any asset-creation work.**
-5. **Versioned magic contract:** `docs/architecture/magic_contract_v1.md`, to be created by `TASK-003`; once present, follow it for shared spell semantics and APIs. Never pretend it already exists.
+5. **Versioned magic contract:** `docs/architecture/magic_contract_v1.md`, created for `TASK-003`; follow it for shared spell semantics and APIs.
 
 Use the source labels as written in the backlog:
 - **[DECIDED]** established product direction.
@@ -45,7 +45,7 @@ Work on one `TASK-XXX` or a tightly coupled pair per change set. Check dependenc
 - **Events and safety:** resolve collisions through typed events, never recursively cast in collision callbacks. Apply configurable per-cast/global effect and event budgets; log `budget_exceeded` without freezing the game.
 - **Interactions:** Fire applies Burning; Water applies Wet and extinguishes Burning; Lightning striking Wet can arc **once** to the nearest other Wet target. Do not hard-code named spell combinations; resolve from target states and elemental payloads.
 - **Determinism:** fixed-tick simulation, run-seeded RNG, stable IDs and tie-breaks, normalized traces. Simulation must not depend on rendering or final art.
-- **Architecture:** respect the backlog's shared API boundaries (`RuneRegistry`, `SpellValidator`, `SpellCompiler`, `SpellRunner`, `MagicEventQueue`, `InteractionResolver`, `RunState`, `SpellCodec`). Suggested locations include `res://game/core/`, `res://magic/{data,compile,runtime}/`, `res://combat/`, `res://world/`, `res://ui/`, `res://debug/`, `res://tests/`. These directories are *proposed*, not currently present.
+- **Architecture:** respect the backlog's shared API boundaries (`RuneRegistry`, `SpellValidator`, `SpellCompiler`, `SpellRunner`, `MagicEventQueue`, `InteractionResolver`, `RunState`, `SpellCodec`). Suggested locations include `res://game/core/`, `res://magic/{data,compile,runtime}/`, `res://combat/`, `res://world/`, `res://ui/`, `res://debug/`, `res://tests/`. The M0 directories are now present.
 
 See `docs/backlog_v1.md` for detailed contracts, examples, legality rules, exact task acceptance criteria, and regression scenarios. Do not rely on this short summary instead of the full task specification.
 
@@ -62,7 +62,7 @@ See `docs/backlog_v1.md` for detailed contracts, examples, legality rules, exact
 1. Inspect the current repository and source documents. Note missing prerequisites and pre-existing uncommitted work; do not delete or overwrite unrelated work.
 2. Identify the assigned `TASK-XXX` IDs; read full requirements, acceptance criteria and dependencies before editing code.
 3. Implement against shared contracts; avoid duplicate spell models/resolvers, bespoke elemental spell classes, and hidden hardcoded combinations.
-4. Add or update deterministic tests and fixtures with the feature. Use Godot headless validation once the Godot project and test runner exist; never report tests as passed without running them.
+4. Add or update deterministic tests and fixtures with the feature. Run `python scripts/validate_godot.py --godot <path-to-godot>` to check parser, scene navigation, suite, and failure detection; never report tests as passed without running them.
 5. Provide reproduction/demo steps, parser/runtime errors when applicable, and describe how each acceptance criterion was verified. If you cannot run a test, say why.
 6. In the handoff/PR include: task IDs, changed files, tests/results, schema/API changes, assumptions labelled as proposed, and unresolved owner decisions.
 7. Avoid committing generated runtime caches, temporary harness artifacts, secret tokens, or unrelated files. Do not silently update the GDD, implementation backlog or baseline art reference.
