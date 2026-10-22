@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "teams": {
+    "friendly_fire": false
+  },
+  "statuses": {
+    "burning": {
+      "duration_ticks": 180,
+      "max_stacks": 1,
+      "refresh": "replace_duration",
+      "dot_interval_ticks": 30,
+      "dot_damage": 2
+    },
+    "wet": {
+      "duration_ticks": 240,
+      "max_stacks": 1,
+      "refresh": "replace_duration"
+    },
+    "charged": {
+      "duration_ticks": 120,
+      "max_stacks": 1,
+      "refresh": "replace_duration"
+    }
+  },
+  "channels": {
+    "essence.fire": {
+      "channel": "fire",
+      "apply": "burning",
+      "remove": []
+    },
+    "essence.water": {
+      "channel": "water",
+      "apply": "wet",
+      "remove": [
+        "burning"
+      ]
+    },
+    "essence.lightning": {
+      "channel": "lightning",
+      "apply": "charged",
+      "remove": []
+    }
+  },
+  "combat": {
+    "armor_scale": 100,
+    "arc_radius": 220,
+    "arc_damage_scale": 0.65,
+    "regen_mana_per_tick": 0.3,
+    "player_max_mana": 120,
+    "base_target_hp": 120,
+    "player_team": 1,
+    "enemy_team": 2
+  },
+  "sandbox": {
+    "width": 920,
+    "height": 680,
+    "visual_ticks": 18,
+    "dps_window_ticks": 180,
+    "move_debug_speed": 190
+  }
+}

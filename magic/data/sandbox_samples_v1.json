@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "formulas": [
+    {
+      "schema_version": 1,
+      "formula_id": "sample.fire_shot",
+      "display_name": "Fire Shot",
+      "root": {
+        "essence_id": "essence.fire",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.water_shot",
+      "display_name": "Water Shot",
+      "root": {
+        "essence_id": "essence.water",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.lightning_shot",
+      "display_name": "Lightning Shot",
+      "root": {
+        "essence_id": "essence.lightning",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.homing_fire",
+      "display_name": "Homing Fire",
+      "root": {
+        "essence_id": "essence.fire",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [
+          "mod.homing"
+        ],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.split_fire_trigger",
+      "display_name": "Split Fire → Lightning",
+      "root": {
+        "essence_id": "essence.fire",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [
+          "mod.split"
+        ],
+        "params": {}
+      },
+      "on_hit": {
+        "trigger_id": "trigger.on_hit",
+        "payload": {
+          "essence_id": "essence.lightning",
+          "manifestation_id": "form.burst",
+          "modifier_ids": [],
+          "params": {}
+        }
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.pierce_water_trigger",
+      "display_name": "Piercing Water → Lightning",
+      "root": {
+        "essence_id": "essence.water",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [
+          "mod.pierce"
+        ],
+        "params": {}
+      },
+      "on_hit": {
+        "trigger_id": "trigger.on_hit",
+        "payload": {
+          "essence_id": "essence.lightning",
+          "manifestation_id": "form.burst",
+          "modifier_ids": [],
+          "params": {}
+        }
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.water_burst",
+      "display_name": "Water Burst",
+      "root": {
+        "essence_id": "essence.water",
+        "manifestation_id": "form.burst",
+        "modifier_ids": [],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.orbit_fire",
+      "display_name": "Orbiting Fire",
+      "root": {
+        "essence_id": "essence.fire",
+        "manifestation_id": "form.orb",
+        "modifier_ids": [],
+        "params": {}
+      }
+    }
+  ]
+}

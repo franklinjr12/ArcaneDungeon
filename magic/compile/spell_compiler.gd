@@ -59,6 +59,16 @@ func _compile_effect(effect: Dictionary) -> Dictionary:
 	var modifiers: Array = []
 	for id in effect["modifier_ids"]:
 		modifiers.append(registry.get_rune(id).snapshot())
-	return {"essence":registry.get_rune(effect["essence_id"]).snapshot(),
-		"manifestation":registry.get_rune(effect["manifestation_id"]).snapshot(),
-		"modifiers":modifiers,"params":effect["params"].duplicate(true)}
+
+	var essence: Dictionary = registry.get_rune(effect["essence_id"]).snapshot()
+	var form: Dictionary = registry.get_rune(effect["manifestation_id"]).snapshot()
+	var resolved: Dictionary = {}
+	for rune in [essence,form] + modifiers:
+		for key in rune["params"]:
+			var spec: Dictionary = rune["params"][key]
+			if spec.has("default"):
+				resolved[key] = spec["default"]
+	for key in effect["params"]:
+		resolved[key] = effect["params"][key]
+	return {"essence":essence,"manifestation":form,
+		"modifiers":modifiers,"params":resolved}

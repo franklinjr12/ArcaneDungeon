@@ -113,3 +113,11 @@ func run(t) -> void:
 	t.check(registry.replace_all(changed_runes)["ok"],"TASK-007 revised registry accepted")
 	var updated = compiler.compile(formulas[0],all_ids)["compiled_spell"]
 	t.equal(updated.mana_cost(),compiled.mana_cost()+2,"TASK-007 cache invalidates after registry revision")
+
+	var erroneous_defaults: Array = entries.duplicate(true)
+	for def in erroneous_defaults:
+		if def["id"] == "form.projectile":
+			def["params"]["speed"]["default"] = "faster"
+	t.contains_issue(registry.replace_all(erroneous_defaults)["issues"],"RUNE_PARAM_DEFAULT_TYPE",
+		"TASK-004/M1 typed rune defaults reject incompatible values")
+	t.equal(registry.get_ids().size(),10,"TASK-004/M1 invalid defaults leave loaded registry unchanged")

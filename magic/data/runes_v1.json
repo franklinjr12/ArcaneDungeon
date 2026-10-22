@@ -5,7 +5,14 @@
       "id": "essence.fire",
       "category": "essence",
       "schema_version": 1,
-      "params": {},
+      "params": {
+        "base_damage": {
+          "type": "float",
+          "default": 12.0,
+          "min": 0.0,
+          "max": 200.0
+        }
+      },
       "compatibility_tags": [
         "element.fire"
       ],
@@ -19,7 +26,14 @@
       "id": "essence.water",
       "category": "essence",
       "schema_version": 1,
-      "params": {},
+      "params": {
+        "base_damage": {
+          "type": "float",
+          "default": 9.0,
+          "min": 0.0,
+          "max": 200.0
+        }
+      },
       "compatibility_tags": [
         "element.water"
       ],
@@ -33,7 +47,14 @@
       "id": "essence.lightning",
       "category": "essence",
       "schema_version": 1,
-      "params": {},
+      "params": {
+        "base_damage": {
+          "type": "float",
+          "default": 11.0,
+          "min": 0.0,
+          "max": 200.0
+        }
+      },
       "compatibility_tags": [
         "element.lightning"
       ],
@@ -47,7 +68,26 @@
       "id": "form.projectile",
       "category": "form",
       "schema_version": 1,
-      "params": {},
+      "params": {
+        "speed": {
+          "type": "float",
+          "default": 430.0,
+          "min": 1.0,
+          "max": 1200.0
+        },
+        "radius": {
+          "type": "float",
+          "default": 10.0,
+          "min": 1.0,
+          "max": 40.0
+        },
+        "lifetime_ticks": {
+          "type": "int",
+          "default": 145,
+          "min": 1,
+          "max": 600
+        }
+      },
       "compatibility_tags": [
         "root",
         "projectile"
@@ -62,7 +102,14 @@
       "id": "form.burst",
       "category": "form",
       "schema_version": 1,
-      "params": {},
+      "params": {
+        "burst_radius": {
+          "type": "float",
+          "default": 75.0,
+          "min": 1.0,
+          "max": 300.0
+        }
+      },
       "compatibility_tags": [
         "root",
         "area"
@@ -77,7 +124,32 @@
       "id": "form.orb",
       "category": "form",
       "schema_version": 1,
-      "params": {},
+      "params": {
+        "orbit_radius": {
+          "type": "float",
+          "default": 72.0,
+          "min": 1.0,
+          "max": 200.0
+        },
+        "angular_speed": {
+          "type": "float",
+          "default": 2.8,
+          "min": 0.0,
+          "max": 20.0
+        },
+        "orb_radius": {
+          "type": "float",
+          "default": 15.0,
+          "min": 1.0,
+          "max": 45.0
+        },
+        "lifetime_ticks": {
+          "type": "int",
+          "default": 360,
+          "min": 1,
+          "max": 600
+        }
+      },
       "compatibility_tags": [
         "root",
         "orbit"
@@ -92,7 +164,20 @@
       "id": "mod.homing",
       "category": "modifier",
       "schema_version": 1,
-      "params": {},
+      "params": {
+        "acquire_radius": {
+          "type": "float",
+          "default": 280.0,
+          "min": 1.0,
+          "max": 1000.0
+        },
+        "turn_rate": {
+          "type": "float",
+          "default": 4.0,
+          "min": 0.0,
+          "max": 20.0
+        }
+      },
       "compatibility_tags": [
         "projectile_only"
       ],
@@ -106,7 +191,20 @@
       "id": "mod.split",
       "category": "modifier",
       "schema_version": 1,
-      "params": {},
+      "params": {
+        "projectile_count": {
+          "type": "int",
+          "default": 3,
+          "min": 1,
+          "max": 8
+        },
+        "spread_degrees": {
+          "type": "float",
+          "default": 17.0,
+          "min": 0.0,
+          "max": 90.0
+        }
+      },
       "compatibility_tags": [
         "projectile_only"
       ],
@@ -120,7 +218,14 @@
       "id": "mod.pierce",
       "category": "modifier",
       "schema_version": 1,
-      "params": {},
+      "params": {
+        "max_targets": {
+          "type": "int",
+          "default": 3,
+          "min": 1,
+          "max": 10
+        }
+      },
       "compatibility_tags": [
         "projectile_only"
       ],

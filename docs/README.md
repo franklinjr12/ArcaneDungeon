@@ -1,6 +1,6 @@
 # ArcaneDungeon — Documentation Index
 
-Godot 4.7.2 GL Compatibility M0 bootstrap is present, including a working launcher and headless contract tests. Gameplay and final art are not yet implemented.
+Godot 4.7.2 GL Compatibility M0 bootstrap and M1 interactive magic sandbox are implemented for review, with headless tests. M2 player combat, dungeon gameplay, and final art are not implemented.
 
 | File | Purpose |
 | --- | --- |
@@ -10,6 +10,7 @@ Godot 4.7.2 GL Compatibility M0 bootstrap is present, including a working launch
 | [assets/art_style_reference.png](assets/art_style_reference.png) | Canonical local visual reference image; do not overwrite |
 | [architecture/magic_contract_v1.md](architecture/magic_contract_v1.md) | Versioned prototype spell schema, interfaces, execution phases and owner decisions |
 | [DEV.md](DEV.md) | Godot launch, clean validation, tests, and CI commands |
+| [M1_magic_sandbox.md](M1_magic_sandbox.md) | M1 controls, magic runtime architecture, reproduction recipes, rules, acceptance testing |
 
 ## External design documents
 
@@ -21,5 +22,5 @@ Godot 4.7.2 GL Compatibility M0 bootstrap is present, including a working launch
 
 - The gameplay backlog is a proposal, not a record of all approved design decisions. Preserve its DECIDED/DIRECTION/PROPOSED/OPEN/OUT OF SCOPE distinctions.
 - Final art production is a separate workstream; future art tasks must consult `assets/art_style_reference.png` and `art_direction.md`. Placeholder visuals are permitted for gameplay prototypes.
-- Follow the milestone gates and task dependency graph in `backlog_v1.md`. M0 tasks TASK-001–010 are now implemented for review. M1 gameplay starts with TASK-011.
+- Follow the milestone gates and task dependency graph in `backlog_v1.md`. M0 TASK-001–010 and the M1 TASK-011–025 sandbox prototype are now implemented for review. M2 begins at TASK-026.
 - Update this index as authoritative documentation is added; avoid listing proposed folders as though they exist.

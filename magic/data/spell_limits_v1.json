@@ -7,5 +7,6 @@
   "max_active_effects": 256,
   "max_lifetime_ticks": 600,
   "max_chain_targets": 4,
-  "min_rehit_delay_ticks": 5
+  "min_rehit_delay_ticks": 5,
+  "max_active_orbs": 6
 }

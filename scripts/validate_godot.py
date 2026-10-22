@@ -28,6 +28,8 @@ def check(godot: str, label: str, args: list[str], should_fail: bool = False) ->
         okay = proc.returncode == 0 and not engine_errors
         if "run_tests.gd" in " ".join(args):
             okay = okay and bool(SUCCESS_SUMMARY.search(combined))
+        if "sandbox_ui_smoke.gd" in " ".join(args):
+            okay = okay and combined.count("M1 UI PASS:") >= 12
         if "navigation_smoke.gd" in " ".join(args):
             okay = okay and combined.count("NAVIGATION PASS:") == 3
     print(f"{label}: {'PASS' if okay else 'FAIL'} (exit={proc.returncode}, engine_errors={len(engine_errors)})", flush=True)
@@ -41,6 +43,7 @@ def main() -> int:
     stages = [
         ("Editor import / parser", ["--editor", "--quit"], False),
         ("Gameplay entry navigation", ["--script", "res://tests/navigation_smoke.gd"], False),
+        ("M1 sandbox UI smoke", ["--script", "res://tests/sandbox_ui_smoke.gd"], False),
         ("Deterministic test suite", ["--script", "res://tests/run_tests.gd"], False),
         ("Negative failure probe", ["--script", "res://tests/run_tests.gd", "--", "--self-test-failure"], True),
     ]

@@ -38,6 +38,17 @@ func from_dict(value: Dictionary) -> Array:
 					issues.append(_issue("RUNE_PARAM_BOUND", "params."+str(param)+".min", "Numeric minimum expected"))
 				if spec.has("max") and typeof(spec["max"]) not in [TYPE_INT, TYPE_FLOAT]:
 					issues.append(_issue("RUNE_PARAM_BOUND", "params."+str(param)+".max", "Numeric maximum expected"))
+				if spec.has("min") and spec.has("max") and typeof(spec["min"]) in [TYPE_INT,TYPE_FLOAT] and typeof(spec["max"]) in [TYPE_INT,TYPE_FLOAT] and spec["min"] > spec["max"]:
+					issues.append(_issue("RUNE_PARAM_BOUNDS_ORDER","params."+str(param),"Minimum exceeds maximum"))
+				if spec.has("default"):
+					var fallback = spec["default"]
+					var expected: String = str(spec["type"])
+					var correct: bool = (expected == "bool" and typeof(fallback) == TYPE_BOOL) or (expected == "string" and typeof(fallback) == TYPE_STRING) or (expected == "float" and typeof(fallback) in [TYPE_INT,TYPE_FLOAT]) or (expected == "int" and typeof(fallback) in [TYPE_INT,TYPE_FLOAT] and floor(float(fallback)) == float(fallback))
+					if not correct:
+						issues.append(_issue("RUNE_PARAM_DEFAULT_TYPE","params."+str(param)+".default","Typed parameter default does not match declared type"))
+					elif typeof(fallback) in [TYPE_INT,TYPE_FLOAT]:
+						if (spec.has("min") and fallback < spec["min"]) or (spec.has("max") and fallback > spec["max"]):
+							issues.append(_issue("RUNE_PARAM_DEFAULT_RANGE","params."+str(param)+".default","Parameter default outside declared bounds"))
 	if typeof(value["compatibility_tags"]) != TYPE_ARRAY:
 		issues.append(_issue("RUNE_TAGS_INVALID", "compatibility_tags", "Expected tags array"))
 	else:
@@ -66,11 +77,11 @@ func id() -> String:
 func category() -> String:
 	return str(_definition.get("category",""))
 
-static func _id_valid(id: String) -> bool:
-	if len(id) < 1 or len(id) > 64 or not id[0].is_valid_identifier():
+static func _id_valid(rune_identifier: String) -> bool:
+	if len(rune_identifier) < 1 or len(rune_identifier) > 64 or not rune_identifier[0].is_valid_identifier():
 		return false
-	for char in id:
-		if char not in "abcdefghijklmnopqrstuvwxyz0123456789_.-":
+	for character in rune_identifier:
+		if character not in "abcdefghijklmnopqrstuvwxyz0123456789_.-":
 			return false
 	return true
 

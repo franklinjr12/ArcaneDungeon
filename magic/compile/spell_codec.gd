@@ -110,8 +110,8 @@ static func _canon_effect(effect: Dictionary) -> Dictionary:
 static func _safe_id(value: String) -> bool:
 	if len(value) < 1 or len(value) > 64 or value[0] not in "abcdefghijklmnopqrstuvwxyz":
 		return false
-	for char in value:
-		if char not in "abcdefghijklmnopqrstuvwxyz0123456789_.-":
+	for character in value:
+		if character not in "abcdefghijklmnopqrstuvwxyz0123456789_.-":
 			return false
 	return true
 

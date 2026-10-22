@@ -1,6 +1,6 @@
-# ArcaneDungeon — Magic Contract v1 (M0)
+# ArcaneDungeon — Magic Contract v1.2 (M0 + M1)
 
-**Contract version:** 1.0, created in TASK-003. **Status:** provisional prototype implementation contract; does not supersede owner decisions in `docs/Game Design & Project Reference.md`.
+**Contract version:** 1.2, extended during TASK-011–025; formula JSON schema remains version 1. **Status:** provisional prototype implementation contract; does not supersede owner decisions in `docs/Game Design & Project Reference.md`.
 
 ## Authority and change control
 
@@ -40,10 +40,10 @@ Elemental semantic states: Fire causes damage + Burning; Water causes damage + W
 | `SpellCodec.encode/decode` | Strict JSON v1, error objects with code/path/message; never deserialize scripts |
 | `SpellValidator.validate(formula,unlocked_rune_ids)` | One legality implementation returning `{ok,issues}` |
 | `SpellCompiler.compile(formula,unlocked_rune_ids)` | Validated cached `CompiledSpell` or issues, immutable snapshot |
-| `SpellRunner.try_cast(slot_id,caster,origin,direction,run_seed)` | **Future TASK-023/024:** `{accepted,reason,cast_id}`. Do not build a fake casting runtime in M0 |
+| `SpellRunner.try_cast(slot_index,origin,direction)` | **Implemented M1**. Deterministic manual cast with `{accepted,reason,cast_id}`; cast actor, seed, and state are injected via runner instance, not call parameters. |
 | `SimulationClock` | Fixed ticks, run-seeded RNG, monotonic ID assignment; determinism without rendering |
 | `MagicEventQueue.push(event),drain(budget)` | Ordered typed events, no reentrant drain, enforced limits |
-| `InteractionResolver.resolve(payload,target,context)` | **Future TASK-012:** semantic damage/state/reaction output, not implemented in M0 |
+| `InteractionResolver.resolve(payload,target,target_store,tick)` | **Implemented M1**. Shared channel damage, status changes and deferred one-arc reaction request; no renderer dependency. |
 | `RunState` | **Future TASK-039:** `{schema_version,seed,stage_index,room_index,currency,unlocked_rune_ids,equipped_formulas,hp,mana}` |
 | `DebugTrace` | Opt-in trace, normalized JSON and filters; disabled instrumentation cannot change outcomes |
 
@@ -71,4 +71,21 @@ These numeric settings are prototype knobs and must live in `magic/data/` (or ex
 
 ## Contract change log
 
-- **v1.0 / TASK-003:** Initial M0 contract; all source-derived proposed rules retain proposal status. No owner-approved migrations yet.\n- **M0 implementation note:** The published backlog uses `RuneRegistry.get(id)` as conceptual syntax. Actual Godot API is `get_rune(id)` (and `get_by_id(id)`) because `Object.get` is a native method and overriding it triggers a parse warning/error. This is a compatibility naming adaptation, not a spell-schema change. Golden legal/invalid/budget traces are synthetic contract fixtures until the TASK-011–025 runtime exists.
+- **v1.0 / TASK-003:** Initial M0 contract; all source-derived proposed rules retain proposal status. No owner-approved migrations yet.
+- **M0 implementation note:** The published backlog uses `RuneRegistry.get(id)` as conceptual syntax. Actual Godot API is `get_rune(id)` (and `get_by_id(id)`) because `Object.get` is a native method and overriding it triggers a parse warning/error. This is a compatibility naming adaptation, not a spell-schema change. Golden legal/invalid/budget traces are synthetic contract fixtures until the TASK-011–025 runtime exists.
+
+## M1 runtime extension — contract revision 1.1 (TASK-011–025)
+
+- This technical contract revision is **backward compatible** with formula JSON schema v1. New runtime tunables are optional, typed rune parameter defaults stored in `magic/data/runes_v1.json`, resolved by `SpellCompiler` into detached plan snapshots. No formula migration is required. Changing formula schema still requires migration, new fixtures and owner approval for semantics.
+- `MagicTarget`: stable `id`, `team`, `position`, `radius`, `tags`, `health`, `status`, `removed` and optional motion. `TargetStore.query(center,radius,attacker_team,exclude_ids,status_id,tick)` filters dead/removed/friendly and sorts by squared distance, then stable ID. `HealthComponent.damage` applies armor and channel resistance before HP clamp.
+- `InteractionResolver.resolve(payload,target,store,tick)` interprets essence IDs using `magic/data/magic_balance_v1.json` channels, independent of manifestation classes. Returns direct damage, status changes and at most one deferred arc request. `StatusComponent.tick` yields deterministic expiration/DOT events; direct hit and On Hit queue handling finish before DOT at the same tick. DOT stops at death.
+- `SpellRunner` owns the simulation clock, event queue, target store, resolver, two-slot loadout, active manifestations, trace and sandbox tuning. Input/UI calls `try_cast(slot, origin, direction)`; the only effect of invalid/out-of-mana/on-cooldown calls is a logged rejection. Valid casts reserve a root effect, deduct mana **once**, and spawn the root. Trigger Burst payloads are separately reserved and never deduct mana. Each Split child is separately budgeted. A separately configured `max_active_orbs` prevents unlimited simultaneous orbiting effects, in addition to global/per-cast effect caps. Every resolved hit uses a validated `HitPayload` with essence/channel, base damage, source/ancestry and knockback metadata; physical knockback is deferred to M2. Status refresh is data-driven (`replace_duration`, `extend_duration`, `keep_duration`). No collision callback performs nested casts.
+- `ProjectileEffect`: swept segment/circle collision, stable ordered contacts, finite lifetime/wall bounds; `mod.homing` uses nearest eligible target and turn-rate cap, `mod.split` uses symmetric offsets, `mod.pierce` uses a per-projectile distinct hit set. `BurstEffect`: one stable radial target query for root and On Hit child. `OrbEffect`: caster-anchored rotating contact area, per-target rehit delay, limited lifetime and no triggers.
+- Every eligible Projectile hit may enqueue its On Hit child even if direct damage kills the original target. Bursts may damage their original triggering target independently if still alive. Wet + Lightning selects the nearest other eligible Wet target by distance/ID, executes **one** derived arc hit, does not chain and does not consume Wet. Water extinguishes Burning and applies Wet. Fire applies Burning. Charged has no automatic extra reaction in M1.
+- Temporary geometry, trace panels, and WASD caster repositioning in the sandbox are debugging affordances, **not the M2 player locomotion implementation**. See `docs/M1_magic_sandbox.md` for reproduction, testing and open design assumptions.
+
+### Revised contract changelog
+
+- **v1.1 / TASK-011–025:** Explicit runtime interfaces and resolved tunable parameter defaults. Existing v1 formula files and M0 fixtures remain valid. This is a prototype engineering integration only; no owner approval of balance constants or open grammar decisions is implied.
+
+- **v1.2 / M1 regression hardening:** Instant Burst effect reservations now remain active through the event-drain phase and are released after hit/trigger/reaction resolution. Consequently, Burst `cleanup` trace records follow its queued `hit` records, and same-tick triggered Bursts count against active-effect budgets until resolved. The versioned fixtures `tests/fixtures/m1_runtime_traces_v1.json` lock event order/ancestry for Split+On Hit and Pierce+On Hit. `tests/m1_trace_golden_generator.gd` is a deliberate regeneration utility, not a background updater. Formula JSON schema remains v1 and needs no migration.
