@@ -1,0 +1,176 @@
+extends Control
+## Combat arena scene: input adapter and readable debug/HUD, gameplay lives in CombatSession.
+const Session = preload("res://combat/combat_session.gd")
+const Canvas = preload("res://ui/combat_canvas.gd")
+var session
+var canvas
+var hud: Label
+var status_line: Label
+var tips: Label
+var overlay: ColorRect
+var pending_cast := -1
+var target_point := Vector2(400,400)
+var seed := 5160
+var scenario := "single"
+var starter := 0
+var refresh_counter := 0
+
+func _ready() -> void:
+	session = Session.new(seed,scenario,starter)
+	_build()
+	_refresh()
+
+func _build() -> void:
+	var bg := ColorRect.new()
+	bg.color = Color("#0b101b")
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(bg)
+	var side := PanelContainer.new()
+	side.position = Vector2(8,8)
+	side.size = Vector2(305,704)
+	add_child(side)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation",9)
+	side.add_child(column)
+	var back := Button.new()
+	back.text = "Back to Menu"
+	column.add_child(back)
+	back.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/main.tscn"))
+	var header := Label.new()
+	header.text = "ARCANE DUNGEON / M2 COMBAT"
+	header.add_theme_font_size_override("font_size",18)
+	column.add_child(header)
+	tips = Label.new()
+	tips.text = "WASD Move   Mouse Aim\nLMB / RMB: Cast 1 / Cast 2\nSPACE Dodge   F3: Debug\nR: Retry  P: Pause\n1 / 2 / 3: Arena scenario\nTAB: Starter loadout\nF4: Reduce hit flashes"
+	tips.add_theme_font_size_override("font_size",12)
+	column.add_child(tips)
+	var scenarios := GridContainer.new()
+	scenarios.columns = 3
+	column.add_child(scenarios)
+	for item in [["Single","single"],["Mixed","mixed"],["Cluster","cluster"]]:
+		var b := Button.new()
+		b.text = item[0]
+		b.custom_minimum_size.x = 91
+		scenarios.add_child(b)
+		b.pressed.connect(_choose_scenario.bind(item[1]))
+	var actions := GridContainer.new()
+	actions.columns = 2
+	column.add_child(actions)
+	for item in [["Retry","retry"],["Loadout","loadout"],["Pause","pause"],["Debug F3","debug"],["Flash F4","flash"]]:
+		var b := Button.new()
+		b.text = item[0]
+		b.custom_minimum_size = Vector2(131,34)
+		actions.add_child(b)
+		b.pressed.connect(_command.bind(item[1]))
+	hud = Label.new()
+	hud.add_theme_font_size_override("font_size",13)
+	column.add_child(hud)
+	status_line = Label.new()
+	status_line.add_theme_font_size_override("font_size",13)
+	column.add_child(status_line)
+	canvas = Canvas.new()
+	canvas.position = Vector2(329,35)
+	canvas.size = Vector2(float(session.data["arena"]["viewport_width"]),float(session.data["arena"]["viewport_height"]))
+	canvas.session = session
+	add_child(canvas)
+	canvas.world_click.connect(_click)
+	overlay = ColorRect.new()
+	overlay.color = Color("#fff4e1")
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.position = canvas.position
+	overlay.size = canvas.size
+	overlay.visible = false
+	add_child(overlay)
+
+func _click(point: Vector2, button: int) -> void:
+	if session.state != "playing" or session.sim.clock.paused:
+		return
+	target_point = point
+	pending_cast = 0 if button == MOUSE_BUTTON_LEFT else 1
+
+func _input(event: InputEvent) -> void:
+	if not event is InputEventKey or not event.pressed or event.echo:
+		return
+	match event.keycode:
+		KEY_1: _choose_scenario("single")
+		KEY_2: _choose_scenario("mixed")
+		KEY_3: _choose_scenario("cluster")
+		KEY_TAB: _command("loadout")
+		KEY_R: _command("retry")
+		KEY_P: _command("pause")
+		KEY_F3: _command("debug")
+		KEY_F4: _command("flash")
+
+func _choose_scenario(key: String) -> void:
+	scenario = key
+	session.restart(seed,scenario,starter)
+	pending_cast = -1
+	_refresh()
+
+func _command(key: String) -> void:
+	match key:
+		"retry":
+			session.restart(seed,scenario,starter)
+			pending_cast = -1
+		"loadout":
+			starter = (starter+1)%session.data["starter_loadouts"].size()
+			session.restart(seed,scenario,starter)
+			pending_cast = -1
+		"pause":
+			if session.state == "playing":
+				session.sim.clock.set_paused(not session.sim.clock.paused)
+		"debug":
+			session.debug_overlay = not session.debug_overlay
+			canvas.show_debug = session.debug_overlay
+		"flash":
+			session.reduce_flashes = not session.reduce_flashes
+	_refresh()
+
+func _physics_process(_dt: float) -> void:
+	if session == null or not session.initialized:
+		return
+	var direction := Input.get_vector("move_left","move_right","move_up","move_down")
+	var aiming: Vector2 = (canvas.world_from_local(canvas.get_local_mouse_position())-session.sim.actor.position).normalized()
+	if aiming.is_zero_approx():
+		aiming = session.player.facing
+	var command := {"move":direction,"aim":aiming,"cast":pending_cast,
+		"cursor":target_point,"dodge":Input.is_action_just_pressed("dodge")}
+	pending_cast = -1
+	if session.state == "playing" and not session.sim.clock.paused:
+		session.issue(command)
+		session.step()
+	canvas.queue_redraw()
+	refresh_counter += 1
+	if refresh_counter % 5 == 0:
+		_refresh()
+	if overlay != null:
+		overlay.visible = session.player.hit_flash > 0 and not session.reduce_flashes and session.player.hit_flash % 3 == 0
+		overlay.color = Color(0.95,0.88,0.8,0.055)
+
+func _refresh() -> void:
+	if session == null or hud == null:
+		return
+	var snap: Dictionary = session.snapshot()
+	var a: Dictionary = session.sim.loadout.preview(0)
+	var b: Dictionary = session.sim.loadout.preview(1)
+	var cds: Array = session.sim.loadout.slots
+	hud.text = "HP %d / %d\nMANA %d / %d\n\nSLOT 1: %s\nMana %d | CD %d | Complexity %d\n\nSLOT 2: %s\nMana %d | CD %d | Complexity %d\n\nDodge %s / %d ticks\nI-FRAMES %d / RECOVER %d\n\nEnemies: %d  Effects: %d" % [
+		roundi(snap["player_hp"]),roundi(session.sim.actor.health.maximum),roundi(snap["player_mana"]),
+		roundi(float(session.sim.settings["combat"]["player_max_mana"])),
+		a.get("formula_id",""),a.get("mana",0),cds[0]["cooldown"],a.get("complexity",0),
+		b.get("formula_id",""),b.get("mana",0),cds[1]["cooldown"],b.get("complexity",0),
+		"READY" if session.player.dodge_cooldown == 0 else "COOLDOWN",
+		session.player.dodge_cooldown,session.player.invulnerable_left,session.player.recovery_left,
+		snap["enemy_count"],snap["effects"]]
+	var last_cast: String = str(session.player.last_message)
+	var recent: Array = session.sim.trace.snapshot()
+	var latest := ""
+	for entry in recent:
+		if entry["type"] == "reaction":
+			latest = "ARC! Wet + Lightning"
+		elif entry["type"] == "status":
+			latest = str(entry.get("reason",""))
+	status_line.text = "State: %s\nCast: %s\nElement: %s\nDamage taken: %.1f\nDodges %d | Casts %d\nFPS %d | Logic %.2fms\n%s" % [
+		session.state.to_upper(),last_cast,latest,snap["damage_taken"],snap["dodges"],snap["casts"],
+		Engine.get_frames_per_second(),snap["frame_ms"],"FLASHES REDUCED" if session.reduce_flashes else ""]

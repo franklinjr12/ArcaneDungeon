@@ -48,7 +48,7 @@ func steer(dt: float, target_store, params: Dictionary) -> void:
 	var max_delta := float(params.get("turn_rate",0.0)) * dt
 	direction = Vector2.RIGHT.rotated(from_angle+clampf(delta,-max_delta,max_delta)).normalized()
 
-func advance(dt: float, target_store, bounds: Rect2) -> Array:
+func advance(dt: float, target_store, bounds: Rect2, walls: Array = []) -> Array:
 	if expired:
 		return []
 	age += 1
@@ -69,6 +69,8 @@ func advance(dt: float, target_store, bounds: Rect2) -> Array:
 			return a["target"].id < b["target"].id
 		return a["t"] < b["t"])
 	var exit_time := _bounds_exit_time(start,end,bounds)
+	for wall in walls:
+		exit_time = minf(exit_time,segment_wall_time(start,end,wall,radius))
 	var hits: Array = []
 	for contact in candidates:
 		if contact["t"] > exit_time + 0.000001:
@@ -117,3 +119,28 @@ static func _bounds_exit_time(start: Vector2, finish: Vector2, bounds: Rect2) ->
 	elif delta.y < 0:
 		t = minf(t,(bounds.position.y-start.y)/delta.y)
 	return clampf(t,0.0,1.0)
+
+## A swept point against an inflated solid AABB, returns first contact t in [0,1].
+static func segment_wall_time(start: Vector2, finish: Vector2, wall: Rect2, padding: float = 0.0) -> float:
+	var rect := Rect2(wall.position-Vector2.ONE*padding,wall.size+Vector2.ONE*padding*2.0)
+	if rect.has_point(start):
+		return 0.0
+	var vector := finish-start
+	var low := 0.0
+	var high := 1.0
+	for axis in 2:
+		var origin: float = start.x if axis == 0 else start.y
+		var component: float = vector.x if axis == 0 else vector.y
+		var minimum: float = rect.position.x if axis == 0 else rect.position.y
+		var maximum: float = rect.end.x if axis == 0 else rect.end.y
+		if absf(component) < 0.00000001:
+			if origin < minimum or origin > maximum:
+				return 1.0
+			continue
+		var a := (minimum-origin)/component
+		var b := (maximum-origin)/component
+		low = maxf(low,minf(a,b))
+		high = minf(high,maxf(a,b))
+		if low > high:
+			return 1.0
+	return low if low >= 0.0 and low <= 1.0 and high >= 0.0 else 1.0

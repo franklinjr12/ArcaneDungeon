@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "arena": {
+    "width": 1320,
+    "height": 900,
+    "viewport_width": 916,
+    "viewport_height": 650,
+    "player_spawn": [
+      185,
+      450
+    ],
+    "walls": [
+      [
+        570,
+        165,
+        64,
+        210
+      ],
+      [
+        570,
+        535,
+        64,
+        200
+      ],
+      [
+        890,
+        360,
+        86,
+        175
+      ]
+    ],
+    "spawn_markers": [
+      [
+        375,
+        270
+      ],
+      [
+        1080,
+        255
+      ],
+      [
+        1120,
+        640
+      ],
+      [
+        700,
+        455
+      ],
+      [
+        410,
+        665
+      ],
+      [
+        1050,
+        500
+      ]
+    ]
+  },
+  "player": {
+    "move_speed": 255,
+    "radius": 17,
+    "max_hp": 150,
+    "dodge_speed": 640,
+    "dodge_duration_ticks": 11,
+    "dodge_invulnerable_ticks": 9,
+    "dodge_cooldown_ticks": 53,
+    "dodge_recovery_ticks": 9,
+    "hit_flash_ticks": 8,
+    "max_burst_distance": 345
+  },
+  "enemy_projectile": {
+    "radius": 11,
+    "lifetime_ticks": 175
+  },
+  "enemies": {
+    "pursuer": {
+      "hp": 95,
+      "radius": 19,
+      "move_speed": 118,
+      "perception_radius": 1250,
+      "preferred_range": 42,
+      "attack_range": 76,
+      "telegraph_ticks": 31,
+      "recovery_ticks": 28,
+      "cooldown_ticks": 10,
+      "damage": 14,
+      "attack_kind": "melee",
+      "color": "#e49a73"
+    },
+    "ranged": {
+      "hp": 80,
+      "radius": 18,
+      "move_speed": 101,
+      "perception_radius": 1250,
+      "preferred_range": 325,
+      "attack_range": 560,
+      "telegraph_ticks": 43,
+      "recovery_ticks": 30,
+      "cooldown_ticks": 17,
+      "damage": 11,
+      "projectile_speed": 310,
+      "spread_degrees": 0,
+      "attack_kind": "ranged",
+      "color": "#8cbaea"
+    },
+    "flanker": {
+      "hp": 85,
+      "radius": 17,
+      "move_speed": 154,
+      "perception_radius": 1250,
+      "preferred_range": 250,
+      "attack_range": 420,
+      "telegraph_ticks": 34,
+      "recovery_ticks": 26,
+      "cooldown_ticks": 18,
+      "damage": 9,
+      "projectile_speed": 340,
+      "spread_degrees": 0,
+      "attack_kind": "ranged",
+      "strafe_factor": 0.8,
+      "color": "#bf9dde"
+    }
+  },
+  "scenarios": {
+    "single": {
+      "name": "Single Pursuer",
+      "enemies": [
+        [
+          "pursuer",
+          375,
+          450
+        ]
+      ]
+    },
+    "mixed": {
+      "name": "Mixed Wave",
+      "enemies": [
+        [
+          "pursuer",
+          375,
+          270
+        ],
+        [
+          "ranged",
+          1080,
+          255
+        ],
+        [
+          "flanker",
+          1100,
+          640
+        ]
+      ]
+    },
+    "cluster": {
+      "name": "Wet / Lightning Cluster",
+      "enemies": [
+        [
+          "pursuer",
+          375,
+          390
+        ],
+        [
+          "ranged",
+          440,
+          450
+        ],
+        [
+          "flanker",
+          390,
+          510
+        ]
+      ]
+    }
+  },
+  "starter_loadouts": [
+    [
+      "sample.fire_shot",
+      "sample.water_burst"
+    ],
+    [
+      "sample.split_fire_trigger",
+      "sample.pierce_water_trigger"
+    ],
+    [
+      "sample.water_burst",
+      "sample.lightning_shot"
+    ]
+  ]
+}

@@ -6,7 +6,7 @@ These instructions apply to the whole repository. Read this file before making c
 
 ArcaneDungeon is a **2D, top-down, pixel-art, combat-first dungeon roguelite** about inventing and combining spells. The core loop is: fight through rooms, earn new runes, defeat a boss, then visit a safe workshop/shop/testing area to revise magic before continuing. Skillful movement, aiming and dodging remain important even when spells become powerful.
 
-M0 and M1 are now implemented as a proposed playable **magic debugging sandbox**: rune registry, compiler, deterministic runner, elemental interactions, projectiles, Bursts, Orbs, triggers, mana/loadouts, target dummies and headless tests. Inspect current files before editing. M2 player control, enemy combat, full dungeon loop, final art and polish are still absent; implementation remains gated by explicit assigned tasks.
+M0–M2 are now implemented as proposed playable **magic debugging sandbox + combat arena**: rune registry/compiler, deterministic spell runtime, elemental interactions, manual movement/casting/dodge, shared target/damage pipelines, three enemy archetypes, HUD, fixed combat scenarios and headless tests. Inspect the current files before editing. M3 run structure, boss, spell editor, full dungeon loop, final art and polish remain absent and gated by explicitly assigned tasks.
 
 ## Required sources and authority
 
@@ -29,7 +29,7 @@ If sources disagree, avoid quietly changing mechanics. Record the discrepancy an
 
 - **M0 / TASK-001–010:** Godot bootstrap, headless tests, versioned spell definitions/contracts, compiler, event queue, trace.
 - **M1 / TASK-011–025:** implemented prototype magic sandbox, manifestations/modifiers, bounded On Hit, elemental states and cross-spell reactions. `docs/M1_magic_sandbox.md` explains current behavior and how to test.
-- **M2 / TASK-026–035:** movement/dodge, combat damage, enemies, arena, HUD and tuning.
+- **M2 / TASK-026–035:** implemented movement/dodge, combat damage, enemies, arena, HUD and prototype tuning. Consult `docs/M2_combat.md` and the replay seed fixture.
 - **M3 / TASK-036–048:** rooms and rewards, boss, shop/workshop, spell editor and end-to-end vertical slice.
 - **M4 / TASK-049–055:** regression, stress/telemetry, onboarding, player testing and owner go/no-go.
 - **POST / TASK-056–061:** gated proposals only. Never start without explicit go/no-go approval.
@@ -45,7 +45,7 @@ Work on one `TASK-XXX` or a tightly coupled pair per change set. Check dependenc
 - **Events and safety:** resolve collisions through typed events, never recursively cast in collision callbacks. Apply configurable per-cast/global effect and event budgets; log `budget_exceeded` without freezing the game.
 - **Interactions:** Fire applies Burning; Water applies Wet and extinguishes Burning; Lightning striking Wet can arc **once** to the nearest other Wet target. Do not hard-code named spell combinations; resolve from target states and elemental payloads.
 - **Determinism:** fixed-tick simulation, run-seeded RNG, stable IDs and tie-breaks, normalized traces. Simulation must not depend on rendering or final art.
-- **Architecture:** respect the backlog's shared API boundaries (`RuneRegistry`, `SpellValidator`, `SpellCompiler`, `SpellRunner`, `MagicEventQueue`, `InteractionResolver`, `RunState`, `SpellCodec`). Suggested locations include `res://game/core/`, `res://magic/{data,compile,runtime}/`, `res://combat/`, `res://world/`, `res://ui/`, `res://debug/`, `res://tests/`. The M0/M1 code directories now exist.
+- **Architecture:** respect the backlog's shared API boundaries (`RuneRegistry`, `SpellValidator`, `SpellCompiler`, `SpellRunner`, `MagicEventQueue`, `InteractionResolver`, `RunState`, `SpellCodec`). Suggested locations include `res://game/core/`, `res://magic/{data,compile,runtime}/`, `res://combat/`, `res://world/`, `res://ui/`, `res://debug/`, `res://tests/`. The M0/M1/M2 code directories now exist.
 
 See `docs/backlog_v1.md` for detailed contracts, examples, legality rules, exact task acceptance criteria, and regression scenarios. Do not rely on this short summary instead of the full task specification.
 
@@ -62,7 +62,7 @@ See `docs/backlog_v1.md` for detailed contracts, examples, legality rules, exact
 1. Inspect the current repository and source documents. Note missing prerequisites and pre-existing uncommitted work; do not delete or overwrite unrelated work.
 2. Identify the assigned `TASK-XXX` IDs; read full requirements, acceptance criteria and dependencies before editing code.
 3. Implement against shared contracts; avoid duplicate spell models/resolvers, bespoke elemental spell classes, and hidden hardcoded combinations.
-4. Add or update deterministic tests and fixtures with the feature. Run `python scripts/validate_godot.py --godot <path-to-godot>` to check parser, scene navigation, M1 sandbox UI behavior, suite, and failure detection; never report tests as passed without running them.
+4. Add or update deterministic tests and fixtures with the feature. Run `python scripts/validate_godot.py --godot <path-to-godot>` to check parser, scene navigation, M1 sandbox UI, M2 combat UI, suite, baseline replays, and failure detection; never report tests as passed without running them.
 5. Provide reproduction/demo steps, parser/runtime errors when applicable, and describe how each acceptance criterion was verified. If you cannot run a test, say why.
 6. In the handoff/PR include: task IDs, changed files, tests/results, schema/API changes, assumptions labelled as proposed, and unresolved owner decisions.
 7. Avoid committing generated runtime caches, temporary harness artifacts, secret tokens, or unrelated files. Do not silently update the GDD, implementation backlog or baseline art reference.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify Godot M0 from a clean checkout and fail on engine errors.
+"""Verify Godot M0-M2 from a clean checkout and fail on engine errors.
 
 Godot's CLI can exit 0 even when a GDScript dependency emits SCRIPT ERROR.
 Use this wrapper in CI and locally; do not trust the process code alone.
@@ -30,6 +30,8 @@ def check(godot: str, label: str, args: list[str], should_fail: bool = False) ->
             okay = okay and bool(SUCCESS_SUMMARY.search(combined))
         if "sandbox_ui_smoke.gd" in " ".join(args):
             okay = okay and combined.count("M1 UI PASS:") >= 12
+        if "combat_ui_smoke.gd" in " ".join(args):
+            okay = okay and combined.count("M2 UI PASS:") >= 17
         if "navigation_smoke.gd" in " ".join(args):
             okay = okay and combined.count("NAVIGATION PASS:") == 3
     print(f"{label}: {'PASS' if okay else 'FAIL'} (exit={proc.returncode}, engine_errors={len(engine_errors)})", flush=True)
@@ -44,6 +46,7 @@ def main() -> int:
         ("Editor import / parser", ["--editor", "--quit"], False),
         ("Gameplay entry navigation", ["--script", "res://tests/navigation_smoke.gd"], False),
         ("M1 sandbox UI smoke", ["--script", "res://tests/sandbox_ui_smoke.gd"], False),
+        ("M2 combat UI smoke", ["--script", "res://tests/combat_ui_smoke.gd"], False),
         ("Deterministic test suite", ["--script", "res://tests/run_tests.gd"], False),
         ("Negative failure probe", ["--script", "res://tests/run_tests.gd", "--", "--self-test-failure"], True),
     ]

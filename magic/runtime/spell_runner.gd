@@ -26,6 +26,7 @@ var loadout
 var actor
 var settings: Dictionary = {}
 var bounds := Rect2(0.0,0.0,920.0,680.0)
+var collision_walls: Array = []
 var mana := 0.0
 var active: Array = []
 var visuals: Array = []
@@ -80,6 +81,7 @@ func reset(run_seed: int = -1) -> void:
 	recent_damage.clear()
 	_deferred_burst_cleanup.clear()
 	_contexts.clear()
+	collision_walls.clear()
 	last_rejection = ""
 	total_hit_count = 0
 
@@ -222,7 +224,7 @@ func advance_one_tick() -> void:
 		if entry["kind"] == "projectile":
 			if "mod.homing" in _modifier_ids(effect.root):
 				effect.steer(1.0/float(clock.tick_rate),targets,effect.root["params"])
-			hits = effect.advance(1.0/float(clock.tick_rate),targets,bounds)
+			hits = effect.advance(1.0/float(clock.tick_rate),targets,bounds,collision_walls)
 		elif entry["kind"] == "orb":
 			hits = effect.advance(1.0/float(clock.tick_rate),clock.tick,actor,targets,
 				limits.get_limit("min_rehit_delay_ticks"))

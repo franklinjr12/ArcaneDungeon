@@ -1,6 +1,6 @@
-# ArcaneDungeon — Magic Contract v1.2 (M0 + M1)
+# ArcaneDungeon — Magic Contract v1.3 (M0 + M1 + M2)
 
-**Contract version:** 1.2, extended during TASK-011–025; formula JSON schema remains version 1. **Status:** provisional prototype implementation contract; does not supersede owner decisions in `docs/Game Design & Project Reference.md`.
+**Contract version:** 1.3, extended during TASK-026–035; formula JSON schema remains version 1. **Status:** provisional prototype implementation contract; does not supersede owner decisions in `docs/Game Design & Project Reference.md`.
 
 ## Authority and change control
 
@@ -89,3 +89,14 @@ These numeric settings are prototype knobs and must live in `magic/data/` (or ex
 - **v1.1 / TASK-011–025:** Explicit runtime interfaces and resolved tunable parameter defaults. Existing v1 formula files and M0 fixtures remain valid. This is a prototype engineering integration only; no owner approval of balance constants or open grammar decisions is implied.
 
 - **v1.2 / M1 regression hardening:** Instant Burst effect reservations now remain active through the event-drain phase and are released after hit/trigger/reaction resolution. Consequently, Burst `cleanup` trace records follow its queued `hit` records, and same-tick triggered Bursts count against active-effect budgets until resolved. The versioned fixtures `tests/fixtures/m1_runtime_traces_v1.json` lock event order/ancestry for Split+On Hit and Pierce+On Hit. `tests/m1_trace_golden_generator.gd` is a deliberate regeneration utility, not a background updater. Formula JSON schema remains v1 and needs no migration.
+
+## M2 combat integration — technical revision 1.3 (TASK-026–035)
+
+- `CombatSession.issue(command)` is the deterministic command dispatch surface. `PlayerCombat.process_command` owns direction normalization, mouse-aim independent movement, dodge i-frames, cast lockout, recovery and context blocking; the scene controller only collects input. `CombatSession` wraps the existing `SpellRunner` with its clock and team/health/status/compiled-plan interfaces, not a duplicate runner.
+- `ProjectileEffect.advance(dt,target_store,bounds,walls=[])` optionally sweeps against solid AABBs and remains backward-compatible for M1 (default empty walls). `SpellRunner.collision_walls` is optional, cleared on reset. M2 uses common geometry for movement, line of sight, telegraphs and both friendly and hostile projectile occlusion. A scoped M2-only manual Burst range and LOS restriction are **PROPOSED** and belong to `combat/combat_tuning_v1.json`.
+- Enemy attacks carry stable `DamageEvent` IDs and teams. Dodge invulnerability is checked before shared `MagicTarget.receive_damage`, preserving channel resistance/armor/HP clamp; repeated attack IDs cannot apply damage twice. Enemy AI `idle/acquire/chase/windup/recover/dead` is deterministic and independent from art; its typed `AttackIntent` is exposed to placeholder warning drawings.
+- `tests/fixtures/m2_baseline_v1.json` locks six seed-replay outcomes. `tests/m2_baseline_driver.gd` exercises ordinary player commands, not privileged HP/mana changes. The M1 formula schema and M1 causal golden traces remain unchanged. No schema migration or owner-approved gameplay redesign occurred.
+
+### M2 contract change log
+
+- **v1.3 / TASK-026–035:** Opt-in solid-wall swept projectile collision, command-driven combat session, typed hostile damage and telegraph interfaces. M0/M1 APIs remain compatible; all M2 numeric balance constants and input bindings are provisional. See `docs/M2_combat.md` for acceptance details.

@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "purpose": "Deterministic input-only M2 baseline (not balance approval)",
+  "cases": [
+    {
+      "casts": 16,
+      "completed": true,
+      "damage_received": 0.0,
+      "dodges": 0,
+      "enemies_remaining": 0,
+      "hp_remaining": 150.0,
+      "loadout": 0,
+      "reactions": 0,
+      "result": "cleared",
+      "scenario": "single",
+      "seed": 20261022,
+      "ticks": 27
+    },
+    {
+      "casts": 14,
+      "completed": true,
+      "damage_received": 0.0,
+      "dodges": 0,
+      "enemies_remaining": 0,
+      "hp_remaining": 150.0,
+      "loadout": 2,
+      "reactions": 0,
+      "result": "cleared",
+      "scenario": "single",
+      "seed": 20261022,
+      "ticks": 29
+    },
+    {
+      "casts": 36,
+      "completed": true,
+      "damage_received": 20.0,
+      "dodges": 6,
+      "enemies_remaining": 0,
+      "hp_remaining": 130.0,
+      "loadout": 0,
+      "reactions": 0,
+      "result": "cleared",
+      "scenario": "mixed",
+      "seed": 20261022,
+      "ticks": 531
+    },
+    {
+      "casts": 49,
+      "completed": true,
+      "damage_received": 56.0,
+      "dodges": 13,
+      "enemies_remaining": 0,
+      "hp_remaining": 94.0,
+      "loadout": 2,
+      "reactions": 2,
+      "result": "cleared",
+      "scenario": "mixed",
+      "seed": 20261022,
+      "ticks": 1005
+    },
+    {
+      "casts": 32,
+      "completed": true,
+      "damage_received": 0.0,
+      "dodges": 7,
+      "enemies_remaining": 0,
+      "hp_remaining": 150.0,
+      "loadout": 0,
+      "reactions": 0,
+      "result": "cleared",
+      "scenario": "cluster",
+      "seed": 20261022,
+      "ticks": 406
+    },
+    {
+      "casts": 28,
+      "completed": true,
+      "damage_received": 0.0,
+      "dodges": 8,
+      "enemies_remaining": 0,
+      "hp_remaining": 150.0,
+      "loadout": 2,
+      "reactions": 6,
+      "result": "cleared",
+      "scenario": "cluster",
+      "seed": 20261022,
+      "ticks": 407
+    }
+  ]
+}
