@@ -1,0 +1,24 @@
+# ArcaneDungeon — Documentation Index
+
+The repository is being initialized for an AI-agent-driven Godot 4.x gameplay prototype. Documentation is present; a runnable Godot project is not yet part of the repository.
+
+| File | Purpose |
+| --- | --- |
+| [../AGENTS.md](../AGENTS.md) | Root instructions for coding, testing, changes, and visual work |
+| [backlog_v1.md](backlog_v1.md) | Gameplay implementation proposal, TASK-001 through TASK-061, with dependencies and acceptance criteria |
+| [art_direction.md](art_direction.md) | Mandatory process for reviewing the visual reference and generating future assets |
+| [assets/art_style_reference.png](assets/art_style_reference.png) | Canonical local visual reference image; do not overwrite |
+| `architecture/magic_contract_v1.md` (planned) | Versioned shared spell grammar/API contract; to be created during TASK-003 |
+
+## External design documents
+
+- [ArcaneDungeon living GDD](https://docs.google.com/document/d/1fYI_7zgrL-xbm4WV52z6mimLcU6s_N8HKZKPppVY6_0/edit) — authoritative owner design decisions.
+- [Arcane World — Magic and World Interactions](https://docs.google.com/document/d/13l4Aqtsrp0f47Uuj-7BatHlrwJv7RlUCY2HO92KQCng/edit) — conceptual inspiration for elemental/semantic interactions.
+- [Arcane World — World Knowledge](https://docs.google.com/document/d/1PSme3lsfFgC6T2nVckuKikEATj0A-CcFZodu8q1Ae4U/edit) — background/reference, not automatic feature scope.
+
+## Current document rules
+
+- The gameplay backlog is a proposal, not a record of all approved design decisions. Preserve its DECIDED/DIRECTION/PROPOSED/OPEN/OUT OF SCOPE distinctions.
+- Final art production is a separate workstream; future art tasks must consult `assets/art_style_reference.png` and `art_direction.md`. Placeholder visuals are permitted for gameplay prototypes.
+- Follow the milestone gates and task dependency graph in `backlog_v1.md`. Implementation starts with TASK-001; TASK-003 creates the architecture contract.
+- Update this index as authoritative documentation is added; avoid listing proposed folders as though they exist.

@@ -1,0 +1,11 @@
+
+# IndieGameHarness transient state
+.indiegameharness/tmp/
+.indiegameharness/runs/
+.indiegameharness/artifacts/
+.indiegameharness/state.db*
+.indiegameharness/checkpoints/
+.indiegameharness/capability-cache.json
+.indiegameharness/project.lock
+.indiegameharness/project.toml
+# Kept in version control: scripts/, tests/, inspection/

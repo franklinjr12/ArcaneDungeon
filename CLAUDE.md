@@ -1,0 +1,3 @@
+# Claude Code instructions
+
+Read and follow [AGENTS.md](AGENTS.md) before working in this repository. It is the single canonical instruction source shared by Codex, Claude Code and other agents. Read [docs/README.md](docs/README.md) for current source links; in particular inspect [docs/assets/art_style_reference.png](docs/assets/art_style_reference.png) and [docs/art_direction.md](docs/art_direction.md) before any approved asset-creation task. Do not duplicate or override the rules here.
