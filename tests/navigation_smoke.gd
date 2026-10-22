@@ -20,8 +20,8 @@ func _run() -> void:
 		quit(1)
 		return
 	var buttons = current_scene.find_children("*","Button",true,false)
-	if buttons.size() != 2:
-		printerr("navigation: expected 2 launcher buttons, found ",buttons.size())
+	if buttons.size() != 3:
+		printerr("navigation: expected 3 launcher buttons, found ",buttons.size())
 		quit(1)
 		return
 	buttons[0].pressed.emit()
@@ -49,4 +49,17 @@ func _run() -> void:
 		failures += 1
 	else:
 		print("NAVIGATION PASS: Arena")
+	if current_scene != null and current_scene.name == "CombatArena":
+		var home = current_scene.find_children("*","Button",true,false)
+		home[0].pressed.emit()
+		await process_frame
+	if current_scene != null and current_scene.name == "MainMenu":
+		var run_buttons = current_scene.find_children("*","Button",true,false)
+		run_buttons[2].pressed.emit()
+		await process_frame
+	if current_scene != null and current_scene.name == "VerticalSlice":
+		print("NAVIGATION PASS: Run")
+	else:
+		printerr("navigation: Run button failed")
+		failures += 1
 	quit(1 if failures > 0 else 0)

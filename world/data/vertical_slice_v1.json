@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "seed": 20261022,
+  "initial_unlocked": [
+    "essence.fire",
+    "essence.water",
+    "essence.lightning",
+    "form.projectile",
+    "form.burst"
+  ],
+  "initial_formulas": [
+    "sample.fire_shot",
+    "sample.water_burst"
+  ],
+  "initial_currency": 0,
+  "duplicate_reward_currency": 12,
+  "room_reward_currency": 24,
+  "boss_currency": 95,
+  "workshop_restore_hp": 150,
+  "workshop_restore_mana": 120,
+  "edit_policy": "workshop_only",
+  "max_active_enemies": 8,
+  "reward_choices": 2,
+  "boss": {
+    "hp": 430,
+    "radius": 35,
+    "position": [
+      1030,
+      450
+    ],
+    "windup_ticks": 48,
+    "recovery_ticks": 44,
+    "phase_threshold": 0.5,
+    "second_phase_windup_ticks": 33,
+    "radial_shots": 8,
+    "radial_damage": 9,
+    "shot_damage": 16,
+    "shot_speed": 300,
+    "shot_spread": 0,
+    "telegraph_radius": 190
+  },
+  "merchant": {
+    "rune_price": 40,
+    "max_hp_upgrade_price": 35,
+    "max_hp_upgrade_amount": 25,
+    "stock_numeric_upgrade": "max_hp"
+  },
+  "rooms": [
+    {
+      "id": "s1_r1",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "pursuer",
+              375,
+              450
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s1_r2",
+      "stage": 0,
+      "room": 1,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "pursuer",
+              375,
+              270
+            ],
+            [
+              "ranged",
+              1080,
+              255
+            ]
+          ]
+        },
+        {
+          "trigger": "on_clear",
+          "delay_ticks": 30,
+          "enemies": [
+            [
+              "flanker",
+              1110,
+              650
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s1_r3",
+      "stage": 0,
+      "room": 2,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "pursuer",
+              375,
+              390
+            ],
+            [
+              "ranged",
+              440,
+              450
+            ],
+            [
+              "flanker",
+              390,
+              510
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s1_boss",
+      "stage": 0,
+      "room": 3,
+      "type": "boss",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": []
+    },
+    {
+      "id": "workshop",
+      "stage": 0,
+      "room": 4,
+      "type": "workshop",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1100,
+        450
+      ],
+      "waves": []
+    },
+    {
+      "id": "s2_r1",
+      "stage": 1,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "ranged",
+              1080,
+              255
+            ],
+            [
+              "flanker",
+              1100,
+              640
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

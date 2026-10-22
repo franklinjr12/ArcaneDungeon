@@ -18,10 +18,10 @@ func _ready() -> void:
 	heading.add_theme_font_size_override("font_size", 30)
 	panel.add_child(heading)
 	var subheading := Label.new()
-	subheading.text = "M0 systems prototype • final art intentionally deferred"
+	subheading.text = "M3 vertical slice prototype • final art deferred"
 	subheading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	panel.add_child(subheading)
-	for pair in [["Magic Sandbox", "res://scenes/sandbox.tscn"], ["Combat Arena", "res://scenes/arena.tscn"]]:
+	for pair in [["Magic Sandbox", "res://scenes/sandbox.tscn"], ["Combat Arena", "res://scenes/arena.tscn"], ["Start Run (M3)", "res://scenes/run.tscn"]]:
 		var button := Button.new()
 		button.text = pair[0]
 		button.custom_minimum_size.y = 48

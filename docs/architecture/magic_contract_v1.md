@@ -1,6 +1,6 @@
-# ArcaneDungeon — Magic Contract v1.3 (M0 + M1 + M2)
+# ArcaneDungeon — Magic Contract v1.4 (M0–M3)
 
-**Contract version:** 1.3, extended during TASK-026–035; formula JSON schema remains version 1. **Status:** provisional prototype implementation contract; does not supersede owner decisions in `docs/Game Design & Project Reference.md`.
+**Contract version:** 1.4, extended during TASK-036–048; formula JSON schema remains version 1. **Status:** provisional prototype implementation contract; does not supersede owner decisions in `docs/Game Design & Project Reference.md`.
 
 ## Authority and change control
 
@@ -44,7 +44,7 @@ Elemental semantic states: Fire causes damage + Burning; Water causes damage + W
 | `SimulationClock` | Fixed ticks, run-seeded RNG, monotonic ID assignment; determinism without rendering |
 | `MagicEventQueue.push(event),drain(budget)` | Ordered typed events, no reentrant drain, enforced limits |
 | `InteractionResolver.resolve(payload,target,target_store,tick)` | **Implemented M1**. Shared channel damage, status changes and deferred one-arc reaction request; no renderer dependency. |
-| `RunState` | **Future TASK-039:** `{schema_version,seed,stage_index,room_index,currency,unlocked_rune_ids,equipped_formulas,hp,mana}` |
+| `RunState.snapshot(), restore(data,registry,max_rooms)` | **M3 implemented:** `{schema_version,seed,sequence_index,currency,unlocked,formulas,hp,max_hp,mana,collected,purchases,edit_seconds,edit_count,quick_edit_count}`. Only run-owned data; no runtime entities. Reject invalid schema or locked formula before applying. |
 | `DebugTrace` | Opt-in trace, normalized JSON and filters; disabled instrumentation cannot change outcomes |
 
 Use `magic/data/` for definitions, `magic/compile/` for parser/validator/compiler, `magic/runtime/` for event machinery, `game/core/` for clock and shared logging, `debug/` for traces, `tests/` for headless suites and golden fixtures. M1 combat must not duplicate M0 compiler/registry/queue.
@@ -100,3 +100,13 @@ These numeric settings are prototype knobs and must live in `magic/data/` (or ex
 ### M2 contract change log
 
 - **v1.3 / TASK-026–035:** Opt-in solid-wall swept projectile collision, command-driven combat session, typed hostile damage and telegraph interfaces. M0/M1 APIs remain compatible; all M2 numeric balance constants and input bindings are provisional. See `docs/M2_combat.md` for acceptance details.
+
+## M3 contract extension — technical revision 1.4 (TASK-036–048)
+
+- `RoomTemplate.initialize(data,arena,known_enemy_types)` validates marker coordinates, blocked entrances, known enemies and scene. A room definition references the M3 scene, markers and data-only waves; no production procedural graph is implied.
+- `EncounterDirector` schedules initial and optional on-clear delayed waves, owns the authoritative room-clear guard when `CombatSession.defer_clear` is true, and emits completion at most once. A timed wave prevents clearing on temporarily zero living enemies. `RunFlow` serially instantiates a new M2 `CombatSession` on room transition, transfers validated run-owned resources/formulas and discards runtime bullets, statuses and effect queues.
+- `RunState` stores finite JSON-compatible values, rune knowledge licenses, the two v1 formulas, per-room reward grants, merchant purchase IDs and editor experiment metrics. JSON number normalization permits integral floats during deserialization. `restore` validates then atomically copies the state. Saves are in-memory across the single continuous M3 scene; a disk save/load UI is **outside this milestone**.
+- The `SpellEditor` uses the exact v1 `SpellCompiler`, rune access list and formula grammar; changes are kept in an undoable draft until an entirely valid Apply. Modified IDs `custom.slot_1/custom.slot_2` distinguish player-crafted builds without affecting existing golden samples. Edit policy `workshop_only/cleared_room` is a prototype data flag and active-fight edits are blocked.
+- `RunFlow.enter_test_range` builds an isolated `SpellRunner` using the same compiled plans/elemental semantics. Range casts/health/mana/traces cannot affect the saved dungeon HP, money or progression. The optional prepared Wet cluster is distinct from the default, M1-identical reset preset.
+- The M3 boss uses the shared M2 enemy target/HP/damage/hostile projectile API and alternate finite radial/targeted warning patterns. Rewards and shop are deterministic from seed+room/run inventory, duplicate rune fallback currency and numeric upgrade costs are **PROPOSED**, not approved design.
+- The formula JSON schema remains v1; no migration required. **v1.4 / TASK-036–048** adds run/room/editor interfaces, six room templates, seed-based reward policy and M3 end-to-end test. Existing M0–M2 execution semantics are preserved; no permanent product decisions implied.

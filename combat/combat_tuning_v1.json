@@ -171,6 +171,10 @@
           510
         ]
       ]
+    },
+    "empty": {
+      "name": "M3 managed encounter",
+      "enemies": []
     }
   },
   "starter_loadouts": [

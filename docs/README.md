@@ -1,6 +1,6 @@
 # ArcaneDungeon — Documentation Index
 
-Godot 4.7.2 GL Compatibility M0 bootstrap, M1 interactive magic sandbox and M2 playable combat arena are implemented as prototypes with headless regression tests. M3 dungeon progression and final art are not implemented.
+Godot 4.7.2 GL Compatibility M0–M3 playable prototypes are implemented for review: magic sandbox, combat arena, and linear dungeon → mini-boss → workshop → stage-two vertical slice. Final art, production progression and M4 player validation remain absent.
 
 | File | Purpose |
 | --- | --- |
@@ -12,6 +12,7 @@ Godot 4.7.2 GL Compatibility M0 bootstrap, M1 interactive magic sandbox and M2 p
 | [DEV.md](DEV.md) | Godot launch, clean validation, tests, and CI commands |
 | [M1_magic_sandbox.md](M1_magic_sandbox.md) | M1 controls, magic runtime architecture, reproduction recipes, rules, acceptance testing |
 | [M2_combat.md](M2_combat.md) | M2 combat input, enemy behaviors, HUD, fixed scenarios, replay seed/metrics and open decisions |
+| [M3_vertical_slice.md](M3_vertical_slice.md) | M3 run walkthrough, seeded rewards/rooms, mini-boss, shop, spell editor, safe testing, full-route regression |
 
 ## External design documents
 
@@ -23,5 +24,5 @@ Godot 4.7.2 GL Compatibility M0 bootstrap, M1 interactive magic sandbox and M2 p
 
 - The gameplay backlog is a proposal, not a record of all approved design decisions. Preserve its DECIDED/DIRECTION/PROPOSED/OPEN/OUT OF SCOPE distinctions.
 - Final art production is a separate workstream; future art tasks must consult `assets/art_style_reference.png` and `art_direction.md`. Placeholder visuals are permitted for gameplay prototypes.
-- Follow the milestone gates and task dependency graph in `backlog_v1.md`. M0 TASK-001–010 and the M1 TASK-011–025 sandbox prototype are now implemented for review. M2 TASK-026–035 is also implemented for review; M3 begins at TASK-036.
+- Follow the milestone gates and task dependency graph in `backlog_v1.md`. M0 TASK-001–010 and the M1 TASK-011–025 sandbox prototype are now implemented for review. M2 TASK-026–035 is also implemented for review; M3 TASK-036–048 is implemented for technical review. M4 begins at TASK-049; real human playtests and gameplay go/no-go are still outstanding.
 - Update this index as authoritative documentation is added; avoid listing proposed folders as though they exist.

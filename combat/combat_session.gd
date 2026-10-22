@@ -4,6 +4,7 @@ const Runner = preload("res://magic/runtime/spell_runner.gd")
 const Geometry = preload("res://world/arena_geometry.gd")
 const Player = preload("res://combat/player_combat.gd")
 const Enemy = preload("res://combat/enemy_combat.gd")
+const Boss = preload("res://combat/boss_combat.gd")
 const DamageEvent = preload("res://combat/damage_event.gd")
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 const TUNING_FILE := "res://combat/combat_tuning_v1.json"
@@ -24,6 +25,7 @@ var seed := 5160
 var scenario := "single"
 var loadout_index := 0
 var state := "playing"
+var defer_clear := false
 var clear_tick := -1
 var attacks_received := 0
 var damage_received := 0.0
@@ -73,6 +75,7 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	_attack_ids.clear()
 	_death_ids.clear()
 	state = "playing"
+	defer_clear = false
 	clear_tick = -1
 	attacks_received = 0
 	damage_received = 0.0
@@ -96,6 +99,16 @@ func spawn_enemy(kind: String, at: Vector2):
 	enemies.append(enemy)
 	return enemy
 
+func spawn_boss(settings: Dictionary, at: Vector2):
+	if not world.valid_position(at,float(settings["radius"])):
+		return null
+	var target = sim.add_target(at,Vector2.ZERO,float(settings["hp"]))
+	target.radius = float(settings["radius"])
+	target.tags = ["enemy","boss"]
+	var boss = Boss.new(target,settings)
+	enemies.append(boss)
+	return boss
+
 func issue(command: Dictionary) -> Dictionary:
 	if state != "playing":
 		return {"accepted":false,"reason":"COMBAT_ENDED"}
@@ -116,7 +129,7 @@ func step() -> void:
 		_notify("DEFEAT - R to retry",sim.actor.position)
 		# Input commands are rejected once state becomes dead.
 		# Active effects are cleared on explicit retry, never survive restart.
-	if state == "playing" and alive_enemies() == 0:
+	if state == "playing" and not defer_clear and alive_enemies() == 0:
 		state = "cleared"
 		clear_tick = sim.clock.tick
 		_notify("ARENA CLEARED - 1/2/3 next, R replay",sim.actor.position)
