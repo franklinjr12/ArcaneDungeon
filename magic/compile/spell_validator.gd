@@ -2,6 +2,7 @@ extends RefCounted
 const Codec = preload("res://magic/compile/spell_codec.gd")
 var registry
 var max_complexity := 12
+var allow_builtin := false
 
 func _init(rune_registry, complexity_cap: int = 12) -> void:
 	registry = rune_registry
@@ -73,9 +74,13 @@ func _check_rune(id: String, category: String, path: String, unlocked: Array, is
 	if rune == null:
 		issues.append(_issue("RUNE_UNKNOWN",path,"Unknown rune "+id))
 		return
+	var builtin: bool = registry.is_builtin(id)
+	if builtin and not allow_builtin:
+		issues.append(_issue("RUNE_BUILTIN_FORBIDDEN",path,"Built-in rune cannot be used in player formulas: "+id))
+		return
 	if rune.category() != category:
 		issues.append(_issue("RUNE_WRONG_CATEGORY",path,"Expected "+category+" rune"))
-	if id not in unlocked:
+	if id not in unlocked and not builtin:
 		issues.append(_issue("RUNE_LOCKED",path,"Rune not unlocked: "+id))
 
 func _complexity(formula: Dictionary) -> int:

@@ -248,6 +248,28 @@
       "cooldown_ticks": 3,
       "description": "Spawn an explicit Burst payload on valid hit",
       "display_key": "trigger.on_hit"
+    },
+    {
+      "id": "essence.neutral",
+      "category": "essence",
+      "schema_version": 1,
+      "params": {
+        "base_damage": {
+          "type": "float",
+          "default": 8.0,
+          "min": 0.0,
+          "max": 200.0
+        }
+      },
+      "compatibility_tags": [
+        "element.neutral"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 0,
+      "cooldown_ticks": 0,
+      "description": "Built-in neutral damage; not collectible",
+      "display_key": "essence.neutral",
+      "builtin": true
     }
   ]
 }

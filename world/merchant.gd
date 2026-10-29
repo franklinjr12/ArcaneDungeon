@@ -6,10 +6,10 @@ var bought: Dictionary = {}
 func _init(tuning: Dictionary) -> void:
 	config = tuning["merchant"].duplicate(true)
 
-func build(run, all_ids: Array) -> Array:
+func build(run, all_ids: Array, excluded_ids: Array = []) -> Array:
 	var available: Array = []
 	for id in all_ids:
-		if id not in run.unlocked:
+		if id not in run.unlocked and id not in excluded_ids:
 			available.append(id)
 	available.sort()
 	var selected := ""
