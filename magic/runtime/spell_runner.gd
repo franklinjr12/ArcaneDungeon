@@ -101,6 +101,9 @@ func fill_targets() -> void:
 func equip(slot: int, formula: Dictionary) -> Dictionary:
 	return loadout.equip(slot,formula)
 
+func equip_builtin(slot: int, definition: Dictionary) -> Dictionary:
+	return loadout.equip_builtin(slot,definition)
+
 func try_cast(slot: int, origin: Vector2, direction: Vector2) -> Dictionary:
 	var cast_id: int = clock.next_id("cast")
 	var formula_id := ""
