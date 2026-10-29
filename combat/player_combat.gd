@@ -65,8 +65,9 @@ func process_command(command: Dictionary) -> Dictionary:
 			return {"accepted":false,"reason":last_message}
 		var plan = sim.loadout.get_plan(cast_slot)
 		if plan == null:
-			last_message = "SLOT_EMPTY"
-			return {"accepted":false,"reason":last_message}
+			var empty_result: Dictionary = sim.try_cast(cast_slot,sim.actor.position,facing)
+			last_message = str(empty_result["reason"])
+			return empty_result
 		var source: Vector2 = sim.actor.position
 		var cast_aim := facing
 		if str(plan.snapshot()["root"]["manifestation"]["id"]) == "form.burst":
