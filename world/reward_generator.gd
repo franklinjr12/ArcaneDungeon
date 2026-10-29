@@ -1,13 +1,15 @@
 extends RefCounted
 ## Stable independent RNG per room: cannot be altered by combat tick counts.
 var config: Dictionary = {}
-func _init(tuning: Dictionary) -> void:
+var excluded: Array = []
+func _init(tuning: Dictionary, excluded_ids: Array = []) -> void:
 	config = tuning.duplicate(true)
+	excluded = excluded_ids.duplicate()
 
 func choices(run, room_id: String) -> Array:
 	var possible: Array = []
 	for id in ["mod.split","mod.homing","mod.pierce","form.orb","trigger.on_hit"]:
-		if id not in run.unlocked:
+		if id not in run.unlocked and id not in excluded:
 			possible.append(id)
 	var key := str(run.seed)+":"+room_id
 	var hash_value := 2166136261

@@ -23,6 +23,11 @@
     }
   },
   "channels": {
+    "essence.neutral": {
+      "channel": "neutral",
+      "apply": "",
+      "remove": []
+    },
     "essence.fire": {
       "channel": "fire",
       "apply": "burning",
