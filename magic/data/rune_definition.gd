@@ -3,6 +3,7 @@ extends Resource
 const REQUIRED := ["id", "category", "schema_version", "params", "compatibility_tags", "complexity_weight", "mana_cost", "cooldown_ticks", "description", "display_key"]
 const CATEGORIES := ["essence", "form", "modifier", "trigger"]
 const PARAM_TYPES := ["bool", "int", "float", "string"]
+const OPTIONAL := ["builtin"]
 var _definition: Dictionary = {}
 
 func from_dict(value: Dictionary) -> Array:
@@ -11,7 +12,7 @@ func from_dict(value: Dictionary) -> Array:
 		if not value.has(key):
 			issues.append(_issue("RUNE_FIELD_REQUIRED", key, "Missing required rune field"))
 	for key in value:
-		if key not in REQUIRED:
+		if key not in REQUIRED and key not in OPTIONAL:
 			issues.append(_issue("RUNE_UNKNOWN_FIELD", key, "Unknown rune field"))
 	if not issues.is_empty():
 		return issues
@@ -49,6 +50,8 @@ func from_dict(value: Dictionary) -> Array:
 					elif typeof(fallback) in [TYPE_INT,TYPE_FLOAT]:
 						if (spec.has("min") and fallback < spec["min"]) or (spec.has("max") and fallback > spec["max"]):
 							issues.append(_issue("RUNE_PARAM_DEFAULT_RANGE","params."+str(param)+".default","Parameter default outside declared bounds"))
+	if value.has("builtin") and typeof(value["builtin"]) != TYPE_BOOL:
+		issues.append(_issue("RUNE_BUILTIN_INVALID", "builtin", "Built-in flag must be a bool"))
 	if typeof(value["compatibility_tags"]) != TYPE_ARRAY:
 		issues.append(_issue("RUNE_TAGS_INVALID", "compatibility_tags", "Expected tags array"))
 	else:
@@ -64,12 +67,16 @@ func from_dict(value: Dictionary) -> Array:
 	if issues.is_empty():
 		_definition = value.duplicate(true)
 		_definition["schema_version"] = 1
+		_definition["builtin"] = bool(value.get("builtin", false))
 		for number_key in ["complexity_weight","mana_cost","cooldown_ticks"]:
 			_definition[number_key] = int(_definition[number_key])
 	return issues
 
 func snapshot() -> Dictionary:
 	return _definition.duplicate(true)
+
+func is_builtin() -> bool:
+	return bool(_definition.get("builtin", false))
 
 func id() -> String:
 	return str(_definition.get("id",""))
