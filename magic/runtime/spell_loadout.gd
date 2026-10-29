@@ -11,7 +11,7 @@ func _init(rune_registry, accessible: Array, max_complexity: int = 12) -> void:
 	registry = rune_registry
 	compiler = Compiler.new(registry,max_complexity)
 	unlocked = accessible.duplicate()
-	slots = [{"formula_id":"","formula":{},"compiled":null,"cooldown":0},{"formula_id":"","formula":{},"compiled":null,"cooldown":0}]
+	slots = [{"formula_id":"","formula":{},"compiled":null,"builtin_definition":{},"cooldown":0},{"formula_id":"","formula":{},"compiled":null,"builtin_definition":{},"cooldown":0}]
 
 func equip(index: int, formula: Variant) -> Dictionary:
 	if not allow_edit:
@@ -24,7 +24,23 @@ func equip(index: int, formula: Variant) -> Dictionary:
 	slots[index]["formula_id"] = formula["formula_id"]
 	slots[index]["formula"] = formula.duplicate(true)
 	slots[index]["compiled"] = result["compiled_spell"]
+	slots[index]["builtin_definition"] = {}
 	# Preserve existing cooldown to prevent editing to reset cast cadence.
+	return {"ok":true,"reason":"EQUIPPED","issues":[]}
+
+func equip_builtin(index: int, definition: Dictionary) -> Dictionary:
+	if not allow_edit:
+		return {"ok":false,"reason":"EDIT_CONTEXT_BLOCKED","issues":[]}
+	if index < 0 or index >= slots.size():
+		return {"ok":false,"reason":"SLOT_INVALID","issues":[]}
+	var result: Dictionary = compiler.compile_builtin(definition)
+	if not result["ok"]:
+		return {"ok":false,"reason":"FORMULA_INVALID","issues":result["issues"]}
+	var formula: Dictionary = definition["formula"]
+	slots[index]["formula_id"] = formula["formula_id"]
+	slots[index]["formula"] = formula.duplicate(true)
+	slots[index]["compiled"] = result["compiled_spell"]
+	slots[index]["builtin_definition"] = definition.duplicate(true)
 	return {"ok":true,"reason":"EQUIPPED","issues":[]}
 
 func get_plan(index: int):
@@ -37,7 +53,11 @@ func check_slot(index: int) -> String:
 		return "SLOT_INVALID"
 	if slots[index]["compiled"] == null:
 		return "SLOT_EMPTY"
-	var check: Dictionary = compiler.compile(slots[index]["formula"],unlocked)
+	var check: Dictionary
+	if not slots[index]["builtin_definition"].is_empty():
+		check = compiler.compile_builtin(slots[index]["builtin_definition"])
+	else:
+		check = compiler.compile(slots[index]["formula"],unlocked)
 	if not check["ok"]:
 		return "FORMULA_INVALID"
 	if check["compiled_spell"].snapshot()["registry_revision"] != slots[index]["compiled"].snapshot()["registry_revision"]:

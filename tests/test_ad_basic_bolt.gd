@@ -6,6 +6,8 @@ const Flow = preload("res://world/run_flow.gd")
 const RunState = preload("res://world/run_state.gd")
 const Reward = preload("res://world/reward_generator.gd")
 const Merchant = preload("res://world/merchant.gd")
+const Compiler = preload("res://magic/compile/spell_compiler.gd")
+const Runner = preload("res://magic/runtime/spell_runner.gd")
 const COLLECTIBLE := ["essence.fire","essence.lightning","essence.water","form.burst","form.orb","form.projectile","mod.homing","mod.pierce","mod.split","trigger.on_hit"]
 
 func run(t) -> void:
@@ -49,3 +51,46 @@ func run(t) -> void:
 	var result: Dictionary = validator.validate(formula,all_ids)
 	t.check(not result["ok"],"AD-011c player formula with neutral rejected")
 	t.contains_issue(result["issues"],"RUNE_BUILTIN_FORBIDDEN","AD-011c stable builtin issue code")
+
+	# (d) basic bolt compiles, is cheaper than every starter preset, casts and deals neutral damage
+	var loaded: Dictionary = Compiler.load_builtin_definition()
+	t.check(loaded["ok"],"AD-011d basic bolt definition loads")
+	var definition: Dictionary = loaded["definition"]
+	var compiler = Compiler.new(registry)
+	var built: Dictionary = compiler.compile_builtin(definition)
+	t.check(built["ok"],"AD-011d basic bolt compiles")
+	var plan: Dictionary = built["compiled_spell"].snapshot()
+	t.equal(plan["mana_cost"],3,"AD-011d basic bolt mana cost 3")
+	t.equal(plan["cooldown_ticks"],int(definition["cooldown_ticks"]),"AD-011d basic bolt cooldown from data")
+	t.equal(plan["root"]["essence"]["id"],"essence.neutral","AD-011d basic bolt root essence neutral")
+	var tuning: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))
+	var preset_ids := {}
+	for loadout in tuning["starter_loadouts"]:
+		for id in loadout:
+			preset_ids[id] = true
+	for id in flow.config["initial_formulas"]:
+		preset_ids[id] = true
+	for id in preset_ids:
+		var preset: Dictionary = compiler.compile(flow.formulas[id],registry.get_ids())
+		t.check(preset["ok"] and plan["mana_cost"] < preset["compiled_spell"].snapshot()["mana_cost"],"AD-011d cheaper mana than "+id)
+		t.check(preset["ok"] and plan["cooldown_ticks"] <= preset["compiled_spell"].snapshot()["cooldown_ticks"],"AD-011d cooldown not longer than "+id)
+	var bad: Dictionary = definition.duplicate(true)
+	bad["extra"] = 1
+	t.contains_issue(compiler.compile_builtin(bad)["issues"],"BUILTIN_DEFINITION_INVALID","AD-011d malformed definition rejected")
+	var player_def: Dictionary = definition.duplicate(true)
+	player_def["formula"] = flow.formulas[flow.config["initial_formulas"][0]].duplicate(true)
+	t.contains_issue(compiler.compile_builtin(player_def)["issues"],"BUILTIN_DEFINITION_INVALID","AD-011d player formula rejected from builtin path")
+	var runner = Runner.new(20261029)
+	var dummy = runner.add_target(Vector2(300,340))
+	t.check(runner.equip_builtin(0,definition)["ok"],"AD-011d basic bolt equips")
+	t.equal(runner.loadout.check_slot(0),"READY","AD-011d builtin slot recompiles ready")
+	var start_hp: float = dummy.health.current
+	var cast: Dictionary = runner.try_cast(0,runner.actor.position,Vector2.RIGHT)
+	t.check(cast["accepted"],"AD-011d basic bolt casts")
+	for i in 120:
+		runner.step()
+	t.check(dummy.health.current < start_hp,"AD-011d basic bolt damages target")
+	t.equal(runner.settings["channels"]["essence.neutral"]["channel"],"neutral","AD-011d neutral damage channel configured")
+	t.check(runner.recent_damage.size() > 0 and float(runner.recent_damage[0]["damage"]) > 0.0,"AD-011d neutral damage recorded")
+	t.check(runner.equip(0,flow.formulas[flow.config["initial_formulas"][0]])["ok"],"AD-011d plain equip replaces builtin")
+	t.check(runner.loadout.slots[0]["builtin_definition"].is_empty(),"AD-011d plain equip clears builtin definition")
