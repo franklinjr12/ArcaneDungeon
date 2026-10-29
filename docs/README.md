@@ -1,6 +1,6 @@
 # ArcaneDungeon — Documentation Index
 
-Godot 4.7.2 GL Compatibility M0–M3 playable prototypes are implemented for review: magic sandbox, combat arena, and linear dungeon → mini-boss → workshop → stage-two vertical slice. M4 TASK-049–053 automated validation/telemetry/onboarding is implemented; a first reference-inspired sprite, effects, environment and UI art pass is implemented; human playtesting and owner go/no-go remain absent.
+Godot 4.7.1 stable (pinned) GL Compatibility M0–M3 playable prototypes are implemented for review: magic sandbox, combat arena, and linear dungeon → mini-boss → workshop → stage-two vertical slice. M4 TASK-049–053 automated validation/telemetry/onboarding is implemented; a first reference-inspired sprite, effects, environment and UI art pass is implemented; human playtesting and owner go/no-go remain absent.
 
 | File | Purpose |
 | --- | --- |
@@ -9,11 +9,12 @@ Godot 4.7.2 GL Compatibility M0–M3 playable prototypes are implemented for rev
 | [art_direction.md](art_direction.md) | Mandatory process for reviewing the visual reference and generating future assets |
 | [assets/art_style_reference.png](assets/art_style_reference.png) | Canonical local visual reference image; do not overwrite |
 | [architecture/magic_contract_v1.md](architecture/magic_contract_v1.md) | Versioned prototype spell schema, interfaces, execution phases and owner decisions |
-| [DEV.md](DEV.md) | Godot launch, clean validation, tests, and CI commands |
+| [DEV.md](DEV.md) | Godot launch, engine pin, local validation and test commands |
 | [M1_magic_sandbox.md](M1_magic_sandbox.md) | M1 controls, magic runtime architecture, reproduction recipes, rules, acceptance testing |
 | [M2_combat.md](M2_combat.md) | M2 combat input, enemy behaviors, HUD, fixed scenarios, replay seed/metrics and open decisions |
 | [M3_vertical_slice.md](M3_vertical_slice.md) | M3 run walkthrough, seeded rewards/rooms, mini-boss, shop, spell editor, safe testing, full-route regression |
 | [M4_validation.md](M4_validation.md) | M4 code, regression/stress/telemetry commands, observability boundaries and deferred acceptance |
+| [GDD_v1_conformance.md](GDD_v1_conformance.md) | GDD v1.0 rule → status (OK/GAP) → board row tracker for Round AD-R1 |
 | [ART_IMPLEMENTATION.md](ART_IMPLEMENTATION.md) | First owner-reference-inspired pixel art pass: PNG sprites, Aseprite timelines, VFX and Godot integration. Contact sheet in art/previews/art_overview.png. |
 | [playtests/M4_playtest_protocol.md](playtests/M4_playtest_protocol.md) | Human testing checklist, anonymous observation schema and offline report generation; **not performed** |
 | [playtests/M4_decision_record.md](playtests/M4_decision_record.md) | Unresolved owner review/go-no-go and v2/POST gate; **pending** |
