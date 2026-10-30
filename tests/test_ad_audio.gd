@@ -15,7 +15,14 @@ func run(t) -> void:
 	t.equal(cues["sfx.tele.grave_hound"]["priority"], 3, "AD-020 telegraph priority")
 	t.equal(cues["sfx.player.hurt"]["priority"], 2, "AD-020 hurt priority")
 	t.check(cues["amb.ruins"].get("loop", false), "AD-020 amb loops")
-	# Missing stream: silent, never crashes, spy still fires.
+	# Generated placeholder streams exist and load.
+	for id in IDS:
+		var path: String = cues[id]["stream"]
+		t.check(path.ends_with(".wav") and ResourceLoader.exists(path), "AD-021 stream exists: " + id)
+	t.check(Director.new()._resolve_stream("amb.ruins", cues["amb.ruins"]["stream"]).loop_mode != AudioStreamWAV.LOOP_DISABLED, "AD-021 amb.ruins imports looping")
+	t.check(Director.new()._resolve_stream("sfx.dash", cues["sfx.dash"]["stream"]).loop_mode == AudioStreamWAV.LOOP_DISABLED, "AD-021 sfx do not loop")
+	# Missing stream: silent (point one cue at a bogus path)
+	d.table["cues"]["sfx.dash"]["stream"] = "res://assets/audio/sfx/missing.wav"
 	var spy := []
 	d.cue_played.connect(func(c, p, ok): spy.append([c, ok]))
 	t.check(not d.play("sfx.dash"), "AD-020 missing stream returns false")
