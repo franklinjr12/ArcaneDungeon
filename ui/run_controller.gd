@@ -37,10 +37,15 @@ var display_frame_samples: Array = []
 var low_fps := 0.0
 var _stats_recorded := false
 var _settings
+var _director
 
 func _ready() -> void:
 	VisualTheme.apply(self)
 	flow = Flow.new()
+	_director = get_node_or_null("/root/AudioDirector")
+	if _director != null:
+		flow.audio_sink = _director.play
+		_director.play("amb.workshop" if flow.mode == "workshop" else "amb.ruins")
 	var save = get_node_or_null("/root/SaveService")
 	if save != null:
 		_settings = save.settings
@@ -67,7 +72,7 @@ func _build() -> void:
 	sidebar.custom_minimum_size = Vector2(288,0)
 	sidebar.add_theme_constant_override("separation",8)
 	scroll.add_child(sidebar)
-	_button(sidebar,"Back to Menu",func(): get_tree().change_scene_to_file("res://scenes/main.tscn"))
+	_button(sidebar,"Back to Menu",func(): get_tree().change_scene_to_file("res://scenes/main.tscn"),"ui.cancel")
 	_heading(sidebar,"ARCANE DUNGEON / M4",21)
 	portrait_hud = PortraitHUD.new()
 	portrait_hud.flow = flow
@@ -154,8 +159,10 @@ func _heading(parent: Node, title: String, fontsize: int = 15) -> void:
 		label.add_theme_color_override("font_color",Color("#efbc65"))
 	parent.add_child(label)
 
-func _button(parent: Node, label: String, action: Callable) -> Button:
+func _button(parent: Node, label: String, action: Callable, press_cue: String = "ui.confirm") -> Button:
 	var b := Button.new()
+	if _director != null:
+		_director.bind_button(b,press_cue)
 	b.text = label
 	b.custom_minimum_size.y = 31
 	b.pressed.connect(action)
@@ -396,7 +403,7 @@ func _build_summary_panel() -> void:
 		context.add_child(label)
 	summary_retry_button = _button(context,"Retry same seed",func(): _retry_same_seed())
 	summary_new_seed_button = _button(context,"New seed",func(): _new_seed())
-	summary_title_button = _button(context,"Title",func(): _to_title())
+	summary_title_button = _button(context,"Title",func(): _to_title(),"ui.cancel")
 
 func _retry_same_seed() -> void:
 	_close_visual_editor()
@@ -502,7 +509,7 @@ func _editor_rebuild() -> void:
 			editor_preview.text += str(issue["code"])+": "+str(issue["message"])+"\n"
 	_button(editor_controls,"Undo",func(): e.undo(); _editor_rebuild())
 	_button(editor_controls,"Reset draft",func(): e.reset_draft();_editor_rebuild())
-	_button(editor_controls,"Cancel (restore original)",func(): _close_editor(false))
+	_button(editor_controls,"Cancel (restore original)",func(): _close_editor(false),"ui.cancel")
 	var apply := _button(editor_controls,"Apply valid formula",func(): _close_editor(true))
 	apply.disabled = not verdict["ok"]
 
