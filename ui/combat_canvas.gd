@@ -57,7 +57,7 @@ func _draw() -> void:
 	var actor_casting: bool = session.sim.active.size()>0 and tick%14<5
 	var player_velocity: Vector2 = mage.position-last_player_at
 	last_player_at = mage.position
-	Art.entity(self,"mage",at,tick,session.player.dodge_heading*16.0 if session.player.dodge_left>0 else player_velocity,
+	Art.entity(self,"mage",at,tick,session.player.dash_heading*16.0 if session.player.dash_left>0 else player_velocity,
 		actor_casting,session.player.hit_flash>0 and not session.reduce_flashes,not mage.alive())
 	if session.player.invulnerable():
 		Art.effect(self,"dodge",at,tick,Vector2(65,65),0.85)

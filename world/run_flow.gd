@@ -139,10 +139,10 @@ func _finish_combat() -> void:
 	session.state = "cleared"
 	session.enemy_shots.clear()
 	# Exiting combat cancels dash locks so cleared-room walking obeys input.
-	session.player.dodge_left = 0
+	session.player.dash_left = 0
 	session.player.recovery_left = 0
 	session.player.invulnerable_left = 0
-	session.player.dodge_cooldown = 0
+	session.player.dash_cooldown = 0
 	# Old projectiles remain only in this room and are discarded on transition.
 	state = "cleared"
 	run.hp = session.sim.actor.health.current
@@ -182,7 +182,7 @@ func move_after_clear(command: Dictionary) -> Dictionary:
 	if state not in ["cleared","workshop"] or session.player.modal:
 		return {"accepted":false,"reason":"NO_MOVEMENT"}
 	# Only movement and aim are allowed between encounters.
-	var safe: Dictionary = {"move":command.get("move",Vector2.ZERO),"aim":command.get("aim",Vector2.RIGHT),"cast":-1,"dodge":false}
+	var safe: Dictionary = {"move":command.get("move",Vector2.ZERO),"aim":command.get("aim",Vector2.RIGHT),"cast":-1,"dash":false}
 	return session.player.process_command(safe)
 
 func try_exit(position: Vector2) -> Dictionary:

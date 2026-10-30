@@ -44,7 +44,7 @@ func _build() -> void:
 	header.add_theme_font_size_override("font_size",18)
 	column.add_child(header)
 	tips = Label.new()
-	tips.text = "WASD Move   Mouse Aim\nLMB / RMB: Cast 1 / Cast 2\nSPACE Dodge   F3: Debug\nR: Retry  P: Pause\n1 / 2 / 3: Arena scenario\nTAB: Starter loadout\nF4: Reduce hit flashes"
+	tips.text = "WASD Move   Mouse Aim\nLMB / RMB: Cast 1 / Cast 2\nSPACE Dash   F3: Debug\nR: Retry  P: Pause\n1 / 2 / 3: Arena scenario\nTAB: Starter loadout\nF4: Reduce hit flashes"
 	tips.add_theme_font_size_override("font_size",12)
 	column.add_child(tips)
 	var scenarios := GridContainer.new()
@@ -137,7 +137,7 @@ func _physics_process(_dt: float) -> void:
 	if aiming.is_zero_approx():
 		aiming = session.player.facing
 	var command := {"move":direction,"aim":aiming,"cast":pending_cast,
-		"cursor":target_point,"dodge":Input.is_action_just_pressed("dodge")}
+		"cursor":target_point,"dash":Input.is_action_just_pressed("dash")}
 	pending_cast = -1
 	if session.state == "playing" and not session.sim.clock.paused:
 		session.issue(command)
@@ -157,13 +157,13 @@ func _refresh() -> void:
 	var a: Dictionary = session.sim.loadout.preview(0)
 	var b: Dictionary = session.sim.loadout.preview(1)
 	var cds: Array = session.sim.loadout.slots
-	hud.text = "HP %d / %d\nMANA %d / %d\n\nSLOT 1: %s\nMana %d | CD %d | Complexity %d\n\nSLOT 2: %s\nMana %d | CD %d | Complexity %d\n\nDodge %s / %d ticks\nI-FRAMES %d / RECOVER %d\n\nEnemies: %d  Effects: %d" % [
+	hud.text = "HP %d / %d\nMANA %d / %d\n\nSLOT 1: %s\nMana %d | CD %d | Complexity %d\n\nSLOT 2: %s\nMana %d | CD %d | Complexity %d\n\nDash %s / %d ticks\nI-FRAMES %d / RECOVER %d\n\nEnemies: %d  Effects: %d" % [
 		roundi(snap["player_hp"]),roundi(session.sim.actor.health.maximum),roundi(snap["player_mana"]),
 		roundi(float(session.sim.settings["combat"]["player_max_mana"])),
 		a.get("formula_id",""),a.get("mana",0),cds[0]["cooldown"],a.get("complexity",0),
 		b.get("formula_id",""),b.get("mana",0),cds[1]["cooldown"],b.get("complexity",0),
-		"READY" if session.player.dodge_cooldown == 0 else "COOLDOWN",
-		session.player.dodge_cooldown,session.player.invulnerable_left,session.player.recovery_left,
+		"READY" if session.player.dash_cooldown == 0 else "COOLDOWN",
+		session.player.dash_cooldown,session.player.invulnerable_left,session.player.recovery_left,
 		snap["enemy_count"],snap["effects"]]
 	var last_cast: String = str(session.player.last_message)
 	var recent: Array = session.sim.trace.snapshot()
@@ -173,6 +173,6 @@ func _refresh() -> void:
 			latest = "ARC! Wet + Lightning"
 		elif entry["type"] == "status":
 			latest = str(entry.get("reason",""))
-	status_line.text = "State: %s\nCast: %s\nElement: %s\nDamage taken: %.1f\nDodges %d | Casts %d\nFPS %d | Logic %.2fms\n%s" % [
-		session.state.to_upper(),last_cast,latest,snap["damage_taken"],snap["dodges"],snap["casts"],
+	status_line.text = "State: %s\nCast: %s\nElement: %s\nDamage taken: %.1f\nDashes %d | Casts %d\nFPS %d | Logic %.2fms\n%s" % [
+		session.state.to_upper(),last_cast,latest,snap["damage_taken"],snap["dashes"],snap["casts"],
 		Engine.get_frames_per_second(),snap["frame_ms"],"FLASHES REDUCED" if session.reduce_flashes else ""]
