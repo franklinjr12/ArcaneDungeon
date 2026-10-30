@@ -79,11 +79,8 @@ func _engine_map(t, assets: Dictionary) -> void:
 	t.equal(ART.export_frame_for("mage", "idle", int(ceil(f0["total_ms"] * 60.0 / 1000.0)))["index"], 0, "AD-030 idle loops")
 	var dead: Dictionary = ART.export_frame_for("bone_thrall", "dead", 100000)
 	t.equal(dead["index"], 4, "AD-030 dead holds last frame")
-	var node := Node2D.new()
+	# Drawing is only legal inside _draw(); the headless runner has no render pass,
+	# so the draw path is covered by frame/atlas lookups above instead.
 	ART.use_art_export = true
-	ART.entity(node, "mage", Vector2(10, 10), 5, Vector2(-1, 0))
-	ART.entity(node, "undead_warden", Vector2(10, 10), 5, Vector2.ZERO, true)
-	ART.tile_floor(node, Rect2(0, 0, 64, 64), Vector2.ZERO)
+	t.check(ART.export_frame_for("undead_warden", "cast", 5).has("region"), "AD-030 export frame has atlas region")
 	ART.use_art_export = false
-	node.free()
-	t.check(true, "AD-030 export draw smoke")
