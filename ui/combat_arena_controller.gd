@@ -3,6 +3,7 @@ const VisualTheme = preload("res://ui/pixel_theme.gd")
 ## Combat arena scene: input adapter and readable debug/HUD, gameplay lives in CombatSession.
 const Session = preload("res://combat/combat_session.gd")
 const Canvas = preload("res://ui/combat_canvas.gd")
+const Art = preload("res://ui/pixel_art_renderer.gd")
 const InputActions = preload("res://ui/input_actions.gd")
 var session
 var canvas
@@ -115,6 +116,9 @@ func _input(event: InputEvent) -> void:
 				KEY_3: _choose_scenario("cluster")
 				KEY_F3: _command("debug")
 				KEY_F4: _command("flash")
+				KEY_F6:
+					Art.toggle_art_export()
+					canvas.queue_redraw()
 
 func _choose_scenario(key: String) -> void:
 	scenario = key

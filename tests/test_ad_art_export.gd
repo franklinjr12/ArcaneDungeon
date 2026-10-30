@@ -1,4 +1,5 @@
 extends RefCounted
+const ART = preload("res://ui/pixel_art_renderer.gd")
 ## AD-030: every art/export manifest entry loads as SpriteFrames and matches its Aseprite json.
 const MANIFEST := "res://art/export/manifest.json"
 
@@ -25,7 +26,7 @@ func run(t) -> void:
 		var tsize: Vector2i = Vector2i(tex.get_size())
 		var frames: Array = j["frames"]
 		var tags: Array = j["meta"]["frameTags"]
-		var sf := _build(tex, frames, tags)
+		var sf: SpriteFrames = ART.build_sprite_frames(stem)
 		var names := []
 		for tg in tags:
 			names.append(str(tg["name"]))
@@ -59,23 +60,30 @@ func run(t) -> void:
 		if pivot != null:
 			t.equal(e["pivot"], pivot, "AD-030 manifest pivot: " + stem)
 	t.check(sprites >= 30, "AD-030 sprite entries >= 30")
+	_engine_map(t, assets)
 
-## One animation per frameTag; frame duration is relative to a 1000/ms-based speed.
-static func _build(tex: Texture2D, frames: Array, tags: Array) -> SpriteFrames:
-	var sf := SpriteFrames.new()
-	sf.remove_animation("default")
-	for tg in tags:
-		var n := str(tg["name"])
-		var from: int = int(tg["from"])
-		var to: int = int(tg["to"])
-		# base = 100 ms per 1.0 duration unit at speed 10 fps
-		sf.add_animation(n)
-		sf.set_animation_speed(n, 10.0)
-		sf.set_animation_loop(n, true)
-		for i in range(from, to + 1):
-			var r: Dictionary = frames[i]["frame"]
-			var at := AtlasTexture.new()
-			at.atlas = tex
-			at.region = Rect2(r["x"], r["y"], r["w"], r["h"])
-			sf.add_frame(n, at, float(frames[i]["duration"]) / 100.0)
-	return sf
+func _engine_map(t, assets: Dictionary) -> void:
+	t.check(not ART.use_art_export, "AD-030 art export off by default")
+	t.check(ART.toggle_art_export(), "AD-030 toggle on")
+	t.check(not ART.toggle_art_export(), "AD-030 toggle off")
+	var map: Dictionary = ART.export_map()
+	for kind in map["entities"]:
+		var stem: String = map["entities"][kind]
+		t.check(assets.has(stem), "AD-030 map entity in manifest: " + kind)
+		for st in ["idle", "move", "cast", "hit", "dead"]:
+			t.check(assets[stem]["tags"].has(map["states"][stem][st]), "AD-030 map tag %s/%s" % [stem, st])
+	t.check(assets[map["floor"]["asset"]]["tags"].has(map["floor"]["tag"]), "AD-030 floor tag exists")
+	t.equal(ART.build_sprite_frames("ad_chr_mage").get_animation_names().size(), 18, "AD-030 mage has 18 animations")
+	var f0: Dictionary = ART.export_frame_for("mage", "idle", 0)
+	t.equal(f0["index"], 0, "AD-030 tick 0 -> frame 0")
+	t.equal(ART.export_frame_for("mage", "idle", int(ceil(f0["total_ms"] * 60.0 / 1000.0)))["index"], 0, "AD-030 idle loops")
+	var dead: Dictionary = ART.export_frame_for("bone_thrall", "dead", 100000)
+	t.equal(dead["index"], 4, "AD-030 dead holds last frame")
+	var node := Node2D.new()
+	ART.use_art_export = true
+	ART.entity(node, "mage", Vector2(10, 10), 5, Vector2(-1, 0))
+	ART.entity(node, "undead_warden", Vector2(10, 10), 5, Vector2.ZERO, true)
+	ART.tile_floor(node, Rect2(0, 0, 64, 64), Vector2.ZERO)
+	ART.use_art_export = false
+	node.free()
+	t.check(true, "AD-030 export draw smoke")
