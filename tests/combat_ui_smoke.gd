@@ -45,7 +45,7 @@ func _run() -> void:
 	verify(arena.session.player.casts == 0,"scenario reset clears prior casts")
 	arena._command("loadout")
 	verify(arena.starter == 1,"loadout button switches two starter formulas")
-	verify(arena.session.sim.loadout.preview(0)["formula_id"] != "sample.fire_shot","loadout switch updates equipped slot")
+	verify(arena.session.sim.loadout.preview(1)["formula_id"] != "sample.fire_shot","loadout switch updates equipped slot")
 	var caster = arena.session.sim.actor
 	var source = arena.session.enemies[0].target
 	arena.session.damage_player(source.id,999,"physical")

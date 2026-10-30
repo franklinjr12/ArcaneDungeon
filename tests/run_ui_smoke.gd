@@ -98,7 +98,7 @@ func _run() -> void:
 	control._editor_rebuild()
 	control._close_editor(true)
 	expect(run.run.formulas[0]["formula_id"]=="custom.slot_1","editor apply persists formula")
-	expect(run.range_sim.loadout.preview(0)["formula_id"]=="custom.slot_1",
+	expect(run.range_sim.loadout.preview(1)["formula_id"]=="custom.slot_1",
 		"test range refreshes after apply")
 	control._test_click(run.range_sim.actor.position+Vector2(200,0),MOUSE_BUTTON_LEFT)
 	expect(run.range_sim.active.size()>0,"workshop test click spawns compiled spell")

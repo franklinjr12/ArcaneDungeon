@@ -121,7 +121,7 @@ func run(t) -> void:
 	t.check(applied["ok"],"TASK-044 apply compiled valid draft")
 	t.equal(f.run.formulas[0]["root"]["essence_id"],"essence.water","TASK-044 edited spell persists in run")
 	t.equal(f.run.formulas[0]["display_name"],"Custom Spell 1","TASK-044 edited spell gets truthful display name")
-	t.equal(f.session.sim.loadout.preview(0)["formula_id"],"custom.slot_1","TASK-044 live loadout recompiles")
+	t.equal(f.session.sim.loadout.preview(1)["formula_id"],"custom.slot_1","TASK-044 live loadout recompiles")
 	var previous: Dictionary = f.run.formulas[0].duplicate(true)
 	t.check(f.open_editor(0)["ok"],"TASK-044 another edit opens")
 	f.editor.set_root("essence.fire","form.orb")

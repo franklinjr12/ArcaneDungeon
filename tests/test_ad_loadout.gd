@@ -2,6 +2,8 @@ extends RefCounted
 ## AD-012: 4-slot loadout, locked basic bolt in slot 1, starter presets, cast_rejected trace.
 const Compiler = preload("res://magic/compile/spell_compiler.gd")
 const Runner = preload("res://magic/runtime/spell_runner.gd")
+const Flow = preload("res://world/run_flow.gd")
+const Session = preload("res://combat/combat_session.gd")
 
 func _formula(id: String) -> Dictionary:
 	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://magic/data/sandbox_samples_v1.json"))
@@ -67,3 +69,19 @@ func run(t) -> void:
 	var dry: Dictionary = runner.try_cast(1,runner.actor.position,Vector2.RIGHT)
 	t.equal(dry["reason"],"INSUFFICIENT_MANA","AD-012 no mana rejects")
 	t.equal(_rejections(runner,"no_mana"),1,"AD-012 no_mana cast_rejected traced")
+	# (g) M3 run + M2 arena wiring
+	var flow = Flow.new(20261029)
+	var run_slots: Array = flow.session.sim.loadout.slots
+	t.equal(run_slots.size(),4,"AD-012 M3 run has 4 slots")
+	t.equal(run_slots[0]["formula_id"],"builtin.basic_bolt","AD-012 M3 slot 1 basic bolt")
+	t.check(flow.session.sim.loadout.is_locked(0),"AD-012 M3 slot 1 locked")
+	t.equal(run_slots[1]["formula_id"],"sample.fire_shot","AD-012 M3 slot 2 fire shot")
+	t.equal(run_slots[2]["formula_id"],"sample.split_water","AD-012 M3 slot 3 split water")
+	t.equal(flow.session.sim.loadout.check_slot(3),"SLOT_EMPTY","AD-012 M3 slot 4 empty")
+	t.check("mod.split" in flow.run.unlocked,"AD-012 mod.split unlocked at run start")
+	var arena = Session.new(701,"single",0)
+	var arena_slots: Array = arena.sim.loadout.slots
+	t.check(arena.sim.loadout.is_locked(0) and arena_slots[0]["formula_id"] == "builtin.basic_bolt","AD-012 M2 slot 1 locked bolt")
+	t.equal(arena_slots[1]["formula_id"],arena.data["starter_loadouts"][0][0],"AD-012 M2 slot 2 first starter preset")
+	t.equal(arena_slots[2]["formula_id"],arena.data["starter_loadouts"][0][1],"AD-012 M2 slot 3 second starter preset")
+	t.equal(arena.sim.loadout.check_slot(3),"SLOT_EMPTY","AD-012 M2 slot 4 empty")

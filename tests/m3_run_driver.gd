@@ -48,7 +48,7 @@ static func fight(flow, maximum_ticks: int = 4000) -> Dictionary:
 					break
 		var slot := -1
 		if foe != null and session.player.dodge_left == 0 and session.player.recovery_left == 0:
-			for idx in [iteration%2,1-iteration%2]:
+			for idx in [1+iteration%2,2-iteration%2]:
 				if session.sim.loadout.slots[idx]["cooldown"] > 0:
 					continue
 				var spell = session.sim.loadout.get_plan(idx)
@@ -64,6 +64,10 @@ static func fight(flow, maximum_ticks: int = 4000) -> Dictionary:
 				if form == "form.orb" and distance < 160:
 					slot = idx
 					break
+			if slot == -1 and sight:
+				var bolt = session.sim.loadout.get_plan(0)
+				if bolt != null and session.sim.loadout.slots[0]["cooldown"] == 0 and session.sim.mana >= float(bolt.snapshot()["mana_cost"]):
+					slot = 0
 		flow.step({"move":movement,"aim":direction,"cursor":cursor,"cast":slot,"dodge":dodge})
 	return {"state":flow.state,"tick":flow.session.sim.clock.tick,
 		"hp":flow.session.sim.actor.health.current,"casts":flow.session.player.casts,
