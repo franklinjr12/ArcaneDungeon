@@ -2,6 +2,10 @@ extends Control
 const VisualTheme = preload("res://ui/pixel_theme.gd")
 const MenuImage = preload("res://assets/pixel/menu_background.png")
 ## TASK-001: launcher only; actual gameplay belongs to M1/M2.
+var volume_slider: HSlider
+var flash_toggle: CheckBox
+var shake_toggle: CheckBox
+var telemetry_toggle: CheckBox
 
 func _ready() -> void:
 	VisualTheme.apply(self)
@@ -35,8 +39,61 @@ func _ready() -> void:
 		button.custom_minimum_size.y = 48
 		panel.add_child(button)
 		button.pressed.connect(_switch_scene.bind(pair[1]))
+		var director = get_node_or_null("/root/AudioDirector")
+		if director != null:
+			director.bind_button(button)
+	_build_settings_row.call_deferred()
 
 func _switch_scene(path: String) -> void:
 	var error := get_tree().change_scene_to_file(path)
 	if error != OK:
 		preload("res://game/core/error_log.gd").record("MAIN_SCENE_CHANGE_FAILED", "%s (%s)" % [path, error])
+
+
+## Settings live in a sibling control under the viewport root (not a menu descendant), so the
+## launcher keeps exactly its three navigation buttons; freed together with the menu.
+func _build_settings_row() -> void:
+	var save = get_node_or_null("/root/SaveService")
+	if save == null:
+		return
+	var settings = save.settings
+	var row := VBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	row.custom_minimum_size = Vector2(370, 0)
+	row.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM, Control.PRESET_MODE_MINSIZE, 24)
+	VisualTheme.apply(row)
+	get_tree().root.add_child(row)
+	tree_exiting.connect(row.queue_free)
+	var volume_row := HBoxContainer.new()
+	row.add_child(volume_row)
+	var volume_label := Label.new()
+	volume_label.text = "Master volume"
+	volume_row.add_child(volume_label)
+	volume_slider = HSlider.new()
+	volume_slider.min_value = 0.0
+	volume_slider.max_value = 1.0
+	volume_slider.step = 0.05
+	volume_slider.value = float(settings.volumes.get("Master", 1.0))
+	volume_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	volume_row.add_child(volume_slider)
+	volume_slider.value_changed.connect(func(v: float):
+		settings.volumes["Master"] = v
+		settings.apply_audio()
+		save.save_settings())
+	flash_toggle = _toggle(row, "Reduce flashes", settings.reduce_flashes, func(on: bool):
+		settings.reduce_flashes = on
+		save.save_settings())
+	shake_toggle = _toggle(row, "Screen shake", settings.screen_shake, func(on: bool):
+		settings.screen_shake = on
+		save.save_settings())
+	telemetry_toggle = _toggle(row, "Local telemetry (opt-in)", settings.telemetry_opt_in, func(on: bool):
+		settings.telemetry_opt_in = on
+		save.save_settings())
+
+func _toggle(parent: Control, text: String, value: bool, on_change: Callable) -> CheckBox:
+	var box := CheckBox.new()
+	box.text = text
+	box.button_pressed = value
+	parent.add_child(box)
+	box.toggled.connect(on_change)
+	return box

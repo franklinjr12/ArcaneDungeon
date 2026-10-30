@@ -28,22 +28,22 @@ static func simulate(scenario: String, loadout: int, max_ticks: int = 2400) -> D
 			move = -aim
 		elif dist < 255.0:
 			move = aim.rotated(PI/2.0)*0.3
-		var dodge := false
+		var dash := false
 		for enemy in game.enemies:
-			if enemy.state == "windup" and enemy.target.alive() and game.player.dodge_cooldown == 0:
+			if enemy.state == "windup" and enemy.target.alive() and game.player.dash_cooldown == 0:
 				var eta: int = int(enemy.tuning["telegraph_ticks"])-enemy.state_tick
 				if eta <= 7 and actor_pos.distance_to(enemy.target.position)<float(enemy.tuning["attack_range"])+60:
-					dodge = true
+					dash = true
 					move = aim.rotated(PI/2.0)
 					break
 		for shot in game.enemy_shots:
-			if game.player.dodge_cooldown == 0 and actor_pos.distance_to(shot["position"]) < 85:
-				dodge = true
+			if game.player.dash_cooldown == 0 and actor_pos.distance_to(shot["position"]) < 85:
+				dash = true
 				move = shot["direction"].rotated(PI/2.0)
 				break
 		var slot := -1
 		var cursor: Vector2 = foe.target.position
-		for index in [tick%2,1-(tick%2)]:
+		for index in [1+(tick%2),2-(tick%2)]:
 			if game.sim.loadout.slots[index]["cooldown"]>0:
 				continue
 			var plan = game.sim.loadout.get_plan(index)
@@ -59,7 +59,7 @@ static func simulate(scenario: String, loadout: int, max_ticks: int = 2400) -> D
 			elif form == "form.orb" and dist < 260:
 				slot = index
 				break
-		var response = game.issue({"move":move,"aim":aim,"cursor":cursor,"cast":slot,"dodge":dodge})
+		var response = game.issue({"move":move,"aim":aim,"cursor":cursor,"cast":slot,"dash":dash})
 		game.step()
 		total_ms += game.elapsed_frame_ms
 	var summary: Dictionary = game.snapshot()
@@ -67,7 +67,7 @@ static func simulate(scenario: String, loadout: int, max_ticks: int = 2400) -> D
 		"scenario":scenario,"loadout":loadout,"seed":FIXED_SEED,
 		"completed":game.state=="cleared","result":game.state,
 		"ticks":game.sim.clock.tick,"damage_received":snappedf(game.damage_received,0.01),
-		"casts":game.player.casts,"dodges":game.player.dodges,"reactions":game.reactions,
+		"casts":game.player.casts,"dashes":game.player.dashes,"reactions":game.reactions,
 		"enemies_remaining":game.alive_enemies(),
 		"hp_remaining":snappedf(game.sim.actor.health.current,0.01),
 		"max_frame_ms":snappedf(game.elapsed_frame_ms,0.01),

@@ -72,16 +72,16 @@ func advance(session) -> void:
 		"chase":
 			var preferred: float = float(tuning["preferred_range"])
 			var movement := Vector2.ZERO
-			if kind == "pursuer":
+			if kind == "bone_thrall":
 				if distance > preferred:
 					movement = session.world.navigate_direction(target.position,player.position,target.radius)
-			elif kind == "ranged":
+			elif kind == "fallen_adept":
 				if distance > preferred+45.0 or not sight:
 					movement = session.world.navigate_direction(target.position,player.position,target.radius)
 				elif distance < preferred-60.0:
 					movement = -toward.normalized()
 			else:
-				# Flanker orbits with bounded lateral steering and no teleporting.
+				# Grave hound orbits with bounded lateral steering and no teleporting.
 				var sign_side := 1.0 if target.id % 2 == 0 else -1.0
 				movement = toward.normalized().rotated(sign_side*PI/2.0)*float(tuning["strafe_factor"])
 				if distance > preferred+35.0:
@@ -112,7 +112,7 @@ func _execute_attack(session) -> void:
 	if not session.world.clear_sight(target.position,player.position,8):
 		return
 	var direction: Vector2 = (player.position-target.position).normalized()
-	if kind == "pursuer":
+	if kind == "bone_thrall":
 		if target.position.distance_to(player.position) <= float(tuning["attack_range"])+player.radius:
 			session.damage_player(target.id,float(tuning["damage"]),"physical")
 	else:

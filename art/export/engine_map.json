@@ -1,0 +1,22 @@
+{
+ "version": 1,
+ "note": "PROPOSED values (AD-030): scale and state->tag mapping are hand-authored, not approved art direction. Not written by import_art_exports.py.",
+ "scale": 1.5,
+ "entities": {
+  "mage": "ad_chr_mage",
+  "bone_thrall": "ad_enm_bone_thrall",
+  "fallen_adept": "ad_enm_fallen_adept",
+  "grave_hound": "ad_enm_grave_hound",
+  "undead_warden": "ad_bos_ossuary_warden",
+  "dummy": "ad_npc_training_dummy"
+ },
+ "states": {
+  "ad_chr_mage": {"idle": "idle_down", "move": "walk_down", "cast": "cast_down", "hit": "hit_down", "dead": "death_down"},
+  "ad_enm_bone_thrall": {"idle": "idle", "move": "move", "cast": "attack", "hit": "hit", "dead": "death"},
+  "ad_enm_fallen_adept": {"idle": "idle", "move": "move", "cast": "attack", "hit": "hit", "dead": "death"},
+  "ad_enm_grave_hound": {"idle": "idle", "move": "move", "cast": "attack", "hit": "hit", "dead": "death"},
+  "ad_bos_ossuary_warden": {"idle": "idle", "move": "move", "cast": "burst", "hit": "hit", "dead": "death"},
+  "ad_npc_training_dummy": {"idle": "idle", "move": "idle", "cast": "idle", "hit": "hit", "dead": "idle"}
+ },
+ "floor": {"asset": "ad_til_ruins_floor", "tag": "accent"}
+}

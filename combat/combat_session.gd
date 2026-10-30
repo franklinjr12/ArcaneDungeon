@@ -34,6 +34,14 @@ var elapsed_frame_ms := 0.0
 var initialized := false
 var debug_overlay := false
 var reduce_flashes := false
+## AD-020: output-only audio sink (Callable(cue_id, position)); never read back by the simulation.
+var audio_sink: Callable
+var _audio_hits := 0
+var _audio_reactions := 0
+var _audio_extinguish := 0
+var _audio_dashes := 0
+var _audio_dead := false
+const NON_CAST_REJECTIONS := ["DASH_LOCKOUT","CASTER_DEAD","PAUSED","MODAL_OPEN"]
 
 func _init(run_seed: int = 5160, scenario_id: String = "single", starter_index: int = 0) -> void:
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(TUNING_FILE))
@@ -74,6 +82,11 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	ai_transitions.clear()
 	_attack_ids.clear()
 	_death_ids.clear()
+	_audio_hits = 0
+	_audio_reactions = 0
+	_audio_extinguish = 0
+	_audio_dashes = 0
+	_audio_dead = false
 	state = "playing"
 	defer_clear = false
 	clear_tick = -1
@@ -81,9 +94,8 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	damage_received = 0.0
 	reactions = 0
 	elapsed_frame_ms = 0.0
-	for n in 2:
-		var spell: String = str(data["starter_loadouts"][loadout_index][n])
-		sim.equip(n,samples[spell])
+	var starter: Array = data["starter_loadouts"][loadout_index]
+	sim.equip_starter_loadout([samples[str(starter[0])],samples[str(starter[1])]])
 	sim.loadout.allow_edit = false
 	for spec in data["scenarios"][scenario]["enemies"]:
 		spawn_enemy(str(spec[0]),Vector2(float(spec[1]),float(spec[2])))
@@ -104,7 +116,7 @@ func spawn_boss(settings: Dictionary, at: Vector2):
 		return null
 	var target = sim.add_target(at,Vector2.ZERO,float(settings["hp"]))
 	target.radius = float(settings["radius"])
-	target.tags = ["enemy","boss"]
+	target.tags = ["enemy","boss","undead_warden"]
 	var boss = Boss.new(target,settings)
 	enemies.append(boss)
 	return boss
@@ -112,7 +124,28 @@ func spawn_boss(settings: Dictionary, at: Vector2):
 func issue(command: Dictionary) -> Dictionary:
 	if state != "playing":
 		return {"accepted":false,"reason":"COMBAT_ENDED"}
-	return player.process_command(command)
+	var slot: int = int(command.get("cast",-1))
+	var essence := "neutral"
+	if slot >= 0:
+		var plan = sim.loadout.get_plan(slot)
+		if plan != null:
+			essence = str(plan.snapshot()["root"]["essence"]["id"]).trim_prefix("essence.")
+	var result: Dictionary = player.process_command(command)
+	if audio_sink.is_valid():
+		if player.dashes > _audio_dashes:
+			_cue("sfx.dash",sim.actor.position)
+		if slot >= 0:
+			if bool(result.get("accepted",false)):
+				_cue("sfx.cast." + (essence if essence in ["fire","water","lightning"] else "neutral"),sim.actor.position)
+			elif str(result.get("reason","")) not in NON_CAST_REJECTIONS:
+				_cue("sfx.cast.rejected",sim.actor.position)
+	_audio_dashes = player.dashes
+	return result
+
+## AD-020: read-only audio sink call; silent when no sink is attached.
+func _cue(id: String, at = null) -> void:
+	if audio_sink.is_valid():
+		audio_sink.call(id,at)
 
 func step() -> void:
 	if state != "playing" or sim.clock.paused:
@@ -121,11 +154,20 @@ func step() -> void:
 	player.step_timers()
 	sim.step()
 	# AI progresses once after all player spells for the tick.
+	var audio_before: Array = []
+	if audio_sink.is_valid():
+		for enemy in enemies:
+			audio_before.append([enemy.state,int(enemy.get("phase")) if enemy.get("phase") != null else 1])
 	for enemy in enemies:
 		enemy.advance(self)
+	if audio_sink.is_valid():
+		_audio_step(audio_before)
 	advance_enemy_projectiles()
 	if not sim.actor.alive() and state == "playing":
 		state = "dead"
+		if not _audio_dead:
+			_audio_dead = true
+			_cue("sfx.player.death",sim.actor.position)
 		_notify("DEFEAT - R to retry",sim.actor.position)
 		# Input commands are rejected once state becomes dead.
 		# Active effects are cleared on explicit retry, never survive restart.
@@ -140,6 +182,34 @@ func step() -> void:
 	var age: int = sim.clock.tick-68
 	feedback = feedback.filter(func(v): return int(v["tick"]) >= age)
 	elapsed_frame_ms = float(Time.get_ticks_usec()-start_usec)/1000.0
+
+## AD-020: derive audio cues from this tick's trace/AI changes. Reads only; mutates audio cursors.
+func _audio_step(before: Array) -> void:
+	var hits: int = sim.trace.filter_records(-1,"","hit").size()
+	if hits > _audio_hits:
+		_cue("sfx.hit.generic",sim.actor.position)
+	_audio_hits = hits
+	var arcs: int = sim.trace.filter_records(-1,"","reaction").size()
+	if arcs > _audio_reactions:
+		_cue("sfx.react.arc",sim.actor.position)
+	_audio_reactions = arcs
+	var removed := 0
+	for entry in sim.trace.filter_records(-1,"","status"):
+		if str(entry.get("reason","")) == "burning:removed":
+			removed += 1
+	if removed > _audio_extinguish:
+		_cue("sfx.react.extinguish",sim.actor.position)
+	_audio_extinguish = removed
+	for index in enemies.size():
+		var enemy = enemies[index]
+		var at: Vector2 = enemy.target.position
+		if enemy.state == "windup" and before[index][0] != "windup":
+			if "boss" in enemy.target.tags:
+				_cue("sfx.boss.tele_a" if int(enemy.cycle)%2 == 0 else "sfx.boss.tele_b",at)
+			else:
+				_cue("sfx.tele." + enemy.kind,at)
+		if enemy.get("phase") != null and int(enemy.get("phase")) == 2 and int(before[index][1]) == 1:
+			_cue("sfx.boss.phase",at)
 
 func alive_enemies() -> int:
 	var count := 0
@@ -160,7 +230,8 @@ func damage_player(source_id: int, amount: float, channel: String, attack_id: in
 		return {"accepted":false,"reason":"ALREADY_APPLIED"}
 	_attack_ids[attack_id] = true
 	if player.invulnerable():
-		_notify("DODGED",sim.actor.position)
+		_cue("sfx.dash.iframe",sim.actor.position)
+		_notify("DASH_EVADE",sim.actor.position)
 		return {"accepted":false,"reason":"INVULNERABLE"}
 	var event = DamageEvent.new(source_id,source.team,sim.actor.id,amount,channel,attack_id,sim.clock.tick)
 	var dealt: float = sim.actor.receive_damage(amount,channel,source.team,float(sim.settings["combat"]["armor_scale"]))
@@ -168,6 +239,7 @@ func damage_player(source_id: int, amount: float, channel: String, attack_id: in
 		damage_received += dealt
 		attacks_received += 1
 		player.hit_flash = int(data["player"]["hit_flash_ticks"])
+		_cue("sfx.player.hurt",sim.actor.position)
 		damage_events.append(event.snapshot().merged({"dealt":dealt,"tick":sim.clock.tick}))
 		_notify("-%d HP" % roundi(dealt),sim.actor.position)
 	return {"accepted":dealt>0,"damage":dealt,"reason":"HIT" if dealt>0 else "BLOCKED"}
@@ -177,6 +249,8 @@ func on_enemy_death(enemy) -> void:
 		return
 	_death_ids[enemy.target.id] = true
 	enemy.target.status.clear()
+	if "boss" in enemy.target.tags:
+		_cue("sfx.boss.death",enemy.target.position)
 	ai_transitions.append_array(enemy.transitions.duplicate(true))
 	_notify("%s DOWN" % enemy.kind.to_upper(),enemy.target.position)
 
@@ -228,6 +302,6 @@ func snapshot() -> Dictionary:
 			"position":foe.target.position,"alive":foe.target.alive()})
 	return {"seed":seed,"scenario":scenario,"tick":sim.clock.tick,"state":state,"player_hp":sim.actor.health.current,
 		"player_position":sim.actor.position,"player_mana":sim.mana,"enemy_count":alive_enemies(),
-		"dodges":player.dodges,"casts":player.casts,"damage_taken":damage_received,"hits_received":attacks_received,
+		"dashes":player.dashes,"casts":player.casts,"damage_taken":damage_received,"hits_received":attacks_received,
 		"reactions":reactions,"enemy_shots":enemy_shots.size(),"effects":sim.queue.active_effect_count(),
 		"frame_ms":elapsed_frame_ms,"foes":foe_data}

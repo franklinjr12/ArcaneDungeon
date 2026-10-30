@@ -1,6 +1,8 @@
 extends RefCounted
 ## TASK-044 transactional 2-slot editor, backed by the exact M1 SpellCompiler.
 const Compiler = preload("res://magic/compile/spell_compiler.gd")
+const Limits = preload("res://magic/runtime/spell_limits.gd")
+const DEFAULT_CAP := 12
 var run
 var registry
 var compiler
@@ -10,18 +12,40 @@ var original: Dictionary = {}
 var undo_history: Array = []
 var errors: Array = []
 var allowed := false
+var is_new := false
+var max_presets := 3
+var complexity_cap := DEFAULT_CAP
 
-func _init(run_state, rune_registry) -> void:
+func _init(run_state, rune_registry, max_preset_slots: int = 3) -> void:
 	run = run_state
 	registry = rune_registry
-	compiler = Compiler.new(registry,12)
+	max_presets = max_preset_slots
+	var limits = Limits.new()
+	if limits.load_defaults()["ok"]:
+		complexity_cap = limits.get_limit("max_complexity")
+	compiler = Compiler.new(registry,complexity_cap)
+
+func _starter_draft(index: int) -> Dictionary:
+	var essence := "essence.fire"
+	for entry in available("essence"):
+		if not entry["locked"]:
+			essence = entry["id"]
+			break
+	return {"schema_version":1,"formula_id":"custom.slot_"+str(index+1),
+		"display_name":"Custom Spell "+str(index+1),
+		"root":{"essence_id":essence,"manifestation_id":"form.projectile","modifier_ids":[],"params":{}}}
 
 func open(index: int) -> Dictionary:
-	if index < 0 or index >= run.formulas.size():
+	if index < 0 or index >= max_presets or index > run.formulas.size():
 		return {"ok":false,"reason":"SLOT_INVALID"}
 	slot = index
-	original = run.formulas[index].duplicate(true)
-	draft = original.duplicate(true)
+	is_new = index == run.formulas.size()
+	if is_new:
+		original = {}
+		draft = _starter_draft(index)
+	else:
+		original = run.formulas[index].duplicate(true)
+		draft = original.duplicate(true)
 	undo_history.clear()
 	allowed = true
 	return validate()
@@ -80,7 +104,7 @@ func undo() -> Dictionary:
 
 func reset_draft() -> Dictionary:
 	_record_undo()
-	draft = original.duplicate(true)
+	draft = _starter_draft(slot) if is_new else original.duplicate(true)
 	return validate()
 
 func validate() -> Dictionary:
@@ -88,7 +112,7 @@ func validate() -> Dictionary:
 	errors = result["issues"].duplicate(true)
 	if result["ok"]:
 		var plan: Dictionary = result["compiled_spell"].snapshot()
-		return {"ok":true,"issues":[],"mana":plan["mana_cost"],"complexity":plan["complexity"],
+		return {"ok":true,"issues":[],"mana":plan["mana_cost"],"complexity":plan["complexity"],"complexity_cap":complexity_cap,
 			"cooldown":plan["cooldown_ticks"],"summary":str(draft["root"]["essence_id"])+
 			" / "+str(draft["root"]["manifestation_id"])+" / "+str(draft["root"]["modifier_ids"])}
 	return {"ok":false,"issues":errors.duplicate(true)}
@@ -99,13 +123,17 @@ func apply() -> Dictionary:
 	var valid: Dictionary = validate()
 	if not valid["ok"]:
 		return {"ok":false,"reason":"FORMULA_INVALID","issues":errors.duplicate(true)}
-	run.formulas[slot] = draft.duplicate(true)
+	if is_new:
+		run.formulas.append(draft.duplicate(true))
+		is_new = false
+	else:
+		run.formulas[slot] = draft.duplicate(true)
 	original = draft.duplicate(true)
 	allowed = false
 	return {"ok":true,"reason":"APPLIED","formula":run.formulas[slot].duplicate(true)}
 
 func cancel() -> void:
-	draft = original.duplicate(true)
+	draft = _starter_draft(slot) if is_new else original.duplicate(true)
 	undo_history.clear()
 	allowed = false
 

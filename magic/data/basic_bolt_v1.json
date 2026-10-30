@@ -1,0 +1,1 @@
+{"schema_version":1,"mana_cost":3,"cooldown_ticks":2,"formula":{"schema_version":1,"formula_id":"builtin.basic_bolt","display_name":"Basic Bolt","root":{"essence_id":"essence.neutral","manifestation_id":"form.projectile","modifier_ids":[],"params":{}}}}

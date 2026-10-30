@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "rift_line": "Something in the Uncatalogued Ruins has opened a rift, and the Undead it wakes now guard it.",
+  "room_names": {
+    "s1_r1": "Uncatalogued Ruins I",
+    "s1_r2": "Uncatalogued Ruins II",
+    "s1_r3": "Uncatalogued Ruins III",
+    "s1_boss": "Warden's Rift",
+    "workshop": "Traders Guild Outpost",
+    "s2_r1": "Uncatalogued Ruins - Lower Stacks"
+  },
+  "merchant": {
+    "title": "Traders Guild Outpost",
+    "greetings": [
+      "Guild prices. No haggling, no credit.",
+      "Runes and ward-salve. Coin first.",
+      "Pick what you need. The Guild keeps the ledger."
+    ],
+    "purchase": [
+      "Logged. The Guild thanks you for the coin.",
+      "Done. Mind the rift on the way out."
+    ]
+  }
+}
