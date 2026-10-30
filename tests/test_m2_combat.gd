@@ -7,7 +7,7 @@ const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 func run(t) -> void:
 	var game = Session.new(701,"single",0)
 	t.check(game.initialized,"TASK-026 combat session initializes using M1 runner")
-	t.equal(game.alive_enemies(),1,"TASK-035 single pursuer scenario spawns")
+	t.equal(game.alive_enemies(),1,"TASK-035 single bone thrall scenario spawns")
 	t.equal(game.sim.loadout.slots.size(),4,"AD-012 four loadout slots persist in combat")
 	var start: Vector2 = game.sim.actor.position
 	for raw in [Vector2.RIGHT,Vector2.LEFT,Vector2.UP,Vector2.DOWN,Vector2(1,1),
@@ -77,24 +77,24 @@ func run(t) -> void:
 		scene.step()
 		for foe in scene.enemies:
 			observed[foe.kind]=foe.state
-	t.check(scene.enemies[0].transitions.size()>0,"TASK-029 pursuer state transitions recorded")
+	t.check(scene.enemies[0].transitions.size()>0,"TASK-029 bone_thrall state transitions recorded")
 	t.check(scene.enemies[1].transitions.size()>0,"TASK-029 ranged state transitions recorded")
-	t.check(scene.enemies[2].transitions.size()>0,"TASK-029 flanker state transitions recorded")
+	t.check(scene.enemies[2].transitions.size()>0,"TASK-029 grave_hound state transitions recorded")
 	for foe in scene.enemies:
 		t.check(scene.world.valid_position(foe.target.position,foe.target.radius),"TASK-032 "+foe.kind+" remains in arena")
 	var flank_start: Vector2 = scene.enemies[2].target.position
 	for i in 50:
 		scene.step()
 	var flank_direction: Vector2 = scene.enemies[2].target.position-flank_start
-	t.check(absf(flank_direction.y)>3.0,"TASK-032 flanker has lateral displacement")
+	t.check(absf(flank_direction.y)>3.0,"TASK-032 grave_hound has lateral displacement")
 	var windup = Session.new(777,"single",0)
-	var pursuer = windup.enemies[0]
-	pursuer.target.position = windup.sim.actor.position+Vector2(60,0)
-	pursuer.change_state("chase",windup.sim.clock.tick)
-	pursuer.advance(windup)
-	t.equal(pursuer.state,"windup","TASK-029 melee enemy advertises windup before damage")
+	var bone_thrall = windup.enemies[0]
+	bone_thrall.target.position = windup.sim.actor.position+Vector2(60,0)
+	bone_thrall.change_state("chase",windup.sim.clock.tick)
+	bone_thrall.advance(windup)
+	t.equal(bone_thrall.state,"windup","TASK-029 melee enemy advertises windup before damage")
 	var healthy: float = windup.sim.actor.health.current
-	for i in int(pursuer.tuning["telegraph_ticks"])-1:
+	for i in int(bone_thrall.tuning["telegraph_ticks"])-1:
 		windup.step()
 	t.equal(windup.sim.actor.health.current,healthy,"TASK-029 no damage during melee telegraph")
 	windup.step()

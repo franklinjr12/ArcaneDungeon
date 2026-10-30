@@ -13,7 +13,7 @@ const DUMMY = preload("res://assets/pixel/dummy_sheet.png")
 const ICONS = ["fire","water","lightning","projectile","burst","orb","homing","split","pierce","on_hit",
 	"health","mana","rune","coin","dodge","wet","burning","charged","damage","door","shop","book","staff","shield"]
 const EFFECT_ROWS = ["fire","water","lightning","orb","enemy","arc","impact","dodge"]
-const F = {"mage":MAGE,"pursuer":PURSUER,"ranged":RANGED,"flanker":FLANKER,"boss":BOSS,"dummy":DUMMY}
+const F = {"mage":MAGE,"bone_thrall":PURSUER,"fallen_adept":RANGED,"grave_hound":FLANKER,"undead_warden":BOSS,"dummy":DUMMY}
 
 static func tile_floor(canvas: CanvasItem, view: Rect2, offset: Vector2, stage: int = 0) -> void:
 	canvas.draw_rect(Rect2(Vector2.ZERO,view.size),Color("#0f1924"))
@@ -66,7 +66,7 @@ static func entity(canvas: CanvasItem, kind: String, at: Vector2, tick: int, mot
 		casting: bool = false, hurt: bool = false, dead: bool = false) -> void:
 	if not F.has(kind):
 		kind = "dummy"
-	var size: Vector2 = Vector2(104,112) if kind == "boss" else Vector2(48,56)
+	var size: Vector2 = Vector2(104,112) if kind == "undead_warden" else Vector2(48,56)
 	var frame := 0
 	if dead:
 		frame = 9

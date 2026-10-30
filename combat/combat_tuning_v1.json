@@ -73,7 +73,8 @@
     "lifetime_ticks": 175
   },
   "enemies": {
-    "pursuer": {
+    "bone_thrall": {
+      "display_name": "Bone thrall",
       "hp": 95,
       "radius": 19,
       "move_speed": 118,
@@ -87,7 +88,8 @@
       "attack_kind": "melee",
       "color": "#e49a73"
     },
-    "ranged": {
+    "fallen_adept": {
+      "display_name": "Fallen adept",
       "hp": 80,
       "radius": 18,
       "move_speed": 101,
@@ -103,7 +105,8 @@
       "attack_kind": "ranged",
       "color": "#8cbaea"
     },
-    "flanker": {
+    "grave_hound": {
+      "display_name": "Grave hound",
       "hp": 85,
       "radius": 17,
       "move_speed": 154,
@@ -123,10 +126,10 @@
   },
   "scenarios": {
     "single": {
-      "name": "Single Pursuer",
+      "name": "Single Bone thrall",
       "enemies": [
         [
-          "pursuer",
+          "bone_thrall",
           375,
           450
         ]
@@ -136,17 +139,17 @@
       "name": "Mixed Wave",
       "enemies": [
         [
-          "pursuer",
+          "bone_thrall",
           375,
           270
         ],
         [
-          "ranged",
+          "fallen_adept",
           1080,
           255
         ],
         [
-          "flanker",
+          "grave_hound",
           1100,
           640
         ]
@@ -156,17 +159,17 @@
       "name": "Wet / Lightning Cluster",
       "enemies": [
         [
-          "pursuer",
+          "bone_thrall",
           375,
           390
         ],
         [
-          "ranged",
+          "fallen_adept",
           440,
           450
         ],
         [
-          "flanker",
+          "grave_hound",
           390,
           510
         ]
