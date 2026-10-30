@@ -1,0 +1,198 @@
+{ "frames": [
+   {
+    "filename": "ad_til_ruins_wall_front_00",
+    "frame": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_front_01",
+    "frame": { "x": 17, "y": 0, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_front_02",
+    "frame": { "x": 34, "y": 0, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_front_03",
+    "frame": { "x": 51, "y": 0, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_front_04",
+    "frame": { "x": 68, "y": 0, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_front_05",
+    "frame": { "x": 0, "y": 33, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_front_06",
+    "frame": { "x": 17, "y": 33, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_front_07",
+    "frame": { "x": 34, "y": 33, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_front_08",
+    "frame": { "x": 51, "y": 33, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_front_09",
+    "frame": { "x": 68, "y": 33, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_top_00",
+    "frame": { "x": 0, "y": 66, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_top_01",
+    "frame": { "x": 17, "y": 66, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_top_02",
+    "frame": { "x": 34, "y": 66, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_top_03",
+    "frame": { "x": 51, "y": 66, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_top_04",
+    "frame": { "x": 68, "y": 66, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_top_05",
+    "frame": { "x": 0, "y": 99, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_top_06",
+    "frame": { "x": 17, "y": 99, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_top_07",
+    "frame": { "x": 34, "y": 99, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_top_08",
+    "frame": { "x": 51, "y": 99, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   },
+   {
+    "filename": "ad_til_ruins_wall_top_09",
+    "frame": { "x": 68, "y": 99, "w": 16, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 32 },
+    "sourceSize": { "w": 16, "h": 32 },
+    "duration": 1000
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_til_ruins_wall.png",
+  "format": "I8",
+  "size": { "w": 84, "h": 131 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "front", "from": 0, "to": 9, "direction": "forward", "color": "#000000ff" },
+   { "name": "top", "from": 10, "to": 19, "direction": "forward", "color": "#000000ff" }
+  ],
+  "slices": [
+   { "name": "pivot", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 31, "w": 1, "h": 1 } }] }
+  ]
+ }
+}

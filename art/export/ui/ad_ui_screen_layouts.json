@@ -1,0 +1,100 @@
+{ "frames": [
+   {
+    "filename": "ad_ui_screen_layouts_hud_00",
+    "frame": { "x": 0, "y": 0, "w": 640, "h": 360 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 640, "h": 360 },
+    "sourceSize": { "w": 640, "h": 360 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_screen_layouts_spell_editor_00",
+    "frame": { "x": 0, "y": 360, "w": 640, "h": 360 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 640, "h": 360 },
+    "sourceSize": { "w": 640, "h": 360 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_screen_layouts_merchant_00",
+    "frame": { "x": 0, "y": 720, "w": 640, "h": 360 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 640, "h": 360 },
+    "sourceSize": { "w": 640, "h": 360 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_screen_layouts_reward_pick_00",
+    "frame": { "x": 0, "y": 1080, "w": 640, "h": 360 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 640, "h": 360 },
+    "sourceSize": { "w": 640, "h": 360 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_screen_layouts_pause_00",
+    "frame": { "x": 0, "y": 1440, "w": 640, "h": 360 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 640, "h": 360 },
+    "sourceSize": { "w": 640, "h": 360 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_screen_layouts_run_summary_00",
+    "frame": { "x": 0, "y": 1800, "w": 640, "h": 360 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 640, "h": 360 },
+    "sourceSize": { "w": 640, "h": 360 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_screen_layouts_title_00",
+    "frame": { "x": 0, "y": 2160, "w": 640, "h": 360 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 640, "h": 360 },
+    "sourceSize": { "w": 640, "h": 360 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_screen_layouts_settings_00",
+    "frame": { "x": 0, "y": 2520, "w": 640, "h": 360 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 640, "h": 360 },
+    "sourceSize": { "w": 640, "h": 360 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_ui_screen_layouts.png",
+  "format": "I8",
+  "size": { "w": 640, "h": 2880 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "hud", "from": 0, "to": 0, "direction": "forward", "color": "#000000ff" },
+   { "name": "spell_editor", "from": 1, "to": 1, "direction": "forward", "color": "#000000ff" },
+   { "name": "merchant", "from": 2, "to": 2, "direction": "forward", "color": "#000000ff" },
+   { "name": "reward_pick", "from": 3, "to": 3, "direction": "forward", "color": "#000000ff" },
+   { "name": "pause", "from": 4, "to": 4, "direction": "forward", "color": "#000000ff" },
+   { "name": "run_summary", "from": 5, "to": 5, "direction": "forward", "color": "#000000ff" },
+   { "name": "title", "from": 6, "to": 6, "direction": "forward", "color": "#000000ff" },
+   { "name": "settings", "from": 7, "to": 7, "direction": "forward", "color": "#000000ff" }
+  ],
+  "layers": [
+   { "name": "art", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+   { "name": "safe_area", "keys": [{ "frame": 0, "bounds": {"x": 16, "y": 9, "w": 608, "h": 342 } }] },
+   { "name": "pivot", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 1, "h": 1 } }] }
+  ]
+ }
+}

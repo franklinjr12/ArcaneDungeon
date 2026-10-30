@@ -1,0 +1,40 @@
+{ "frames": [
+   {
+    "filename": "ad_ui_tooltip_and_shop_card_static_00",
+    "frame": { "x": 0, "y": 0, "w": 48, "h": 48 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 48, "h": 48 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_tooltip_and_shop_card_static_01",
+    "frame": { "x": 48, "y": 0, "w": 48, "h": 48 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 48, "h": 48 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_ui_tooltip_and_shop_card.png",
+  "format": "I8",
+  "size": { "w": 96, "h": 48 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "static", "from": 0, "to": 1, "direction": "forward", "color": "#000000ff" }
+  ],
+  "layers": [
+   { "name": "art", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+   { "name": "tooltip_9slice", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 48, "h": 48 }, "center": {"x": 4, "y": 4, "w": 40, "h": 40 } }] },
+   { "name": "icon_slot", "keys": [{ "frame": 0, "bounds": {"x": 16, "y": 5, "w": 16, "h": 16 } }] },
+   { "name": "pivot", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 1, "h": 1 } }] }
+  ]
+ }
+}
