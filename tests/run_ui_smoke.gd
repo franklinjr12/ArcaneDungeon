@@ -55,7 +55,7 @@ func _run() -> void:
 		"new game enters first combat")
 	expect(control.arena_canvas != null and control.arena_canvas.visible,"combat canvas visible")
 	expect(control.sidebar != null and control.sidebar.get_child_count()>5,"run sidebar built")
-	control._open_editor(0)
+	control._open_editor(1)
 	expect(not control.editor_open,"editor cannot open during combat")
 	var run = control.flow
 	run.session.enemies[0].target.receive_damage(1000,"fire",1,100)
@@ -97,7 +97,7 @@ func _run() -> void:
 		if label.text.contains("Affordable") or label.text.contains("Need "):
 			previews = true
 	expect(previews,"merchant displays effect preview and affordability")
-	control._open_editor(0)
+	control._open_editor(1)
 	expect(control.editor_open and control.editor_panel.visible,"structured editor panel opens")
 	expect(control.editor_controls.find_children("*","OptionButton",true,false).size()>=2,
 		"editor has root Essence and Manifestation selectors")
@@ -107,13 +107,41 @@ func _run() -> void:
 	expect(control.editor_preview.text.contains("VALID"),"editor live validation shows valid draft")
 	control._close_editor(false)
 	expect(not control.editor_open and run.run.formulas[0]==old,"editor cancel restores original")
-	control._open_editor(0)
+	control._open_editor(1)
 	run.editor.set_root("essence.water","form.projectile")
 	control._editor_rebuild()
 	control._close_editor(true)
 	expect(run.run.formulas[0]["formula_id"]=="custom.slot_1","editor apply persists formula")
 	expect(run.range_sim.loadout.preview(1)["formula_id"]=="custom.slot_1",
 		"test range refreshes after apply")
+	control._open_editor(0)
+	expect(not control.editor_open,"slot 1 cannot be edited")
+	expect(control.loadout_slot_buttons[0].disabled and control.loadout_slot_buttons[0].text.contains("LOCKED"),
+		"slot 1 button locked")
+	control._open_editor(3)
+	expect(control.editor_open and control.editor_preview.text.contains("VALID") and control.editor_preview.text.contains("Cooldown") and control.editor_preview.text.contains("cap"),
+		"slot 4 opens with cap-aware preview")
+	run.editor.set_root("essence.fire","form.projectile")
+	run.editor.toggle_modifier("mod.pierce")
+	control._editor_rebuild()
+	var apply_disabled := false
+	for b in control.editor_controls.find_children("*","Button",true,false):
+		if b.text.begins_with("Apply"):
+			apply_disabled = b.disabled
+	expect(control.editor_preview.text.contains("INVALID") and control.editor_preview.text.contains("RUNE_LOCKED") and apply_disabled,
+		"invalid formula shows reason, Apply disabled")
+	control._close_editor(true)
+	expect(control.editor_open and run.run.formulas.size()==2,"invalid formula cannot be equipped")
+	run.editor.toggle_modifier("mod.pierce")
+	run.editor.set_root("essence.lightning","form.projectile")
+	control._editor_rebuild()
+	control._close_editor(true)
+	expect(run.run.formulas.size()==3 and run.range_sim.loadout.preview(3)["formula_id"]=="custom.slot_3",
+		"valid slot 4 applied")
+	var cast4: Dictionary = control._test_cast_slot(3,run.range_sim.actor.position+Vector2(200,0))
+	expect(cast4.get("accepted",false),"slot 4 casts in range")
+	control._reset_test_range()
+	expect(run.range_sim.active.size()==0,"reset range clears spells")
 	control._test_click(run.range_sim.actor.position+Vector2(200,0),MOUSE_BUTTON_LEFT)
 	expect(run.range_sim.active.size()>0,"workshop test click spawns compiled spell")
 	control._redraw_panel()
