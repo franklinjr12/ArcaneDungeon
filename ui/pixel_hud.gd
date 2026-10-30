@@ -36,7 +36,7 @@ func _draw() -> void:
 		if label.length()>11:
 			label = label.substr(0,11)
 		_text(Vector2(px+34,94),label,Color("#e9d5a8"),10)
-		var plan = flow.session.sim.loadout.get_plan(i)
+		var plan = flow.session.sim.loadout.get_plan(i+1)
 		var cost: int = int(plan.snapshot()["mana_cost"]) if plan!=null else 0
 		_text(Vector2(px+34,109),"MP %d · SLOT %d" % [cost,i+1],Color("#91c2ce"),10)
 

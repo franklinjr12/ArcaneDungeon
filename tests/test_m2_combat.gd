@@ -8,7 +8,7 @@ func run(t) -> void:
 	var game = Session.new(701,"single",0)
 	t.check(game.initialized,"TASK-026 combat session initializes using M1 runner")
 	t.equal(game.alive_enemies(),1,"TASK-035 single pursuer scenario spawns")
-	t.equal(game.sim.loadout.slots.size(),2,"TASK-026 M1 two editable-in-workshop slots persist in combat")
+	t.equal(game.sim.loadout.slots.size(),4,"AD-012 four loadout slots persist in combat")
 	var start: Vector2 = game.sim.actor.position
 	for raw in [Vector2.RIGHT,Vector2.LEFT,Vector2.UP,Vector2.DOWN,Vector2(1,1),
 		Vector2(-1,1),Vector2(1,-1),Vector2(-1,-1)]:

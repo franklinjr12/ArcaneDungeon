@@ -22,11 +22,11 @@ func run(t) -> void:
 	spell.player.modal = false
 	spell.player.dodge_left = 0
 	# Root Burst has finite cast range and respects line of sight in combat.
-	var far = spell.issue({"aim":Vector2.RIGHT,"cast":1,"cursor":Vector2(1200,450)})
+	var far = spell.issue({"aim":Vector2.RIGHT,"cast":2,"cursor":Vector2(1200,450)})
 	t.equal(far["reason"],"BURST_OUT_OF_RANGE","TASK-034 out-of-range Burst provides explicit rejection")
 	t.equal(spell.sim.queue.active_effect_count(),0,"TASK-034 invalid Burst has no spawned effects")
 	spell.sim.actor.position = Vector2(510,260)
-	var obstructed = spell.issue({"aim":Vector2.RIGHT,"cast":1,"cursor":Vector2(730,260)})
+	var obstructed = spell.issue({"aim":Vector2.RIGHT,"cast":2,"cursor":Vector2(730,260)})
 	t.equal(obstructed["reason"],"BURST_OCCLUDED","TASK-033 Burst cannot target through wall")
 	var projectile = Session.new(122,"single",0)
 	projectile.sim.actor.position = Vector2(510,250)
