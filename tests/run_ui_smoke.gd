@@ -111,12 +111,41 @@ func _run() -> void:
 		enemy.target.receive_damage(10000,"fire",1,100)
 	run.step()
 	control._redraw_panel()
-	var endcard := false
+	expect(run.state=="won","clearing the first stage-2 room wins the slice")
+	var texts: Array = []
 	for item in control.context.find_children("*","Label",true,false):
-		if item.text.contains("VERTICAL SLICE COMPLETE"):
-			endcard = true
-	expect(endcard,"clearing final room displays completion and replay action")
-	control._restart()
-	expect(run.room.values["id"]=="s1_r1" and run.run.currency==0,
-		"restart action clears all run progression")
+		texts.append(item.text)
+	var joined := "\n".join(texts)
+	expect(joined.contains("RUN SUMMARY") and joined.contains("VICTORY"),"win opens Run Summary: victory")
+	expect(joined.contains("Kills") and joined.contains("Spells used"),"summary shows kills and spells used")
+	expect(control.summary_retry_button != null and control.summary_retry_button.is_visible_in_tree()
+		and control.summary_new_seed_button != null and control.summary_new_seed_button.is_visible_in_tree()
+		and control.summary_title_button != null and control.summary_title_button.is_visible_in_tree(),
+		"summary has Retry same seed / New seed / Title buttons")
+	var seed_before: int = run.run.seed
+	control.summary_retry_button.emit_signal("pressed")
+	expect(run.room.values["id"]=="s1_r1" and run.run.currency==0 and run.run.seed==seed_before
+		and run.state=="fighting","retry same seed fully resets the run with the same seed")
+	run.session.sim.actor.receive_damage(100000,"fire",2,100)
+	run.step({"cast":0})
+	control._redraw_panel()
+	texts.clear()
+	for item in control.context.find_children("*","Label",true,false):
+		texts.append(item.text)
+	joined = "\n".join(texts)
+	expect(run.state=="dead" and joined.contains("RUN SUMMARY") and joined.contains("DEFEATED"),
+		"death opens Run Summary: defeated")
+	control.summary_new_seed_button.emit_signal("pressed")
+	expect(run.run.seed != seed_before and run.room.values["id"]=="s1_r1" and run.run.currency==0
+		and run.run.unlocked==run.config["initial_unlocked"],"new seed differs and resets run-local state")
+	var sources := ""
+	for path in ["res://ui/run_controller.gd","res://ui/main_menu.gd","res://ui/run_canvas.gd"]:
+		sources += FileAccess.get_file_as_string(path)
+	expect(not sources.contains("recover(") and not sources.contains(".restore("),"no UI path loads a saved run")
+	var menu_src := FileAccess.get_file_as_string("res://ui/main_menu.gd")
+	expect(not menu_src.contains("Continue") and not menu_src.contains("Resume"),"main menu has no Continue/Resume")
+	control._to_title()
+	await process_frame
+	await process_frame
+	expect(current_scene != null and current_scene.scene_file_path=="res://scenes/main.tscn","Title returns to main menu")
 	quit(1 if failures>0 else 0)
