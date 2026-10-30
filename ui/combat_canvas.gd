@@ -2,6 +2,9 @@ extends Control
 ## Render-only reference-guided sprites. M2 and M3 collision/state remain authoritative.
 signal world_click(at: Vector2, button: int)
 const Art = preload("res://ui/pixel_art_renderer.gd")
+const DamageNumbers = preload("res://ui/damage_numbers.gd")
+var _damage_numbers = DamageNumbers.new()
+var _damage_session = null
 const SlotHUD = preload("res://ui/pixel_hud.gd")
 var session
 var hover := Vector2(440,440)
@@ -126,8 +129,26 @@ func _draw() -> void:
 	for item in session.feedback:
 		var age: float = float(tick-int(item["tick"]))
 		_label(item["position"]-offset+Vector2(-24,-30-age*.38),str(item["label"]),Color("#ffdf95"))
+	_draw_damage_numbers(offset,tick)
 	if show_debug:
 		_label(Vector2(18,20),"DEBUG: wall/attack geometry and live target state",Color("#d6edf7"))
+
+func _draw_damage_numbers(offset: Vector2, tick: int) -> void:
+	if session == null:
+		return
+	if _damage_session != session:
+		_damage_session = session
+		_damage_numbers.reset()
+	_damage_numbers.update(session.sim.targets.all(),tick)
+	for popup in _damage_numbers.popups:
+		var age: float = float(tick-int(popup["spawn_tick"]))
+		var at: Vector2 = popup["position"]-offset+Vector2(-8,-34-age*DamageNumbers.RISE_PER_TICK-float(popup["index"])*12)
+		var text: String = popup["text"]
+		var width := ThemeDB.fallback_font.get_string_size(text,HORIZONTAL_ALIGNMENT_LEFT,-1,14).x
+		var start := at-Vector2(width/2.0,0)
+		if popup["symbol"] != "":
+			Art.damage_symbol(self,popup["symbol"],start+Vector2(-7,-5),10.0,popup["color"])
+		draw_string(ThemeDB.fallback_font,start,text,HORIZONTAL_ALIGNMENT_LEFT,-1,14,popup["color"])
 
 func _label(point: Vector2, label: String, shade: Color) -> void:
 	draw_string(ThemeDB.fallback_font,point,label,HORIZONTAL_ALIGNMENT_LEFT,-1,12,shade)
