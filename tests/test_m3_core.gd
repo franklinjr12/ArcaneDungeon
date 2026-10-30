@@ -47,7 +47,20 @@ func run(t) -> void:
 	var stable = Reward.new(f.config)
 	var reward_a: Array = stable.choices(f.run,"s1_r1")
 	t.equal(reward_a,stable.choices(f.run,"s1_r1"),"TASK-041 identical seed and room choose same rewards")
-	t.check(reward_a.size() >= 2,"TASK-041 first room offers a rune and currency")
+	var ids: Array = []
+	for card in reward_a:
+		t.equal(card["kind"],"rune","AD-017 card is a rune while unowned runes remain")
+		t.check(card["id"] not in f.run.unlocked and card["id"] not in ids,"AD-017 card unowned and distinct")
+		t.check(str(card["behaviour"]) != "" and str(card["name"]) != "","AD-017 card states name and behaviour")
+		ids.append(card["id"])
+	t.equal(reward_a.size(),3,"AD-017 three distinct rune cards, no currency")
+	var builtin_ids: Array = f.session.sim.registry.get_builtin_ids()
+	t.check("essence.neutral" not in Reward.new(f.config,builtin_ids).choices(f.run,"s1_r1").map(func(c): return c.get("id","")),
+		"AD-017 no essence.neutral card")
+	var empty_cfg: Dictionary = f.config.duplicate(true)
+	empty_cfg["reward_pool"] = []
+	var fallback: Array = Reward.new(empty_cfg).choices(f.run,"s1_r1")
+	t.equal(fallback,[{"kind":"currency","amount":int(f.config["room_reward_currency"])}],"AD-017 currency fallback when pool empty")
 	var different := false
 	for seed in range(1,40):
 		var copy = RunState.new()

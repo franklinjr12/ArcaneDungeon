@@ -267,15 +267,14 @@ func _redraw_panel() -> void:
 		else:
 			_heading(context,"ROOM CLEARED. EXIT UNLOCKED.")
 		if flow.room.values["type"] != "boss" and not flow.reward_collected:
-			_heading(context,"Choose ONE rune or currency:",13)
+			_heading(context,"Choose ONE reward:",13)
 			for i in flow.reward_options.size():
 				var item: Dictionary = flow.reward_options[i]
 				var caption := ""
 				if item["kind"] == "rune":
-					var rune = flow.session.sim.registry.get_rune(str(item["id"]))
-					caption = "Learn "+str(item["id"])+" — "+str(rune.snapshot()["description"])
+					caption = str(item["name"])+": "+str(item["behaviour"])
 				else:
-					caption = "Take +"+str(item["amount"])+" currency"
+					caption = "+"+str(item["amount"])+" currency"
 				_button(context,caption,_choose_reward.bind(i))
 		if flow.edit_policy == "cleared_room":
 			_heading(context,"Quick edit allowed (no shop/test)",12)
