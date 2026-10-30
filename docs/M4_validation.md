@@ -1,6 +1,6 @@
 # ArcaneDungeon — M4 Validation Implementation (TASK-049–055)
 
-**Status:** TASK-049–053 automated/code work implemented. TASK-054 **human sessions explicitly delayed until owner requests them after sprite production**; TASK-055 **owner go/no-go undecided**. These are not claimed to be complete. All visual assets and changes to `docs/assets/art_style_reference.png` are out of scope. Godot 4.7.2 GL Compatibility is the tested build, not a final owner-approved engine pin.
+**Status:** TASK-049–053 automated/code work implemented. TASK-054 **human sessions explicitly delayed until owner requests them after sprite production**; TASK-055 **owner go/no-go undecided**. These are not claimed to be complete. All visual assets and changes to `docs/assets/art_style_reference.png` are out of scope. Engine pin: Godot 4.7.1 stable, GL Compatibility (owner decision, AD-010).
 
 ## Launch and inspect
 
@@ -18,7 +18,12 @@ cd C:\Repos\ArcaneDungeon
 python scripts/validate_godot.py --godot "C:\Users\sa-su\Documents\Godot\Godot_console.exe"
 ```
 
-The validation script now runs parser/import, launcher navigation, M1 sandbox UI, M2 arena UI, M3+M4 run UI, deterministic test discovery, a 40-target stress probe, and an expected nonzero intentional-failure test. It rejects Godot engine error output even when the executable exits 0. CI should invoke this same wrapper.
+```sh
+# Linux
+python3 scripts/validate_godot.py --godot /usr/local/bin/godot
+```
+
+The validation script now runs parser/import, launcher navigation, M1 sandbox UI, M2 arena UI, M3+M4 run UI, deterministic test discovery, a 40-target stress probe, and an expected nonzero intentional-failure test. It rejects Godot engine error output even when the executable exits 0.
 
 ```powershell
 & "C:\Users\sa-su\Documents\Godot\Godot_console.exe" --headless --path . --script res://tests/m4_stress_probe.gd
