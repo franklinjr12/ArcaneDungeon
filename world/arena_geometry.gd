@@ -18,7 +18,7 @@ func valid_position(point: Vector2, radius: float) -> bool:
 	return true
 
 func move_body(point: Vector2, movement: Vector2, radius: float) -> Vector2:
-	# Substepping prevents fast dodge/mob traversal from skipping walls.
+	# Substepping prevents fast dash/mob traversal from skipping walls.
 	var segments := maxi(1,int(ceil(movement.length()/6.0)))
 	var stride := movement/float(segments)
 	var result := point

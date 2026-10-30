@@ -7,6 +7,7 @@ const TestCanvas = preload("res://ui/sandbox_canvas.gd")
 const PortraitHUD = preload("res://ui/pixel_hud.gd")
 const RuneAtlas = preload("res://assets/pixel/rune_icons.png")
 const Prompts = preload("res://ui/onboarding_prompts.gd")
+const InputActions = preload("res://ui/input_actions.gd")
 var flow
 var guide = Prompts.new()
 var tip: Label
@@ -82,8 +83,8 @@ func _build() -> void:
 	_button(sidebar,"Restart run (R)",func(): _restart())
 	_button(sidebar,"Next room at EXIT (E)",func(): _exit())
 	_button(sidebar,"Toggle edit policy (F2)",func(): _policy())
-	_button(sidebar,"Open spell editor (Q)",func(): _open_editor(0))
-	_button(sidebar,"Edit slot 2 (T)",func(): _open_editor(1))
+	_button(sidebar,"Open spell editor",func(): _open_editor(0))
+	_button(sidebar,"Edit slot 2",func(): _open_editor(1))
 	_button(sidebar,"Toggle debug (F3)",func():
 		arena_canvas.show_debug = not arena_canvas.show_debug)
 	_heading(sidebar,"Room / Workshop",15)
@@ -91,7 +92,9 @@ func _build() -> void:
 	context.add_theme_constant_override("separation",6)
 	sidebar.add_child(context)
 	var help := Label.new()
-	help.text = "WASD move, mouse aim\nLMB/RMB cast, Space dodge\nE exit (when nearby)\nQ/T edit, R restart\nF2 edit policy / F3 debug\nWorkshop: test, buy, edit"
+	help.text = "WASD/Arrows move, mouse aim\nLMB/RMB/Q/E cast slots 1-4\nSpace dash, Esc pause\nF exit (when nearby), R restart\nWorkshop: test, buy, edit"
+	if InputActions.debug_keys_enabled():
+		help.text += "\nF2 edit policy / F3 debug"
 	help.add_theme_font_size_override("font_size",11)
 	sidebar.add_child(help)
 	arena_canvas = ArenaCanvas.new()
@@ -148,7 +151,7 @@ func _world_click(point: Vector2, button: int) -> void:
 	if editor_open or flow.state != "fighting":
 		return
 	cursor = point
-	cast_pending = 0 if button == MOUSE_BUTTON_LEFT else 1
+	cast_pending = InputActions.slot_for_mouse_button(button)
 
 func _test_click(point: Vector2, button: int) -> void:
 	if editor_open or flow.state != "workshop":
@@ -160,15 +163,25 @@ func _test_click(point: Vector2, button: int) -> void:
 	_update_labels()
 
 func _input(event: InputEvent) -> void:
-	if not event is InputEventKey or not event.pressed or event.echo or editor_open:
+	if editor_open or not event.is_pressed() or event.is_echo():
 		return
-	match event.keycode:
-		KEY_E: _exit()
-		KEY_R: _restart()
-		KEY_Q: _open_editor(0)
-		KEY_T: _open_editor(1)
-		KEY_F2: _policy()
-		KEY_F3: arena_canvas.show_debug = not arena_canvas.show_debug
+	var fighting: bool = flow.state == "fighting"
+	var slot := InputActions.cast_slot_for_event(event)
+	if slot >= 2 and fighting:
+		cursor = arena_canvas.world_from_local(arena_canvas.get_local_mouse_position())
+		cast_pending = slot
+	elif event.is_action_pressed("interact"):
+		_exit()
+	elif event.is_action_pressed("pause"):
+		if fighting:
+			flow.session.sim.clock.set_paused(not flow.session.sim.clock.paused)
+	elif event is InputEventKey:
+		match event.keycode:
+			KEY_R: _restart()
+			KEY_F2:
+				if InputActions.debug_keys_enabled(): _policy()
+			KEY_F3:
+				if InputActions.debug_keys_enabled(): arena_canvas.show_debug = not arena_canvas.show_debug
 
 func _process(delta: float) -> void:
 	if delta > 0 and delta < 2.0:
@@ -188,7 +201,7 @@ func _physics_process(_delta: float) -> void:
 			if aim.is_zero_approx():
 				aim = flow.session.player.facing
 			var command := {"move":dir,"aim":aim,"cast":cast_pending,"cursor":cursor,
-				"dodge":Input.is_action_just_pressed("dodge")}
+				"dash":Input.is_action_just_pressed("dash")}
 			flow.step(command)
 		elif flow.state in ["cleared","workshop"]:
 			flow.move_after_clear({"move":Input.get_vector("move_left","move_right","move_up","move_down"),
@@ -305,11 +318,11 @@ func _update_labels() -> void:
 	if flow == null:
 		return
 	var values: Dictionary = flow.snapshot()
-	info.text = "Stage %d / Room %d\n%s [%s]\nHP %.0f/%.0f   Mana %.0f\nCoins %d / Unlocked runes %d\nDodge CD %d\nSlot1 %s\nSlot2 %s\nEdit policy: %s" % [
+	info.text = "Stage %d / Room %d\n%s [%s]\nHP %.0f/%.0f   Mana %.0f\nCoins %d / Unlocked runes %d\nDash CD %d\nSlot1 %s\nSlot2 %s\nEdit policy: %s" % [
 		int(flow.room.values["stage"])+1,int(flow.room.values["room"])+1,
 		flow.room.values["id"],flow.state.to_upper(),flow.run.hp if flow.state != "fighting" else flow.session.sim.actor.health.current,
 		flow.run.max_hp,flow.session.sim.mana,flow.run.currency,flow.run.unlocked.size(),
-		flow.session.player.dodge_cooldown,
+		flow.session.player.dash_cooldown,
 		str(flow.run.formulas[0]["display_name"]),str(flow.run.formulas[1]["display_name"]),flow.edit_policy]
 	info.text += "\nRender FPS %.0f / observed low %.0f" % [
 		Engine.get_frames_per_second(),low_fps]

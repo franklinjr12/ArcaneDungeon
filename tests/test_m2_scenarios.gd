@@ -10,7 +10,7 @@ func run(t) -> void:
 		var scenario: String = str(sample["scenario"])
 		var loadout: int = int(sample["loadout"])
 		var outcome: Dictionary = Baseline.simulate(scenario,loadout)
-		for key in ["seed","scenario","loadout","completed","result","ticks","damage_received","casts","dodges","reactions",
+		for key in ["seed","scenario","loadout","completed","result","ticks","damage_received","casts","dashes","reactions",
 			"enemies_remaining","hp_remaining"]:
 			t.equal(outcome[key],sample[key],"TASK-035 %s build %d deterministic %s" % [scenario,loadout,key])
 		t.check(outcome["completed"],"TASK-035 %s build %d playable without direct HP manipulation" % [scenario,loadout])
@@ -20,7 +20,7 @@ func run(t) -> void:
 	var enemy = spell.enemies[0]
 	enemy.target.position = spell.sim.actor.position+Vector2(280,0)
 	spell.player.modal = false
-	spell.player.dodge_left = 0
+	spell.player.dash_left = 0
 	# Root Burst has finite cast range and respects line of sight in combat.
 	var far = spell.issue({"aim":Vector2.RIGHT,"cast":2,"cursor":Vector2(1200,450)})
 	t.equal(far["reason"],"BURST_OUT_OF_RANGE","TASK-034 out-of-range Burst provides explicit rejection")

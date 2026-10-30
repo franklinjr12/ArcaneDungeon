@@ -159,7 +159,7 @@ func damage_player(source_id: int, amount: float, channel: String, attack_id: in
 		return {"accepted":false,"reason":"ALREADY_APPLIED"}
 	_attack_ids[attack_id] = true
 	if player.invulnerable():
-		_notify("DODGED",sim.actor.position)
+		_notify("DASH_EVADE",sim.actor.position)
 		return {"accepted":false,"reason":"INVULNERABLE"}
 	var event = DamageEvent.new(source_id,source.team,sim.actor.id,amount,channel,attack_id,sim.clock.tick)
 	var dealt: float = sim.actor.receive_damage(amount,channel,source.team,float(sim.settings["combat"]["armor_scale"]))
@@ -227,6 +227,6 @@ func snapshot() -> Dictionary:
 			"position":foe.target.position,"alive":foe.target.alive()})
 	return {"seed":seed,"scenario":scenario,"tick":sim.clock.tick,"state":state,"player_hp":sim.actor.health.current,
 		"player_position":sim.actor.position,"player_mana":sim.mana,"enemy_count":alive_enemies(),
-		"dodges":player.dodges,"casts":player.casts,"damage_taken":damage_received,"hits_received":attacks_received,
+		"dashes":player.dashes,"casts":player.casts,"damage_taken":damage_received,"hits_received":attacks_received,
 		"reactions":reactions,"enemy_shots":enemy_shots.size(),"effects":sim.queue.active_effect_count(),
 		"frame_ms":elapsed_frame_ms,"foes":foe_data}
