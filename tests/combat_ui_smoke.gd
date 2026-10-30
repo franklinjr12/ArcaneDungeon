@@ -26,7 +26,7 @@ func _run() -> void:
 		quit(1)
 		return
 	verify(arena.canvas != null,"arena canvas and camera created")
-	verify(arena.session.alive_enemies() == 1,"single pursuer scenario ready")
+	verify(arena.session.alive_enemies() == 1,"single bone thrall scenario ready")
 	verify(arena.hud.text.contains("HP") and arena.hud.text.contains("SLOT 1"),"HP mana cooldown and slots visible")
 	_check_slot_hud(arena.canvas.slot_hud,"arena")
 	arena._click(Vector2(385,450),MOUSE_BUTTON_LEFT)
