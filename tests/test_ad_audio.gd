@@ -19,8 +19,8 @@ func run(t) -> void:
 	for id in IDS:
 		var path: String = cues[id]["stream"]
 		t.check(path.ends_with(".wav") and ResourceLoader.exists(path), "AD-021 stream exists: " + id)
-	t.check(Director.new()._resolve_stream("amb.ruins", cues["amb.ruins"]["stream"]).loop_mode != AudioStreamWAV.LOOP_DISABLED, "AD-021 amb.ruins imports looping")
-	t.check(Director.new()._resolve_stream("sfx.dash", cues["sfx.dash"]["stream"]).loop_mode == AudioStreamWAV.LOOP_DISABLED, "AD-021 sfx do not loop")
+	t.check(d._resolve_stream("amb.ruins", cues["amb.ruins"]["stream"]).loop_mode != AudioStreamWAV.LOOP_DISABLED, "AD-021 amb.ruins imports looping")
+	t.check(d._resolve_stream("sfx.dash", cues["sfx.dash"]["stream"]).loop_mode == AudioStreamWAV.LOOP_DISABLED, "AD-021 sfx do not loop")
 	# Missing stream: silent (point one cue at a bogus path)
 	d.table["cues"]["sfx.dash"]["stream"] = "res://assets/audio/sfx/missing.wav"
 	var spy := []
