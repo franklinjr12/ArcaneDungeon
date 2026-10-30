@@ -39,6 +39,3 @@ func dismiss() -> void:
 
 func reopen() -> void:
 	dismissed = false
-
-func message(_context: String) -> String:
-	return text()
