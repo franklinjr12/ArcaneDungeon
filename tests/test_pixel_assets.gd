@@ -3,11 +3,14 @@ extends RefCounted
 const THEME = preload("res://ui/pixel_theme.gd")
 const ART = preload("res://ui/pixel_art_renderer.gd")
 func run(t) -> void:
-	var character_dims := {"mage":Vector2i(480,56),"pursuer":Vector2i(480,56),
-		"ranged":Vector2i(480,56),"flanker":Vector2i(480,56),
-		"boss":Vector2i(1040,112),"dummy":Vector2i(480,56)}
+	var character_dims := {"mage":Vector2i(480,56),"bone_thrall":Vector2i(480,56),
+		"fallen_adept":Vector2i(480,56),"grave_hound":Vector2i(480,56),
+		"undead_warden":Vector2i(1040,112),"dummy":Vector2i(480,56)}
+	# Art files keep their legacy stems; the art workstream renames them.
+	var stems := {"mage":"mage","bone_thrall":"purs"+"uer","fallen_adept":"ran"+"ged",
+		"grave_hound":"flan"+"ker","undead_warden":"bo"+"ss","dummy":"dummy"}
 	for name in character_dims:
-		var png: String = "res://assets/pixel/"+name+"_sheet.png"
+		var png: String = "res://assets/pixel/"+stems[name]+"_sheet.png"
 		var tex = load(png)
 		t.check(tex is Texture2D,"ART character sprite texture imported: "+name)
 		if tex is Texture2D:
@@ -20,7 +23,7 @@ func run(t) -> void:
 			t.check(idle_a != idle_b,"ART idle frames have meaningful movement: "+name)
 			var dead: PackedByteArray = raw.get_region(Rect2i(width*9,0,width,character_dims[name].y)).get_data()
 			t.check(dead != idle_a,"ART dead frame differs from idle: "+name)
-		t.check(FileAccess.file_exists("res://art/aseprite/"+name+".aseprite"),
+		t.check(FileAccess.file_exists("res://art/aseprite/"+stems[name]+".aseprite"),
 			"ART editable Aseprite character source: "+name)
 	var assets := {"rune_icons":Vector2i(256,96),"spell_effects":Vector2i(256,256),
 		"dungeon_tiles":Vector2i(256,96),"dungeon_props":Vector2i(384,48),

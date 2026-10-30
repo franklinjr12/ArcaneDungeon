@@ -103,7 +103,7 @@ func spawn_boss(settings: Dictionary, at: Vector2):
 		return null
 	var target = sim.add_target(at,Vector2.ZERO,float(settings["hp"]))
 	target.radius = float(settings["radius"])
-	target.tags = ["enemy","boss"]
+	target.tags = ["enemy","boss","undead_warden"]
 	var boss = Boss.new(target,settings)
 	enemies.append(boss)
 	return boss

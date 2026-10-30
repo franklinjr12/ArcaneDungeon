@@ -25,7 +25,7 @@ func run(t) -> void:
 	t.check(not invalid["ok"],"TASK-036 missing marker is invalid")
 	t.equal(invalid["issues"][0]["code"],"ROOM_MISSING_FIELD","TASK-036 precise missing marker diagnostic")
 	var overlapped: Dictionary = f.config["rooms"][0].duplicate(true)
-	overlapped["waves"][0]["enemies"][0] = ["pursuer",185,450]
+	overlapped["waves"][0]["enemies"][0] = ["bone_thrall",185,450]
 	var issue: Dictionary = room.initialize(overlapped,f.session.data["arena"],f.session.data["enemies"].keys())
 	t.check(not issue["ok"],"TASK-036 enemy spawn overlapping entrance rejected")
 	t.check(issue["issues"].any(func(x):return x["code"]=="ROOM_SPAWN_AT_ENTRANCE"),"TASK-036 blocked entrance diagnostic")

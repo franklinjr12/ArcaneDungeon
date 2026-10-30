@@ -23,6 +23,8 @@
   "max_active_enemies": 8,
   "reward_choices": 2,
   "boss": {
+    "kind": "undead_warden",
+    "display_name": "Undead warden",
     "hp": 430,
     "radius": 35,
     "position": [
@@ -71,7 +73,7 @@
           "delay_ticks": 0,
           "enemies": [
             [
-              "pursuer",
+              "bone_thrall",
               375,
               450
             ]
@@ -103,12 +105,12 @@
           "delay_ticks": 0,
           "enemies": [
             [
-              "pursuer",
+              "bone_thrall",
               375,
               270
             ],
             [
-              "ranged",
+              "fallen_adept",
               1080,
               255
             ]
@@ -119,7 +121,7 @@
           "delay_ticks": 30,
           "enemies": [
             [
-              "flanker",
+              "grave_hound",
               1110,
               650
             ]
@@ -151,17 +153,17 @@
           "delay_ticks": 0,
           "enemies": [
             [
-              "pursuer",
+              "bone_thrall",
               375,
               390
             ],
             [
-              "ranged",
+              "fallen_adept",
               440,
               450
             ],
             [
-              "flanker",
+              "grave_hound",
               390,
               510
             ]
@@ -233,12 +235,12 @@
           "delay_ticks": 0,
           "enemies": [
             [
-              "ranged",
+              "fallen_adept",
               1080,
               255
             ],
             [
-              "flanker",
+              "grave_hound",
               1100,
               640
             ]
