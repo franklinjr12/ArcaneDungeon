@@ -115,3 +115,21 @@ static func portal(canvas: CanvasItem, at: Vector2, open: bool, tick: int) -> vo
 	icon(canvas,"door",at+Vector2(-11,-12),Vector2(22,22))
 	if open:
 		effect(canvas,"arc",at+Vector2(0,2),tick,Vector2(38,38),0.8)
+
+## AD-015: placeholder element glyphs left of damage numbers (final art: AD-VFX-036).
+static func damage_symbol(canvas: CanvasItem, symbol: String, center: Vector2, size: float = 10.0, shade: Color = Color.WHITE) -> void:
+	var h := size / 2.0
+	match symbol:
+		"flame":
+			canvas.draw_colored_polygon(PackedVector2Array([
+				center+Vector2(-h,h),center+Vector2(-h,-h*0.2),center+Vector2(-h*0.5,-h*0.7),
+				center+Vector2(-h*0.25,-h*0.1),center+Vector2(0,-h),center+Vector2(h*0.25,-h*0.1),
+				center+Vector2(h*0.5,-h*0.7),center+Vector2(h,-h*0.2),center+Vector2(h,h)]),shade)
+		"droplet":
+			canvas.draw_circle(center+Vector2(0,h*0.4),h*0.65,shade)
+			canvas.draw_colored_polygon(PackedVector2Array([
+				center+Vector2(0,-h),center+Vector2(h*0.6,h*0.25),center+Vector2(-h*0.6,h*0.25)]),shade)
+		"bolt":
+			canvas.draw_colored_polygon(PackedVector2Array([
+				center+Vector2(h*0.3,-h),center+Vector2(-h*0.6,h*0.1),center+Vector2(-h*0.05,h*0.1),
+				center+Vector2(-h*0.3,h),center+Vector2(h*0.6,-h*0.2),center+Vector2(h*0.05,-h*0.2)]),shade)
