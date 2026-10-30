@@ -17,6 +17,7 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 [autoload]
 
 SaveService="*res://game/core/save_service.gd"
+AudioDirector="*res://game/audio/audio_director.gd"
 
 [display]
 
