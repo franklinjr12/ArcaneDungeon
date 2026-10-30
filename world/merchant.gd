@@ -3,8 +3,29 @@ extends RefCounted
 var config: Dictionary
 var stock: Array = []
 var bought: Dictionary = {}
+var flavour: Dictionary = {}
+const FLAVOUR_PATH := "res://world/data/flavour_v1.json"
+
+static func load_flavour() -> Dictionary:
+	var file := FileAccess.open(FLAVOUR_PATH, FileAccess.READ)
+	if file == null:
+		return {}
+	var parsed = JSON.parse_string(file.get_as_text())
+	return parsed if parsed is Dictionary else {}
+
 func _init(tuning: Dictionary) -> void:
 	config = tuning["merchant"].duplicate(true)
+	flavour = load_flavour()
+
+func _line(key: String, index: int) -> String:
+	var lines: Array = flavour.get("merchant", {}).get(key, [])
+	return "" if lines.is_empty() else str(lines[posmod(index, lines.size())])
+
+func greeting(run_seed: int) -> String:
+	return _line("greetings", run_seed)
+
+func purchase_line(count: int) -> String:
+	return _line("purchase", count)
 
 func build(run, all_ids: Array, excluded_ids: Array = []) -> Array:
 	var available: Array = []

@@ -19,7 +19,7 @@
       "complexity_weight": 1,
       "mana_cost": 5,
       "cooldown_ticks": 1,
-      "description": "Fire damage and Burning",
+      "description": "Deals fire damage and applies Burning to the target.",
       "display_key": "essence.fire"
     },
     {
@@ -40,7 +40,7 @@
       "complexity_weight": 1,
       "mana_cost": 4,
       "cooldown_ticks": 1,
-      "description": "Water damage and Wet",
+      "description": "Deals water damage, applies Wet and puts out Burning.",
       "display_key": "essence.water"
     },
     {
@@ -61,7 +61,7 @@
       "complexity_weight": 1,
       "mana_cost": 6,
       "cooldown_ticks": 2,
-      "description": "Lightning damage and Charged",
+      "description": "Deals lightning damage; on a Wet target it arcs once to the nearest other Wet target.",
       "display_key": "essence.lightning"
     },
     {
@@ -95,7 +95,7 @@
       "complexity_weight": 1,
       "mana_cost": 2,
       "cooldown_ticks": 2,
-      "description": "A traveling hit effect",
+      "description": "Fires a single bolt in a straight line that ends on its first hit.",
       "display_key": "form.projectile"
     },
     {
@@ -117,7 +117,7 @@
       "complexity_weight": 2,
       "mana_cost": 8,
       "cooldown_ticks": 8,
-      "description": "An instantaneous area effect",
+      "description": "Hits every target within a 75-unit radius at once.",
       "display_key": "form.burst"
     },
     {
@@ -157,7 +157,7 @@
       "complexity_weight": 2,
       "mana_cost": 9,
       "cooldown_ticks": 9,
-      "description": "Orbiting persistent contact effect",
+      "description": "Circles you at 72 units for 6 seconds, hitting what it touches.",
       "display_key": "form.orb"
     },
     {
@@ -184,7 +184,7 @@
       "complexity_weight": 1,
       "mana_cost": 3,
       "cooldown_ticks": 2,
-      "description": "Turn toward a nearby target",
+      "description": "Projectile turns toward the nearest target within 280 units.",
       "display_key": "mod.homing"
     },
     {
@@ -211,7 +211,7 @@
       "complexity_weight": 2,
       "mana_cost": 4,
       "cooldown_ticks": 3,
-      "description": "Generate multiple projectiles",
+      "description": "Projectile fires as 3 bolts spread across 17 degrees.",
       "display_key": "mod.split"
     },
     {
@@ -232,7 +232,7 @@
       "complexity_weight": 1,
       "mana_cost": 2,
       "cooldown_ticks": 1,
-      "description": "Hit several distinct targets",
+      "description": "Projectile passes through targets, hitting up to 3 different ones.",
       "display_key": "mod.pierce"
     },
     {
@@ -246,7 +246,7 @@
       "complexity_weight": 1,
       "mana_cost": 5,
       "cooldown_ticks": 3,
-      "description": "Spawn an explicit Burst payload on valid hit",
+      "description": "When the projectile hits, it releases its attached Burst payload.",
       "display_key": "trigger.on_hit"
     },
     {
@@ -267,7 +267,7 @@
       "complexity_weight": 1,
       "mana_cost": 0,
       "cooldown_ticks": 0,
-      "description": "Built-in neutral damage; not collectible",
+      "description": "Basic Bolt: a neutral projectile that deals plain damage, no element.",
       "display_key": "essence.neutral",
       "builtin": true
     }

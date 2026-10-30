@@ -8,6 +8,7 @@ const PortraitHUD = preload("res://ui/pixel_hud.gd")
 const RuneAtlas = preload("res://assets/pixel/rune_icons.png")
 const Prompts = preload("res://ui/onboarding_prompts.gd")
 const InputActions = preload("res://ui/input_actions.gd")
+const MerchantScript = preload("res://world/merchant.gd")
 var flow
 var guide = Prompts.new()
 var tip: Label
@@ -38,6 +39,8 @@ var low_fps := 0.0
 var _stats_recorded := false
 var _settings
 var _director
+var flavour: Dictionary = MerchantScript.load_flavour()
+var _rift_shown := false
 
 func _ready() -> void:
 	VisualTheme.apply(self)
@@ -53,6 +56,7 @@ func _ready() -> void:
 			flow.experiment.configure(true)
 		_settings.apply_audio()
 	_build()
+	current_notice = stage_banner()
 	_redraw_panel()
 
 func _build() -> void:
@@ -242,6 +246,16 @@ func _physics_process(_delta: float) -> void:
 		else:
 			_update_labels()
 
+func room_display_name(room_id: String) -> String:
+	return str(flavour.get("room_names", {}).get(room_id, room_id))
+
+## Rift line is returned once per run (reset on retry / new seed).
+func stage_banner() -> String:
+	if _rift_shown:
+		return ""
+	_rift_shown = true
+	return str(flavour.get("rift_line", ""))
+
 func _guide(show: bool) -> void:
 	if show:
 		guide.reopen()
@@ -302,7 +316,11 @@ func _redraw_panel() -> void:
 		_button(context,"Advance at exit →",func(): _exit())
 	elif flow.state == "workshop":
 		_heading(context,"SAFE WORKSHOP",15)
-		_heading(context,"Merchant — buy once per item",13)
+		_heading(context,str(flavour.get("merchant", {}).get("title", "Merchant"))+" — buy once per item",13)
+		var greet := Label.new()
+		greet.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		greet.text = flow.merchant.greeting(flow.run.seed)
+		context.add_child(greet)
 		for i in flow.merchant.stock.size():
 			var item: Dictionary = flow.merchant.stock[i]
 			var affordable: bool = int(item["price"]) <= flow.run.currency
@@ -340,7 +358,7 @@ func _update_labels() -> void:
 	var values: Dictionary = flow.snapshot()
 	info.text = "Stage %d / Room %d\n%s [%s]\nHP %.0f/%.0f   Mana %.0f\nCoins %d / Unlocked runes %d\nDash CD %d\nSlot1 %s\nSlot2 %s\nEdit policy: %s" % [
 		int(flow.room.values["stage"])+1,int(flow.room.values["room"])+1,
-		flow.room.values["id"],flow.state.to_upper(),flow.run.hp if flow.state != "fighting" else flow.session.sim.actor.health.current,
+		room_display_name(str(flow.room.values["id"])),flow.state.to_upper(),flow.run.hp if flow.state != "fighting" else flow.session.sim.actor.health.current,
 		flow.run.max_hp,flow.session.sim.mana,flow.run.currency,flow.run.unlocked.size(),
 		flow.session.player.dash_cooldown,
 		str(flow.run.formulas[0]["display_name"]),str(flow.run.formulas[1]["display_name"]),flow.edit_policy]
@@ -378,6 +396,8 @@ func _choose_reward(i: int) -> void:
 func _buy(i: int) -> void:
 	var result: Dictionary = flow.buy(i)
 	current_notice = "Merchant: "+str(result.get("kind",result.get("reason","")))
+	if result.get("ok",false):
+		current_notice = flow.merchant.purchase_line(flow.run.purchases.size())
 	_redraw_panel()
 
 func _build_summary_panel() -> void:
@@ -408,6 +428,7 @@ func _build_summary_panel() -> void:
 func _retry_same_seed() -> void:
 	_close_visual_editor()
 	_stats_recorded = false
+	_rift_shown = false
 	flow.retry_same_seed()
 	current_notice = "Retry same seed: currencies / runes reset"
 	_redraw_panel()
@@ -415,6 +436,7 @@ func _retry_same_seed() -> void:
 func _new_seed() -> void:
 	_close_visual_editor()
 	_stats_recorded = false
+	_rift_shown = false
 	flow.start_new_seed()
 	current_notice = "New seed: currencies / runes reset"
 	_redraw_panel()
