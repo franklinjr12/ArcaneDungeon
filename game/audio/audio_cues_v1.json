@@ -1,0 +1,189 @@
+{
+ "schema_version": 1,
+ "max_voices_total": 24,
+ "unstealable_priority": 3,
+ "cues": {
+  "sfx.cast.neutral": {
+   "stream": "res://assets/audio/sfx/sfx_cast_neutral.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3
+  },
+  "sfx.cast.fire": {
+   "stream": "res://assets/audio/sfx/sfx_cast_fire.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3
+  },
+  "sfx.cast.water": {
+   "stream": "res://assets/audio/sfx/sfx_cast_water.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3
+  },
+  "sfx.cast.lightning": {
+   "stream": "res://assets/audio/sfx/sfx_cast_lightning.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3
+  },
+  "sfx.hit.generic": {
+   "stream": "res://assets/audio/sfx/sfx_hit_generic.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 6
+  },
+  "sfx.react.arc": {
+   "stream": "res://assets/audio/sfx/sfx_react_arc.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3
+  },
+  "sfx.react.extinguish": {
+   "stream": "res://assets/audio/sfx/sfx_react_extinguish.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3
+  },
+  "sfx.dash": {
+   "stream": "res://assets/audio/sfx/sfx_dash.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3
+  },
+  "sfx.dash.iframe": {
+   "stream": "res://assets/audio/sfx/sfx_dash_iframe.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3
+  },
+  "sfx.cast.rejected": {
+   "stream": "res://assets/audio/sfx/sfx_cast_rejected.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3
+  },
+  "sfx.tele.bone_thrall": {
+   "stream": "res://assets/audio/sfx/sfx_tele_bone_thrall.ogg",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4
+  },
+  "sfx.tele.fallen_adept": {
+   "stream": "res://assets/audio/sfx/sfx_tele_fallen_adept.ogg",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4
+  },
+  "sfx.tele.grave_hound": {
+   "stream": "res://assets/audio/sfx/sfx_tele_grave_hound.ogg",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4
+  },
+  "sfx.boss.tele_a": {
+   "stream": "res://assets/audio/sfx/sfx_boss_tele_a.ogg",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4
+  },
+  "sfx.boss.tele_b": {
+   "stream": "res://assets/audio/sfx/sfx_boss_tele_b.ogg",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4
+  },
+  "sfx.boss.phase": {
+   "stream": "res://assets/audio/sfx/sfx_boss_phase.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3
+  },
+  "sfx.boss.death": {
+   "stream": "res://assets/audio/sfx/sfx_boss_death.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3
+  },
+  "sfx.player.hurt": {
+   "stream": "res://assets/audio/sfx/sfx_player_hurt.ogg",
+   "bus": "SFX",
+   "priority": 2,
+   "max_voices": 3
+  },
+  "sfx.player.death": {
+   "stream": "res://assets/audio/sfx/sfx_player_death.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3
+  },
+  "sfx.room.cleared": {
+   "stream": "res://assets/audio/sfx/sfx_room_cleared.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3
+  },
+  "sfx.pickup.rune": {
+   "stream": "res://assets/audio/sfx/sfx_pickup_rune.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3
+  },
+  "sfx.pickup.currency": {
+   "stream": "res://assets/audio/sfx/sfx_pickup_currency.ogg",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3
+  },
+  "ui.hover": {
+   "stream": "res://assets/audio/ui/ui_hover.ogg",
+   "bus": "UI",
+   "priority": 1,
+   "max_voices": 2
+  },
+  "ui.confirm": {
+   "stream": "res://assets/audio/ui/ui_confirm.ogg",
+   "bus": "UI",
+   "priority": 1,
+   "max_voices": 2
+  },
+  "ui.cancel": {
+   "stream": "res://assets/audio/ui/ui_cancel.ogg",
+   "bus": "UI",
+   "priority": 1,
+   "max_voices": 2
+  },
+  "ui.editor_error": {
+   "stream": "res://assets/audio/ui/ui_editor_error.ogg",
+   "bus": "UI",
+   "priority": 1,
+   "max_voices": 2
+  },
+  "ui.purchase": {
+   "stream": "res://assets/audio/ui/ui_purchase.ogg",
+   "bus": "UI",
+   "priority": 1,
+   "max_voices": 2
+  },
+  "ui.reward_pick": {
+   "stream": "res://assets/audio/ui/ui_reward_pick.ogg",
+   "bus": "UI",
+   "priority": 1,
+   "max_voices": 2
+  },
+  "amb.ruins": {
+   "stream": "res://assets/audio/amb/amb_ruins.ogg",
+   "bus": "Ambience",
+   "priority": 1,
+   "max_voices": 1,
+   "loop": true
+  },
+  "amb.workshop": {
+   "stream": "res://assets/audio/amb/amb_workshop.ogg",
+   "bus": "Ambience",
+   "priority": 1,
+   "max_voices": 1,
+   "loop": true
+  }
+ }
+}
