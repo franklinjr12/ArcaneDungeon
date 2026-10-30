@@ -35,10 +35,18 @@ var scene_key := ""
 var modal_actions: Array = []
 var display_frame_samples: Array = []
 var low_fps := 0.0
+var _stats_recorded := false
+var _settings
 
 func _ready() -> void:
 	VisualTheme.apply(self)
 	flow = Flow.new()
+	var save = get_node_or_null("/root/SaveService")
+	if save != null:
+		_settings = save.settings
+		if _settings.telemetry_opt_in:
+			flow.experiment.configure(true)
+		_settings.apply_audio()
 	_build()
 	_redraw_panel()
 
@@ -76,6 +84,10 @@ func _build() -> void:
 	_button(help_actions,"Show tips",func(): _guide(true))
 	_button(sidebar,"Opt in / out of local telemetry",func():
 		flow.experiment.configure(not flow.experiment.enabled)
+		var save = get_node_or_null("/root/SaveService")
+		if save != null:
+			save.settings.telemetry_opt_in = flow.experiment.enabled
+			save.save_settings()
 		current_notice = "Local telemetry "+("ENABLED (export only)" if flow.experiment.enabled else "OFF / cleared")
 		_update_labels())
 	_button(sidebar,"Export opt-in JSON + CSV",func(): _export_metrics())
@@ -363,6 +375,10 @@ func _buy(i: int) -> void:
 
 func _build_summary_panel() -> void:
 	var stats: Dictionary = flow.summary()
+	var save = get_node_or_null("/root/SaveService")
+	if save != null and not _stats_recorded:
+		_stats_recorded = true
+		save.record_run(stats)
 	_heading(context,"RUN SUMMARY — "+("VICTORY" if flow.state == "won" else "DEFEATED"),16)
 	var seconds := int(stats["seconds"])
 	for line in ["Rooms cleared: %d" % int(stats["rooms_cleared"]),"Kills: %d" % int(stats["kills"]),
@@ -371,18 +387,27 @@ func _build_summary_panel() -> void:
 		var label := Label.new()
 		label.text = line
 		context.add_child(label)
+	if save != null:
+		var totals: Dictionary = save.stats()
+		var label := Label.new()
+		var best: float = totals["best_time_seconds"]
+		label.text = "Runs: %d  Wins: %d  Best: %s" % [totals["runs"],totals["wins"],
+			("%d:%02d" % [int(best)/60,int(best)%60]) if best >= 0.0 else "--"]
+		context.add_child(label)
 	summary_retry_button = _button(context,"Retry same seed",func(): _retry_same_seed())
 	summary_new_seed_button = _button(context,"New seed",func(): _new_seed())
 	summary_title_button = _button(context,"Title",func(): _to_title())
 
 func _retry_same_seed() -> void:
 	_close_visual_editor()
+	_stats_recorded = false
 	flow.retry_same_seed()
 	current_notice = "Retry same seed: currencies / runes reset"
 	_redraw_panel()
 
 func _new_seed() -> void:
 	_close_visual_editor()
+	_stats_recorded = false
 	flow.start_new_seed()
 	current_notice = "New seed: currencies / runes reset"
 	_redraw_panel()
@@ -400,6 +425,8 @@ func _exit() -> void:
 	_redraw_panel()
 
 func _flash_transition() -> void:
+	if _settings != null and _settings.reduce_flashes:
+		return
 	transition_veil.modulate.a = 0.85
 	var tween := create_tween()
 	tween.tween_property(transition_veil,"modulate:a",0.0,0.4)

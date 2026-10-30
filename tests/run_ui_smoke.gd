@@ -9,7 +9,21 @@ func expect(success: bool, what: String) -> void:
 		failures += 1
 		printerr("M3 UI FAIL: ",what)
 
+func _install_save_sandbox():
+	var save = root.get_node_or_null("SaveService")
+	if save == null:
+		save = preload("res://game/core/save_service.gd").new()
+		save.name = "SaveService"
+		root.add_child(save)
+	var dir := "user://ad019_smoke/"
+	DirAccess.make_dir_recursive_absolute(dir)
+	for f in DirAccess.get_files_at(dir):
+		DirAccess.remove_absolute(dir + f)
+	save.set_base_dir(dir)
+	return save
+
 func _run() -> void:
+	var save = _install_save_sandbox()
 	var pack = load("res://scenes/run.tscn")
 	expect(pack is PackedScene,"M3 scene loadable")
 	if not pack is PackedScene:
@@ -123,6 +137,9 @@ func _run() -> void:
 		and control.summary_title_button != null and control.summary_title_button.is_visible_in_tree(),
 		"summary has Retry same seed / New seed / Title buttons")
 	var seed_before: int = run.run.seed
+	expect(save.stats()["runs"]==1 and save.stats()["wins"]==1,"AD-019 win recorded once in stats")
+	control._redraw_panel()
+	expect(save.stats()["runs"]==1,"AD-019 redrawing summary does not double-count")
 	control.summary_retry_button.emit_signal("pressed")
 	expect(run.room.values["id"]=="s1_r1" and run.run.currency==0 and run.run.seed==seed_before
 		and run.state=="fighting","retry same seed fully resets the run with the same seed")
@@ -135,6 +152,7 @@ func _run() -> void:
 	joined = "\n".join(texts)
 	expect(run.state=="dead" and joined.contains("RUN SUMMARY") and joined.contains("DEFEATED"),
 		"death opens Run Summary: defeated")
+	expect(save.stats()["runs"]==2 and save.stats()["deaths"]==1,"AD-019 death recorded in stats")
 	control.summary_new_seed_button.emit_signal("pressed")
 	expect(run.run.seed != seed_before and run.room.values["id"]=="s1_r1" and run.run.currency==0
 		and run.run.unlocked==run.config["initial_unlocked"],"new seed differs and resets run-local state")
@@ -148,4 +166,22 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	expect(current_scene != null and current_scene.scene_file_path=="res://scenes/main.tscn","Title returns to main menu")
+	var menu = load("res://scenes/main.tscn").instantiate()
+	root.add_child(menu)
+	await process_frame
+	expect(menu.volume_slider != null and menu.flash_toggle != null and menu.shake_toggle != null,"AD-019 menu has settings row")
+	menu.flash_toggle.set_pressed(true)
+	menu.shake_toggle.set_pressed(false)
+	menu.volume_slider.value = 0.5
+	menu.queue_free()
+	await process_frame
+	var reborn = preload("res://game/core/save_service.gd").new()
+	reborn.set_base_dir("user://ad019_smoke/")
+	expect(reborn.settings.reduce_flashes and not reborn.settings.screen_shake
+		and is_equal_approx(float(reborn.settings.volumes["Master"]),0.5),"AD-019 settings survive restart")
+	expect(FileAccess.file_exists("user://ad019_smoke/settings.cfg") and not FileAccess.file_exists("user://ad019_smoke/settings.cfg.tmp"),
+		"AD-019 settings file written atomically")
+	expect(reborn.stats()["runs"]==2,"AD-019 stats survive restart")
+	reborn.free()
+	save.set_base_dir("user://")
 	quit(1 if failures>0 else 0)
