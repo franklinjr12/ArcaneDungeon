@@ -84,14 +84,14 @@ func _draw() -> void:
 		Art.entity(self,enemy.kind,enemy_at,tick,movement,enemy.state=="windup",false,not target.alive())
 		if target.alive():
 			_health_bar(enemy_at,target.radius+12,target.health.current/target.health.maximum,Color("#dc7060"))
-			if enemy.kind == "boss" or show_debug:
-				_label(enemy_at+Vector2(-27,-(59 if enemy.kind=="boss" else 45)),enemy.kind.to_upper(),Color("#eec88b"))
+			if enemy.kind == "undead_warden" or show_debug:
+				_label(enemy_at+Vector2(-27,-(59 if enemy.kind=="undead_warden" else 45)),str(enemy.tuning.get("display_name",enemy.kind)),Color("#eec88b"))
 			Art.status_icons(self,target,tick,enemy_at+Vector2(-15,target.radius+21))
 		if enemy.state == "windup" and enemy.intent != null and target.alive():
 			var intent: Dictionary = enemy.intent.snapshot()
 			var time_left: int = maxi(0,int(enemy.tuning["telegraph_ticks"])-enemy.state_tick)
 			var f: float = 1.0-float(time_left)/maxf(1.0,float(enemy.tuning["telegraph_ticks"]))
-			var radius: float = float(intent["range"]) if enemy.kind in ["pursuer","boss"] else 33.0
+			var radius: float = float(intent["range"]) if enemy.kind in ["bone_thrall","undead_warden"] else 33.0
 			draw_arc(enemy_at,radius,0,TAU,56,Color("#e9ad56",0.55+0.4*f),2.0+f*2.5)
 			draw_line(enemy_at,mage.position-offset,Color("#f7b765",0.35+0.3*f),1.7)
 			_label(enemy_at+Vector2(-26,-54),"! %d" % time_left,Color("#ffe4a0"))
