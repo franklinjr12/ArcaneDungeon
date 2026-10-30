@@ -32,6 +32,8 @@ var cursor := Vector2(400,440)
 var opened_editor_ms := 0
 var refresh_counter := 0
 var editor_open := false
+var loadout_list: VBoxContainer
+var loadout_slot_buttons: Array = []
 var scene_key := ""
 var modal_actions: Array = []
 var display_frame_samples: Array = []
@@ -107,16 +109,18 @@ func _build() -> void:
 	_button(sidebar,"Restart run (R)",func(): _retry_same_seed())
 	_button(sidebar,"Next room at EXIT (E)",func(): _exit())
 	_button(sidebar,"Toggle edit policy (F2)",func(): _policy())
-	_button(sidebar,"Open spell editor",func(): _open_editor(0))
-	_button(sidebar,"Edit slot 2",func(): _open_editor(1))
 	_button(sidebar,"Toggle debug (F3)",func():
 		arena_canvas.show_debug = not arena_canvas.show_debug)
+	_heading(sidebar,"Loadout",15)
+	loadout_list = VBoxContainer.new()
+	loadout_list.add_theme_constant_override("separation",4)
+	sidebar.add_child(loadout_list)
 	_heading(sidebar,"Room / Workshop",15)
 	context = VBoxContainer.new()
 	context.add_theme_constant_override("separation",6)
 	sidebar.add_child(context)
 	var help := Label.new()
-	help.text = "WASD/Arrows move, mouse aim\nLMB/RMB/Q/E cast slots 1-4\nSpace dash, Esc pause\nF exit (when nearby), R retry same seed\nWorkshop: test, buy, edit"
+	help.text = "WASD/Arrows move, mouse aim\nLMB/RMB/Q/E cast slots 1-4\nSpace dash, Esc pause\nF exit (when nearby), R retry same seed\nWorkshop: test, buy, edit\nWorkshop: T reset range, Q/E test slots 3-4"
 	if InputActions.debug_keys_enabled():
 		help.text += "\nF2 edit policy / F3 debug"
 	help.add_theme_font_size_override("font_size",11)
@@ -182,10 +186,19 @@ func _world_click(point: Vector2, button: int) -> void:
 func _test_click(point: Vector2, button: int) -> void:
 	if editor_open or flow.state != "workshop":
 		return
-	var slot := 0 if button == MOUSE_BUTTON_LEFT else 1
+	_test_cast_slot(InputActions.slot_for_mouse_button(button),point)
+
+func _test_cast_slot(slot: int, point: Vector2) -> Dictionary:
 	var dir: Vector2 = (point-flow.range_sim.actor.position).normalized()
 	var result: Dictionary = flow.test_cast(slot,dir)
-	current_notice = "Test cast: "+str(result.get("reason",""))
+	current_notice = "Test cast slot %d: %s" % [slot+1,str(result.get("reason",""))]
+	_update_labels()
+	return result
+
+func _reset_test_range() -> void:
+	flow.enter_test_range()
+	test_canvas.runner = flow.range_sim
+	current_notice = "Safe test range reset"
 	_update_labels()
 
 func _input(event: InputEvent) -> void:
@@ -196,6 +209,8 @@ func _input(event: InputEvent) -> void:
 	if slot >= 2 and fighting:
 		cursor = arena_canvas.world_from_local(arena_canvas.get_local_mouse_position())
 		cast_pending = slot
+	elif slot >= 2 and flow.state == "workshop" and flow.range_sim != null:
+		_test_cast_slot(slot,test_canvas.get_local_mouse_position())
 	elif event.is_action_pressed("interact"):
 		_exit()
 	elif event.is_action_pressed("pause"):
@@ -204,6 +219,8 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventKey:
 		match event.keycode:
 			KEY_R: _retry_same_seed()
+			KEY_T:
+				if flow.state == "workshop": _reset_test_range()
 			KEY_F2:
 				if InputActions.debug_keys_enabled(): _policy()
 			KEY_F3:
@@ -287,6 +304,7 @@ func _redraw_panel() -> void:
 	arena_canvas.visible = flow.mode != "workshop"
 	test_canvas.visible = flow.mode == "workshop"
 	test_canvas.runner = flow.range_sim
+	_rebuild_loadout()
 	_clear(context)
 	summary_retry_button = null
 	summary_new_seed_button = null
@@ -339,11 +357,8 @@ func _redraw_panel() -> void:
 			detail.text = explanation+" | "+("Purchased" if flow.merchant.bought.has(item["id"]) else ("Affordable" if affordable else "Need "+str(int(item["price"])-flow.run.currency)+" coins"))
 			context.add_child(detail)
 		_heading(context,"Testing range: no progression/rewards",12)
-		_button(context,"Reset test targets + mana",func():
-			flow.enter_test_range()
-			test_canvas.runner = flow.range_sim
-			current_notice = "Safe test range reset")
-		_button(context,"Prepare two Wet cluster targets",func():
+		_button(context,"Reset test targets + mana (T)",func(): _reset_test_range())
+		_button(context,"Prepare Wet cluster (2 targets)",func():
 			flow.prepare_wet_cluster()
 			current_notice = "Wet cluster prepared: lightning arc can be tested")
 		_button(context,"Refill test mana",func():
@@ -352,16 +367,29 @@ func _redraw_panel() -> void:
 		_button(context,"Continue to stage 2 at exit",func(): _exit())
 	_update_labels()
 
+func _rebuild_loadout() -> void:
+	_clear(loadout_list)
+	loadout_slot_buttons = []
+	var b := _button(loadout_list,"Slot 1: Basic Bolt [LOCKED]",func(): _open_editor(0))
+	b.disabled = true
+	loadout_slot_buttons.append(b)
+	for n in range(2,5):
+		var fi := n-2
+		var label := str(flow.run.formulas[fi]["display_name"]) if fi < flow.run.formulas.size() else "(empty)"
+		var sb := _button(loadout_list,"Slot %d: %s — Edit" % [n,label],_open_editor.bind(n-1))
+		sb.disabled = fi > flow.run.formulas.size()
+		loadout_slot_buttons.append(sb)
+
 func _update_labels() -> void:
 	if flow == null:
 		return
 	var values: Dictionary = flow.snapshot()
-	info.text = "Stage %d / Room %d\n%s [%s]\nHP %.0f/%.0f   Mana %.0f\nCoins %d / Unlocked runes %d\nDash CD %d\nSlot1 %s\nSlot2 %s\nEdit policy: %s" % [
+	info.text = "Stage %d / Room %d\n%s [%s]\nHP %.0f/%.0f   Mana %.0f\nCoins %d / Unlocked runes %d\nDash CD %d\nSlot1 Basic Bolt\nSlot2 %s\nSlot3 %s\nSlot4 %s\nEdit policy: %s" % [
 		int(flow.room.values["stage"])+1,int(flow.room.values["room"])+1,
 		room_display_name(str(flow.room.values["id"])),flow.state.to_upper(),flow.run.hp if flow.state != "fighting" else flow.session.sim.actor.health.current,
 		flow.run.max_hp,flow.session.sim.mana,flow.run.currency,flow.run.unlocked.size(),
 		flow.session.player.dash_cooldown,
-		str(flow.run.formulas[0]["display_name"]),str(flow.run.formulas[1]["display_name"]),flow.edit_policy]
+		_slot_name(0),_slot_name(1),_slot_name(2),flow.edit_policy]
 	info.text += "\nRender FPS %.0f / observed low %.0f" % [
 		Engine.get_frames_per_second(),low_fps]
 	if flow.mode == "workshop" and flow.range_sim != null:
@@ -466,10 +494,17 @@ func _policy() -> void:
 	current_notice = "Edit policy: "+next+" (test switch, not final rule)"
 	_redraw_panel()
 
+func _slot_name(fi: int) -> String:
+	return str(flow.run.formulas[fi]["display_name"]) if fi < flow.run.formulas.size() else "(empty)"
+
 func _open_editor(index: int) -> void:
 	if editor_open:
 		return
-	var result: Dictionary = flow.open_editor(index)
+	if index <= 0:
+		current_notice = "Slot 1 is locked (Basic Bolt) — cannot edit"
+		_update_labels()
+		return
+	var result: Dictionary = flow.open_editor(index-1)
 	if not result["ok"]:
 		current_notice = "Editor: "+str(result.get("reason","BLOCKED"))
 		_update_labels()
@@ -483,7 +518,7 @@ func _open_editor(index: int) -> void:
 func _editor_rebuild() -> void:
 	_clear(editor_controls)
 	var e = flow.editor
-	_heading(editor_controls,"SPELL EDITOR / SLOT "+str(e.slot+1),20)
+	_heading(editor_controls,"SPELL EDITOR / SLOT "+str(e.slot+2),20)
 	_heading(editor_controls,"Essence → Manifestation → Modifier → On Hit",12)
 	_heading(editor_controls,"Essence",14)
 	var essence: OptionButton = _option(editor_controls,e.available("essence"),str(e.draft["root"]["essence_id"]))
@@ -523,8 +558,8 @@ func _editor_rebuild() -> void:
 	editor_controls.add_child(editor_preview)
 	var verdict: Dictionary = e.validate()
 	if verdict["ok"]:
-		editor_preview.text = "VALID / Mana %d / Complexity %d / Cooldown %d\n%s" % [
-			verdict["mana"],verdict["complexity"],verdict["cooldown"],verdict["summary"]]
+		editor_preview.text = "VALID / Mana %d / Cooldown %d ticks / Complexity %d / %d cap\n%s" % [
+			verdict["mana"],verdict["cooldown"],verdict["complexity"],verdict["complexity_cap"],verdict["summary"]]
 	else:
 		editor_preview.text = "INVALID — cannot apply:\n"
 		for issue in verdict["issues"]:

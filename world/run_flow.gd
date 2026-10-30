@@ -103,7 +103,7 @@ func _enter_current() -> Dictionary:
 	reward_options.clear()
 	reward_collected = false
 	_counted_kills.clear()
-	editor = Editor.new(run,session.sim.registry)
+	editor = Editor.new(run,session.sim.registry,session.sim.loadout.slots.size()-PRESET_SLOT_OFFSET)
 	merchant = null
 	range_sim = null
 	encounter = null
@@ -314,7 +314,7 @@ func open_editor(slot: int) -> Dictionary:
 		return {"ok":false,"reason":"COMBAT_LOCKED"}
 	if mode != "workshop" and (state != "cleared" or edit_policy != "cleared_room"):
 		return {"ok":false,"reason":"POLICY_WORKSHOP_ONLY"}
-	editor = Editor.new(run,session.sim.registry)
+	editor = Editor.new(run,session.sim.registry,session.sim.loadout.slots.size()-PRESET_SLOT_OFFSET)
 	var result: Dictionary = editor.open(slot)
 	if result["ok"]:
 		session.player.modal = true
