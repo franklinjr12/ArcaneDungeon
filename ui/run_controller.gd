@@ -91,7 +91,7 @@ func _build() -> void:
 	context.add_theme_constant_override("separation",6)
 	sidebar.add_child(context)
 	var help := Label.new()
-	help.text = "WASD move, mouse aim\nLMB/RMB cast, Space dodge\nE exit (when nearby)\nQ/T edit, R restart\nF2 edit policy / F3 debug\nWorkshop: test, buy, edit"
+	help.text = "WASD move, mouse aim\nLMB/RMB cast, Space dash\nE exit (when nearby)\nQ/T edit, R restart\nF2 edit policy / F3 debug\nWorkshop: test, buy, edit"
 	help.add_theme_font_size_override("font_size",11)
 	sidebar.add_child(help)
 	arena_canvas = ArenaCanvas.new()
@@ -188,7 +188,7 @@ func _physics_process(_delta: float) -> void:
 			if aim.is_zero_approx():
 				aim = flow.session.player.facing
 			var command := {"move":dir,"aim":aim,"cast":cast_pending,"cursor":cursor,
-				"dodge":Input.is_action_just_pressed("dodge")}
+				"dash":Input.is_action_just_pressed("dash")}
 			flow.step(command)
 		elif flow.state in ["cleared","workshop"]:
 			flow.move_after_clear({"move":Input.get_vector("move_left","move_right","move_up","move_down"),
@@ -305,11 +305,11 @@ func _update_labels() -> void:
 	if flow == null:
 		return
 	var values: Dictionary = flow.snapshot()
-	info.text = "Stage %d / Room %d\n%s [%s]\nHP %.0f/%.0f   Mana %.0f\nCoins %d / Unlocked runes %d\nDodge CD %d\nSlot1 %s\nSlot2 %s\nEdit policy: %s" % [
+	info.text = "Stage %d / Room %d\n%s [%s]\nHP %.0f/%.0f   Mana %.0f\nCoins %d / Unlocked runes %d\nDash CD %d\nSlot1 %s\nSlot2 %s\nEdit policy: %s" % [
 		int(flow.room.values["stage"])+1,int(flow.room.values["room"])+1,
 		flow.room.values["id"],flow.state.to_upper(),flow.run.hp if flow.state != "fighting" else flow.session.sim.actor.health.current,
 		flow.run.max_hp,flow.session.sim.mana,flow.run.currency,flow.run.unlocked.size(),
-		flow.session.player.dodge_cooldown,
+		flow.session.player.dash_cooldown,
 		str(flow.run.formulas[0]["display_name"]),str(flow.run.formulas[1]["display_name"]),flow.edit_policy]
 	info.text += "\nRender FPS %.0f / observed low %.0f" % [
 		Engine.get_frames_per_second(),low_fps]
