@@ -1,6 +1,11 @@
 {
   "schema_version": 1,
   "rift_line": "Something in the Uncatalogued Ruins has opened a rift, and the Undead it wakes now guard it.",
+  "onboarding": {
+    "room1": "Move/aim with mouse. LMB bolt, RMB/Q presets, Space dash gives i-frames.",
+    "first_reward": "3 cards: pick 1. Each card adds a new behaviour to your spells.",
+    "first_workshop": "Edit slot 4, test it in the range. Invalid spells show why."
+  },
   "room_names": {
     "s1_r1": "Uncatalogued Ruins I",
     "s1_r2": "Uncatalogued Ruins II",

@@ -1,0 +1,30 @@
+extends RefCounted
+## AD-042: data-driven onboarding tips, once per profile, one on screen.
+const Prompts = preload("res://ui/onboarding_prompts.gd")
+
+func run(t) -> void:
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(Prompts.FLAVOUR_PATH))
+	t.check(raw.has("onboarding"), "AD-042 onboarding block exists")
+	var p = Prompts.new()
+	for id in Prompts.TIP_IDS:
+		var s := str(p.tips.get(id, ""))
+		t.check(not s.is_empty() and s.length() <= Prompts.MAX_CHARS, "AD-042 tip loads and fits: " + id)
+		t.check(not s.containsn("battlemage"), "AD-042 no Battlemage: " + id)
+	t.check(str(p.tips["room1"]).contains("Space") and str(p.tips["room1"]).contains("i-frames"), "AD-042 room1 text")
+	t.check(str(p.tips["first_reward"]).contains("3 cards"), "AD-042 first_reward text")
+	t.check(str(p.tips["first_workshop"]).contains("slot 4"), "AD-042 first_workshop text")
+	t.equal(p.trigger("room1"), p.tips["room1"], "AD-042 first trigger returns text")
+	t.equal(p.trigger("room1"), "", "AD-042 second trigger empty")
+	p.trigger("first_reward")
+	t.equal(p.current, "first_reward", "AD-042 new tip replaces current")
+	t.equal(p.text(), p.tips["first_reward"], "AD-042 only one tip visible")
+	t.equal(p.trigger("nope"), "", "AD-042 unknown id")
+	p.dismiss()
+	t.equal(p.text(), "", "AD-042 dismiss clears text")
+	p.reopen()
+	t.equal(p.text(), "", "AD-042 reopen does not resurrect")
+	t.equal(p.trigger("first_reward"), "", "AD-042 seen tip not re-shown")
+	var q = Prompts.new()
+	q.load_seen(["room1", "bogus"])
+	t.equal(q.trigger("room1"), "", "AD-042 seen from profile suppressed")
+	t.check(not q.seen.has("bogus"), "AD-042 unknown seen id dropped")
