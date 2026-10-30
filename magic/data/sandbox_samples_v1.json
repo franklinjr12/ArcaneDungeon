@@ -112,6 +112,19 @@
         "modifier_ids": [],
         "params": {}
       }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.split_water",
+      "display_name": "Split Water",
+      "root": {
+        "essence_id": "essence.water",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [
+          "mod.split"
+        ],
+        "params": {}
+      }
     }
   ]
 }

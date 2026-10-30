@@ -10,6 +10,7 @@ const Session = preload("res://combat/combat_session.gd")
 const Runner = preload("res://magic/runtime/spell_runner.gd")
 const ExperimentLog = preload("res://debug/experiment_log.gd")
 const CONFIG := "res://world/data/vertical_slice_v1.json"
+const PRESET_SLOT_OFFSET := 1
 const SAMPLES := "res://magic/data/sandbox_samples_v1.json"
 var config: Dictionary = {}
 var formulas: Dictionary = {}
@@ -72,11 +73,10 @@ func _enter_current() -> Dictionary:
 	session.sim.mana = run.mana
 	session.sim.loadout.unlocked = run.unlocked.duplicate(true)
 	session.sim.loadout.allow_edit = true
-	for index in 2:
-		var result: Dictionary = session.sim.equip(index,run.formulas[index])
-		if not result["ok"]:
-			state = "error"
-			return {"ok":false,"reason":"RUN_LOADOUT_INVALID","issues":result["issues"]}
+	var result: Dictionary = session.sim.equip_starter_loadout(run.formulas)
+	if not result["ok"]:
+		state = "error"
+		return {"ok":false,"reason":"RUN_LOADOUT_INVALID","issues":result["issues"]}
 	session.sim.loadout.allow_edit = false
 	reward_options.clear()
 	reward_collected = false
@@ -106,15 +106,18 @@ func _enter_current() -> Dictionary:
 	logs.append({"kind":"room_enter","id":room.values["id"],"index":run.sequence_index})
 	return {"ok":true}
 
+func _slot_has_spell(runner, slot: int) -> bool:
+	return slot >= 0 and slot < runner.loadout.slots.size() and runner.loadout.slots[slot]["compiled"] != null
+
 func step(command: Dictionary = {}) -> Dictionary:
 	if state != "fighting":
 		return {"ok":false,"reason":"NOT_FIGHTING"}
 	if not command.is_empty():
 		var issued: Dictionary = session.issue(command)
-		if int(command.get("cast",-1)) in [0,1]:
-			var cast_slot: int = int(command["cast"])
+		var cast_slot: int = int(command.get("cast",-1))
+		if _slot_has_spell(session.sim,cast_slot):
 			experiment.record("dungeon_cast",{"room_index":run.sequence_index,"slot":cast_slot,
-				"cast_accepted":bool(issued.get("accepted",false))},run.formulas[cast_slot])
+				"cast_accepted":bool(issued.get("accepted",false))},session.sim.loadout.slots[cast_slot]["formula"])
 	session.step()
 	experiment.mark_tick(session.sim.clock.tick)
 	var reactions_now: int = session.sim.trace.filter_records(-1,"","reaction").size()
@@ -207,10 +210,9 @@ func enter_test_range() -> Dictionary:
 		return {"ok":false,"reason":"TEST_ONLY_WORKSHOP"}
 	range_sim = Runner.new(run.seed)
 	range_sim.loadout.unlocked = run.unlocked.duplicate(true)
-	for index in 2:
-		var result: Dictionary = range_sim.equip(index,run.formulas[index])
-		if not result["ok"]:
-			return result
+	var result: Dictionary = range_sim.equip_starter_loadout(run.formulas)
+	if not result["ok"]:
+		return result
 	range_sim.actor.health.maximum = float(config["workshop_restore_hp"])
 	range_sim.actor.health.reset()
 	range_sim.mana = float(config["workshop_restore_mana"])
@@ -242,8 +244,8 @@ func test_cast(slot: int, direction: Vector2) -> Dictionary:
 	if mode != "workshop" or range_sim == null:
 		return {"accepted":false,"reason":"TEST_ONLY_WORKSHOP"}
 	var result: Dictionary = range_sim.try_cast(slot,range_sim.actor.position,direction)
-	if slot in [0,1]:
-		experiment.record("test_cast",{"slot":slot,"is_workshop":true,"cast_accepted":result["accepted"]},run.formulas[slot])
+	if _slot_has_spell(range_sim,slot):
+		experiment.record("test_cast",{"slot":slot,"is_workshop":true,"cast_accepted":result["accepted"]},range_sim.loadout.slots[slot]["formula"])
 	return result
 
 func open_editor(slot: int) -> Dictionary:
@@ -271,7 +273,7 @@ func close_editor(apply_changes: bool, duration_seconds: float = 0.0) -> Diction
 		var edit_slot: int = editor.slot
 		session.sim.loadout.allow_edit = true
 		session.sim.loadout.unlocked = run.unlocked.duplicate(true)
-		var equipped: Dictionary = session.sim.equip(edit_slot,run.formulas[edit_slot])
+		var equipped: Dictionary = session.sim.equip(edit_slot+PRESET_SLOT_OFFSET,run.formulas[edit_slot])
 		session.sim.loadout.allow_edit = false
 		if not equipped["ok"]:
 			return equipped

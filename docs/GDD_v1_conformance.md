@@ -4,7 +4,7 @@ This page tracks GDD v1.0 rules ([GDD v1.0](https://docs.google.com/document/d/1
 
 | GDD v1.0 rule | Current status | Board row |
 | --- | --- | --- |
-| 4 spell slots, slot 1 locked to a neutral basic bolt (current: 2 slots, LMB/RMB) | GAP | AD-011, AD-012 |
+| 4 spell slots, slot 1 locked to a neutral basic bolt, starter presets in slots 2-3, slot 4 empty (input still LMB/RMB = slots 1/2 until AD-013) | PARTIAL (AD-011, AD-012 done; input AD-013) | AD-011, AD-012 |
 | Dash replaces dodge; input map LMB/RMB/Q/E/Space/F/Esc (current: Space dodge) | GAP | AD-013 |
 | HUD shows 4 slots + dash + mana | GAP | AD-014 |
 | Damage numbers white + element symbol | GAP | AD-015 |
