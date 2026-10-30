@@ -6,11 +6,12 @@
     "essence.water",
     "essence.lightning",
     "form.projectile",
-    "form.burst"
+    "form.burst",
+    "mod.split"
   ],
   "initial_formulas": [
     "sample.fire_shot",
-    "sample.water_burst"
+    "sample.split_water"
   ],
   "initial_currency": 0,
   "duplicate_reward_currency": 12,

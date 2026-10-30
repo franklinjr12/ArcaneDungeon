@@ -81,9 +81,8 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	damage_received = 0.0
 	reactions = 0
 	elapsed_frame_ms = 0.0
-	for n in 2:
-		var spell: String = str(data["starter_loadouts"][loadout_index][n])
-		sim.equip(n,samples[spell])
+	var starter: Array = data["starter_loadouts"][loadout_index]
+	sim.equip_starter_loadout([samples[str(starter[0])],samples[str(starter[1])]])
 	sim.loadout.allow_edit = false
 	for spec in data["scenarios"][scenario]["enemies"]:
 		spawn_enemy(str(spec[0]),Vector2(float(spec[1]),float(spec[2])))

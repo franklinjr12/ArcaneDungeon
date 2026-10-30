@@ -43,7 +43,7 @@ static func simulate(scenario: String, loadout: int, max_ticks: int = 2400) -> D
 				break
 		var slot := -1
 		var cursor: Vector2 = foe.target.position
-		for index in [tick%2,1-(tick%2)]:
+		for index in [1+(tick%2),2-(tick%2)]:
 			if game.sim.loadout.slots[index]["cooldown"]>0:
 				continue
 			var plan = game.sim.loadout.get_plan(index)
