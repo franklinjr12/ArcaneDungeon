@@ -42,6 +42,8 @@ var _counted_kills: Dictionary = {}
 var logs: Array = []
 var experiment = ExperimentLog.new()
 var _prior_reactions := 0
+## AD-020: output-only audio sink (Callable(cue_id, position)); the simulation never reads it.
+var audio_sink: Callable
 
 func _init(run_seed: int = -1) -> void:
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(CONFIG))
@@ -54,6 +56,10 @@ func _init(run_seed: int = -1) -> void:
 		formulas[str(value["formula_id"])] = value
 	initialized = true
 	start_new(run_seed if run_seed >= 0 else int(config["seed"]))
+
+func _cue(id: String, at = null) -> void:
+	if audio_sink.is_valid():
+		audio_sink.call(id,at)
 
 func start_new(run_seed: int) -> void:
 	run = State.new()
@@ -82,6 +88,7 @@ func _enter_current() -> Dictionary:
 	mode = "workshop" if room.values["type"] == "workshop" else "combat"
 	session = Session.new(run.seed+run.sequence_index,"empty",0)
 	session.defer_clear = true
+	session.audio_sink = _cue
 	session.sim.actor.position = room.marker("entrance")
 	session.sim.actor.health.maximum = run.max_hp
 	session.sim.actor.health.current = run.hp
@@ -118,6 +125,7 @@ func _enter_current() -> Dictionary:
 		encounter.initialize(room,session,int(config["max_active_enemies"]))
 		state = "fighting"
 	_prior_reactions = 0
+	_cue("amb.workshop" if mode == "workshop" else "amb.ruins")
 	experiment.record("room_enter",{"room_index":run.sequence_index})
 	logs.append({"kind":"room_enter","id":room.values["id"],"index":run.sequence_index})
 	return {"ok":true}
@@ -170,6 +178,7 @@ func _finish_combat() -> void:
 	# Old projectiles remain only in this room and are discarded on transition.
 	state = "cleared"
 	rooms_cleared += 1
+	_cue("sfx.room.cleared",session.sim.actor.position)
 	run.hp = session.sim.actor.health.current
 	run.mana = session.sim.mana
 	if int(room.values["stage"]) >= 1:
@@ -182,6 +191,7 @@ func _finish_combat() -> void:
 	elif room.values["type"] == "boss":
 		boss_defeated_events += 1
 		run.currency += int(config["boss_currency"])
+		_cue("sfx.pickup.currency",session.sim.actor.position)
 		reward_collected = true
 	else:
 		reward_options = rewards.choices(run,str(room.values["id"]))
@@ -221,6 +231,8 @@ func choose_reward(index: int) -> Dictionary:
 	run.collected.append(id)
 	reward_collected = true
 	session.sim.loadout.unlocked = run.unlocked.duplicate(true)
+	_cue("ui.reward_pick")
+	_cue("sfx.pickup.rune" if outcome.get("kind","") == "unlock" else "sfx.pickup.currency")
 	experiment.record("rune_choice",{"room_index":run.sequence_index,"rune_index":index})
 	logs.append({"kind":"reward","room":id,"item":option.duplicate(true)})
 	return outcome
@@ -316,6 +328,7 @@ func close_editor(apply_changes: bool, duration_seconds: float = 0.0) -> Diction
 	if apply_changes:
 		var result: Dictionary = editor.apply()
 		if not result["ok"]:
+			_cue("ui.editor_error")
 			return result
 		var edit_slot: int = editor.slot
 		session.sim.loadout.allow_edit = true
@@ -344,6 +357,9 @@ func buy(index: int) -> Dictionary:
 		return {"ok":false,"reason":"SHOP_ONLY_WORKSHOP"}
 	var outcome: Dictionary = merchant.purchase(index,run)
 	if outcome["ok"]:
+		_cue("ui.purchase")
+		if outcome["kind"] == "rune":
+			_cue("sfx.pickup.rune")
 		experiment.record("purchase",{"room_index":run.sequence_index,"price":int(merchant.stock[index]["price"])})
 		session.sim.loadout.unlocked = run.unlocked.duplicate(true)
 		if outcome["kind"] == "upgrade":
