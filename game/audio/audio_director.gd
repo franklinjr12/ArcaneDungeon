@@ -44,6 +44,11 @@ func _resolve_stream(cue_id: String, path: String) -> AudioStream:
 		return null
 	return load(path) as AudioStream
 
+## Hover + press feedback for a UI button; output-only.
+func bind_button(button: BaseButton, press_cue: String = "ui.confirm") -> void:
+	button.mouse_entered.connect(play.bind("ui.hover"))
+	button.pressed.connect(play.bind(press_cue))
+
 func play(cue_id: String, pos = null) -> bool:
 	var ok := _play(cue_id, pos)
 	cue_played.emit(cue_id, pos, ok)

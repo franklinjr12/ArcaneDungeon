@@ -39,6 +39,9 @@ func _ready() -> void:
 		button.custom_minimum_size.y = 48
 		panel.add_child(button)
 		button.pressed.connect(_switch_scene.bind(pair[1]))
+		var director = get_node_or_null("/root/AudioDirector")
+		if director != null:
+			director.bind_button(button)
 	_build_settings_row.call_deferred()
 
 func _switch_scene(path: String) -> void:
