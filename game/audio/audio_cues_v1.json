@@ -4,182 +4,182 @@
  "unstealable_priority": 3,
  "cues": {
   "sfx.cast.neutral": {
-   "stream": "res://assets/audio/sfx/sfx_cast_neutral.ogg",
+   "stream": "res://assets/audio/sfx/sfx_cast_neutral.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 3
   },
   "sfx.cast.fire": {
-   "stream": "res://assets/audio/sfx/sfx_cast_fire.ogg",
+   "stream": "res://assets/audio/sfx/sfx_cast_fire.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 3
   },
   "sfx.cast.water": {
-   "stream": "res://assets/audio/sfx/sfx_cast_water.ogg",
+   "stream": "res://assets/audio/sfx/sfx_cast_water.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 3
   },
   "sfx.cast.lightning": {
-   "stream": "res://assets/audio/sfx/sfx_cast_lightning.ogg",
+   "stream": "res://assets/audio/sfx/sfx_cast_lightning.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 3
   },
   "sfx.hit.generic": {
-   "stream": "res://assets/audio/sfx/sfx_hit_generic.ogg",
+   "stream": "res://assets/audio/sfx/sfx_hit_generic.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 6
   },
   "sfx.react.arc": {
-   "stream": "res://assets/audio/sfx/sfx_react_arc.ogg",
+   "stream": "res://assets/audio/sfx/sfx_react_arc.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 3
   },
   "sfx.react.extinguish": {
-   "stream": "res://assets/audio/sfx/sfx_react_extinguish.ogg",
+   "stream": "res://assets/audio/sfx/sfx_react_extinguish.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 3
   },
   "sfx.dash": {
-   "stream": "res://assets/audio/sfx/sfx_dash.ogg",
+   "stream": "res://assets/audio/sfx/sfx_dash.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 3
   },
   "sfx.dash.iframe": {
-   "stream": "res://assets/audio/sfx/sfx_dash_iframe.ogg",
+   "stream": "res://assets/audio/sfx/sfx_dash_iframe.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 3
   },
   "sfx.cast.rejected": {
-   "stream": "res://assets/audio/sfx/sfx_cast_rejected.ogg",
+   "stream": "res://assets/audio/sfx/sfx_cast_rejected.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 3
   },
   "sfx.tele.bone_thrall": {
-   "stream": "res://assets/audio/sfx/sfx_tele_bone_thrall.ogg",
+   "stream": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
    "max_voices": 4
   },
   "sfx.tele.fallen_adept": {
-   "stream": "res://assets/audio/sfx/sfx_tele_fallen_adept.ogg",
+   "stream": "res://assets/audio/sfx/sfx_tele_fallen_adept.wav",
    "bus": "SFX",
    "priority": 3,
    "max_voices": 4
   },
   "sfx.tele.grave_hound": {
-   "stream": "res://assets/audio/sfx/sfx_tele_grave_hound.ogg",
+   "stream": "res://assets/audio/sfx/sfx_tele_grave_hound.wav",
    "bus": "SFX",
    "priority": 3,
    "max_voices": 4
   },
   "sfx.boss.tele_a": {
-   "stream": "res://assets/audio/sfx/sfx_boss_tele_a.ogg",
+   "stream": "res://assets/audio/sfx/sfx_boss_tele_a.wav",
    "bus": "SFX",
    "priority": 3,
    "max_voices": 4
   },
   "sfx.boss.tele_b": {
-   "stream": "res://assets/audio/sfx/sfx_boss_tele_b.ogg",
+   "stream": "res://assets/audio/sfx/sfx_boss_tele_b.wav",
    "bus": "SFX",
    "priority": 3,
    "max_voices": 4
   },
   "sfx.boss.phase": {
-   "stream": "res://assets/audio/sfx/sfx_boss_phase.ogg",
+   "stream": "res://assets/audio/sfx/sfx_boss_phase.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 3
   },
   "sfx.boss.death": {
-   "stream": "res://assets/audio/sfx/sfx_boss_death.ogg",
+   "stream": "res://assets/audio/sfx/sfx_boss_death.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 3
   },
   "sfx.player.hurt": {
-   "stream": "res://assets/audio/sfx/sfx_player_hurt.ogg",
+   "stream": "res://assets/audio/sfx/sfx_player_hurt.wav",
    "bus": "SFX",
    "priority": 2,
    "max_voices": 3
   },
   "sfx.player.death": {
-   "stream": "res://assets/audio/sfx/sfx_player_death.ogg",
+   "stream": "res://assets/audio/sfx/sfx_player_death.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 3
   },
   "sfx.room.cleared": {
-   "stream": "res://assets/audio/sfx/sfx_room_cleared.ogg",
+   "stream": "res://assets/audio/sfx/sfx_room_cleared.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 3
   },
   "sfx.pickup.rune": {
-   "stream": "res://assets/audio/sfx/sfx_pickup_rune.ogg",
+   "stream": "res://assets/audio/sfx/sfx_pickup_rune.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 3
   },
   "sfx.pickup.currency": {
-   "stream": "res://assets/audio/sfx/sfx_pickup_currency.ogg",
+   "stream": "res://assets/audio/sfx/sfx_pickup_currency.wav",
    "bus": "SFX",
    "priority": 1,
    "max_voices": 3
   },
   "ui.hover": {
-   "stream": "res://assets/audio/ui/ui_hover.ogg",
+   "stream": "res://assets/audio/ui/ui_hover.wav",
    "bus": "UI",
    "priority": 1,
    "max_voices": 2
   },
   "ui.confirm": {
-   "stream": "res://assets/audio/ui/ui_confirm.ogg",
+   "stream": "res://assets/audio/ui/ui_confirm.wav",
    "bus": "UI",
    "priority": 1,
    "max_voices": 2
   },
   "ui.cancel": {
-   "stream": "res://assets/audio/ui/ui_cancel.ogg",
+   "stream": "res://assets/audio/ui/ui_cancel.wav",
    "bus": "UI",
    "priority": 1,
    "max_voices": 2
   },
   "ui.editor_error": {
-   "stream": "res://assets/audio/ui/ui_editor_error.ogg",
+   "stream": "res://assets/audio/ui/ui_editor_error.wav",
    "bus": "UI",
    "priority": 1,
    "max_voices": 2
   },
   "ui.purchase": {
-   "stream": "res://assets/audio/ui/ui_purchase.ogg",
+   "stream": "res://assets/audio/ui/ui_purchase.wav",
    "bus": "UI",
    "priority": 1,
    "max_voices": 2
   },
   "ui.reward_pick": {
-   "stream": "res://assets/audio/ui/ui_reward_pick.ogg",
+   "stream": "res://assets/audio/ui/ui_reward_pick.wav",
    "bus": "UI",
    "priority": 1,
    "max_voices": 2
   },
   "amb.ruins": {
-   "stream": "res://assets/audio/amb/amb_ruins.ogg",
+   "stream": "res://assets/audio/amb/amb_ruins.wav",
    "bus": "Ambience",
    "priority": 1,
    "max_voices": 1,
    "loop": true
   },
   "amb.workshop": {
-   "stream": "res://assets/audio/amb/amb_workshop.ogg",
+   "stream": "res://assets/audio/amb/amb_workshop.wav",
    "bus": "Ambience",
    "priority": 1,
    "max_voices": 1,

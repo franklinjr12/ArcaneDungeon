@@ -76,7 +76,7 @@ func _play(cue_id: String, pos) -> bool:
 			return false
 	_serial += 1
 	var voice := {"cue_id": cue_id, "priority": prio, "serial": _serial, "player": null}
-	if is_inside_tree():
+	if is_inside_tree() and DisplayServer.get_name() != "headless":
 		var p: Node = AudioStreamPlayer2D.new() if pos is Vector2 else AudioStreamPlayer.new()
 		p.stream = stream
 		p.bus = str(cue.get("bus", "SFX"))
