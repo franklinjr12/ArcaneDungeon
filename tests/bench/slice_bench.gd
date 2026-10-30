@@ -1,5 +1,6 @@
 extends SceneTree
-## AD-043: deterministic 10-seed headless slice benchmark with a scripted player (no gameplay change).
+## AD-043: deterministic 10-seed headless slice benchmark. Scripted player only; no gameplay change.
+## Run: godot --headless --path . --script res://tests/bench/slice_bench.gd
 const Flow = preload("res://world/run_flow.gd")
 const SEEDS := [20261022, 20261023, 20261024, 20261025, 20261026, 20261027, 20261028, 20261029, 20261030, 20261031]
 const ROOM_TICK_CAP := 6000
@@ -10,134 +11,150 @@ func _initialize() -> void:
 func _run() -> void:
 	var first: Dictionary = _bench()
 	var second: Dictionary = _bench()
-	var text_a: String = JSON.stringify(first, "", true)
-	var text_b: String = JSON.stringify(second, "", true)
-	print("AD_SLICE_BENCH:" + text_a)
-	print("BENCH_MD_BEGIN")
-	print(_markdown(first))
-	print("BENCH_MD_END")
-	if text_a != text_b:
-		printerr("AD_SLICE_BENCH: two in-process runs differ")
+	var a: String = JSON.stringify(first,"",true)
+	var b: String = JSON.stringify(second,"",true)
+	if a != b:
+		printerr("AD_SLICE_BENCH nondeterministic: two runs differ")
 		quit(1)
 		return
 	if first["per_seed"].size() != SEEDS.size():
-		printerr("AD_SLICE_BENCH: missing seed results")
+		printerr("AD_SLICE_BENCH missing seed results")
 		quit(1)
 		return
+	print("AD_SLICE_BENCH:" + a)
+	print("BENCH_MD_BEGIN")
+	print(_markdown(first))
+	print("BENCH_MD_END")
 	quit(0)
 
 func _bench() -> Dictionary:
 	var per_seed: Array = []
 	for run_seed in SEEDS:
 		per_seed.append(_play(int(run_seed)))
-	return {"per_seed": per_seed, "aggregate": _aggregate(per_seed)}
+	return {"seeds": SEEDS.duplicate(), "per_seed": per_seed, "aggregate": _aggregate(per_seed)}
 
-func _r3(value: float) -> float:
+func _r(value: float) -> float:
 	return snappedf(value, 0.001)
 
 func _play(run_seed: int) -> Dictionary:
 	var flow = Flow.new(run_seed)
-	var rate: float = float(flow.session.sim.clock.tick_rate)
 	var rooms: Array = []
-	var casts: Dictionary = {}
 	var picks: Array = []
-	var workshop_spell: Dictionary = {}
+	var casts: Dictionary = {}
 	var outcome := "won"
-	var total_ticks := 0
-	var total_hp := 0.0
-	var total_starved := 0
-	var warden_ticks := 0
-	var room_count: int = flow.config["rooms"].size()
-	for index in room_count:
+	var workshop_spell: Dictionary = {}
+	var earned: Array = []
+	var rate: int = flow.session.sim.clock.tick_rate
+	for slot in flow.session.sim.loadout.slots.size():
+		casts[str(slot)] = 0
+	while true:
 		var room_id: String = str(flow.room.values["id"])
-		if flow.mode == "workshop":
-			workshop_spell = _workshop(flow, picks)
-			var leave: Dictionary = _reach_exit(flow)
-			if not leave["ok"]:
-				outcome = "error"
+		if flow.state == "workshop":
+			workshop_spell = _workshop(flow, earned)
+		else:
+			var rec: Dictionary = _fight(flow, rate)
+			rec["room"] = room_id
+			rooms.append(rec)
+			for key in rec["casts"]:
+				casts[key] += rec["casts"][key]
+			if flow.state == "dead":
+				outcome = "dead"
 				break
-			continue
-		var stats: Dictionary = _fight(flow, casts)
-		var ticks: int = stats["ticks"]
-		total_ticks += ticks
-		total_hp += stats["hp_lost"]
-		total_starved += stats["starved"]
-		if room_id == "s1_boss":
-			warden_ticks = ticks
-		var room_result := {"room": room_id, "ticks": ticks, "seconds": _r3(float(ticks) / rate),
-			"hp_lost": _r3(stats["hp_lost"]), "mana_starved_ticks": stats["starved"], "outcome": stats["outcome"]}
-		rooms.append(room_result)
-		if stats["outcome"] == "won":
-			break
-		if stats["outcome"] != "cleared":
-			outcome = stats["outcome"]
-			break
-		if str(flow.room.values["type"]) == "combat":
-			var pick: int = 0
-			for i in flow.reward_options.size():
-				var option: Dictionary = flow.reward_options[i]
-				if option["kind"] == "rune" and str(option["id"]) not in flow.run.unlocked:
-					pick = i
-					break
-			var option: Dictionary = flow.reward_options[pick]
-			flow.choose_reward(pick)
-			var entry := {"room": room_id, "index": pick, "kind": str(option["kind"])}
-			if option["kind"] == "rune":
-				entry["id"] = str(option["id"])
-			else:
-				entry["amount"] = int(option["amount"])
-			picks.append(entry)
-		if not _reach_exit(flow)["ok"]:
+			if flow.state == "fighting":
+				outcome = "timeout"
+				break
+			if flow.state == "won":
+				break
+			if flow.room.values["type"] == "combat":
+				picks.append(_pick(flow, room_id, earned))
+		var exit_result: Dictionary = _reach_exit(flow)
+		if not exit_result.get("ok", false):
 			outcome = "error"
 			break
-	var casts_out: Dictionary = {}
-	for key in casts.keys():
-		casts_out[str(key)] = casts[key]
+	var ticks := 0
+	var hp := 0.0
+	var starved := 0
+	var warden_ticks := 0
+	for rec in rooms:
+		ticks += rec["ticks"]
+		hp += rec["hp_lost"]
+		starved += rec["mana_starved_ticks"]
+		if rec["room"] == "s1_boss":
+			warden_ticks = rec["ticks"]
 	return {"seed": run_seed, "outcome": outcome, "deaths": 1 if outcome == "dead" else 0,
-		"total_ticks": total_ticks, "total_seconds": _r3(float(total_ticks) / rate),
-		"total_hp_lost": _r3(total_hp), "total_mana_starved_ticks": total_starved,
-		"casts_per_slot": casts_out, "warden_ticks": warden_ticks, "warden_seconds": _r3(float(warden_ticks) / rate),
-		"reward_picks": picks, "workshop_spell": workshop_spell, "rooms": rooms}
+		"total_ticks": ticks, "total_seconds": _r(float(ticks) / rate), "total_hp_lost": _r(hp),
+		"total_mana_starved_ticks": starved, "casts_per_slot": casts, "warden_ticks": warden_ticks,
+		"warden_seconds": _r(float(warden_ticks) / rate), "reward_picks": picks,
+		"workshop_spell": workshop_spell, "rooms": rooms}
 
-func _workshop(flow, picks: Array) -> Dictionary:
-	if not flow.open_editor(0)["ok"]:
-		return {"error": "OPEN_FAILED"}
+func _pick(flow, room_id: String, earned: Array) -> Dictionary:
+	var index := 0
+	for i in flow.reward_options.size():
+		var option: Dictionary = flow.reward_options[i]
+		if option["kind"] == "rune" and not (str(option["id"]) in flow.run.unlocked):
+			index = i
+			break
+	var option: Dictionary = flow.reward_options[index]
+	var result: Dictionary = flow.choose_reward(index)
+	var record := {"room": room_id, "index": index, "kind": str(option["kind"])}
+	if option["kind"] == "rune":
+		record["id"] = str(option["id"])
+		if result.get("ok", false):
+			earned.append(str(option["id"]))
+	else:
+		record["amount"] = int(option.get("amount", 0))
+	return record
+
+func _workshop(flow, earned: Array) -> Dictionary:
+	if not flow.open_editor(0).get("ok", false):
+		return {"applied": false, "reason": "OPEN_FAILED"}
 	var editor = flow.editor
 	var essence := "essence.water"
-	for entry in editor.available("essence"):
-		if not entry["locked"]:
-			essence = str(entry["id"])
-			if essence == "essence.water":
+	var form := "form.projectile"
+	var essences: Array = editor.available("essence")
+	var ok_root := false
+	for entry in essences:
+		if entry["id"] == essence and not entry["locked"]:
+			ok_root = true
+	if not ok_root:
+		for entry in essences:
+			if not entry["locked"]:
+				essence = entry["id"]
 				break
-	editor.set_root(essence, "form.projectile")
-	for pick in picks:
-		if pick.has("id") and str(pick["id"]).begins_with("mod."):
-			editor.toggle_modifier(str(pick["id"]))
+	editor.set_root(essence, form)
+	for id in earned:
+		if id.begins_with("mod."):
+			editor.toggle_modifier(id)
 			break
-	var ok: bool = editor.validate()["ok"]
-	flow.close_editor(ok, 0.0)
+	var valid: bool = editor.validate()["ok"]
+	var result: Dictionary = flow.close_editor(valid, 0.0)
+	if not valid or not result.get("ok", false):
+		if flow.editor.allowed:
+			flow.close_editor(false, 0.0)
+		return {"applied": false, "reason": "INVALID"}
 	var formula: Dictionary = flow.run.formulas[0]
-	return {"applied": ok, "formula_id": str(formula["formula_id"]), "essence": str(formula["root"]["essence_id"]),
-		"form": str(formula["root"]["manifestation_id"]), "modifiers": formula["root"]["modifier_ids"].duplicate()}
+	return {"applied": true, "formula_id": str(formula["formula_id"]),
+		"runes": _runes(formula)}
 
-func _cheapest(session) -> float:
-	var best := INF
-	for slot in session.sim.loadout.slots.size():
-		var plan = session.sim.loadout.get_plan(slot)
-		if plan != null:
-			best = minf(best, float(plan.snapshot()["mana_cost"]))
-	return best
+func _runes(formula: Dictionary) -> Array:
+	var root: Dictionary = formula["root"]
+	var list: Array = [str(root["essence_id"]), str(root["manifestation"]["id"])]
+	for modifier in root.get("modifiers", []):
+		list.append(str(modifier["id"] if typeof(modifier) == TYPE_DICTIONARY else modifier))
+	return list
 
-func _fight(flow, casts: Dictionary) -> Dictionary:
-	var hp_start: float = flow.session.sim.actor.health.current
+func _fight(flow, rate: int) -> Dictionary:
+	var session = flow.session
+	var slots: int = session.sim.loadout.slots.size()
+	var hp_start: float = session.sim.actor.health.current
 	var ticks := 0
 	var starved := 0
+	var casts: Dictionary = {}
+	for slot in slots:
+		casts[str(slot)] = 0
 	for iteration in ROOM_TICK_CAP:
 		if flow.state != "fighting":
 			break
-		var session = flow.session
-		if session.sim.mana < _cheapest(session):
-			starved += 1
 		var actor: Vector2 = session.sim.actor.position
 		var foe = _nearest(session)
 		var movement := Vector2.ZERO
@@ -173,11 +190,17 @@ func _fight(flow, casts: Dictionary) -> Dictionary:
 					dash = true
 					movement = shot["direction"].rotated(PI / 2.0)
 					break
+		var cheapest := INF
+		for idx in slots:
+			var plan = session.sim.loadout.get_plan(idx)
+			if plan != null:
+				cheapest = minf(cheapest, float(plan.snapshot()["mana_cost"]))
+		if session.sim.mana < cheapest:
+			starved += 1
 		var slot := -1
 		if foe != null and session.player.dash_left == 0 and session.player.recovery_left == 0:
-			var count: int = session.sim.loadout.slots.size() - 1
-			for k in count:
-				var idx: int = 1 + (iteration + k) % count
+			for k in slots - 1:
+				var idx: int = 1 + (iteration + k) % (slots - 1)
 				if session.sim.loadout.slots[idx]["cooldown"] > 0:
 					continue
 				var spell = session.sim.loadout.get_plan(idx)
@@ -201,12 +224,16 @@ func _fight(flow, casts: Dictionary) -> Dictionary:
 		flow.step({"move": movement, "aim": direction, "cursor": cursor, "cast": slot, "dash": dash})
 		ticks += 1
 		if slot >= 0 and flow.spells_used > used_before:
-			casts[slot] = int(casts.get(slot, 0)) + (flow.spells_used - used_before)
-	var outcome: String = flow.state
-	if flow.state == "fighting":
-		outcome = "timeout"
-	var hp_end: float = flow.session.sim.actor.health.current
-	return {"ticks": ticks, "hp_lost": hp_start - hp_end, "starved": starved, "outcome": outcome}
+			casts[str(slot)] += flow.spells_used - used_before
+	var state: String = flow.state
+	var label := "timeout"
+	if state == "cleared":
+		label = "cleared"
+	elif state == "won" or state == "dead":
+		label = state
+	return {"outcome": label, "ticks": ticks, "sim_seconds": _r(float(ticks) / rate),
+		"hp_lost": _r(hp_start - session.sim.actor.health.current),
+		"mana_starved_ticks": starved, "casts": casts}
 
 func _reach_exit(flow, max_ticks: int = 1100) -> Dictionary:
 	for i in max_ticks:
@@ -234,74 +261,64 @@ func _nearest(session):
 
 func _stats(values: Array) -> Dictionary:
 	if values.is_empty():
-		return {"median": 0.0, "min": 0.0, "max": 0.0}
-	var sorted := values.duplicate()
+		return {"n": 0, "median": 0, "min": 0, "max": 0}
+	var sorted: Array = values.duplicate()
 	sorted.sort()
 	var n: int = sorted.size()
 	var median: float = float(sorted[n / 2]) if n % 2 == 1 else (float(sorted[n / 2 - 1]) + float(sorted[n / 2])) / 2.0
-	return {"median": _r3(median), "min": _r3(float(sorted[0])), "max": _r3(float(sorted[n - 1]))}
+	return {"n": n, "median": _r(median), "min": _r(float(sorted[0])), "max": _r(float(sorted[n - 1]))}
 
 func _aggregate(per_seed: Array) -> Dictionary:
-	var out: Dictionary = {}
+	var agg: Dictionary = {}
 	for key in ["total_seconds", "total_hp_lost", "total_mana_starved_ticks", "warden_seconds", "deaths"]:
-		var values: Array = []
-		for r in per_seed:
-			values.append(r[key])
-		out[key] = _stats(values)
-	var slot_keys: Dictionary = {}
-	var room_ids: Dictionary = {}
-	for r in per_seed:
-		for k in r["casts_per_slot"].keys():
-			slot_keys[k] = true
-		for room in r["rooms"]:
-			room_ids[room["room"]] = true
-	var slot_out: Dictionary = {}
-	for k in slot_keys.keys():
-		var values: Array = []
-		for r in per_seed:
-			values.append(int(r["casts_per_slot"].get(k, 0)))
-		slot_out[k] = _stats(values)
-	out["casts_per_slot"] = slot_out
-	var sec_out: Dictionary = {}
-	var hp_out: Dictionary = {}
-	for id in room_ids.keys():
-		var secs: Array = []
-		var hps: Array = []
-		for r in per_seed:
-			for room in r["rooms"]:
-				if room["room"] == id:
-					secs.append(room["seconds"])
-					hps.append(room["hp_lost"])
-		sec_out[id] = _stats(secs)
-		hp_out[id] = _stats(hps)
-	out["room_seconds"] = sec_out
-	out["room_hp_lost"] = hp_out
-	return out
+		agg[key] = _stats(per_seed.map(func(s): return s[key]))
+	var casts: Dictionary = {}
+	for key in per_seed[0]["casts_per_slot"]:
+		casts[key] = _stats(per_seed.map(func(s): return s["casts_per_slot"][key]))
+	agg["casts_per_slot"] = casts
+	var seconds: Dictionary = {}
+	var hp: Dictionary = {}
+	var by_room: Dictionary = {}
+	for s in per_seed:
+		for rec in s["rooms"]:
+			if not by_room.has(rec["room"]):
+				by_room[rec["room"]] = {"s": [], "h": []}
+			by_room[rec["room"]]["s"].append(rec["sim_seconds"])
+			by_room[rec["room"]]["h"].append(rec["hp_lost"])
+	for id in by_room:
+		seconds[id] = _stats(by_room[id]["s"])
+		hp[id] = _stats(by_room[id]["h"])
+	agg["room_seconds"] = seconds
+	agg["room_hp_lost"] = hp
+	return agg
 
 func _markdown(result: Dictionary) -> String:
-	var lines: Array = ["| seed | outcome | total s | HP lost | mana-starved ticks | warden s | casts per slot | rewards |",
-		"|---|---|---|---|---|---|---|---|"]
-	for r in result["per_seed"]:
-		var rewards: Array = []
-		for p in r["reward_picks"]:
-			rewards.append(str(p.get("id", "currency+" + str(p.get("amount", 0)))))
-		lines.append("| %d | %s | %s | %s | %d | %s | %s | %s |" % [r["seed"], r["outcome"], r["total_seconds"],
-			r["total_hp_lost"], r["total_mana_starved_ticks"], r["warden_seconds"],
-			JSON.stringify(r["casts_per_slot"], "", true), ", ".join(rewards)])
+	var lines: Array = []
+	lines.append("| seed | outcome | total s | HP lost | starved ticks | warden s | casts (slot0/1/2/3) | rewards |")
+	lines.append("|---|---|---|---|---|---|---|---|")
+	for s in result["per_seed"]:
+		var c: Array = []
+		for key in s["casts_per_slot"]:
+			c.append(str(s["casts_per_slot"][key]))
+		var r: Array = []
+		for p in s["reward_picks"]:
+			r.append(str(p.get("id", "currency:%d" % int(p.get("amount", 0)))))
+		lines.append("| %d | %s | %s | %s | %d | %s | %s | %s |" % [s["seed"], s["outcome"], s["total_seconds"],
+			s["total_hp_lost"], s["total_mana_starved_ticks"], s["warden_seconds"], "/".join(c), ", ".join(r)])
 	lines.append("")
 	lines.append("| metric | median | min | max |")
 	lines.append("|---|---|---|---|")
 	var agg: Dictionary = result["aggregate"]
 	for key in ["total_seconds", "total_hp_lost", "total_mana_starved_ticks", "warden_seconds", "deaths"]:
 		lines.append("| %s | %s | %s | %s |" % [key, agg[key]["median"], agg[key]["min"], agg[key]["max"]])
-	for slot in agg["casts_per_slot"].keys():
-		var s: Dictionary = agg["casts_per_slot"][slot]
-		lines.append("| casts slot %s | %s | %s | %s |" % [slot, s["median"], s["min"], s["max"]])
+	for key in agg["casts_per_slot"]:
+		var st: Dictionary = agg["casts_per_slot"][key]
+		lines.append("| casts slot %s | %s | %s | %s |" % [key, st["median"], st["min"], st["max"]])
 	lines.append("")
-	lines.append("| room | seconds median | min | max | HP lost median | min | max |")
-	lines.append("|---|---|---|---|---|---|---|")
-	for id in agg["room_seconds"].keys():
+	lines.append("| room | n | median s | min s | max s | median HP lost | min HP lost | max HP lost |")
+	lines.append("|---|---|---|---|---|---|---|---|")
+	for id in agg["room_seconds"]:
 		var a: Dictionary = agg["room_seconds"][id]
 		var h: Dictionary = agg["room_hp_lost"][id]
-		lines.append("| %s | %s | %s | %s | %s | %s | %s |" % [id, a["median"], a["min"], a["max"], h["median"], h["min"], h["max"]])
+		lines.append("| %s | %d | %s | %s | %s | %s | %s | %s |" % [id, a["n"], a["median"], a["min"], a["max"], h["median"], h["min"], h["max"]])
 	return "\n".join(lines)
