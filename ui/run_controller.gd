@@ -23,6 +23,9 @@ var editor_controls: VBoxContainer
 var editor_preview: Label
 var transition_veil: ColorRect
 var current_notice := ""
+var summary_retry_button: Button
+var summary_new_seed_button: Button
+var summary_title_button: Button
 var cast_pending := -1
 var cursor := Vector2(400,440)
 var opened_editor_ms := 0
@@ -80,7 +83,7 @@ func _build() -> void:
 	notices.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	sidebar.add_child(notices)
 	_heading(sidebar,"Actions",15)
-	_button(sidebar,"Restart run (R)",func(): _restart())
+	_button(sidebar,"Restart run (R)",func(): _retry_same_seed())
 	_button(sidebar,"Next room at EXIT (E)",func(): _exit())
 	_button(sidebar,"Toggle edit policy (F2)",func(): _policy())
 	_button(sidebar,"Open spell editor",func(): _open_editor(0))
@@ -92,7 +95,7 @@ func _build() -> void:
 	context.add_theme_constant_override("separation",6)
 	sidebar.add_child(context)
 	var help := Label.new()
-	help.text = "WASD/Arrows move, mouse aim\nLMB/RMB/Q/E cast slots 1-4\nSpace dash, Esc pause\nF exit (when nearby), R restart\nWorkshop: test, buy, edit"
+	help.text = "WASD/Arrows move, mouse aim\nLMB/RMB/Q/E cast slots 1-4\nSpace dash, Esc pause\nF exit (when nearby), R retry same seed\nWorkshop: test, buy, edit"
 	if InputActions.debug_keys_enabled():
 		help.text += "\nF2 edit policy / F3 debug"
 	help.add_theme_font_size_override("font_size",11)
@@ -177,7 +180,7 @@ func _input(event: InputEvent) -> void:
 			flow.session.sim.clock.set_paused(not flow.session.sim.clock.paused)
 	elif event is InputEventKey:
 		match event.keycode:
-			KEY_R: _restart()
+			KEY_R: _retry_same_seed()
 			KEY_F2:
 				if InputActions.debug_keys_enabled(): _policy()
 			KEY_F3:
@@ -252,8 +255,11 @@ func _redraw_panel() -> void:
 	test_canvas.visible = flow.mode == "workshop"
 	test_canvas.runner = flow.range_sim
 	_clear(context)
-	if flow.state == "dead":
-		_heading(context,"DEFEATED — Restart to retry")
+	summary_retry_button = null
+	summary_new_seed_button = null
+	summary_title_button = null
+	if flow.state in ["dead","won"]:
+		_build_summary_panel()
 	elif flow.state == "error":
 		_heading(context,"RUN DATA ERROR")
 	elif flow.state == "fighting":
@@ -261,11 +267,7 @@ func _redraw_panel() -> void:
 		if flow.encounter != null:
 			_heading(context,"Waves scheduled: "+str(flow.encounter.schedule.size()),12)
 	elif flow.state == "cleared":
-		if flow.run.sequence_index == flow.config["rooms"].size()-1:
-			_heading(context,"VERTICAL SLICE COMPLETE!",16)
-			_button(context,"Replay from stage 1",func(): _restart())
-		else:
-			_heading(context,"ROOM CLEARED. EXIT UNLOCKED.")
+		_heading(context,"ROOM CLEARED. EXIT UNLOCKED.")
 		if flow.room.values["type"] != "boss" and not flow.reward_collected:
 			_heading(context,"Choose ONE reward:",13)
 			for i in flow.reward_options.size():
@@ -359,11 +361,34 @@ func _buy(i: int) -> void:
 	current_notice = "Merchant: "+str(result.get("kind",result.get("reason","")))
 	_redraw_panel()
 
-func _restart() -> void:
+func _build_summary_panel() -> void:
+	var stats: Dictionary = flow.summary()
+	_heading(context,"RUN SUMMARY — "+("VICTORY" if flow.state == "won" else "DEFEATED"),16)
+	var seconds := int(stats["seconds"])
+	for line in ["Rooms cleared: %d" % int(stats["rooms_cleared"]),"Kills: %d" % int(stats["kills"]),
+			"Time: %d:%02d" % [seconds/60,seconds%60],"Spells used: %d" % int(stats["spells_used"]),
+			"Seed: %d" % int(stats["seed"])]:
+		var label := Label.new()
+		label.text = line
+		context.add_child(label)
+	summary_retry_button = _button(context,"Retry same seed",func(): _retry_same_seed())
+	summary_new_seed_button = _button(context,"New seed",func(): _new_seed())
+	summary_title_button = _button(context,"Title",func(): _to_title())
+
+func _retry_same_seed() -> void:
 	_close_visual_editor()
-	flow.start_new(flow.run.seed)
-	current_notice = "New run: currencies / unlocks reset"
+	flow.retry_same_seed()
+	current_notice = "Retry same seed: currencies / runes reset"
 	_redraw_panel()
+
+func _new_seed() -> void:
+	_close_visual_editor()
+	flow.start_new_seed()
+	current_notice = "New seed: currencies / runes reset"
+	_redraw_panel()
+
+func _to_title() -> void:
+	get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 func _exit() -> void:
 	if editor_open:
