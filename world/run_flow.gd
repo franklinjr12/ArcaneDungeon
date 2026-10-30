@@ -30,6 +30,15 @@ var transition_count := 0
 var edit_policy := "workshop_only"
 var mode := "combat"
 var initialized := false
+var outcome := ""
+var win_events := 0
+# Run-local summary counters (not in RunState, so the save schema is untouched).
+# ticks_elapsed counts fighting-state step() calls only (combat time, deterministic).
+var rooms_cleared := 0
+var kills := 0
+var ticks_elapsed := 0
+var spells_used := 0
+var _counted_kills: Dictionary = {}
 var logs: Array = []
 var experiment = ExperimentLog.new()
 var _prior_reactions := 0
@@ -51,6 +60,12 @@ func start_new(run_seed: int) -> void:
 	run.initialize(run_seed,config,formulas)
 	boss_defeated_events = 0
 	transition_count = 0
+	outcome = ""
+	win_events = 0
+	rooms_cleared = 0
+	kills = 0
+	ticks_elapsed = 0
+	spells_used = 0
 	edit_policy = str(config["edit_policy"])
 	logs.clear()
 	experiment.record("run_restart")
@@ -80,6 +95,7 @@ func _enter_current() -> Dictionary:
 	session.sim.loadout.allow_edit = false
 	reward_options.clear()
 	reward_collected = false
+	_counted_kills.clear()
 	editor = Editor.new(run,session.sim.registry)
 	merchant = null
 	range_sim = null
@@ -116,9 +132,16 @@ func step(command: Dictionary = {}) -> Dictionary:
 		var issued: Dictionary = session.issue(command)
 		var cast_slot: int = int(command.get("cast",-1))
 		if _slot_has_spell(session.sim,cast_slot):
+			if bool(issued.get("accepted",false)):
+				spells_used += 1
 			experiment.record("dungeon_cast",{"room_index":run.sequence_index,"slot":cast_slot,
 				"cast_accepted":bool(issued.get("accepted",false))},session.sim.loadout.slots[cast_slot]["formula"])
 	session.step()
+	ticks_elapsed += 1
+	for enemy in session.enemies:
+		if not enemy.target.alive() and not _counted_kills.has(enemy.target.id):
+			_counted_kills[enemy.target.id] = true
+			kills += 1
 	experiment.mark_tick(session.sim.clock.tick)
 	var reactions_now: int = session.sim.trace.filter_records(-1,"","reaction").size()
 	if reactions_now > _prior_reactions:
@@ -128,6 +151,7 @@ func step(command: Dictionary = {}) -> Dictionary:
 		encounter.advance()
 	if session.state == "dead":
 		state = "dead"
+		outcome = "lost"
 		experiment.record("death",{"room_index":run.sequence_index})
 	elif session.state == "cleared" or (room.values["type"] == "boss" and session.alive_enemies() == 0):
 		_finish_combat()
@@ -145,9 +169,17 @@ func _finish_combat() -> void:
 	session.player.dash_cooldown = 0
 	# Old projectiles remain only in this room and are discarded on transition.
 	state = "cleared"
+	rooms_cleared += 1
 	run.hp = session.sim.actor.health.current
 	run.mana = session.sim.mana
-	if room.values["type"] == "boss":
+	if int(room.values["stage"]) >= 1:
+		# First stage-2 room cleared: slice complete, no reward choice.
+		outcome = "won"
+		win_events += 1
+		state = "won"
+		reward_collected = true
+		reward_options.clear()
+	elif room.values["type"] == "boss":
 		boss_defeated_events += 1
 		run.currency += int(config["boss_currency"])
 		reward_collected = true
@@ -155,6 +187,21 @@ func _finish_combat() -> void:
 		reward_options = rewards.choices(run,str(room.values["id"]))
 	experiment.record("room_clear",{"room_index":run.sequence_index})
 	logs.append({"kind":"combat_clear","id":room.values["id"]})
+
+func summary() -> Dictionary:
+	return {"outcome":outcome,"seed":run.seed,"rooms_cleared":rooms_cleared,"kills":kills,
+		"ticks":ticks_elapsed,"seconds":float(ticks_elapsed)/float(session.sim.clock.tick_rate),
+		"spells_used":spells_used}
+
+func retry_same_seed() -> void:
+	start_new(run.seed)
+
+func start_new_seed() -> void:
+	# Deterministic successor seed (not a gameplay tunable): hash of the current seed, 31-bit positive.
+	var next_seed: int = ("%d:next" % run.seed).hash() & 0x7fffffff
+	if next_seed == run.seed:
+		next_seed += 1
+	start_new(next_seed)
 
 func choose_reward(index: int) -> Dictionary:
 	if state != "cleared" or room.values["type"] != "combat" or reward_collected:
@@ -313,7 +360,8 @@ func change_edit_policy(value: String) -> bool:
 func snapshot() -> Dictionary:
 	return {"state":state,"room_id":room.values["id"],"index":run.sequence_index,
 		"mode":mode,"door_open":state in ["cleared","workshop"],"rewards":reward_options.duplicate(true),
-		"collected":reward_collected,"run":run.snapshot(),"boss_events":boss_defeated_events}
+		"collected":reward_collected,"run":run.snapshot(),"boss_events":boss_defeated_events,
+		"outcome":outcome,"win_events":win_events}
 
 func recover(saved: Variant) -> Dictionary:
 	var validated = State.new()
