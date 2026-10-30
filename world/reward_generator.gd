@@ -8,8 +8,8 @@ func _init(tuning: Dictionary, excluded_ids: Array = []) -> void:
 
 func choices(run, room_id: String) -> Array:
 	var possible: Array = []
-	for id in ["mod.split","mod.homing","mod.pierce","form.orb","trigger.on_hit"]:
-		if id not in run.unlocked and id not in excluded:
+	for id in config.get("reward_pool", []):
+		if id not in run.unlocked and id not in excluded and id not in possible:
 			possible.append(id)
 	var key := str(run.seed)+":"+room_id
 	var hash_value := 2166136261
@@ -20,7 +20,11 @@ func choices(run, room_id: String) -> Array:
 	var options: Array = []
 	while not possible.is_empty() and options.size() < int(config["reward_choices"]):
 		var idx := random.randi_range(0,possible.size()-1)
-		options.append({"kind":"rune","id":possible[idx]})
+		var id: String = possible[idx]
+		var card: Dictionary = config.get("reward_cards", {}).get(id, {})
+		options.append({"kind":"rune","id":id,"name":str(card.get("name",id)),
+			"behaviour":str(card.get("behaviour",""))})
 		possible.remove_at(idx)
-	options.append({"kind":"currency","amount":int(config["room_reward_currency"])})
+	if options.size() < int(config["reward_choices"]):
+		options.append({"kind":"currency","amount":int(config["room_reward_currency"])})
 	return options
