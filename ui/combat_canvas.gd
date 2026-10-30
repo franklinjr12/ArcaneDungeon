@@ -2,6 +2,7 @@ extends Control
 ## Render-only reference-guided sprites. M2 and M3 collision/state remain authoritative.
 signal world_click(at: Vector2, button: int)
 const Art = preload("res://ui/pixel_art_renderer.gd")
+const SlotHUD = preload("res://ui/pixel_hud.gd")
 var session
 var hover := Vector2(440,440)
 var show_debug := false
@@ -9,8 +10,13 @@ var view_rect := Rect2(0,0,916,650)
 var environment_id := 0
 var last_player_at := Vector2.ZERO
 var last_enemy_at: Dictionary = {}
+var slot_hud
 
 func _ready() -> void:
+	slot_hud = SlotHUD.new()
+	slot_hud.name = "SlotHUD"
+	slot_hud.canvas = self
+	add_child(slot_hud)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	clip_contents = true
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -38,6 +44,8 @@ func _gui_input(event: InputEvent) -> void:
 		accept_event()
 
 func _draw() -> void:
+	if slot_hud != null:
+		slot_hud.queue_redraw()
 	var arena := Rect2(Vector2.ZERO,Vector2(1320,900))
 	var offset := Vector2.ZERO
 	var tick := 0
