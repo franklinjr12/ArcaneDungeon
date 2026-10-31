@@ -22,39 +22,18 @@
   "edit_policy": "workshop_only",
   "max_active_enemies": 8,
   "reward_choices": 3,
-  "reward_pool": [
-    "mod.split",
-    "mod.homing",
-    "mod.pierce",
-    "form.orb",
-    "trigger.on_hit"
-  ],
+  "reward_pool": ["mod.split","mod.homing","mod.pierce","form.orb","trigger.on_hit"],
   "reward_cards": {
-    "mod.split": {
-      "name": "Split",
-      "behaviour": "projectiles fan out into 3"
-    },
-    "mod.homing": {
-      "name": "Homing",
-      "behaviour": "projectiles curve toward nearby enemies"
-    },
-    "mod.pierce": {
-      "name": "Pierce",
-      "behaviour": "projectiles pass through up to 3 enemies"
-    },
-    "form.orb": {
-      "name": "Orb",
-      "behaviour": "spells orbit you and hit what they touch"
-    },
-    "trigger.on_hit": {
-      "name": "On Hit",
-      "behaviour": "projectile hits release a Burst payload"
-    }
+    "mod.split": {"name": "Split", "behaviour": "projectiles fan out into 3"},
+    "mod.homing": {"name": "Homing", "behaviour": "projectiles curve toward nearby enemies"},
+    "mod.pierce": {"name": "Pierce", "behaviour": "projectiles pass through up to 3 enemies"},
+    "form.orb": {"name": "Orb", "behaviour": "spells orbit you and hit what they touch"},
+    "trigger.on_hit": {"name": "On Hit", "behaviour": "projectile hits release a Burst payload"}
   },
   "boss": {
     "kind": "undead_warden",
     "display_name": "Undead warden",
-    "hp": 6500,
+    "hp": 430,
     "radius": 35,
     "position": [
       1030,
@@ -65,8 +44,8 @@
     "phase_threshold": 0.5,
     "second_phase_windup_ticks": 33,
     "radial_shots": 8,
-    "radial_damage": 14,
-    "shot_damage": 24,
+    "radial_damage": 9,
+    "shot_damage": 16,
     "shot_speed": 300,
     "shot_spread": 0,
     "telegraph_radius": 190
@@ -105,78 +84,6 @@
               "bone_thrall",
               375,
               450
-            ],
-            [
-              "bone_thrall",
-              420,
-              360
-            ],
-            [
-              "bone_thrall",
-              420,
-              540
-            ],
-            [
-              "fallen_adept",
-              1080,
-              450
-            ],
-            [
-              "fallen_adept",
-              1000,
-              250
-            ],
-            [
-              "grave_hound",
-              1100,
-              650
-            ]
-          ]
-        },
-        {
-          "trigger": "on_clear",
-          "delay_ticks": 30,
-          "enemies": [
-            [
-              "grave_hound",
-              1110,
-              650
-            ],
-            [
-              "grave_hound",
-              1110,
-              250
-            ],
-            [
-              "fallen_adept",
-              1000,
-              450
-            ]
-          ]
-        },
-        {
-          "trigger": "on_clear",
-          "delay_ticks": 30,
-          "enemies": [
-            [
-              "fallen_adept",
-              1080,
-              255
-            ],
-            [
-              "grave_hound",
-              1100,
-              640
-            ],
-            [
-              "fallen_adept",
-              1080,
-              450
-            ],
-            [
-              "grave_hound",
-              1000,
-              300
             ]
           ]
         }
@@ -211,24 +118,9 @@
               270
             ],
             [
-              "bone_thrall",
-              375,
-              630
-            ],
-            [
               "fallen_adept",
               1080,
               255
-            ],
-            [
-              "fallen_adept",
-              1080,
-              650
-            ],
-            [
-              "grave_hound",
-              800,
-              450
             ]
           ]
         },
@@ -240,21 +132,6 @@
               "grave_hound",
               1110,
               650
-            ],
-            [
-              "grave_hound",
-              1110,
-              250
-            ],
-            [
-              "bone_thrall",
-              600,
-              450
-            ],
-            [
-              "fallen_adept",
-              1000,
-              450
             ]
           ]
         }
@@ -289,11 +166,6 @@
               390
             ],
             [
-              "bone_thrall",
-              375,
-              510
-            ],
-            [
               "fallen_adept",
               440,
               450
@@ -302,73 +174,6 @@
               "grave_hound",
               390,
               510
-            ],
-            [
-              "fallen_adept",
-              1000,
-              300
-            ],
-            [
-              "grave_hound",
-              1000,
-              600
-            ],
-            [
-              "grave_hound",
-              1100,
-              450
-            ],
-            [
-              "fallen_adept",
-              1080,
-              255
-            ]
-          ]
-        },
-        {
-          "trigger": "on_clear",
-          "delay_ticks": 30,
-          "enemies": [
-            [
-              "bone_thrall",
-              500,
-              450
-            ],
-            [
-              "fallen_adept",
-              1000,
-              450
-            ],
-            [
-              "grave_hound",
-              900,
-              300
-            ]
-          ]
-        },
-        {
-          "trigger": "on_clear",
-          "delay_ticks": 30,
-          "enemies": [
-            [
-              "fallen_adept",
-              1080,
-              255
-            ],
-            [
-              "fallen_adept",
-              1080,
-              650
-            ],
-            [
-              "grave_hound",
-              1110,
-              450
-            ],
-            [
-              "grave_hound",
-              1000,
-              300
             ]
           ]
         }
@@ -446,32 +251,6 @@
               "grave_hound",
               1100,
               640
-            ],
-            [
-              "fallen_adept",
-              1000,
-              450
-            ],
-            [
-              "grave_hound",
-              900,
-              300
-            ]
-          ]
-        },
-        {
-          "trigger": "on_clear",
-          "delay_ticks": 30,
-          "enemies": [
-            [
-              "fallen_adept",
-              1080,
-              255
-            ],
-            [
-              "grave_hound",
-              1110,
-              450
             ]
           ]
         }

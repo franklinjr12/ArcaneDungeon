@@ -50,7 +50,7 @@
     "armor_scale": 100,
     "arc_radius": 220,
     "arc_damage_scale": 0.65,
-    "regen_mana_per_tick": 2.0,
+    "regen_mana_per_tick": 0.3,
     "player_max_mana": 120,
     "base_target_hp": 120,
     "player_team": 1,
