@@ -207,10 +207,12 @@ func _run() -> void:
 	var menu = load("res://scenes/main.tscn").instantiate()
 	root.add_child(menu)
 	await process_frame
-	expect(menu.volume_slider != null and menu.flash_toggle != null and menu.shake_toggle != null,"AD-019 menu has settings row")
-	menu.flash_toggle.set_pressed(true)
-	menu.shake_toggle.set_pressed(false)
-	menu.volume_slider.value = 0.5
+	menu.open_settings()
+	var s = menu.settings_screen
+	expect(s.volume_sliders["Master"] != null and s.flash_toggle != null and s.shake_toggle != null,"AD-019 menu has settings row")
+	s.flash_toggle.set_pressed(true)
+	s.shake_toggle.set_pressed(true)
+	s.volume_sliders["Master"].value = 0.5
 	menu.queue_free()
 	await process_frame
 	var reborn = preload("res://game/core/save_service.gd").new()

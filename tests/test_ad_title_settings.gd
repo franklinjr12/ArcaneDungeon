@@ -43,3 +43,25 @@ func run(t) -> void:
 	svc.free()
 	_clean()
 	DirAccess.remove_absolute(DIR)
+	_title(t)
+
+func _title(t) -> void:
+	var root = (Engine.get_main_loop() as SceneTree).root
+	var menu = load("res://scenes/main.tscn").instantiate()
+	menu.show_debug_entries = false
+	root.add_child(menu)
+	var texts := []
+	for b in menu.find_children("*", "Button", true, false):
+		texts.append(b.text)
+	t.equal(texts, ["New Run", "Settings", "Quit"], "AD-067 release title buttons")
+	t.check(menu.find_child("SandboxButton", true, false) == null and menu.find_child("ArenaButton", true, false) == null, "AD-067 no debug entries in release")
+	menu.open_settings()
+	t.check(menu.settings_screen.visible and not menu.panel.visible, "AD-067 settings replaces title panel")
+	menu.settings_screen.back_requested.emit()
+	t.check(menu.panel.visible and not menu.settings_screen.visible, "AD-067 back restores title panel")
+	menu.free()
+	var dbg = load("res://scenes/main.tscn").instantiate()
+	dbg.show_debug_entries = true
+	root.add_child(dbg)
+	t.check(dbg.find_child("SandboxButton", true, false) != null and dbg.find_child("ArenaButton", true, false) != null, "AD-067 debug entries when enabled")
+	dbg.free()

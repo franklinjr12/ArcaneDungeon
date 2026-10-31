@@ -19,12 +19,7 @@ func _run() -> void:
 		printerr("navigation: expected MainMenu")
 		quit(1)
 		return
-	var buttons = current_scene.find_children("*","Button",true,false)
-	if buttons.size() != 3:
-		printerr("navigation: expected 3 launcher buttons, found ",buttons.size())
-		quit(1)
-		return
-	buttons[0].pressed.emit()
+	current_scene.find_child("SandboxButton",true,false).pressed.emit()
 	await process_frame
 	if current_scene == null or current_scene.name != "MagicSandbox":
 		printerr("navigation: Sandbox button failed")
@@ -41,8 +36,7 @@ func _run() -> void:
 	else:
 		print("NAVIGATION PASS: Back")
 	if current_scene != null and current_scene.name == "MainMenu":
-		var more_buttons = current_scene.find_children("*","Button",true,false)
-		more_buttons[1].pressed.emit()
+		current_scene.find_child("ArenaButton",true,false).pressed.emit()
 		await process_frame
 	if current_scene == null or current_scene.name != "CombatArena":
 		printerr("navigation: Arena button failed")
@@ -54,12 +48,12 @@ func _run() -> void:
 		home[0].pressed.emit()
 		await process_frame
 	if current_scene != null and current_scene.name == "MainMenu":
-		var run_buttons = current_scene.find_children("*","Button",true,false)
-		run_buttons[2].pressed.emit()
+		current_scene.find_child("NewRunButton",true,false).pressed.emit()
 		await process_frame
-	if current_scene != null and current_scene.name == "VerticalSlice":
-		print("NAVIGATION PASS: Run")
+		await process_frame
+	if current_scene != null and current_scene.name == "VerticalSlice" and current_scene.flow.room.values["id"] == "s1_r1":
+		print("NAVIGATION PASS: New Run")
 	else:
-		printerr("navigation: Run button failed")
+		printerr("navigation: New Run button failed")
 		failures += 1
 	quit(1 if failures > 0 else 0)
