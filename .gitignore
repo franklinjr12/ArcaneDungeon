@@ -15,3 +15,7 @@
 
 # Reference images are documentation, not shipped runtime textures
 docs/assets/*.import
+
+# Python bytecode
+__pycache__/
+*.pyc
