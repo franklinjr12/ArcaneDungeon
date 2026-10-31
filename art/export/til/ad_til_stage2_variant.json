@@ -1,0 +1,47 @@
+{
+ "id": "AD-TIL-005",
+ "name": "ad_til_stage2_variant",
+ "applies_to": [
+  "ad_til_ruins_floor",
+  "ad_til_ruins_wall"
+ ],
+ "note": "Stage-2 room = palette swap of the ruins set (deeper, colder). 0 new frames. Index map applied at import/shader time.",
+ "swap": [
+  {
+   "from_name": "stone-1",
+   "from_index": 33,
+   "to_name": "ui-navy-2",
+   "to_index": 1
+  },
+  {
+   "from_name": "stone-2",
+   "from_index": 34,
+   "to_name": "water-1",
+   "to_index": 37
+  },
+  {
+   "from_name": "stone-3",
+   "from_index": 35,
+   "to_name": "water-2",
+   "to_index": 38
+  },
+  {
+   "from_name": "stone-4",
+   "from_index": 36,
+   "to_name": "fx-ice-2",
+   "to_index": 53
+  },
+  {
+   "from_name": "fx-arcane-3",
+   "from_index": 62,
+   "to_name": "fx-ice-3",
+   "to_index": 54
+  },
+  {
+   "from_name": "foliage-3",
+   "from_index": 30,
+   "to_name": "water-2",
+   "to_index": 38
+  }
+ ]
+}

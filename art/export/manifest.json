@@ -1,0 +1,2290 @@
+{
+ "assets": {
+  "ad_bos_ossuary_warden": {
+   "canvas": [
+    64,
+    64
+   ],
+   "category": "bos",
+   "id": "AD-BOS-001",
+   "json": "res://art/export/bos/ad_bos_ossuary_warden.json",
+   "pivot": [
+    32,
+    61
+   ],
+   "png": "res://art/export/bos/ad_bos_ossuary_warden.png",
+   "row": "AD-024",
+   "slices": {
+    "hurtbox": {
+     "h": 45,
+     "w": 28,
+     "x": 18,
+     "y": 16
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 32,
+     "y": 61
+    }
+   },
+   "tags": {
+    "burst": {
+     "frames": 6,
+     "from": 12,
+     "ms": [
+      70,
+      70,
+      70,
+      70,
+      70,
+      70
+     ],
+     "to": 17
+    },
+    "dash": {
+     "frames": 4,
+     "from": 21,
+     "ms": [
+      60,
+      60,
+      60,
+      60
+     ],
+     "to": 24
+    },
+    "death": {
+     "frames": 10,
+     "from": 33,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 42
+    },
+    "hit": {
+     "frames": 2,
+     "from": 31,
+     "ms": [
+      80,
+      80
+     ],
+     "to": 32
+    },
+    "idle": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    },
+    "move": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 7
+    },
+    "phase": {
+     "frames": 6,
+     "from": 25,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 30
+    },
+    "telegraph_burst": {
+     "frames": 4,
+     "from": 8,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 11
+    },
+    "telegraph_dash": {
+     "frames": 3,
+     "from": 18,
+     "ms": [
+      120,
+      120,
+      120
+     ],
+     "to": 20
+    }
+   }
+  },
+  "ad_chr_mage": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "chr",
+   "id": "AD-CHR-001",
+   "json": "res://art/export/chr/ad_chr_mage.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/chr/ad_chr_mage.png",
+   "row": "AD-024",
+   "slices": {
+    "hurtbox": {
+     "h": 22,
+     "w": 11,
+     "x": 11,
+     "y": 8
+    },
+    "muzzle": {
+     "h": 2,
+     "w": 2,
+     "x": 23,
+     "y": 5
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "cast_down": {
+     "frames": 5,
+     "from": 10,
+     "ms": [
+      80,
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 14
+    },
+    "cast_side": {
+     "frames": 5,
+     "from": 37,
+     "ms": [
+      80,
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 41
+    },
+    "cast_up": {
+     "frames": 5,
+     "from": 64,
+     "ms": [
+      80,
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 68
+    },
+    "dash_down": {
+     "frames": 4,
+     "from": 15,
+     "ms": [
+      60,
+      60,
+      60,
+      60
+     ],
+     "to": 18
+    },
+    "dash_side": {
+     "frames": 4,
+     "from": 42,
+     "ms": [
+      60,
+      60,
+      60,
+      60
+     ],
+     "to": 45
+    },
+    "dash_up": {
+     "frames": 4,
+     "from": 69,
+     "ms": [
+      60,
+      60,
+      60,
+      60
+     ],
+     "to": 72
+    },
+    "death_down": {
+     "frames": 6,
+     "from": 21,
+     "ms": [
+      120,
+      120,
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 26
+    },
+    "death_side": {
+     "frames": 6,
+     "from": 48,
+     "ms": [
+      120,
+      120,
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 53
+    },
+    "death_up": {
+     "frames": 6,
+     "from": 75,
+     "ms": [
+      120,
+      120,
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 80
+    },
+    "hit_down": {
+     "frames": 2,
+     "from": 19,
+     "ms": [
+      80,
+      80
+     ],
+     "to": 20
+    },
+    "hit_side": {
+     "frames": 2,
+     "from": 46,
+     "ms": [
+      80,
+      80
+     ],
+     "to": 47
+    },
+    "hit_up": {
+     "frames": 2,
+     "from": 73,
+     "ms": [
+      80,
+      80
+     ],
+     "to": 74
+    },
+    "idle_down": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    },
+    "idle_side": {
+     "frames": 4,
+     "from": 27,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 30
+    },
+    "idle_up": {
+     "frames": 4,
+     "from": 54,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 57
+    },
+    "walk_down": {
+     "frames": 6,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 9
+    },
+    "walk_side": {
+     "frames": 6,
+     "from": 31,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 36
+    },
+    "walk_up": {
+     "frames": 6,
+     "from": 58,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 63
+    }
+   }
+  },
+  "ad_enm_bone_thrall": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "enm",
+   "id": "AD-ENM-001",
+   "json": "res://art/export/enm/ad_enm_bone_thrall.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/enm/ad_enm_bone_thrall.png",
+   "row": "AD-024",
+   "slices": {
+    "hurtbox": {
+     "h": 21,
+     "w": 10,
+     "x": 11,
+     "y": 9
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "attack": {
+     "frames": 4,
+     "from": 11,
+     "ms": [
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 14
+    },
+    "death": {
+     "frames": 5,
+     "from": 17,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 21
+    },
+    "hit": {
+     "frames": 2,
+     "from": 15,
+     "ms": [
+      80,
+      80
+     ],
+     "to": 16
+    },
+    "idle": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    },
+    "move": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 7
+    },
+    "spawn": {
+     "frames": 4,
+     "from": 22,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 25
+    },
+    "telegraph": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      120,
+      120,
+      120
+     ],
+     "to": 10
+    }
+   }
+  },
+  "ad_enm_fallen_adept": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "enm",
+   "id": "AD-ENM-002",
+   "json": "res://art/export/enm/ad_enm_fallen_adept.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/enm/ad_enm_fallen_adept.png",
+   "row": "AD-024",
+   "slices": {
+    "hurtbox": {
+     "h": 21,
+     "w": 10,
+     "x": 11,
+     "y": 9
+    },
+    "muzzle": {
+     "h": 2,
+     "w": 2,
+     "x": 23,
+     "y": 5
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "attack": {
+     "frames": 4,
+     "from": 11,
+     "ms": [
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 14
+    },
+    "death": {
+     "frames": 5,
+     "from": 17,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 21
+    },
+    "hit": {
+     "frames": 2,
+     "from": 15,
+     "ms": [
+      80,
+      80
+     ],
+     "to": 16
+    },
+    "idle": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    },
+    "move": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 7
+    },
+    "spawn": {
+     "frames": 4,
+     "from": 22,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 25
+    },
+    "telegraph": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      120,
+      120,
+      120
+     ],
+     "to": 10
+    }
+   }
+  },
+  "ad_enm_grave_hound": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "enm",
+   "id": "AD-ENM-003",
+   "json": "res://art/export/enm/ad_enm_grave_hound.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/enm/ad_enm_grave_hound.png",
+   "row": "AD-024",
+   "slices": {
+    "hurtbox": {
+     "h": 15,
+     "w": 24,
+     "x": 4,
+     "y": 15
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "attack": {
+     "frames": 4,
+     "from": 11,
+     "ms": [
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 14
+    },
+    "death": {
+     "frames": 5,
+     "from": 17,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 21
+    },
+    "hit": {
+     "frames": 2,
+     "from": 15,
+     "ms": [
+      80,
+      80
+     ],
+     "to": 16
+    },
+    "idle": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    },
+    "move": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 7
+    },
+    "spawn": {
+     "frames": 4,
+     "from": 22,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 25
+    },
+    "telegraph": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      120,
+      120,
+      120
+     ],
+     "to": 10
+    }
+   }
+  },
+  "ad_npc_guild_factor": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "npc",
+   "id": "AD-NPC-001",
+   "json": "res://art/export/npc/ad_npc_guild_factor.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/npc/ad_npc_guild_factor.png",
+   "row": "AD-024",
+   "slices": {
+    "hurtbox": {
+     "h": 22,
+     "w": 11,
+     "x": 11,
+     "y": 8
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "idle": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      200,
+      200,
+      200,
+      200
+     ],
+     "to": 3
+    },
+    "talk": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 7
+    }
+   }
+  },
+  "ad_npc_training_dummy": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "npc",
+   "id": "AD-NPC-002",
+   "json": "res://art/export/npc/ad_npc_training_dummy.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/npc/ad_npc_training_dummy.png",
+   "row": "AD-024",
+   "slices": {
+    "hurtbox": {
+     "h": 22,
+     "w": 14,
+     "x": 9,
+     "y": 8
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "hit": {
+     "frames": 2,
+     "from": 1,
+     "ms": [
+      80,
+      80
+     ],
+     "to": 2
+    },
+    "idle": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      1000
+     ],
+     "to": 0
+    },
+    "reset": {
+     "frames": 3,
+     "from": 3,
+     "ms": [
+      120,
+      120,
+      120
+     ],
+     "to": 5
+    }
+   }
+  },
+  "ad_npc_training_dummy_mobile": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "npc",
+   "id": "AD-NPC-002M",
+   "json": "res://art/export/npc/ad_npc_training_dummy_mobile.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/npc/ad_npc_training_dummy_mobile.png",
+   "row": "AD-024",
+   "slices": {
+    "hurtbox": {
+     "h": 22,
+     "w": 14,
+     "x": 9,
+     "y": 8
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "hit": {
+     "frames": 2,
+     "from": 4,
+     "ms": [
+      80,
+      80
+     ],
+     "to": 5
+    },
+    "move": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_por_mage_32": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "por",
+   "id": "AD-POR-001",
+   "json": "res://art/export/por/ad_por_mage_32.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/por/ad_por_mage_32.png",
+   "row": "AD-024",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "idle": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      1000
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_coin_pickup": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "prp",
+   "id": "AD-PRP-007",
+   "json": "res://art/export/prp/ad_prp_coin_pickup.json",
+   "pivot": [
+    8,
+    14
+   ],
+   "png": "res://art/export/prp/ad_prp_coin_pickup.png",
+   "row": "AD-025",
+   "slices": {
+    "hurtbox": {
+     "h": 12,
+     "w": 11,
+     "x": 3,
+     "y": 3
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 14
+    }
+   },
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_prp_exit_portal": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-PRP-002",
+   "json": "res://art/export/prp/ad_prp_exit_portal.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_exit_portal.png",
+   "row": "AD-025",
+   "slices": {
+    "hurtbox": {
+     "h": 29,
+     "w": 25,
+     "x": 4,
+     "y": 2
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "loop": {
+     "frames": 6,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 5
+    }
+   }
+  },
+  "ad_prp_guild_stall": {
+   "canvas": [
+    48,
+    48
+   ],
+   "category": "prp",
+   "id": "AD-PRP-005",
+   "json": "res://art/export/prp/ad_prp_guild_stall.json",
+   "pivot": [
+    24,
+    46
+   ],
+   "png": "res://art/export/prp/ad_prp_guild_stall.png",
+   "row": "AD-025",
+   "slices": {
+    "hurtbox": {
+     "h": 43,
+     "w": 42,
+     "x": 3,
+     "y": 4
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 24,
+     "y": 46
+    }
+   },
+   "tags": {
+    "static": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      1000
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_room_gate": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-PRP-001",
+   "json": "res://art/export/prp/ad_prp_room_gate.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_room_gate.png",
+   "row": "AD-025",
+   "slices": {
+    "hurtbox": {
+     "h": 29,
+     "w": 28,
+     "x": 2,
+     "y": 2
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "lock": {
+     "frames": 4,
+     "from": 6,
+     "ms": [
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 9
+    },
+    "locked": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      1000
+     ],
+     "to": 0
+    },
+    "open": {
+     "frames": 1,
+     "from": 5,
+     "ms": [
+      1000
+     ],
+     "to": 5
+    },
+    "unlock": {
+     "frames": 4,
+     "from": 1,
+     "ms": [
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 4
+    }
+   }
+  },
+  "ad_prp_rubble_set": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-PRP-008",
+   "json": "res://art/export/prp/ad_prp_rubble_set.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_rubble_set.png",
+   "row": "AD-025",
+   "slices": {
+    "hurtbox": {
+     "h": 25,
+     "w": 28,
+     "x": 3,
+     "y": 6
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "static": {
+     "frames": 6,
+     "from": 0,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 5
+    }
+   }
+  },
+  "ad_prp_rune_pedestal": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-PRP-003",
+   "json": "res://art/export/prp/ad_prp_rune_pedestal.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_rune_pedestal.png",
+   "row": "AD-025",
+   "slices": {
+    "hurtbox": {
+     "h": 31,
+     "w": 20,
+     "x": 6,
+     "y": 0
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "collect": {
+     "frames": 6,
+     "from": 4,
+     "ms": [
+      80,
+      80,
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 9
+    },
+    "idle": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_prp_rune_pickup": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "prp",
+   "id": "AD-PRP-009",
+   "json": "res://art/export/prp/ad_prp_rune_pickup.json",
+   "pivot": [
+    8,
+    14
+   ],
+   "png": "res://art/export/prp/ad_prp_rune_pickup.png",
+   "row": "AD-025",
+   "slices": {
+    "hurtbox": {
+     "h": 15,
+     "w": 7,
+     "x": 5,
+     "y": 0
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 14
+    }
+   },
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_prp_spell_lectern": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-PRP-006",
+   "json": "res://art/export/prp/ad_prp_spell_lectern.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_spell_lectern.png",
+   "row": "AD-025",
+   "slices": {
+    "hurtbox": {
+     "h": 26,
+     "w": 20,
+     "x": 6,
+     "y": 5
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "idle": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_prp_test_range_markers": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-PRP-014",
+   "json": "res://art/export/prp/ad_prp_test_range_markers.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_test_range_markers.png",
+   "row": "AD-025",
+   "slices": {
+    "hurtbox": {
+     "h": 26,
+     "w": 25,
+     "x": 4,
+     "y": 5
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "static": {
+     "frames": 3,
+     "from": 0,
+     "ms": [
+      1000,
+      1000,
+      1000
+     ],
+     "to": 2
+    }
+   }
+  },
+  "ad_prp_torch": {
+   "canvas": [
+    16,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-PRP-004",
+   "json": "res://art/export/prp/ad_prp_torch.json",
+   "pivot": [
+    8,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_torch.png",
+   "row": "AD-025",
+   "slices": {
+    "hurtbox": {
+     "h": 30,
+     "w": 11,
+     "x": 3,
+     "y": 1
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 30
+    }
+   },
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_prp_workshop_exit": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-PRP-015",
+   "json": "res://art/export/prp/ad_prp_workshop_exit.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_workshop_exit.png",
+   "row": "AD-025",
+   "slices": {
+    "hurtbox": {
+     "h": 29,
+     "w": 26,
+     "x": 3,
+     "y": 2
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "idle": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_til_guild_workshop": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "til",
+   "id": "AD-TIL-003",
+   "json": "res://art/export/til/ad_til_guild_workshop.json",
+   "pivot": [
+    0,
+    15
+   ],
+   "png": "res://art/export/til/ad_til_guild_workshop.png",
+   "row": "AD-025",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 15
+    }
+   },
+   "tags": {
+    "floor": {
+     "frames": 8,
+     "from": 0,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 7
+    },
+    "rug": {
+     "frames": 9,
+     "from": 8,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 16
+    },
+    "rune_circle": {
+     "frames": 4,
+     "from": 24,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 27
+    },
+    "wall": {
+     "frames": 7,
+     "from": 17,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 23
+    }
+   }
+  },
+  "ad_til_ruins_boss_room": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "til",
+   "id": "AD-TIL-004",
+   "json": "res://art/export/til/ad_til_ruins_boss_room.json",
+   "pivot": [
+    0,
+    15
+   ],
+   "png": "res://art/export/til/ad_til_ruins_boss_room.png",
+   "row": "AD-025",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 15
+    }
+   },
+   "tags": {
+    "dais": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 7
+    },
+    "rift_scar": {
+     "frames": 4,
+     "from": 8,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 11
+    },
+    "rune_inlay": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_til_ruins_floor": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "til",
+   "id": "AD-TIL-001",
+   "json": "res://art/export/til/ad_til_ruins_floor.json",
+   "pivot": [
+    0,
+    15
+   ],
+   "png": "res://art/export/til/ad_til_ruins_floor.png",
+   "row": "AD-025",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 15
+    }
+   },
+   "tags": {
+    "accent": {
+     "frames": 8,
+     "from": 16,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 23
+    },
+    "autotile": {
+     "frames": 16,
+     "from": 0,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 15
+    }
+   }
+  },
+  "ad_til_ruins_wall": {
+   "canvas": [
+    16,
+    32
+   ],
+   "category": "til",
+   "id": "AD-TIL-002",
+   "json": "res://art/export/til/ad_til_ruins_wall.json",
+   "pivot": [
+    0,
+    31
+   ],
+   "png": "res://art/export/til/ad_til_ruins_wall.png",
+   "row": "AD-025",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 31
+    }
+   },
+   "tags": {
+    "front": {
+     "frames": 10,
+     "from": 0,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 9
+    },
+    "top": {
+     "frames": 10,
+     "from": 10,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 19
+    }
+   }
+  },
+  "ad_til_stage2_variant": {
+   "canvas": null,
+   "category": "til",
+   "id": "AD-TIL-005",
+   "json": "res://art/export/til/ad_til_stage2_variant.json",
+   "kind": "swap_table",
+   "pivot": null,
+   "png": null,
+   "row": "AD-025",
+   "slices": {},
+   "tags": {}
+  },
+  "ad_ui_crosshair": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "ui",
+   "id": "AD-UI-009",
+   "json": "res://art/export/ui/ad_ui_crosshair.json",
+   "pivot": [
+    8,
+    8
+   ],
+   "png": "res://art/export/ui/ad_ui_crosshair.png",
+   "row": "AD-029",
+   "slices": {
+    "hotspot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 8
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 8
+    }
+   },
+   "tags": {
+    "states": {
+     "frames": 2,
+     "from": 0,
+     "ms": [
+      100,
+      100
+     ],
+     "to": 1
+    }
+   }
+  },
+  "ad_ui_editor_loadout_list": {
+   "canvas": [
+    96,
+    32
+   ],
+   "category": "ui",
+   "id": "AD-UI-015",
+   "json": "res://art/export/ui/ad_ui_editor_loadout_list.json",
+   "pivot": [
+    0,
+    0
+   ],
+   "png": "res://art/export/ui/ad_ui_editor_loadout_list.png",
+   "row": "AD-029",
+   "slices": {
+    "key_label": {
+     "h": 16,
+     "w": 16,
+     "x": 6,
+     "y": 8
+    },
+    "name": {
+     "h": 7,
+     "w": 54,
+     "x": 28,
+     "y": 6
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 0
+    },
+    "row_9slice": {
+     "h": 32,
+     "w": 96,
+     "x": 0,
+     "y": 0
+    },
+    "scroll_btn": {
+     "h": 16,
+     "w": 16,
+     "x": 40,
+     "y": 8
+    }
+   },
+   "tags": {
+    "row_states": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 3
+    },
+    "scroll": {
+     "frames": 2,
+     "from": 4,
+     "ms": [
+      100,
+      100
+     ],
+     "to": 5
+    }
+   }
+  },
+  "ad_ui_formula_socket": {
+   "canvas": [
+    20,
+    20
+   ],
+   "category": "ui",
+   "id": "AD-UI-007",
+   "json": "res://art/export/ui/ad_ui_formula_socket.json",
+   "pivot": [
+    10,
+    10
+   ],
+   "png": "res://art/export/ui/ad_ui_formula_socket.png",
+   "row": "AD-029",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 10,
+     "y": 10
+    },
+    "socket_content": {
+     "h": 10,
+     "w": 10,
+     "x": 5,
+     "y": 5
+    },
+    "socket_frame": {
+     "h": 20,
+     "w": 20,
+     "x": 0,
+     "y": 0
+    }
+   },
+   "tags": {
+    "states": {
+     "frames": 16,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 15
+    }
+   }
+  },
+  "ad_ui_invalid_marker": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "ui",
+   "id": "AD-UI-008",
+   "json": "res://art/export/ui/ad_ui_invalid_marker.json",
+   "pivot": [
+    8,
+    8
+   ],
+   "png": "res://art/export/ui/ad_ui_invalid_marker.png",
+   "row": "AD-029",
+   "slices": {
+    "marker": {
+     "h": 14,
+     "w": 14,
+     "x": 1,
+     "y": 1
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 8
+    }
+   },
+   "tags": {
+    "play": {
+     "frames": 2,
+     "from": 0,
+     "ms": [
+      250,
+      250
+     ],
+     "to": 1
+    }
+   }
+  },
+  "ad_ui_reaction_notice": {
+   "canvas": [
+    48,
+    16
+   ],
+   "category": "ui",
+   "id": "AD-UI-006",
+   "json": "res://art/export/ui/ad_ui_reaction_notice.json",
+   "pivot": [
+    0,
+    0
+   ],
+   "png": "res://art/export/ui/ad_ui_reaction_notice.png",
+   "row": "AD-029",
+   "slices": {
+    "notice_9slice": {
+     "h": 16,
+     "w": 48,
+     "x": 0,
+     "y": 0
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 0
+    },
+    "symbol": {
+     "h": 10,
+     "w": 10,
+     "x": 3,
+     "y": 3
+    },
+    "text": {
+     "h": 5,
+     "w": 28,
+     "x": 17,
+     "y": 5
+    }
+   },
+   "tags": {
+    "static": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      100
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_ui_screen_layouts": {
+   "canvas": [
+    640,
+    360
+   ],
+   "category": "ui",
+   "id": "AD-UI-012",
+   "json": "res://art/export/ui/ad_ui_screen_layouts.json",
+   "pivot": [
+    0,
+    0
+   ],
+   "png": "res://art/export/ui/ad_ui_screen_layouts.png",
+   "row": "AD-029",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 0
+    },
+    "safe_area": {
+     "h": 342,
+     "w": 608,
+     "x": 16,
+     "y": 9
+    }
+   },
+   "tags": {
+    "hud": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      100
+     ],
+     "to": 0
+    },
+    "merchant": {
+     "frames": 1,
+     "from": 2,
+     "ms": [
+      100
+     ],
+     "to": 2
+    },
+    "pause": {
+     "frames": 1,
+     "from": 4,
+     "ms": [
+      100
+     ],
+     "to": 4
+    },
+    "reward_pick": {
+     "frames": 1,
+     "from": 3,
+     "ms": [
+      100
+     ],
+     "to": 3
+    },
+    "run_summary": {
+     "frames": 1,
+     "from": 5,
+     "ms": [
+      100
+     ],
+     "to": 5
+    },
+    "settings": {
+     "frames": 1,
+     "from": 7,
+     "ms": [
+      100
+     ],
+     "to": 7
+    },
+    "spell_editor": {
+     "frames": 1,
+     "from": 1,
+     "ms": [
+      100
+     ],
+     "to": 1
+    },
+    "title": {
+     "frames": 1,
+     "from": 6,
+     "ms": [
+      100
+     ],
+     "to": 6
+    }
+   }
+  },
+  "ad_ui_tooltip_and_shop_card": {
+   "canvas": [
+    48,
+    48
+   ],
+   "category": "ui",
+   "id": "AD-UI-010",
+   "json": "res://art/export/ui/ad_ui_tooltip_and_shop_card.json",
+   "pivot": [
+    0,
+    0
+   ],
+   "png": "res://art/export/ui/ad_ui_tooltip_and_shop_card.png",
+   "row": "AD-029",
+   "slices": {
+    "icon_slot": {
+     "h": 16,
+     "w": 16,
+     "x": 16,
+     "y": 5
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 0
+    },
+    "tooltip_9slice": {
+     "h": 48,
+     "w": 48,
+     "x": 0,
+     "y": 0
+    }
+   },
+   "tags": {
+    "static": {
+     "frames": 2,
+     "from": 0,
+     "ms": [
+      100,
+      100
+     ],
+     "to": 1
+    }
+   }
+  },
+  "arc_fnt_digits_3x5": {
+   "canvas": [
+    64,
+    8
+   ],
+   "category": "fnt",
+   "id": "AD-UI-011",
+   "json": "res://art/export/fnt/arc_fnt_digits_3x5.json",
+   "pivot": [
+    0,
+    0
+   ],
+   "png": "res://art/export/fnt/arc_fnt_digits_3x5.png",
+   "row": "AD-029",
+   "slices": {
+    "cell": {
+     "h": 8,
+     "w": 4,
+     "x": 0,
+     "y": 0
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 0
+    }
+   },
+   "tags": {
+    "atlas": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      100
+     ],
+     "to": 0
+    }
+   }
+  },
+  "arc_fnt_m5x7": {
+   "canvas": [
+    128,
+    48
+   ],
+   "category": "fnt",
+   "id": "AD-UI-011",
+   "json": "res://art/export/fnt/arc_fnt_m5x7.json",
+   "pivot": [
+    0,
+    0
+   ],
+   "png": "res://art/export/fnt/arc_fnt_m5x7.png",
+   "row": "AD-029",
+   "slices": {
+    "cell": {
+     "h": 8,
+     "w": 8,
+     "x": 0,
+     "y": 0
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 0
+    }
+   },
+   "tags": {
+    "atlas": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      100
+     ],
+     "to": 0
+    }
+   }
+  },
+  "arc_fnt_silkscreen": {
+   "canvas": [
+    128,
+    48
+   ],
+   "category": "fnt",
+   "id": "AD-UI-011",
+   "json": "res://art/export/fnt/arc_fnt_silkscreen.json",
+   "pivot": [
+    0,
+    0
+   ],
+   "png": "res://art/export/fnt/arc_fnt_silkscreen.png",
+   "row": "AD-029",
+   "slices": {
+    "cell": {
+     "h": 8,
+     "w": 8,
+     "x": 0,
+     "y": 0
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 0
+    }
+   },
+   "tags": {
+    "atlas": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      100
+     ],
+     "to": 0
+    }
+   }
+  },
+  "arc_ui_button": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "ui",
+   "id": "AD-UI-002",
+   "json": "res://art/export/ui/arc_ui_button.json",
+   "pivot": [
+    0,
+    0
+   ],
+   "png": "res://art/export/ui/arc_ui_button.png",
+   "row": "AD-029",
+   "slices": {
+    "button_9slice": {
+     "h": 32,
+     "w": 32,
+     "x": 0,
+     "y": 0
+    },
+    "label": {
+     "h": 24,
+     "w": 24,
+     "x": 4,
+     "y": 4
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 0
+    }
+   },
+   "tags": {
+    "states": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 3
+    }
+   }
+  },
+  "arc_ui_panel_9slice": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "ui",
+   "id": "AD-UI-001",
+   "json": "res://art/export/ui/arc_ui_panel_9slice.json",
+   "pivot": [
+    0,
+    0
+   ],
+   "png": "res://art/export/ui/arc_ui_panel_9slice.png",
+   "row": "AD-029",
+   "slices": {
+    "panel_9slice": {
+     "h": 16,
+     "w": 16,
+     "x": 0,
+     "y": 0
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 0
+    }
+   },
+   "tags": {
+    "static": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      100
+     ],
+     "to": 0
+    }
+   }
+  }
+ },
+ "source_rows": [
+  "AD-024",
+  "AD-025",
+  "AD-029"
+ ],
+ "version": 1
+}

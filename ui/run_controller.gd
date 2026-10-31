@@ -7,6 +7,7 @@ const TestCanvas = preload("res://ui/sandbox_canvas.gd")
 const PortraitHUD = preload("res://ui/pixel_hud.gd")
 const RuneAtlas = preload("res://assets/pixel/rune_icons.png")
 const Prompts = preload("res://ui/onboarding_prompts.gd")
+const Art = preload("res://ui/pixel_art_renderer.gd")
 const InputActions = preload("res://ui/input_actions.gd")
 const MerchantScript = preload("res://world/merchant.gd")
 var flow
@@ -227,6 +228,8 @@ func _input(event: InputEvent) -> void:
 				if InputActions.debug_keys_enabled(): _policy()
 			KEY_F3:
 				if InputActions.debug_keys_enabled(): arena_canvas.show_debug = not arena_canvas.show_debug
+			KEY_F6:
+				if InputActions.debug_keys_enabled(): Art.toggle_art_export(); arena_canvas.queue_redraw()
 
 func _process(delta: float) -> void:
 	if delta > 0 and delta < 2.0:
