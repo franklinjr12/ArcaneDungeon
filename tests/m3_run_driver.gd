@@ -3,7 +3,7 @@ extends RefCounted
 const Flow = preload("res://world/run_flow.gd")
 const SEED := 20261022
 
-static func fight(flow, maximum_ticks: int = 4000) -> Dictionary:
+static func fight(flow, maximum_ticks: int = 4000, on_tick: Callable = Callable()) -> Dictionary:
 	for iteration in maximum_ticks:
 		if flow.state != "fighting":
 			break
@@ -69,6 +69,8 @@ static func fight(flow, maximum_ticks: int = 4000) -> Dictionary:
 				if bolt != null and session.sim.loadout.slots[0]["cooldown"] == 0 and session.sim.mana >= float(bolt.snapshot()["mana_cost"]):
 					slot = 0
 		flow.step({"move":movement,"aim":direction,"cursor":cursor,"cast":slot,"dash":dash})
+		if on_tick.is_valid():
+			on_tick.call(flow)
 	return {"state":flow.state,"tick":flow.session.sim.clock.tick,
 		"hp":flow.session.sim.actor.health.current,"casts":flow.session.player.casts,
 		"enemies":flow.session.alive_enemies()}
