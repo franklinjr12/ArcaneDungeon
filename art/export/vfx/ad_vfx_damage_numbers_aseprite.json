@@ -1,0 +1,153 @@
+{ "frames": [
+   {
+    "filename": "ad_vfx_damage_numbers_glyphs_00",
+    "frame": { "x": 1, "y": 1, "w": 8, "h": 8 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 8 },
+    "sourceSize": { "w": 8, "h": 8 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_vfx_damage_numbers_glyphs_01",
+    "frame": { "x": 11, "y": 1, "w": 8, "h": 8 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 8 },
+    "sourceSize": { "w": 8, "h": 8 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_vfx_damage_numbers_glyphs_02",
+    "frame": { "x": 21, "y": 1, "w": 8, "h": 8 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 8 },
+    "sourceSize": { "w": 8, "h": 8 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_vfx_damage_numbers_glyphs_03",
+    "frame": { "x": 31, "y": 1, "w": 8, "h": 8 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 8 },
+    "sourceSize": { "w": 8, "h": 8 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_vfx_damage_numbers_glyphs_04",
+    "frame": { "x": 41, "y": 1, "w": 8, "h": 8 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 8 },
+    "sourceSize": { "w": 8, "h": 8 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_vfx_damage_numbers_glyphs_05",
+    "frame": { "x": 51, "y": 1, "w": 8, "h": 8 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 8 },
+    "sourceSize": { "w": 8, "h": 8 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_vfx_damage_numbers_glyphs_06",
+    "frame": { "x": 1, "y": 11, "w": 8, "h": 8 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 8 },
+    "sourceSize": { "w": 8, "h": 8 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_vfx_damage_numbers_glyphs_07",
+    "frame": { "x": 11, "y": 11, "w": 8, "h": 8 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 8 },
+    "sourceSize": { "w": 8, "h": 8 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_vfx_damage_numbers_glyphs_08",
+    "frame": { "x": 21, "y": 11, "w": 8, "h": 8 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 8 },
+    "sourceSize": { "w": 8, "h": 8 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_vfx_damage_numbers_glyphs_09",
+    "frame": { "x": 31, "y": 11, "w": 8, "h": 8 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 8 },
+    "sourceSize": { "w": 8, "h": 8 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_vfx_damage_numbers_glyphs_10",
+    "frame": { "x": 41, "y": 11, "w": 8, "h": 8 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 8 },
+    "sourceSize": { "w": 8, "h": 8 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_vfx_damage_numbers_glyphs_11",
+    "frame": { "x": 51, "y": 11, "w": 8, "h": 8 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 8 },
+    "sourceSize": { "w": 8, "h": 8 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_vfx_damage_numbers_glyphs_12",
+    "frame": { "x": 1, "y": 21, "w": 8, "h": 8 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 8 },
+    "sourceSize": { "w": 8, "h": 8 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_vfx_damage_numbers_glyphs_13",
+    "frame": { "x": 11, "y": 21, "w": 8, "h": 8 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 8 },
+    "sourceSize": { "w": 8, "h": 8 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_vfx_damage_numbers_glyphs_14",
+    "frame": { "x": 21, "y": 21, "w": 8, "h": 8 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 8, "h": 8 },
+    "sourceSize": { "w": 8, "h": 8 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_vfx_damage_numbers.png",
+  "format": "I8",
+  "size": { "w": 60, "h": 30 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "glyphs", "from": 0, "to": 14, "direction": "forward", "color": "#000000ff" }
+  ],
+  "slices": [
+   { "name": "glyph_digit", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 5, "h": 7 } }] },
+   { "name": "glyph_symbol", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 7, "h": 7 } }] }
+  ]
+ }
+}

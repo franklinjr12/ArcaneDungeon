@@ -23,6 +23,8 @@ func run(t) -> void:
 		t.check(tex is Texture2D, "AD-030 png loads: " + stem)
 		if not tex is Texture2D or not j is Dictionary:
 			continue
+		if e.get("kind", "") == "glyph_atlas":
+			continue
 		var tsize: Vector2i = Vector2i(tex.get_size())
 		var frames: Array = j["frames"]
 		var tags: Array = j["meta"]["frameTags"]
@@ -55,6 +57,9 @@ func run(t) -> void:
 			if s["name"] == "pivot":
 				var b: Dictionary = s["keys"][0]["bounds"]
 				pivot = [b["x"], b["y"]]
+		if e["category"] in ["vfx", "ico"] and pivot == null:
+			t.check(e["pivot"] is Array and e["pivot"].size() == 2, "AD-039 manifest pivot (canvas centre): " + stem)
+			continue
 		t.check(pivot != null, "AD-030 pivot slice in json: " + stem)
 		t.check(e["slices"].has("pivot"), "AD-030 pivot slice in manifest: " + stem)
 		if pivot != null:

@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""AD-030: copy published P0 art exports into art/export/ and write manifest.json."""
+"""AD-030: copy published art exports into art/export/ and write manifest.json.
+
+P0 (default rows): AD-024 AD-025 AD-029.
+P1 (AD-039): python3 scripts/import_art_exports.py \\
+    --rows AD-024 AD-025 AD-029 AD-032 AD-033 AD-034 AD-045 AD-035 AD-036 --supersede AD-045
+AD-045 status_* / extinguish_puff replace the AD-034 ones (--supersede). vfx/ico stems have no
+pivot slice requirement (pivot = canvas centre); the AD-036 glyph atlas is kind 'glyph_atlas'.
+"""
 import argparse
 import json
 import shutil
@@ -9,7 +16,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 DRIVE = Path.home() / "Google Drive/Games/ArcaneDungeon/Art/Tasks"
 FALLBACK = Path("/workspace/art/arcane_dungeon")
-CATS = {"chr", "enm", "bos", "npc", "por", "til", "prp", "ui", "fnt"}
+CATS = {"chr", "enm", "bos", "npc", "por", "til", "prp", "ui", "fnt", "vfx", "ico"}
 
 
 def category(stem):
@@ -29,16 +36,23 @@ def find_row(sources, row):
     return None
 
 
-def build_entry(stem, row, rowdir, errors):
+def load_cards(rowdir):
+    cards = {}
+    for c in sorted((rowdir / "cards").glob("*.json")):
+        cd = json.loads(c.read_text())
+        cards[cd.get("name")] = cd
+    return cards
+
+
+def is_side_file(stem, cards):
+    return stem not in cards and any(stem.startswith(n + "_") for n in cards if n)
+
+
+def build_entry(stem, row, rowdir, cards, errors):
     jpath = rowdir / "export" / (stem + ".json")
     ppath = rowdir / "export" / (stem + ".png")
     data = json.loads(jpath.read_text())
-    card = None
-    for c in sorted((rowdir / "cards").glob("*.json")):
-        cd = json.loads(c.read_text())
-        if cd.get("name") == stem:
-            card = cd
-            break
+    card = cards.get(stem)
     if card is None:
         errors.append(f"{stem}: no card with name == stem in {row}/cards")
         return None
@@ -46,6 +60,13 @@ def build_entry(stem, row, rowdir, errors):
     if not cat:
         errors.append(f"{stem}: cannot derive category")
         return None
+    if "frames" not in data and "glyphs" in data and "atlas_png" in data:
+        if not ppath.is_file():
+            errors.append(f"{stem}: missing png")
+        return {"id": card["id"], "row": row, "category": cat, "kind": "glyph_atlas",
+                "png": f"res://art/export/{cat}/{stem}.png",
+                "json": f"res://art/export/{cat}/{stem}.json",
+                "canvas": data["canvas"], "tags": {}, "slices": {}, "pivot": None}
     frames = data.get("frames", [])
     meta = data.get("meta", {})
     entry = {"id": card["id"], "row": row, "category": cat,
@@ -72,6 +93,8 @@ def build_entry(stem, row, rowdir, errors):
     if "pivot" in entry["slices"]:
         p = entry["slices"]["pivot"]
         entry["pivot"] = [p["x"], p["y"]]
+    elif cat in ("vfx", "ico"):
+        entry["pivot"] = [sz["w"] / 2, sz["h"] / 2]
     else:
         errors.append(f"{stem}: missing pivot slice")
     return entry
@@ -82,6 +105,8 @@ def main():
     ap.add_argument("--source", action="append", type=Path)
     ap.add_argument("--rows", nargs="+", default=["AD-024", "AD-025", "AD-029"])
     ap.add_argument("--dest", type=Path, default=REPO / "art/export")
+    ap.add_argument("--supersede", action="append", default=[], metavar="ROW",
+                    help="on a duplicate stem the entry from this row replaces the earlier one")
     ap.add_argument("--check", action="store_true")
     a = ap.parse_args()
     sources = a.source or [DRIVE if DRIVE.is_dir() else FALLBACK]
@@ -91,12 +116,21 @@ def main():
         if rowdir is None:
             errors.append(f"{row}: export dir not found in {[str(s) for s in sources]}")
             continue
+        cards = load_cards(rowdir)
         for j in sorted((rowdir / "export").glob("*.json")):
-            e = build_entry(j.stem, row, rowdir, errors)
+            if is_side_file(j.stem, cards):
+                side = a.dest / category(j.stem) / j.name
+                copies.append((j, side))
+                continue
+            e = build_entry(j.stem, row, rowdir, cards, errors)
             if e is None:
                 continue
             if j.stem in assets:
-                errors.append(f"{j.stem}: duplicate stem")
+                if row in a.supersede:
+                    dst = a.dest / e["category"] / j.stem
+                    copies = [c for c in copies if c[1].with_suffix("") != dst]
+                else:
+                    errors.append(f"{j.stem}: duplicate stem")
             assets[j.stem] = e
             copies.append((j, a.dest / e["category"] / j.name))
             if e["png"]:

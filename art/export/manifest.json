@@ -705,6 +705,49 @@
     }
    }
   },
+  "ad_ico_atlas_mvp": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "ico",
+   "id": "AD-ICO-001",
+   "json": "res://art/export/ico/ad_ico_atlas_mvp.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/ico/ad_ico_atlas_mvp.png",
+   "row": "AD-033",
+   "slices": {},
+   "tags": {
+    "icons": {
+     "frames": 18,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 17
+    }
+   }
+  },
   "ad_npc_guild_factor": {
    "canvas": [
     32,
@@ -2076,6 +2119,1126 @@
     }
    }
   },
+  "ad_vfx_basic_bolt": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-038",
+   "json": "res://art/export/vfx/ad_vfx_basic_bolt.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_basic_bolt.png",
+   "row": "AD-032",
+   "slices": {},
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_basic_bolt_impact": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-039",
+   "json": "res://art/export/vfx/ad_vfx_basic_bolt_impact.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_basic_bolt_impact.png",
+   "row": "AD-032",
+   "slices": {},
+   "tags": {
+    "impact": {
+     "frames": 5,
+     "from": 0,
+     "ms": [
+      60,
+      60,
+      60,
+      60,
+      60
+     ],
+     "to": 4
+    }
+   }
+  },
+  "ad_vfx_boss_phase_cue": {
+   "canvas": [
+    64,
+    64
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-034",
+   "json": "res://art/export/vfx/ad_vfx_boss_phase_cue.json",
+   "pivot": [
+    32.0,
+    32.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_boss_phase_cue.png",
+   "row": "AD-035",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 8,
+     "from": 0,
+     "ms": [
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 7
+    }
+   }
+  },
+  "ad_vfx_boss_radial_bullet": {
+   "canvas": [
+    8,
+    8
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-031",
+   "json": "res://art/export/vfx/ad_vfx_boss_radial_bullet.json",
+   "pivot": [
+    4.0,
+    4.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_boss_radial_bullet.png",
+   "row": "AD-035",
+   "slices": {},
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_cast_charge": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-021",
+   "json": "res://art/export/vfx/ad_vfx_cast_charge.json",
+   "pivot": [
+    16.0,
+    16.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_cast_charge.png",
+   "row": "AD-035",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      70,
+      70,
+      70,
+      70
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_damage_numbers": {
+   "canvas": [
+    8,
+    8
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-036",
+   "json": "res://art/export/vfx/ad_vfx_damage_numbers.json",
+   "kind": "glyph_atlas",
+   "pivot": null,
+   "png": "res://art/export/vfx/ad_vfx_damage_numbers.png",
+   "row": "AD-036",
+   "slices": {},
+   "tags": {}
+  },
+  "ad_vfx_dash_trail": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-023",
+   "json": "res://art/export/vfx/ad_vfx_dash_trail.json",
+   "pivot": [
+    16.0,
+    16.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_dash_trail.png",
+   "row": "AD-035",
+   "slices": {},
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      60,
+      60,
+      60,
+      60
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_enemy_bolt": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-029",
+   "json": "res://art/export/vfx/ad_vfx_enemy_bolt.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_enemy_bolt.png",
+   "row": "AD-035",
+   "slices": {},
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_enemy_bolt_impact": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-030",
+   "json": "res://art/export/vfx/ad_vfx_enemy_bolt_impact.json",
+   "pivot": [
+    16.0,
+    16.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_enemy_bolt_impact.png",
+   "row": "AD-035",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      60,
+      60,
+      60,
+      60
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_enemy_dissolve": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-025",
+   "json": "res://art/export/vfx/ad_vfx_enemy_dissolve.json",
+   "pivot": [
+    16.0,
+    16.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_enemy_dissolve.png",
+   "row": "AD-035",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 6,
+     "from": 0,
+     "ms": [
+      80,
+      80,
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 5
+    }
+   }
+  },
+  "ad_vfx_enemy_spawn": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-026",
+   "json": "res://art/export/vfx/ad_vfx_enemy_spawn.json",
+   "pivot": [
+    16.0,
+    16.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_enemy_spawn.png",
+   "row": "AD-035",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_extinguish_puff": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-033",
+   "json": "res://art/export/vfx/ad_vfx_extinguish_puff.json",
+   "pivot": [
+    16.0,
+    16.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_extinguish_puff.png",
+   "row": "AD-045",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 5,
+     "from": 0,
+     "ms": [
+      80,
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 4
+    }
+   }
+  },
+  "ad_vfx_fire_burst": {
+   "canvas": [
+    64,
+    64
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-003",
+   "json": "res://art/export/vfx/ad_vfx_fire_burst.json",
+   "pivot": [
+    32.0,
+    32.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_fire_burst.png",
+   "row": "AD-032",
+   "slices": {},
+   "tags": {
+    "burst": {
+     "frames": 6,
+     "from": 0,
+     "ms": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60
+     ],
+     "to": 5
+    }
+   }
+  },
+  "ad_vfx_fire_impact": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-002",
+   "json": "res://art/export/vfx/ad_vfx_fire_impact.json",
+   "pivot": [
+    16.0,
+    16.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_fire_impact.png",
+   "row": "AD-032",
+   "slices": {},
+   "tags": {
+    "impact": {
+     "frames": 6,
+     "from": 0,
+     "ms": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60
+     ],
+     "to": 5
+    }
+   }
+  },
+  "ad_vfx_fire_orb": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-004",
+   "json": "res://art/export/vfx/ad_vfx_fire_orb.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_fire_orb.png",
+   "row": "AD-032",
+   "slices": {},
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_fire_projectile": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-001",
+   "json": "res://art/export/vfx/ad_vfx_fire_projectile.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_fire_projectile.png",
+   "row": "AD-032",
+   "slices": {},
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_hit_spark": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-024",
+   "json": "res://art/export/vfx/ad_vfx_hit_spark.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_hit_spark.png",
+   "row": "AD-035",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      50,
+      50,
+      50,
+      50
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_lightning_arc_segment": {
+   "canvas": [
+    16,
+    8
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-017",
+   "json": "res://art/export/vfx/ad_vfx_lightning_arc_segment.json",
+   "pivot": [
+    8.0,
+    4.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_lightning_arc_segment.png",
+   "row": "AD-034",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 3,
+     "from": 0,
+     "ms": [
+      50,
+      50,
+      50
+     ],
+     "to": 2
+    }
+   }
+  },
+  "ad_vfx_lightning_burst": {
+   "canvas": [
+    64,
+    64
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-011",
+   "json": "res://art/export/vfx/ad_vfx_lightning_burst.json",
+   "pivot": [
+    32.0,
+    32.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_lightning_burst.png",
+   "row": "AD-032",
+   "slices": {},
+   "tags": {
+    "burst": {
+     "frames": 6,
+     "from": 0,
+     "ms": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60
+     ],
+     "to": 5
+    }
+   }
+  },
+  "ad_vfx_lightning_impact": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-010",
+   "json": "res://art/export/vfx/ad_vfx_lightning_impact.json",
+   "pivot": [
+    16.0,
+    16.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_lightning_impact.png",
+   "row": "AD-032",
+   "slices": {},
+   "tags": {
+    "impact": {
+     "frames": 6,
+     "from": 0,
+     "ms": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60
+     ],
+     "to": 5
+    }
+   }
+  },
+  "ad_vfx_lightning_orb": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-012",
+   "json": "res://art/export/vfx/ad_vfx_lightning_orb.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_lightning_orb.png",
+   "row": "AD-032",
+   "slices": {},
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_lightning_projectile": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-009",
+   "json": "res://art/export/vfx/ad_vfx_lightning_projectile.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_lightning_projectile.png",
+   "row": "AD-032",
+   "slices": {},
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_mod_homing_seeker": {
+   "canvas": [
+    8,
+    8
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-015",
+   "json": "res://art/export/vfx/ad_vfx_mod_homing_seeker.json",
+   "pivot": [
+    4.0,
+    4.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_mod_homing_seeker.png",
+   "row": "AD-034",
+   "slices": {},
+   "tags": {
+    "loop": {
+     "frames": 2,
+     "from": 0,
+     "ms": [
+      100,
+      100
+     ],
+     "to": 1
+    }
+   }
+  },
+  "ad_vfx_mod_pierce_spark": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-014",
+   "json": "res://art/export/vfx/ad_vfx_mod_pierce_spark.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_mod_pierce_spark.png",
+   "row": "AD-034",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 3,
+     "from": 0,
+     "ms": [
+      60,
+      60,
+      60
+     ],
+     "to": 2
+    }
+   }
+  },
+  "ad_vfx_mod_split_pop": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-013",
+   "json": "res://art/export/vfx/ad_vfx_mod_split_pop.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_mod_split_pop.png",
+   "row": "AD-034",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 3,
+     "from": 0,
+     "ms": [
+      60,
+      60,
+      60
+     ],
+     "to": 2
+    }
+   }
+  },
+  "ad_vfx_muzzle_flash": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-022",
+   "json": "res://art/export/vfx/ad_vfx_muzzle_flash.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_muzzle_flash.png",
+   "row": "AD-035",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 3,
+     "from": 0,
+     "ms": [
+      50,
+      50,
+      50
+     ],
+     "to": 2
+    }
+   }
+  },
+  "ad_vfx_onhit_glyph": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-016",
+   "json": "res://art/export/vfx/ad_vfx_onhit_glyph.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_onhit_glyph.png",
+   "row": "AD-034",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 2,
+     "from": 0,
+     "ms": [
+      70,
+      70
+     ],
+     "to": 1
+    }
+   }
+  },
+  "ad_vfx_room_clear_flash": {
+   "canvas": [
+    64,
+    64
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-032",
+   "json": "res://art/export/vfx/ad_vfx_room_clear_flash.json",
+   "pivot": [
+    32.0,
+    32.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_room_clear_flash.png",
+   "row": "AD-035",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 6,
+     "from": 0,
+     "ms": [
+      70,
+      70,
+      70,
+      70,
+      70,
+      70
+     ],
+     "to": 5
+    }
+   }
+  },
+  "ad_vfx_status_burning": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-019",
+   "json": "res://art/export/vfx/ad_vfx_status_burning.json",
+   "pivot": [
+    16.0,
+    16.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_status_burning.png",
+   "row": "AD-045",
+   "slices": {
+    "symbol": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 2
+    }
+   },
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_status_charged": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-020",
+   "json": "res://art/export/vfx/ad_vfx_status_charged.json",
+   "pivot": [
+    16.0,
+    16.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_status_charged.png",
+   "row": "AD-045",
+   "slices": {
+    "symbol": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 2
+    }
+   },
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_status_wet": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-018",
+   "json": "res://art/export/vfx/ad_vfx_status_wet.json",
+   "pivot": [
+    16.0,
+    16.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_status_wet.png",
+   "row": "AD-045",
+   "slices": {
+    "symbol": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 2
+    }
+   },
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_telegraph_circle": {
+   "canvas": [
+    64,
+    64
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-027",
+   "json": "res://art/export/vfx/ad_vfx_telegraph_circle.json",
+   "pivot": [
+    32.0,
+    32.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_telegraph_circle.png",
+   "row": "AD-035",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_telegraph_dash_lane": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-037",
+   "json": "res://art/export/vfx/ad_vfx_telegraph_dash_lane.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_telegraph_dash_lane.png",
+   "row": "AD-035",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 3,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100
+     ],
+     "to": 2
+    }
+   }
+  },
+  "ad_vfx_telegraph_line": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-028",
+   "json": "res://art/export/vfx/ad_vfx_telegraph_line.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_telegraph_line.png",
+   "row": "AD-035",
+   "slices": {},
+   "tags": {
+    "play": {
+     "frames": 2,
+     "from": 0,
+     "ms": [
+      100,
+      100
+     ],
+     "to": 1
+    }
+   }
+  },
+  "ad_vfx_water_burst": {
+   "canvas": [
+    64,
+    64
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-007",
+   "json": "res://art/export/vfx/ad_vfx_water_burst.json",
+   "pivot": [
+    32.0,
+    32.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_water_burst.png",
+   "row": "AD-032",
+   "slices": {},
+   "tags": {
+    "burst": {
+     "frames": 6,
+     "from": 0,
+     "ms": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60
+     ],
+     "to": 5
+    }
+   }
+  },
+  "ad_vfx_water_impact": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-006",
+   "json": "res://art/export/vfx/ad_vfx_water_impact.json",
+   "pivot": [
+    16.0,
+    16.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_water_impact.png",
+   "row": "AD-032",
+   "slices": {},
+   "tags": {
+    "impact": {
+     "frames": 6,
+     "from": 0,
+     "ms": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60
+     ],
+     "to": 5
+    }
+   }
+  },
+  "ad_vfx_water_orb": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-008",
+   "json": "res://art/export/vfx/ad_vfx_water_orb.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_water_orb.png",
+   "row": "AD-032",
+   "slices": {},
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_vfx_water_projectile": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "vfx",
+   "id": "AD-VFX-005",
+   "json": "res://art/export/vfx/ad_vfx_water_projectile.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/vfx/ad_vfx_water_projectile.png",
+   "row": "AD-032",
+   "slices": {},
+   "tags": {
+    "loop": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 3
+    }
+   }
+  },
   "arc_fnt_digits_3x5": {
    "canvas": [
     64,
@@ -2284,7 +3447,13 @@
  "source_rows": [
   "AD-024",
   "AD-025",
-  "AD-029"
+  "AD-029",
+  "AD-032",
+  "AD-033",
+  "AD-034",
+  "AD-045",
+  "AD-035",
+  "AD-036"
  ],
  "version": 1
 }

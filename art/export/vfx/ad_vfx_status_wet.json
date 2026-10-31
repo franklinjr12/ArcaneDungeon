@@ -1,0 +1,53 @@
+{ "frames": [
+   {
+    "filename": "ad_vfx_status_wet_loop_00",
+    "frame": { "x": 1, "y": 1, "w": 32, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
+    "sourceSize": { "w": 32, "h": 32 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_vfx_status_wet_loop_01",
+    "frame": { "x": 35, "y": 1, "w": 32, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
+    "sourceSize": { "w": 32, "h": 32 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_vfx_status_wet_loop_02",
+    "frame": { "x": 69, "y": 1, "w": 32, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
+    "sourceSize": { "w": 32, "h": 32 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_vfx_status_wet_loop_03",
+    "frame": { "x": 103, "y": 1, "w": 32, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
+    "sourceSize": { "w": 32, "h": 32 },
+    "duration": 120
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_vfx_status_wet.png",
+  "format": "I8",
+  "size": { "w": 136, "h": 34 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "loop", "from": 0, "to": 3, "direction": "forward", "color": "#000000ff" }
+  ],
+  "slices": [
+   { "name": "symbol", "keys": [{ "frame": 0, "bounds": {"x": 16, "y": 2, "w": 1, "h": 1 } }] }
+  ]
+ }
+}
