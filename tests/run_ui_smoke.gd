@@ -37,12 +37,13 @@ func _run() -> void:
 	if control.flow == null or not control.flow.initialized:
 		quit(1)
 		return
-	expect(control.guide.message("combat").contains("Lightning"),"M4 onboarding introduces Wet to Lightning")
-	expect(control.tip != null and control.tip.text.contains("TIP"),"M4 context tip visible initially")
+	expect(control.tip != null and control.tip.text.contains("TIP") and control.tip.text.contains("Space")
+		and control.guide.current=="room1","AD-042 room1 tip shown on first combat")
 	control._guide(false)
-	expect(control.tip.text.is_empty(),"M4 tips can be dismissed")
+	expect(control.tip.text.is_empty(),"AD-042 tips can be dismissed")
 	control._guide(true)
-	expect(control.tip.text.contains("TIP"),"M4 tips can be reopened")
+	expect(not control.tip.text.contains("Space") and control.guide.seen.count("room1")==1,
+		"AD-042 room1 tip does not return")
 	expect(not control.flow.experiment.enabled,"M4 local telemetry requires opt-in")
 	control.flow.experiment.configure(true)
 	expect(control.flow.experiment.enabled,"M4 telemetry opt-in enables capture")
@@ -63,6 +64,7 @@ func _run() -> void:
 	control._redraw_panel()
 	expect(run.state=="cleared","first room advances to clear state")
 	expect(control.context.get_child_count()>2,"reward choice panel created")
+	expect(control.tip.text.contains("3 cards"),"AD-042 first_reward tip at first clear")
 	control._choose_reward(0)
 	expect(run.reward_collected,"reward button grants item")
 	expect(str(run.room.values["id"]) in run.run.collected,"collect event recorded")
@@ -91,6 +93,7 @@ func _run() -> void:
 	expect(run.room.values["id"]=="workshop","UI traversal reaches workshop after boss")
 	expect(run.mode=="workshop" and control.test_canvas.visible,"test canvas enabled in safe workshop")
 	expect(not control.arena_canvas.visible,"combat canvas hidden during workshop")
+	expect(control.tip.text.contains("slot 4"),"AD-042 first_workshop tip on entering workshop")
 	expect(control.context.get_child_count()>5,"workshop merchant and test tools visible")
 	var previews := false
 	for label in control.context.find_children("*","Label",true,false):
@@ -165,6 +168,13 @@ func _run() -> void:
 		and control.summary_title_button != null and control.summary_title_button.is_visible_in_tree(),
 		"summary has Retry same seed / New seed / Title buttons")
 	var seed_before: int = run.run.seed
+	var persisted: Array = save.profile["stats"].get("onboarding_seen",[])
+	for id in ["room1","first_reward","first_workshop"]:
+		expect(control.guide.seen.count(id)==1 and persisted.count(id)==1,"AD-042 tip seen/persisted once: "+id)
+	var fresh = preload("res://ui/onboarding_prompts.gd").new()
+	fresh.load_seen(persisted)
+	expect(fresh.trigger("room1")=="" and fresh.trigger("first_reward")=="" and fresh.trigger("first_workshop")=="",
+		"AD-042 tips not shown again for same profile")
 	expect(save.stats()["runs"]==1 and save.stats()["wins"]==1,"AD-019 win recorded once in stats")
 	control._redraw_panel()
 	expect(save.stats()["runs"]==1,"AD-019 redrawing summary does not double-count")
