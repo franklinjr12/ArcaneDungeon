@@ -5,6 +5,8 @@ const Art = preload("res://ui/pixel_art_renderer.gd")
 const DamageNumbers = preload("res://ui/damage_numbers.gd")
 var _damage_numbers = DamageNumbers.new()
 var _damage_session = null
+var _fx_memo: Dictionary = {}
+var _fx_session = null
 const SlotHUD = preload("res://ui/pixel_hud.gd")
 var session
 var hover := Vector2(440,440)
@@ -86,7 +88,6 @@ func _draw() -> void:
 			_health_bar(enemy_at,target.radius+12,target.health.current/target.health.maximum,Color("#dc7060"))
 			if enemy.kind == "undead_warden" or show_debug:
 				_label(enemy_at+Vector2(-27,-(59 if enemy.kind=="undead_warden" else 45)),str(enemy.tuning.get("display_name",enemy.kind)),Color("#eec88b"))
-			Art.status_icons(self,target,tick,enemy_at+Vector2(-15,target.radius+21))
 		if enemy.state == "windup" and enemy.intent != null and target.alive():
 			var intent: Dictionary = enemy.intent.snapshot()
 			var time_left: int = maxi(0,int(enemy.tuning["telegraph_ticks"])-enemy.state_tick)
@@ -99,33 +100,14 @@ func _draw() -> void:
 			_label(enemy_at+Vector2(-26,53),"#%d %s" % [target.id,enemy.state],Color("#b9e8fc"))
 	for shot in session.enemy_shots:
 		Art.effect(self,"enemy",shot["position"]-offset,tick,Vector2(28,28))
-	for entry in session.sim.active:
-		var effect = entry["effect"]
-		var element: String = str(effect.root["essence"]["id"])
-		var kind := "fire"
-		if element == "essence.water":
-			kind = "water"
-		elif element == "essence.lightning":
-			kind = "lightning"
-		if entry["kind"] == "orb":
-			kind = "orb"
-		var fx_at: Vector2 = effect.position-offset
-		var display_size := Vector2(34,34) if entry["kind"] != "orb" else Vector2(46,46)
-		Art.effect(self,kind,fx_at,tick,display_size)
+	if _fx_session != session:
+		_fx_session = session
+		_fx_memo = {}
+	for fx in Art.collect_fx(session,tick,_fx_memo):
+		Art.draw_fx(self,fx["event"],fx["at"]-offset,fx["age"],fx["rotation"],fx["length"],Color.WHITE,fx["slot"])
 	for visual in session.sim.visuals:
-		var time_remaining := maxf(0.0,float(int(visual["until"])-tick))
-		var fade := clampf(time_remaining/18.0,0,1)
 		if visual["kind"] == "arc":
-			var p0: Vector2 = visual["from"]-offset
-			var p1: Vector2 = visual["to"]-offset
-			var shift := Vector2(0,5*sin(float(tick)*1.2))
-			draw_line(p0,p1+shift,Color("#def8fe",fade),3)
-			Art.effect(self,"arc",(p0+p1)/2.0,tick,Vector2(34,34),fade)
-			_label((p0+p1)/2.0+Vector2(-12,-15),"ARC!",Color("#ffeda4"))
-		else:
-			var size_hint: float = clampf(float(visual["radius"])*2.0,32,120)
-			var fx_type: String = "impact" if visual["kind"]=="burst" else "arc"
-			Art.effect(self,fx_type,visual["position"]-offset,tick,Vector2(size_hint,size_hint),fade)
+			_label((visual["from"]+visual["to"])/2.0-offset+Vector2(-12,-15),"ARC!",Color("#ffeda4"))
 	for item in session.feedback:
 		var age: float = float(tick-int(item["tick"]))
 		_label(item["position"]-offset+Vector2(-24,-30-age*.38),str(item["label"]),Color("#ffdf95"))

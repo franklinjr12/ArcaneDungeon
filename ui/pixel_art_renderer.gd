@@ -238,13 +238,232 @@ static func effect(canvas: CanvasItem, kind: String, center: Vector2, tick: int,
 	canvas.draw_texture_rect_region(FX,Rect2(center-dimensions/2.0,dimensions),
 		Rect2(Vector2(frame*32,row*32),Vector2(32,32)),Color(1,1,1,clampf(alpha,0,1)))
 
+## Legacy entry point (sandbox): the AD-045 overlay is centred above the old icon-row anchor.
 static func status_icons(canvas: CanvasItem, target, tick: int, at: Vector2) -> void:
 	var current: Dictionary = target.status.snapshot(tick)
-	var i := 0
+	var slot := 0
 	for status_id in ["burning","wet","charged"]:
 		if current.has(status_id):
-			icon(canvas,status_id,at+Vector2(i*16,0),Vector2(17,17))
-			i += 1
+			draw_fx(canvas,"status."+status_id,at+Vector2(15,-(target.radius+21)),tick,0.0,0.0,Color.WHITE,slot)
+			slot += 1
+
+# AD-039: P1 spell FX are the default visuals (not behind F6). Resolved through engine_map.fx + manifest.
+const FX_ELEMENTS := ["fire","water","lightning"]
+const FX_EVENTS := [
+	"projectile.fire","projectile.water","projectile.lightning","projectile.neutral",
+	"orb.fire","orb.water","orb.lightning","mod.homing",
+	"impact.fire","impact.water","impact.lightning","impact.neutral",
+	"burst.fire","burst.water","burst.lightning",
+	"reaction.arc","reaction.extinguish","mod.split","mod.pierce","trigger.on_hit",
+	"status.wet","status.burning","status.charged"]
+## Events that had no P1 mapping when drawn (legacy sprite used instead); must stay empty in the slice.
+static var fx_fallbacks: Array = []
+static var _icon_index: Dictionary = {}
+
+## Pure lookup: P1 FX frame for an event at age_ticks (60 Hz). {} when the event is unmapped.
+static func fx_frame(event: String, age_ticks: int) -> Dictionary:
+	_export_data()
+	var ref: Dictionary = _map.get("fx", {}).get(event, {})
+	if ref.is_empty() or not _manifest.has(ref.get("asset", "")):
+		return {}
+	var stem: String = ref["asset"]
+	var tag: String = ref["tag"]
+	var entry: Dictionary = _manifest[stem]
+	if not entry["tags"].has(tag):
+		return {}
+	var ms: Array = entry["tags"][tag]["ms"]
+	var total := 0
+	for d in ms:
+		total += int(d)
+	var elapsed := maxi(0, age_ticks) * 1000 / 60
+	var looping := tag == "loop"
+	var done := not looping and elapsed >= total
+	var t := elapsed % total if looping else mini(elapsed, total - 1)
+	var index := ms.size() - 1 if done else 0
+	if not done:
+		var acc := 0
+		for i in ms.size():
+			acc += int(ms[i])
+			if t < acc:
+				index = i
+				break
+	var f: Dictionary = _export_json(stem)["frames"][int(entry["tags"][tag]["from"]) + index]["frame"]
+	var piv: Array = entry["pivot"]
+	return {"stem": stem, "tag": tag, "index": index, "total_ms": total, "done": done,
+		"region": Rect2(f["x"], f["y"], f["w"], f["h"]), "pivot": Vector2(piv[0], piv[1])}
+
+static func _legacy_kind(event: String) -> String:
+	var parts := event.split(".")
+	if parts[0] == "orb":
+		return "orb"
+	if parts[0] == "reaction":
+		return "arc"
+	if parts[0] in ["projectile", "impact", "burst"] and parts.size() > 1 and parts[1] in FX_ELEMENTS:
+		return parts[1] if parts[0] == "projectile" else "impact"
+	return "impact"
+
+## Draws region*scale around the pivot. length > 0 stretches only along x (lanes, lines, arcs).
+## Status events also draw the AD-033 icon at the overlay's symbol slice (slot offsets stacked icons).
+static func draw_fx(canvas: CanvasItem, event: String, center: Vector2, age_ticks: int, rotation: float = 0.0,
+		length: float = 0.0, modulate: Color = Color.WHITE, slot: int = 0) -> void:
+	var fr := fx_frame(event, age_ticks)
+	if fr.is_empty():
+		if not fx_fallbacks.has(event):
+			fx_fallbacks.append(event)
+		effect(canvas, _legacy_kind(event), center, age_ticks, Vector2(34, 34), modulate.a)
+		return
+	var sc: float = float(_map.get("scale", 2))
+	var region: Rect2 = fr["region"]
+	var pivot: Vector2 = fr["pivot"]
+	var sx := length / region.size.x if length > 0.0 else sc
+	canvas.draw_set_transform(center, rotation, Vector2.ONE)
+	canvas.draw_texture_rect_region(_texs[fr["stem"]],
+		Rect2(Vector2(-pivot.x * sx, -pivot.y * sc), Vector2(region.size.x * sx, region.size.y * sc)), region, modulate)
+	if event.begins_with("status."):
+		_status_icon(canvas, event, fr, slot, modulate)
+	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+## AD-045: the icon's bottom-centre sits on the 1x1 'symbol' slice (overlay-local art px).
+static func _status_icon(canvas: CanvasItem, event: String, fr: Dictionary, slot: int, modulate: Color) -> void:
+	var sym: Dictionary = _manifest[fr["stem"]]["slices"].get("symbol", {})
+	if sym.is_empty():
+		return
+	var atlas: String = _map["icons"]
+	if _icon_index.is_empty():
+		_icon_index = JSON.parse_string(FileAccess.get_file_as_string("res://art/export/ico/ad_ico_atlas_mvp_index.json"))["icons"]
+	var cell: Dictionary = _icon_index["ad_ico_" + event.trim_prefix("status.")]
+	_export_json(atlas)
+	var sc: float = float(_map.get("scale", 2))
+	var anchor: Vector2 = (Vector2(float(sym["x"]), float(sym["y"])) - fr["pivot"]) * sc
+	var size := Vector2(float(cell["w"]), float(cell["h"])) * sc
+	canvas.draw_texture_rect_region(_texs[atlas],
+		Rect2(anchor + Vector2(-size.x / 2.0 + slot * size.x, -size.y), size),
+		Rect2(float(cell["x"]), float(cell["y"]), float(cell["w"]), float(cell["h"])), modulate)
+
+static func _element(essence_id: String) -> String:
+	var el := essence_id.trim_prefix("essence.")
+	return el if el in FX_ELEMENTS else "neutral"
+
+static func _pos(p: Variant) -> Vector2:
+	return Vector2(float(p["x"]), float(p["y"])) if p is Dictionary else Vector2(p)
+
+## Pure: FX list [{event, at (world), age, rotation, length, slot}] from session state; no drawing.
+## memo is per-canvas render memory (spawn ticks, trace cursors, last statuses, pending one-shots).
+static func collect_fx(session, tick: int, memo: Dictionary) -> Array:
+	var sim = session.sim
+	var out: Array = []
+	for key in ["born", "cursor", "prev", "since", "seen"]:
+		if not memo.has(key):
+			memo[key] = {}
+	if not memo.has("shots"):
+		memo["shots"] = []
+	var shots: Array = memo["shots"]
+	var live: Dictionary = {}
+	var pierce_ids: Dictionary = {}
+	for entry in sim.active:
+		var effect = entry["effect"]
+		var mods: Array = []
+		for m in effect.root.get("modifiers", []):
+			mods.append(m["id"])
+		var el := _element(str(effect.root["essence"]["id"]))
+		var key := "%s:%d" % [entry["kind"], effect.id]
+		live[key] = true
+		var born: int = memo["born"].get(key, tick)
+		memo["born"][key] = born
+		var heading := 0.0
+		if entry["kind"] == "projectile":
+			heading = effect.direction.angle()
+			if "mod.pierce" in mods:
+				pierce_ids[effect.id] = true
+		var ev := ("orb." if entry["kind"] == "orb" else "projectile.") + el
+		out.append({"event": ev, "at": effect.position, "age": tick - born, "rotation": heading, "length": 0.0, "slot": 0})
+		if entry["kind"] == "projectile" and "mod.homing" in mods:
+			out.append({"event": "mod.homing", "at": effect.position, "age": tick - born, "rotation": heading, "length": 0.0, "slot": 0})
+	for key in memo["born"].keys():
+		if not live.has(key):
+			memo["born"].erase(key)
+	# New sim.visuals become one-shots that run their full animation (visuals expire sooner).
+	var tally: Dictionary = {}
+	var seen_now: Dictionary = {}
+	for v in sim.visuals:
+		var base := "%s:%d:%s" % [v["kind"], int(v["until"]), str(v.get("position", v.get("from")))]
+		var n: int = tally.get(base, 0)
+		tally[base] = n + 1
+		var key := "%s#%d" % [base, n]
+		seen_now[key] = true
+		if memo["seen"].has(key):
+			continue
+		match v["kind"]:
+			"hit":
+				_shot(shots, "impact." + _element(str(v.get("essence", ""))), v["position"], tick)
+			"burst":
+				var el := _element(str(v.get("essence", "")))
+				_shot(shots, ("burst." + el) if el != "neutral" else "impact.neutral", v["position"], tick)
+			"arc":
+				var d: Vector2 = v["to"] - v["from"]
+				_shot(shots, "reaction.arc", (v["from"] + v["to"]) / 2.0, tick, d.angle(), d.length())
+	memo["seen"] = seen_now
+	# Trace-derived modifier / trigger FX, consumed through per-type cursors.
+	var batch: Dictionary = {}
+	for kind in ["spawn", "hit", "trigger"]:
+		var recs: Array = sim.trace.filter_records(-1, "", kind)
+		var from: int = int(memo["cursor"].get(kind, 0))
+		if recs.size() < from:
+			from = 0
+		memo["cursor"][kind] = recs.size()
+		batch[kind] = recs.slice(from).filter(func(r): return tick - int(r["tick"]) < 30)
+	var hit_at: Dictionary = {}
+	for r in batch["hit"]:
+		var target = sim.targets.get_target(int(r["target_id"]))
+		if target == null:
+			continue
+		hit_at[int(r["effect_id"])] = target.position
+		if pierce_ids.has(int(r["effect_id"])):
+			_shot(shots, "mod.pierce", target.position, tick)
+	for r in batch["trigger"]:
+		if hit_at.has(int(r["parent_effect_id"])):
+			_shot(shots, "trigger.on_hit", hit_at[int(r["parent_effect_id"])], tick)
+	var groups: Dictionary = {}
+	for r in batch["spawn"]:
+		if int(r["parent_effect_id"]) != 0:
+			continue
+		var gk := "%d:%d" % [int(r["cast_id"]), int(r["tick"])]
+		groups[gk] = groups.get(gk, []) + [r]
+	for gk in groups:
+		if groups[gk].size() > 1:
+			_shot(shots, "mod.split", _pos(groups[gk][0]["position"]), tick)
+	# Live target statuses; extinguish = burning lost while wet.
+	var next_shots: Array = []
+	for target in sim.targets.all():
+		var snap: Dictionary = target.status.snapshot(tick) if target.alive() else {}
+		var before: Dictionary = memo["prev"].get(target.id, {})
+		if before.has("burning") and snap.has("wet") and not snap.has("burning"):
+			_shot(shots, "reaction.extinguish", target.position, tick)
+		memo["prev"][target.id] = snap
+		var slot := 0
+		for sid in ["burning", "wet", "charged"]:
+			var skey := "%d:%s" % [target.id, sid]
+			if not snap.has(sid):
+				memo["since"].erase(skey)
+				continue
+			var since: int = memo["since"].get(skey, tick)
+			memo["since"][skey] = since
+			out.append({"event": "status." + sid, "at": target.position, "age": tick - since,
+				"rotation": 0.0, "length": 0.0, "slot": slot})
+			slot += 1
+	for shot in shots:
+		var age: int = tick - int(shot["tick"])
+		if fx_frame(shot["event"], age).get("done", true) and age > 0:
+			continue
+		next_shots.append(shot)
+		out.append({"event": shot["event"], "at": shot["at"], "age": age,
+			"rotation": shot["rotation"], "length": shot["length"], "slot": 0})
+	memo["shots"] = next_shots
+	return out
+
+static func _shot(shots: Array, event: String, at: Vector2, tick: int, rotation: float = 0.0, length: float = 0.0) -> void:
+	shots.append({"event": event, "at": at, "tick": tick, "rotation": rotation, "length": length})
+
 
 static func portal(canvas: CanvasItem, at: Vector2, open: bool, tick: int) -> void:
 	var shade := Color("#5edfc3") if open else Color("#bd5366")

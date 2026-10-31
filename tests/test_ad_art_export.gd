@@ -53,7 +53,7 @@ func run(t) -> void:
 			var r: Dictionary = f["frame"]
 			t.check(r["x"] >= 0 and r["y"] >= 0 and r["x"] + r["w"] <= tsize.x and r["y"] + r["h"] <= tsize.y, "AD-030 region inside texture: %s/%s" % [stem, f["filename"]])
 		var pivot = null
-		for s in j["meta"]["slices"]:
+		for s in j["meta"].get("slices", []):
 			if s["name"] == "pivot":
 				var b: Dictionary = s["keys"][0]["bounds"]
 				pivot = [b["x"], b["y"]]

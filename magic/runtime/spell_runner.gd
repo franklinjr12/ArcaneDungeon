@@ -209,7 +209,7 @@ func _spawn_burst(effect_plan: Dictionary, origin: Vector2, context: Dictionary,
 	var effect_id: int = clock.next_id("effect")
 	_trace_spawn(context,effect_id,origin)
 	var radius: float = float(effect_plan["params"]["burst_radius"])
-	visuals.append({"kind":"burst","position":origin,"radius":radius,"until":clock.tick+int(settings["sandbox"]["visual_ticks"])})
+	visuals.append({"kind":"burst","position":origin,"radius":radius,"essence":str(effect_plan["essence"]["id"]),"until":clock.tick+int(settings["sandbox"]["visual_ticks"])})
 	for hit in Burst.contacts(origin,radius,int(context["team"]),targets):
 		_queue_hit(effect_plan,int(hit["target_id"]),hit["position"],context,effect_id,{})
 	# Hold the effect reservation until queued contacts finish resolving.
@@ -312,7 +312,7 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 	trace.record("hit",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
 		"formula_id":ctx["formula_id"],"effect_id":detail["effect_id"],
 		"target_id":target.id,"amount":roundi(float(result["damage"])),"tick":clock.tick})
-	visuals.append({"kind":"hit","position":target.position,"radius":20.0,"until":clock.tick+9})
+	visuals.append({"kind":"hit","position":target.position,"radius":20.0,"essence":str(effect_plan["essence"]["id"]),"until":clock.tick+9})
 	for state_change in result["status_events"]:
 		trace.record("status",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],"formula_id":ctx["formula_id"],
 			"target_id":target.id,"reason":state_change["state"]+":"+state_change["action"],"tick":clock.tick})
