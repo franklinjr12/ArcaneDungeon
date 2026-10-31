@@ -59,14 +59,8 @@ func run(t) -> void:
 	t.equal(recorder.export_csv("user://disabled_m4_telemetry.csv"),ERR_UNAVAILABLE,
 		"TASK-052 cannot export while disabled")
 	var guides = Prompts.new()
-	t.check(guides.message("combat").contains("Water") and guides.message("combat").contains("Lightning"),
-		"TASK-053 combat tip teaches Water then Lightning")
-	t.check(guides.message("editor").contains("MUST include a Burst payload"),
-		"TASK-053 On Hit explanation includes required Burst payload")
-	t.check(guides.message("workshop").contains("without changing run HP"),
-		"TASK-053 tutorial explains safe practice")
+	t.check(not guides.trigger("room1").is_empty(), "TASK-053 room 1 tip triggers")
 	guides.dismiss()
-	t.equal(guides.message("editor"),"","TASK-053 hints dismissed nonblocking")
+	t.equal(guides.text(),"","TASK-053 hints dismissed nonblocking")
 	guides.reopen()
-	t.check(not guides.message("editor").is_empty(),"TASK-053 hints can be reopened")
-	t.check(not guides.message("reward").is_empty(),"TASK-053 contextual reward hint available")
+	t.check(not guides.trigger("first_reward").is_empty(),"TASK-053 hints can be reopened for next tip")

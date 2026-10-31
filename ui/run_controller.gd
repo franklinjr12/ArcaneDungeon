@@ -57,6 +57,8 @@ func _ready() -> void:
 		if _settings.telemetry_opt_in:
 			flow.experiment.configure(true)
 		_settings.apply_audio()
+	if save != null:
+		guide.load_seen(save.profile["stats"].get("onboarding_seen", []))
 	_build()
 	current_notice = stage_banner()
 	_redraw_panel()
@@ -407,14 +409,28 @@ func _update_labels() -> void:
 			",".join(statuses),reactions,triggers,caps]
 	notices.text = current_notice
 	if tip != null:
-		var topic := "combat"
-		if editor_open:
-			topic = "editor"
-		elif flow.mode == "workshop":
-			topic = "workshop"
-		elif flow.state == "cleared":
-			topic = "reward" if not flow.reward_collected else "door"
-		tip.text = "TIP: "+guide.message(topic) if not guide.dismissed else ""
+		var active := ""
+		if flow.mode == "workshop":
+			active = "first_workshop"
+		elif flow.state == "fighting" and str(flow.room.values["id"]) == "s1_r1":
+			active = "room1"
+		elif flow.state == "cleared" and not flow.reward_collected:
+			active = "first_reward"
+		if active != "" and not guide.trigger(active).is_empty():
+			_persist_tip(active)
+		if guide.current != active:
+			guide.current = ""
+		tip.text = ("TIP: " + guide.text()) if guide.text() != "" else ""
+
+func _persist_tip(id: String) -> void:
+	var save = get_node_or_null("/root/SaveService")
+	if save == null:
+		return
+	var ids: Array = save.profile["stats"].get("onboarding_seen", [])
+	if not ids.has(id):
+		ids.append(id)
+		save.profile["stats"]["onboarding_seen"] = ids
+		save.save_profile()
 
 func _choose_reward(i: int) -> void:
 	var result: Dictionary = flow.choose_reward(i)
