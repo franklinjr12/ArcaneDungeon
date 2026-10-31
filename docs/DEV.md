@@ -26,6 +26,8 @@ python3 scripts/validate_godot.py --godot /usr/local/bin/godot
 
 The intentional-failure command **must exit nonzero**, proving the test runner detects a failure. The Python validation wrapper also scans Godot output for parser/runtime errors (because Godot may exit zero despite script errors), checks launcher navigation and verifies the negative test. The deterministic suite also includes M3 room sequencing, save validation, reward/shop/editor semantics, boss telegraphs, real-command full-route replay and UI scene smoke. The full M3 route uses `tests/m3_run_driver.gd` under seed `20261022`. The deterministic suite includes M1 target, status, manifestation, event, trigger, loadout and edge-case tests. The scene smokes exercise Water → Wet → Lightning through the M1 sandbox and casting/dodge/pause/retry through M2 combat. The M2 deterministic baseline is fixed in `tests/fixtures/m2_baseline_v1.json`. Full workflow: `docs/M1_magic_sandbox.md`. The M0 suite deterministically discovers `res://tests/test_*.gd` and validates bundled JSON fixtures.
 
+Full validation wrapper: `python3 scripts/validate_godot.py --godot /path/to/godot`. Each stage has a timeout of 600 s for editor import and 300 s for other stages; `--timeout SECONDS` (or env `AD_VALIDATE_TIMEOUT`) overrides it for all stages, with the flag taking precedence. A stage that exceeds its timeout fails with a `timeout` message and a nonzero exit, and each stage prints its elapsed time.
+
 Exports (after user configures and installs suitable export templates/presets; none required for M0):
 
 ```sh
