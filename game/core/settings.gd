@@ -1,7 +1,8 @@
 extends RefCounted
 ## AD-019: player settings model (audio volumes per bus, accessibility toggles, telemetry opt-in).
+const BUSES := ["Master", "SFX", "Ambience", "UI"]
 const DEFAULTS := {
-	"volumes": {"Master": 1.0},
+	"volumes": {"Master": 1.0, "SFX": 1.0, "Ambience": 1.0, "UI": 1.0},
 	"reduce_flashes": false,
 	"screen_shake": true,
 	"telemetry_opt_in": false,
