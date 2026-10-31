@@ -10,7 +10,7 @@ Seeds: [20261022, 20261023, 20261024, 20261025, 20261026, 20261027, 20261028, 20
 
 ## Targets (PROPOSED, AD-044)
 
-Proposals from game design, not approved; to be tuned again after the human playtest.
+Proposals from game design, not approved; to be re-tuned after the human playtest.
 
 - Each combat room costs 15-45% of max HP (player.max_hp = 150 in combat/combat_tuning_v1.json; the bench buys no max-HP upgrades).
 - No seed dies before the warden.
@@ -56,19 +56,19 @@ BENCH_MD_BEGIN
 | s2_r1 | 10 | 20.267 | 20.267 | 24.317 | 0.0 | 0.0 | 0.0 |
 BENCH_MD_END
 
-Derived metrics (combat rooms = s1_r1, s1_r2, s1_r3, s2_r1; boss room s1_boss excluded from HP cost). Seeds that never die: 0 deaths in all 10.
+Derived metrics (combat rooms = s1_r1, s1_r2, s1_r3, s2_r1; the warden room s1_boss is excluded from HP cost; mana-starved % = starved ticks / ticks over all rooms per seed):
 
-| metric | target | median | min | max | pass? |
-|---|---|---|---|---|---|
-| HP cost % max HP, s1_r1 | 15-45 | 0.0 | 0.0 | 0.0 | NO |
-| HP cost % max HP, s1_r2 | 15-45 | 0.0 | 0.0 | 0.0 | NO |
-| HP cost % max HP, s1_r3 | 15-45 | 7.3 | 7.3 | 7.3 | NO |
-| HP cost % max HP, s2_r1 | 15-45 | 0.0 | 0.0 | 0.0 | NO |
-| deaths per seed | 0 before warden | 0 | 0 | 0 | yes |
-| warden fight (s) | 60-150 | 35.7 | 35.7 | 35.7 | NO |
-| mana-starved % of combat ticks | <20 | 53.0 | 53.0 | 54.7 | NO |
-| basic bolt (slot 1) % of casts | <60 | 80.1 | 80.1 | 80.5 | NO |
-| total slice sim time (min) | 20-35 (human target, informational) | 1.20 | 1.20 | 1.26 | yes |
+| metric | median / min / max | PROPOSED target | pass |
+|---|---|---|---|
+| HP cost % of max HP, s1_r1 | 0.0 / 0.0 / 0.0 | 15-45 | NO |
+| HP cost % of max HP, s1_r2 | 0.0 / 0.0 / 0.0 | 15-45 | NO |
+| HP cost % of max HP, s1_r3 | 7.3 / 7.3 / 7.3 | 15-45 | NO |
+| HP cost % of max HP, s2_r1 | 0.0 / 0.0 / 0.0 | 15-45 | NO |
+| Deaths before warden | 0.0 / 0.0 / 0.0 | 0 | yes |
+| Warden seconds | 35.7 / 35.7 / 35.7 | 60-150 | NO |
+| Mana-starved % of combat ticks | 53.0 / 53.0 / 54.7 | <20 | NO |
+| Basic bolt (slot 0 = GDD slot 1) % of casts | 80.1 / 80.1 / 80.5 | <60 | NO |
+| Total slice sim time (min) | 1.20 / 1.20 / 1.26 | 20-35 human target (informational) | n/a |
 
 ## After (AD-044)
 
