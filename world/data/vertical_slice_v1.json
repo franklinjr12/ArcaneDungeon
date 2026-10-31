@@ -33,7 +33,7 @@
   "boss": {
     "kind": "undead_warden",
     "display_name": "Undead warden",
-    "hp": 430,
+    "hp": 6000,
     "radius": 35,
     "position": [
       1030,
@@ -84,6 +84,16 @@
               "bone_thrall",
               375,
               450
+            ],
+            [
+              "grave_hound",
+              1100,
+              640
+            ],
+            [
+              "fallen_adept",
+              1080,
+              255
             ]
           ]
         }
@@ -116,6 +126,11 @@
               "bone_thrall",
               375,
               270
+            ],
+            [
+              "bone_thrall",
+              410,
+              665
             ],
             [
               "fallen_adept",
@@ -174,6 +189,11 @@
               "grave_hound",
               390,
               510
+            ],
+            [
+              "grave_hound",
+              1050,
+              500
             ]
           ]
         }
@@ -243,14 +263,19 @@
           "delay_ticks": 0,
           "enemies": [
             [
+              "grave_hound",
+              1100,
+              640
+            ],
+            [
               "fallen_adept",
               1080,
               255
             ],
             [
-              "grave_hound",
-              1100,
-              640
+              "bone_thrall",
+              375,
+              450
             ]
           ]
         }

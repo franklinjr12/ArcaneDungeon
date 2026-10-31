@@ -75,7 +75,7 @@
   "enemies": {
     "bone_thrall": {
       "display_name": "Bone thrall",
-      "hp": 95,
+      "hp": 1500,
       "radius": 19,
       "move_speed": 118,
       "perception_radius": 1250,
@@ -90,7 +90,7 @@
     },
     "fallen_adept": {
       "display_name": "Fallen adept",
-      "hp": 80,
+      "hp": 1050,
       "radius": 18,
       "move_speed": 101,
       "perception_radius": 1250,
@@ -107,7 +107,7 @@
     },
     "grave_hound": {
       "display_name": "Grave hound",
-      "hp": 85,
+      "hp": 1125,
       "radius": 17,
       "move_speed": 154,
       "perception_radius": 1250,
