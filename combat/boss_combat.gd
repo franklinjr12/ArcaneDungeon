@@ -2,7 +2,7 @@ extends RefCounted
 ## TASK-042 telegraphed phase boss using the same MagicTarget and hostile projectile pipeline.
 const AttackIntent = preload("res://combat/attack_intent.gd")
 var target
-var kind := "boss"
+var kind := "undead_warden"
 var tuning: Dictionary
 var state := "acquire"
 var state_tick := 0

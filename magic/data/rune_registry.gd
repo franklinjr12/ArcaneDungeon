@@ -47,10 +47,30 @@ func get_rune(rune_id: String):
 func get_by_id(rune_id: String):
 	return get_rune(rune_id)
 
+## Collectible (non-builtin) rune IDs only; this is the full unlock set for callers.
 func get_ids() -> Array:
+	var ids: Array = []
+	for rune_id in _runes:
+		if not _runes[rune_id].is_builtin():
+			ids.append(rune_id)
+	ids.sort()
+	return ids
+
+func get_builtin_ids() -> Array:
+	var ids: Array = []
+	for rune_id in _runes:
+		if _runes[rune_id].is_builtin():
+			ids.append(rune_id)
+	ids.sort()
+	return ids
+
+func get_all_ids() -> Array:
 	var ids := _runes.keys()
 	ids.sort()
 	return ids
+
+func is_builtin(rune_id: String) -> bool:
+	return _runes.has(rune_id) and _runes[rune_id].is_builtin()
 
 func list_by_category(category: String) -> Array:
 	var list: Array = []

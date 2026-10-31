@@ -9,5 +9,5 @@ func run(t) -> void:
 			t.check(instance != null, "scene instantiates: " + scene_path)
 			instance.free()
 	t.check(InputMap.has_action("move_up"), "movement input mapped")
-	t.check(InputMap.has_action("dodge"), "dodge input mapped")
-	t.check(InputMap.has_action("cast_primary"), "primary spell input mapped")
+	t.check(InputMap.has_action("dash"), "dash input mapped")
+	t.check(InputMap.has_action("cast_slot_1"), "primary spell input mapped")

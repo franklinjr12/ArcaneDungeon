@@ -49,7 +49,7 @@ func restore(data: Variant, registry, max_rooms: int) -> Dictionary:
 		return {"ok":false,"reason":"RUN_VERSION_OR_INDEX_INVALID"}
 	if int(data["sequence_index"]) < 0 or int(data["sequence_index"]) >= max_rooms:
 		return {"ok":false,"reason":"RUN_SEQUENCE_INVALID"}
-	if typeof(data["unlocked"]) != TYPE_ARRAY or typeof(data["formulas"]) != TYPE_ARRAY or data["formulas"].size() != 2:
+	if typeof(data["unlocked"]) != TYPE_ARRAY or typeof(data["formulas"]) != TYPE_ARRAY or (data["formulas"].size() < 1 or data["formulas"].size() > 3):
 		return {"ok":false,"reason":"RUN_INVENTORY_INVALID"}
 	if typeof(data["collected"]) != TYPE_ARRAY or typeof(data["purchases"]) != TYPE_ARRAY:
 		return {"ok":false,"reason":"RUN_HISTORY_INVALID"}
@@ -65,7 +65,7 @@ func restore(data: Variant, registry, max_rooms: int) -> Dictionary:
 	for rune in data["unlocked"]:
 		if typeof(rune) != TYPE_STRING or rune not in ids:
 			return {"ok":false,"reason":"RUN_RUNE_INVALID"}
-	var compiler = preload("res://magic/compile/spell_compiler.gd").new(registry,12)
+	var compiler = preload("res://magic/compile/spell_compiler.gd").new(registry,_max_complexity())
 	for formula in data["formulas"]:
 		if not compiler.compile(formula,data["unlocked"])["ok"]:
 			return {"ok":false,"reason":"RUN_FORMULA_INVALID"}
@@ -94,3 +94,7 @@ func unlock(rune_id: String, duplicate_currency: int) -> Dictionary:
 
 static func _whole_number(value: Variant) -> bool:
 	return typeof(value) in [TYPE_INT,TYPE_FLOAT] and is_finite(float(value)) and floor(float(value))==float(value)
+
+func _max_complexity() -> int:
+	var limits = preload("res://magic/runtime/spell_limits.gd").new()
+	return limits.get_limit("max_complexity") if limits.load_defaults()["ok"] else 12
