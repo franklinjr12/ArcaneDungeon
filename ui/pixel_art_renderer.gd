@@ -569,20 +569,41 @@ static func portal(canvas: CanvasItem, at: Vector2, open: bool, tick: int) -> vo
 	if open:
 		effect(canvas,"arc",at+Vector2(0,2),tick,Vector2(38,38),0.8)
 
-## AD-015: placeholder element glyphs left of damage numbers (final art: AD-VFX-036).
-static func damage_symbol(canvas: CanvasItem, symbol: String, center: Vector2, size: float = 10.0, shade: Color = Color.WHITE) -> void:
-	var h := size / 2.0
-	match symbol:
-		"flame":
-			canvas.draw_colored_polygon(PackedVector2Array([
-				center+Vector2(-h,h),center+Vector2(-h,-h*0.2),center+Vector2(-h*0.5,-h*0.7),
-				center+Vector2(-h*0.25,-h*0.1),center+Vector2(0,-h),center+Vector2(h*0.25,-h*0.1),
-				center+Vector2(h*0.5,-h*0.7),center+Vector2(h,-h*0.2),center+Vector2(h,h)]),shade)
-		"droplet":
-			canvas.draw_circle(center+Vector2(0,h*0.4),h*0.65,shade)
-			canvas.draw_colored_polygon(PackedVector2Array([
-				center+Vector2(0,-h),center+Vector2(h*0.6,h*0.25),center+Vector2(-h*0.6,h*0.25)]),shade)
-		"bolt":
-			canvas.draw_colored_polygon(PackedVector2Array([
-				center+Vector2(h*0.3,-h),center+Vector2(-h*0.6,h*0.1),center+Vector2(-h*0.05,h*0.1),
-				center+Vector2(-h*0.3,h),center+Vector2(h*0.6,-h*0.2),center+Vector2(h*0.05,-h*0.2)]),shade)
+## AD-036 damage numbers: pure layout. Symbol first (advance 7), then each char of text (advance 4); '+' is the plus glyph.
+static func damage_glyph_layout(symbol: String, text: String) -> Array:
+	var glyphs: Dictionary = _export_json(export_map()["damage_glyphs"])["glyphs"]
+	var names: Array = []
+	if symbol != "":
+		names.append(symbol)
+	for ch in text:
+		names.append("plus" if ch == "+" else ch)
+	var out: Array = []
+	var x := 0
+	for n in names:
+		if not glyphs.has(n):
+			continue
+		var g: Dictionary = glyphs[n]
+		out.append({"glyph": n, "region": Rect2(g["x"], g["y"], g["w"], g["h"]), "x": x})
+		x += int(g["advance"])
+	return out
+
+static func damage_glyph_width(symbol: String, text: String) -> float:
+	var layout := damage_glyph_layout(symbol, text)
+	if layout.is_empty():
+		return 0.0
+	var last: Dictionary = layout[-1]
+	return (float(last["x"]) + (last["region"] as Rect2).size.x) * float(_map.get("scale", 2))
+
+## Draws the layout left to right, top-aligned at `at`, white constant, nearest. Returns the width in world units.
+static func draw_damage_number(canvas: CanvasItem, symbol: String, text: String, at: Vector2) -> float:
+	var layout := damage_glyph_layout(symbol, text)
+	if layout.is_empty():
+		return 0.0
+	var sc: float = float(_map.get("scale", 2))
+	var tex: Texture2D = _texs[export_map()["damage_glyphs"]]
+	var right := 0.0
+	for item in layout:
+		var r: Rect2 = item["region"]
+		canvas.draw_texture_rect_region(tex, Rect2(at + Vector2(float(item["x"]) * sc, 0.0), r.size * sc), r, Color.WHITE)
+		right = maxf(right, (float(item["x"]) + r.size.x) * sc)
+	return right

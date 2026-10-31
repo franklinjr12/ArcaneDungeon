@@ -3,6 +3,7 @@ extends RefCounted
 const MANIFEST := "res://art/export/manifest.json"
 const MAP := "res://art/export/engine_map.json"
 const Art = preload("res://ui/pixel_art_renderer.gd")
+const DamageNumbers = preload("res://ui/damage_numbers.gd")
 const Flow = preload("res://world/run_flow.gd")
 const Driver = preload("res://tests/m3_run_driver.gd")
 const SEED := 20261022
@@ -44,6 +45,7 @@ func run(t) -> void:
 		for n in ["ad_ico_wet", "ad_ico_burning", "ad_ico_charged"]:
 			t.check(idx["icons"].has(n), "AD-039 icon " + n)
 	_lookup(t)
+	_damage_glyphs(t, gj)
 	_iframe(t)
 	_slice_route(t)
 	_boss_route(t)
@@ -123,3 +125,25 @@ func _slice_route(t) -> void:
 		t.check(kinds.has(k), "AD-039 slice route emitted %s events (saw %s)" % [k, seen.keys()])
 	for ev in ["enemy.bolt", "telegraph.circle", "enemy.dissolve"]:
 		t.check(seen.has(ev), "AD-039 slice route observes %s (saw %s)" % [ev, seen.keys()])
+
+func _damage_glyphs(t, gj) -> void:
+	var g: Dictionary = gj["glyphs"]
+	var region := func(n): return Rect2(g[n]["x"], g[n]["y"], g[n]["w"], g[n]["h"])
+	var flame: Array = Art.damage_glyph_layout("flame", "12")
+	t.equal(flame.size(), 3, "AD-039 flame 12 has 3 glyphs")
+	if flame.size() == 3:
+		t.equal([flame[0]["glyph"], flame[1]["glyph"], flame[2]["glyph"]], ["flame", "1", "2"], "AD-039 flame 12 glyph order")
+		t.equal([flame[0]["x"], flame[1]["x"], flame[2]["x"]], [0, 7, 11], "AD-039 flame 12 advances 7 then 4")
+		t.equal(flame[0]["region"], region.call("flame"), "AD-039 flame region from atlas json")
+		t.equal(flame[1]["region"], region.call("1"), "AD-039 digit 1 region from atlas json")
+		t.equal(flame[2]["region"], region.call("2"), "AD-039 digit 2 region from atlas json")
+	for sym in ["droplet", "bolt"]:
+		var lay: Array = Art.damage_glyph_layout(sym, "5")
+		t.check(lay.size() == 2 and lay[0]["glyph"] == sym and lay[1]["x"] == 7 and lay[0]["region"] == region.call(sym), "AD-039 %s layout" % sym)
+	var plain: Array = Art.damage_glyph_layout("", "30")
+	t.equal([plain[0]["x"], plain[1]["x"]], [0, 4], "AD-039 empty symbol starts digits at x 0")
+	t.equal(Art.damage_glyph_layout("", "+7")[0]["glyph"], "plus", "AD-039 + maps to plus glyph")
+	var size: Vector2 = load(Art.export_manifest()[Art.export_map()["damage_glyphs"]]["png"]).get_size()
+	for n in g:
+		t.check(Rect2(Vector2.ZERO, size).encloses(region.call(n)), "AD-039 glyph %s inside png" % n)
+	t.equal(DamageNumbers.format(12.0, "fire")["color"], Color.WHITE, "AD-039 damage number stays white")

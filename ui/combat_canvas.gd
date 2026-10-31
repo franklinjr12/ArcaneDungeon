@@ -125,11 +125,8 @@ func _draw_damage_numbers(offset: Vector2, tick: int) -> void:
 		var age: float = float(tick-int(popup["spawn_tick"]))
 		var at: Vector2 = popup["position"]-offset+Vector2(-8,-34-age*DamageNumbers.RISE_PER_TICK-float(popup["index"])*12)
 		var text: String = popup["text"]
-		var width := ThemeDB.fallback_font.get_string_size(text,HORIZONTAL_ALIGNMENT_LEFT,-1,14).x
-		var start := at-Vector2(width/2.0,0)
-		if popup["symbol"] != "":
-			Art.damage_symbol(self,popup["symbol"],start+Vector2(-7,-5),10.0,popup["color"])
-		draw_string(ThemeDB.fallback_font,start,text,HORIZONTAL_ALIGNMENT_LEFT,-1,14,popup["color"])
+		var width: float = Art.damage_glyph_width(popup["symbol"],text)
+		Art.draw_damage_number(self,popup["symbol"],text,at+Vector2(-width/2.0,-7))
 
 func _label(point: Vector2, label: String, shade: Color) -> void:
 	draw_string(ThemeDB.fallback_font,point,label,HORIZONTAL_ALIGNMENT_LEFT,-1,12,shade)
