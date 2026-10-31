@@ -107,7 +107,7 @@ static func export_frame_for(kind: String, state: String, tick: int) -> Dictiona
 		"region": Rect2(f["x"], f["y"], f["w"], f["h"]), "pivot": Vector2(piv[0], piv[1])}
 
 static func _entity_export(canvas: CanvasItem, kind: String, at: Vector2, tick: int, motion: Vector2,
-		casting: bool, hurt: bool, dead: bool) -> void:
+		casting: bool, hurt: bool, dead: bool, modulate: Color = Color.WHITE) -> void:
 	var state := "idle"
 	if dead:
 		state = "dead"
@@ -125,10 +125,10 @@ static func _entity_export(canvas: CanvasItem, kind: String, at: Vector2, tick: 
 	var flip := motion.x < 0.0
 	if flip:
 		canvas.draw_set_transform(at, 0.0, Vector2(-1, 1))
-		canvas.draw_texture_rect_region(tex, Rect2(-pivot * sc, region.size * sc), region)
+		canvas.draw_texture_rect_region(tex, Rect2(-pivot * sc, region.size * sc), region, modulate)
 		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	else:
-		canvas.draw_texture_rect_region(tex, Rect2(at - pivot * sc, region.size * sc), region)
+		canvas.draw_texture_rect_region(tex, Rect2(at - pivot * sc, region.size * sc), region, modulate)
 
 static func tile_floor(canvas: CanvasItem, view: Rect2, offset: Vector2, stage: int = 0) -> void:
 	if use_art_export:
@@ -201,9 +201,9 @@ static func _tile_floor_export(canvas: CanvasItem, view: Rect2, offset: Vector2,
 				Rect2(f["x"], f["y"], f["w"], f["h"]))
 
 static func entity(canvas: CanvasItem, kind: String, at: Vector2, tick: int, motion: Vector2 = Vector2.ZERO,
-		casting: bool = false, hurt: bool = false, dead: bool = false) -> void:
+		casting: bool = false, hurt: bool = false, dead: bool = false, modulate: Color = Color.WHITE) -> void:
 	if use_art_export and export_map().get("entities", {}).has(kind):
-		_entity_export(canvas, kind, at, tick, motion, casting, hurt, dead)
+		_entity_export(canvas, kind, at, tick, motion, casting, hurt, dead, modulate)
 		return
 	if not F.has(kind):
 		kind = "dummy"
@@ -255,7 +255,10 @@ const FX_EVENTS := [
 	"impact.fire","impact.water","impact.lightning","impact.neutral",
 	"burst.fire","burst.water","burst.lightning",
 	"reaction.arc","reaction.extinguish","mod.split","mod.pierce","trigger.on_hit",
-	"status.wet","status.burning","status.charged"]
+	"status.wet","status.burning","status.charged",
+	"cast.charge","cast.muzzle","dash.trail","hit.spark","enemy.spawn","enemy.dissolve","enemy.bolt","enemy.bolt_impact",
+	"boss.bullet","boss.phase","room.clear","telegraph.circle","telegraph.line","telegraph.dash_lane"]
+const IFRAME_OUTLINE := Color("#e9f2e5")
 ## Events that had no P1 mapping when drawn (legacy sprite used instead); must stay empty in the slice.
 static var fx_fallbacks: Array = []
 static var _icon_index: Dictionary = {}
@@ -302,10 +305,14 @@ static func _legacy_kind(event: String) -> String:
 		return parts[1] if parts[0] == "projectile" else "impact"
 	return "impact"
 
-## Draws region*scale around the pivot. length > 0 stretches only along x (lanes, lines, arcs).
+## AD-VFX-035 i-frame flicker: outline toggles every 60 ms (3.6 ticks, floored), on first.
+static func iframe_outline_on(tick: int) -> bool:
+	return (tick * 1000 / 60) / 60 % 2 == 0
+
+## Draws region*scale around the pivot. uniform > 0 scales both axes to that world diameter (telegraph circle). length > 0 stretches only along x (lanes, lines, arcs).
 ## Status events also draw the AD-033 icon at the overlay's symbol slice (slot offsets stacked icons).
 static func draw_fx(canvas: CanvasItem, event: String, center: Vector2, age_ticks: int, rotation: float = 0.0,
-		length: float = 0.0, modulate: Color = Color.WHITE, slot: int = 0) -> void:
+		length: float = 0.0, modulate: Color = Color.WHITE, slot: int = 0, uniform: float = 0.0) -> void:
 	var fr := fx_frame(event, age_ticks)
 	if fr.is_empty():
 		if not fx_fallbacks.has(event):
@@ -316,6 +323,9 @@ static func draw_fx(canvas: CanvasItem, event: String, center: Vector2, age_tick
 	var region: Rect2 = fr["region"]
 	var pivot: Vector2 = fr["pivot"]
 	var sx := length / region.size.x if length > 0.0 else sc
+	if uniform > 0.0:
+		sc = uniform / region.size.x
+		sx = sc
 	canvas.draw_set_transform(center, rotation, Vector2.ONE)
 	canvas.draw_texture_rect_region(_texs[fr["stem"]],
 		Rect2(Vector2(-pivot.x * sx, -pivot.y * sc), Vector2(region.size.x * sx, region.size.y * sc)), region, modulate)
@@ -352,7 +362,7 @@ static func _pos(p: Variant) -> Vector2:
 static func collect_fx(session, tick: int, memo: Dictionary) -> Array:
 	var sim = session.sim
 	var out: Array = []
-	for key in ["born", "cursor", "prev", "since", "seen"]:
+	for key in ["born", "cursor", "prev", "since", "seen", "known", "dead", "phase", "eshots"]:
 		if not memo.has(key):
 			memo[key] = {}
 	if not memo.has("shots"):
@@ -459,7 +469,90 @@ static func collect_fx(session, tick: int, memo: Dictionary) -> Array:
 		out.append({"event": shot["event"], "at": shot["at"], "age": age,
 			"rotation": shot["rotation"], "length": shot["length"], "slot": 0})
 	memo["shots"] = next_shots
+	_collect_feedback(session, tick, memo, out)
 	return out
+
+## AD-035 feedback, telegraphs and hostile shots (presentation only).
+static func _collect_feedback(session, tick: int, memo: Dictionary, out: Array) -> void:
+	var sim = session.sim
+	var mage: Vector2 = sim.actor.position
+	var shots: Array = memo["shots"]
+	var pending: Array = []
+	# Hostile shots; a vanished id leaves an impact at its last position.
+	var current: Dictionary = {}
+	for s in session.enemy_shots:
+		var sid := int(s["id"])
+		var boss := _is_boss_id(session, int(s["source_id"]))
+		current[sid] = true
+		memo["eshots"][sid] = {"at": s["position"], "boss": boss}
+		out.append({"event": "boss.bullet" if boss else "enemy.bolt", "at": s["position"], "age": tick,
+			"rotation": Vector2(s["direction"]).angle(), "length": 0.0, "slot": 0})
+	for sid in memo["eshots"].keys():
+		if not current.has(sid):
+			pending.append(["enemy.bolt_impact", memo["eshots"][sid]["at"]])
+			memo["eshots"].erase(sid)
+	# Casts: a new cost_paid record this tick.
+	var paid: Array = sim.trace.filter_records(-1, "", "cost_paid")
+	var from: int = int(memo["cursor"].get("cost_paid", 0))
+	if paid.size() < from:
+		from = 0
+	memo["cursor"]["cost_paid"] = paid.size()
+	if paid.size() > from:
+		var aim := Vector2.RIGHT
+		for entry in sim.active:
+			if entry["kind"] == "projectile":
+				aim = entry["effect"].direction
+		pending.append(["cast.charge", mage])
+		_shot(shots, "cast.muzzle", mage + aim * 18.0, tick, aim.angle())
+		out.append({"event": "cast.muzzle", "at": mage + aim * 18.0, "age": 0, "rotation": aim.angle(), "length": 0.0, "slot": 0})
+	if session.player.dash_left > 0:
+		out.append({"event": "dash.trail", "at": mage, "age": tick, "rotation": 0.0, "length": 0.0, "slot": 0})
+	var flash: int = session.player.hit_flash
+	if flash > 0 and int(memo["cursor"].get("flash", 0)) == 0:
+		pending.append(["hit.spark", mage])
+	memo["cursor"]["flash"] = flash
+	for enemy in session.enemies:
+		var target = enemy.target
+		var id: int = target.id
+		if not memo["known"].has(id):
+			memo["known"][id] = true
+			pending.append(["enemy.spawn", target.position])
+		if not target.alive() and not memo["dead"].has(id):
+			memo["dead"][id] = tick
+			pending.append(["enemy.dissolve", target.position])
+		if enemy.kind == "undead_warden":
+			if enemy.phase == 2 and int(memo["phase"].get(id, 1)) != 2:
+				pending.append(["boss.phase", target.position])
+			memo["phase"][id] = enemy.phase
+		if enemy.state != "windup" or enemy.intent == null or not target.alive():
+			continue
+		var intent: Dictionary = enemy.intent.snapshot()
+		var to_mage: Vector2 = mage - target.position
+		var item := {"at": target.position, "age": int(enemy.state_tick), "rotation": to_mage.angle(), "length": 0.0, "slot": 0}
+		if enemy.kind == "undead_warden":
+			if intent["kind"] == "radial":
+				item["event"] = "telegraph.circle"
+				item["uniform"] = 2.0 * float(intent["range"])
+			else:
+				item["event"] = "telegraph.dash_lane"
+				item["length"] = to_mage.length()
+		elif enemy.kind == "bone_thrall":
+			item["event"] = "telegraph.circle"
+			item["uniform"] = 2.0 * float(intent["range"])
+		else:
+			item["event"] = "telegraph.line"
+			item["length"] = to_mage.length()
+		out.append(item)
+	for p in pending:
+		_shot(shots, p[0], p[1], tick)
+		var shot: Dictionary = shots[shots.size() - 1]
+		out.append({"event": shot["event"], "at": shot["at"], "age": 0, "rotation": 0.0, "length": 0.0, "slot": 0})
+
+static func _is_boss_id(session, source_id: int) -> bool:
+	for enemy in session.enemies:
+		if enemy.target.id == source_id:
+			return enemy.kind == "undead_warden"
+	return false
 
 static func _shot(shots: Array, event: String, at: Vector2, tick: int, rotation: float = 0.0, length: float = 0.0) -> void:
 	shots.append({"event": event, "at": at, "tick": tick, "rotation": rotation, "length": length})

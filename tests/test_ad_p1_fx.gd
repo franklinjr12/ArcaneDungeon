@@ -44,7 +44,31 @@ func run(t) -> void:
 		for n in ["ad_ico_wet", "ad_ico_burning", "ad_ico_charged"]:
 			t.check(idx["icons"].has(n), "AD-039 icon " + n)
 	_lookup(t)
+	_iframe(t)
 	_slice_route(t)
+	_boss_route(t)
+
+func _iframe(t) -> void:
+	for tick in 4:
+		t.check(Art.iframe_outline_on(tick), "AD-039 iframe outline on at tick %d" % tick)
+	for tick in range(4, 8):
+		t.check(not Art.iframe_outline_on(tick), "AD-039 iframe outline off at tick %d" % tick)
+	t.check(Art.iframe_outline_on(8), "AD-039 iframe outline on again at tick 8")
+
+func _boss_route(t) -> void:
+	Art.fx_fallbacks.clear()
+	var flow = Flow.new(SEED)
+	flow.run.sequence_index = 3
+	flow._enter_current()
+	var memo: Dictionary = {}
+	var seen: Dictionary = {}
+	var probe := func(f):
+		for item in Art.collect_fx(f.session, f.session.sim.clock.tick, memo):
+			seen[item["event"]] = true
+	Driver.fight(flow, 5000, probe)
+	t.equal(Art.fx_fallbacks, [], "AD-039 boss route: no legacy fallback")
+	for ev in ["telegraph.dash_lane", "boss.bullet", "telegraph.circle", "boss.phase"]:
+		t.check(seen.has(ev), "AD-039 boss route observes %s (saw %s)" % [ev, seen.keys()])
 
 func _lookup(t) -> void:
 	for ev in Art.FX_EVENTS:
@@ -97,3 +121,5 @@ func _slice_route(t) -> void:
 		kinds[str(ev).split(".")[0]] = true
 	for k in ["projectile", "impact", "status"]:
 		t.check(kinds.has(k), "AD-039 slice route emitted %s events (saw %s)" % [k, seen.keys()])
+	for ev in ["enemy.bolt", "telegraph.circle", "enemy.dissolve"]:
+		t.check(seen.has(ev), "AD-039 slice route observes %s (saw %s)" % [ev, seen.keys()])

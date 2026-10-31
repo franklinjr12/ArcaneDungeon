@@ -70,10 +70,12 @@ func _draw() -> void:
 	var actor_casting: bool = session.sim.active.size()>0 and tick%14<5
 	var player_velocity: Vector2 = mage.position-last_player_at
 	last_player_at = mage.position
-	Art.entity(self,"mage",at,tick,session.player.dash_heading*16.0 if session.player.dash_left>0 else player_velocity,
-		actor_casting,session.player.hit_flash>0 and not session.reduce_flashes,not mage.alive())
-	if session.player.invulnerable():
-		Art.effect(self,"dodge",at,tick,Vector2(65,65),0.85)
+	var mage_motion: Vector2 = session.player.dash_heading*16.0 if session.player.dash_left>0 else player_velocity
+	var mage_hurt: bool = session.player.hit_flash>0 and not session.reduce_flashes
+	if session.player.invulnerable() and Art.iframe_outline_on(tick):
+		for step in [Vector2.LEFT,Vector2.RIGHT,Vector2.UP,Vector2.DOWN]:
+			Art.entity(self,"mage",at+step*2.0,tick,mage_motion,actor_casting,mage_hurt,not mage.alive(),Art.IFRAME_OUTLINE)
+	Art.entity(self,"mage",at,tick,mage_motion,actor_casting,mage_hurt,not mage.alive())
 	_health_bar(at,25,mage.health.current/mage.health.maximum,Color("#da686e"))
 	if show_debug:
 		_label(at+Vector2(-17,-45),"MAGE",Color("#f8e7ba"))
@@ -83,7 +85,9 @@ func _draw() -> void:
 		var enemy_at: Vector2 = target.position-offset
 		var movement: Vector2 = target.position-last_enemy_at.get(target.id,target.position)
 		last_enemy_at[target.id] = target.position
-		Art.entity(self,enemy.kind,enemy_at,tick,movement,enemy.state=="windup",false,not target.alive())
+		var dissolved: int = int(_fx_memo.get("dead",{}).get(target.id,tick+1))
+		if tick-dissolved < 20 or target.alive():
+			Art.entity(self,enemy.kind,enemy_at,tick,movement,enemy.state=="windup",false,not target.alive())
 		if target.alive():
 			_health_bar(enemy_at,target.radius+12,target.health.current/target.health.maximum,Color("#dc7060"))
 			if enemy.kind == "undead_warden" or show_debug:
@@ -92,19 +96,14 @@ func _draw() -> void:
 			var intent: Dictionary = enemy.intent.snapshot()
 			var time_left: int = maxi(0,int(enemy.tuning["telegraph_ticks"])-enemy.state_tick)
 			var f: float = 1.0-float(time_left)/maxf(1.0,float(enemy.tuning["telegraph_ticks"]))
-			var radius: float = float(intent["range"]) if enemy.kind in ["bone_thrall","undead_warden"] else 33.0
-			draw_arc(enemy_at,radius,0,TAU,56,Color("#e9ad56",0.55+0.4*f),2.0+f*2.5)
-			draw_line(enemy_at,mage.position-offset,Color("#f7b765",0.35+0.3*f),1.7)
 			_label(enemy_at+Vector2(-26,-54),"! %d" % time_left,Color("#ffe4a0"))
 		if show_debug and target.alive():
 			_label(enemy_at+Vector2(-26,53),"#%d %s" % [target.id,enemy.state],Color("#b9e8fc"))
-	for shot in session.enemy_shots:
-		Art.effect(self,"enemy",shot["position"]-offset,tick,Vector2(28,28))
 	if _fx_session != session:
 		_fx_session = session
 		_fx_memo = {}
 	for fx in Art.collect_fx(session,tick,_fx_memo):
-		Art.draw_fx(self,fx["event"],fx["at"]-offset,fx["age"],fx["rotation"],fx["length"],Color.WHITE,fx["slot"])
+		Art.draw_fx(self,fx["event"],fx["at"]-offset,fx["age"],fx["rotation"],fx["length"],Color.WHITE,fx["slot"],fx.get("uniform",0.0))
 	for visual in session.sim.visuals:
 		if visual["kind"] == "arc":
 			_label((visual["from"]+visual["to"])/2.0-offset+Vector2(-12,-15),"ARC!",Color("#ffeda4"))
