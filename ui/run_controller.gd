@@ -9,6 +9,7 @@ const RuneAtlas = preload("res://assets/pixel/rune_icons.png")
 const Prompts = preload("res://ui/onboarding_prompts.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
 const InputActions = preload("res://ui/input_actions.gd")
+const PauseMenu = preload("res://ui/pause_menu.gd")
 const MerchantScript = preload("res://world/merchant.gd")
 var flow
 var guide = Prompts.new()
@@ -44,6 +45,8 @@ var _settings
 var _director
 var flavour: Dictionary = MerchantScript.load_flavour()
 var _rift_shown := false
+var pause_menu
+var _prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
 
 func _ready() -> void:
 	VisualTheme.apply(self)
@@ -161,6 +164,57 @@ func _build() -> void:
 	editor_controls.custom_minimum_size = Vector2(470,0)
 	editor_controls.add_theme_constant_override("separation",9)
 	editor_scroll.add_child(editor_controls)
+	pause_menu = PauseMenu.new()
+	pause_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pause_menu.visible = false
+	add_child(pause_menu)
+	pause_menu.resume_requested.connect(close_pause)
+	pause_menu.retry_confirmed.connect(_pause_retry)
+	pause_menu.quit_confirmed.connect(_pause_quit)
+
+func is_paused() -> bool:
+	return pause_menu != null and pause_menu.visible
+
+func can_pause() -> bool:
+	return not editor_open and flow.state in ["fighting","cleared","workshop"]
+
+func open_pause() -> void:
+	if not can_pause() or is_paused():
+		return
+	_set_clocks_paused(true)
+	_prev_mouse_mode = Input.mouse_mode
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	pause_menu.visible = true
+
+func close_pause() -> void:
+	if not is_paused():
+		return
+	if pause_menu.is_settings_open():
+		pause_menu.close_settings()
+	if pause_menu.is_confirm_open():
+		pause_menu.cancel_confirm()
+	pause_menu.visible = false
+	_set_clocks_paused(false)
+	Input.mouse_mode = _prev_mouse_mode
+
+func _set_clocks_paused(on: bool) -> void:
+	flow.session.sim.clock.set_paused(on)
+	if flow.range_sim != null and flow.range_sim.get("clock") != null:
+		flow.range_sim.clock.set_paused(on)
+
+func _pause_retry() -> void:
+	close_pause()
+	_retry_same_seed()
+
+func _pause_quit() -> void:
+	var save = get_node_or_null("/root/SaveService")
+	if save != null and not _stats_recorded:
+		var s: Dictionary = flow.summary()
+		s["outcome"] = "abandoned"
+		save.record_run(s)
+		_stats_recorded = true
+	close_pause()
+	_to_title()
 
 func _heading(parent: Node, title: String, fontsize: int = 15) -> void:
 	var label := Label.new()
@@ -181,13 +235,13 @@ func _button(parent: Node, label: String, action: Callable, press_cue: String = 
 	return b
 
 func _world_click(point: Vector2, button: int) -> void:
-	if editor_open or flow.state != "fighting":
+	if is_paused() or editor_open or flow.state != "fighting":
 		return
 	cursor = point
 	cast_pending = InputActions.slot_for_mouse_button(button)
 
 func _test_click(point: Vector2, button: int) -> void:
-	if editor_open or flow.state != "workshop":
+	if is_paused() or editor_open or flow.state != "workshop":
 		return
 	_test_cast_slot(InputActions.slot_for_mouse_button(button),point)
 
@@ -205,6 +259,12 @@ func _reset_test_range() -> void:
 	_update_labels()
 
 func _input(event: InputEvent) -> void:
+	if is_paused():
+		if event is InputEventKey:
+			if event.pressed and not event.echo and event.is_action_pressed("pause"):
+				pause_menu.handle_cancel()
+			get_viewport().set_input_as_handled()
+		return
 	if editor_open or not event.is_pressed() or event.is_echo():
 		return
 	var fighting: bool = flow.state == "fighting"
@@ -217,8 +277,7 @@ func _input(event: InputEvent) -> void:
 	elif event.is_action_pressed("interact"):
 		_exit()
 	elif event.is_action_pressed("pause"):
-		if fighting:
-			flow.session.sim.clock.set_paused(not flow.session.sim.clock.paused)
+		open_pause()
 	elif event is InputEventKey:
 		match event.keycode:
 			KEY_R: _retry_same_seed()
@@ -241,6 +300,9 @@ func _process(delta: float) -> void:
 
 func _physics_process(_delta: float) -> void:
 	if flow == null or not flow.initialized:
+		return
+	if is_paused():
+		cast_pending = -1
 		return
 	if not editor_open:
 		if flow.state == "fighting":
@@ -473,6 +535,7 @@ func _build_summary_panel() -> void:
 	summary_title_button = _button(context,"Title",func(): _to_title(),"ui.cancel")
 
 func _retry_same_seed() -> void:
+	close_pause()
 	_close_visual_editor()
 	_stats_recorded = false
 	_rift_shown = false
@@ -481,6 +544,7 @@ func _retry_same_seed() -> void:
 	_redraw_panel()
 
 func _new_seed() -> void:
+	close_pause()
 	_close_visual_editor()
 	_stats_recorded = false
 	_rift_shown = false
@@ -489,6 +553,7 @@ func _new_seed() -> void:
 	_redraw_panel()
 
 func _to_title() -> void:
+	close_pause()
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 func _exit() -> void:
