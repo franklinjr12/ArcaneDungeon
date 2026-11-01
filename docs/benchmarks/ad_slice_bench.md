@@ -74,41 +74,41 @@ Derived metrics (combat rooms = s1_r1, s1_r2, s1_r3, s2_r1; the warden room s1_b
 
 ## After (AD-044)
 
-**MUST NOT MET**: HP cost % of max HP, s1_r1 (median 0.0%, target 15-45%; s1_r1 is not a changed room and the tuning limit of 3 iterations was reached). Per-seed table below.
+**MUST NOT MET**: room HP cost is 0-11 of 150 max HP (0-7%, target 15-45%) in every combat room. The extra waves from the earlier iterations were removed because they broke the TASK-037, AD-031, AD-039, TASK-041, TASK-047 and TASK-048 suites (those pin wave counts and clear s1_r3 with the starter loadout). Only the warden tuning survives. The planner decides the next step (3-iteration limit reached). The warden fight (66.7 s) and zero deaths pass.
 
 BENCH_MD_BEGIN
 | seed | outcome | total s | HP lost | starved ticks | warden s | casts (slot0/1/2/3) | rewards |
 |---|---|---|---|---|---|---|---|
-| 20261022 | won | 133.367 | 94.0 | 3992 | 66.733 | 489/96/37/0 | mod.homing, trigger.on_hit, form.orb |
-| 20261023 | won | 133.367 | 94.0 | 3992 | 66.733 | 489/96/37/0 | trigger.on_hit, form.orb, mod.homing |
-| 20261024 | won | 134.15 | 87.0 | 4061 | 66.733 | 474/104/37/0 | form.orb, mod.pierce, trigger.on_hit |
-| 20261025 | won | 133.367 | 94.0 | 3992 | 66.733 | 489/96/37/0 | form.orb, mod.homing, mod.pierce |
-| 20261026 | won | 133.367 | 94.0 | 3992 | 66.733 | 489/96/37/0 | trigger.on_hit, mod.homing, form.orb |
-| 20261027 | won | 133.367 | 94.0 | 3992 | 66.733 | 489/96/37/0 | form.orb, trigger.on_hit, mod.homing |
-| 20261028 | won | 134.15 | 87.0 | 4061 | 66.733 | 474/104/37/0 | mod.pierce, form.orb, mod.homing |
-| 20261029 | won | 134.15 | 87.0 | 4061 | 66.733 | 474/104/37/0 | trigger.on_hit, form.orb, mod.pierce |
-| 20261030 | won | 133.367 | 94.0 | 3992 | 66.733 | 489/96/37/0 | mod.homing, trigger.on_hit, form.orb |
-| 20261031 | won | 133.367 | 94.0 | 3992 | 66.733 | 489/96/37/0 | trigger.on_hit, mod.homing, form.orb |
+| 20261022 | won | 102.8 | 11.0 | 2855 | 66.733 | 359/75/36/0 | mod.homing, trigger.on_hit, form.orb |
+| 20261023 | won | 102.8 | 11.0 | 2855 | 66.733 | 359/75/36/0 | trigger.on_hit, form.orb, mod.homing |
+| 20261024 | won | 105.25 | 11.0 | 3000 | 66.733 | 370/77/36/0 | form.orb, mod.pierce, trigger.on_hit |
+| 20261025 | won | 102.8 | 11.0 | 2855 | 66.733 | 359/75/36/0 | form.orb, mod.homing, mod.pierce |
+| 20261026 | won | 102.8 | 11.0 | 2855 | 66.733 | 359/75/36/0 | trigger.on_hit, mod.homing, form.orb |
+| 20261027 | won | 102.8 | 11.0 | 2855 | 66.733 | 359/75/36/0 | form.orb, trigger.on_hit, mod.homing |
+| 20261028 | won | 105.25 | 11.0 | 3000 | 66.733 | 370/77/36/0 | mod.pierce, form.orb, mod.homing |
+| 20261029 | won | 105.25 | 11.0 | 3000 | 66.733 | 370/77/36/0 | trigger.on_hit, form.orb, mod.pierce |
+| 20261030 | won | 102.8 | 11.0 | 2855 | 66.733 | 359/75/36/0 | mod.homing, trigger.on_hit, form.orb |
+| 20261031 | won | 102.8 | 11.0 | 2855 | 66.733 | 359/75/36/0 | trigger.on_hit, mod.homing, form.orb |
 
 | metric | median | min | max |
 |---|---|---|---|
-| total_seconds | 133.367 | 133.367 | 134.15 |
-| total_hp_lost | 94.0 | 87.0 | 94.0 |
-| total_mana_starved_ticks | 3992.0 | 3992.0 | 4061.0 |
+| total_seconds | 102.8 | 102.8 | 105.25 |
+| total_hp_lost | 11.0 | 11.0 | 11.0 |
+| total_mana_starved_ticks | 2855.0 | 2855.0 | 3000.0 |
 | warden_seconds | 66.733 | 66.733 | 66.733 |
 | deaths | 0.0 | 0.0 | 0.0 |
-| casts slot 0 | 489.0 | 474.0 | 489.0 |
-| casts slot 1 | 96.0 | 96.0 | 104.0 |
-| casts slot 2 | 37.0 | 37.0 | 37.0 |
+| casts slot 0 | 359.0 | 359.0 | 370.0 |
+| casts slot 1 | 75.0 | 75.0 | 77.0 |
+| casts slot 2 | 36.0 | 36.0 | 36.0 |
 | casts slot 3 | 0.0 | 0.0 | 0.0 |
 
 | room | n | median s | min s | max s | median HP lost | min HP lost | max HP lost |
 |---|---|---|---|---|---|---|---|
 | s1_r1 | 10 | 0.433 | 0.433 | 0.433 | 0.0 | 0.0 | 0.0 |
-| s1_r2 | 10 | 17.583 | 17.583 | 17.583 | 34.0 | 34.0 | 34.0 |
-| s1_r3 | 10 | 16.0 | 16.0 | 16.0 | 31.0 | 31.0 | 31.0 |
+| s1_r2 | 10 | 8.417 | 8.417 | 8.417 | 0.0 | 0.0 | 0.0 |
+| s1_r3 | 10 | 6.933 | 6.933 | 6.933 | 11.0 | 11.0 | 11.0 |
 | s1_boss | 10 | 66.733 | 66.733 | 66.733 | 0.0 | 0.0 | 0.0 |
-| s2_r1 | 10 | 32.617 | 32.617 | 33.4 | 29.0 | 22.0 | 29.0 |
+| s2_r1 | 10 | 20.283 | 20.283 | 22.733 | 0.0 | 0.0 | 0.0 |
 BENCH_MD_END
 
 Derived metrics (same definitions as Before):
@@ -116,21 +116,17 @@ Derived metrics (same definitions as Before):
 | metric | median / min / max | target | pass |
 |---|---|---|---|
 | HP cost % of max HP, s1_r1 | 0.0 / 0.0 / 0.0 | MUST 15-45 | NO |
-| HP cost % of max HP, s1_r2 | 22.7 / 22.7 / 22.7 | MUST 15-45 | yes |
-| HP cost % of max HP, s1_r3 | 20.7 / 20.7 / 20.7 | MUST 15-45 | yes |
-| HP cost % of max HP, s2_r1 | 19.3 / 14.7 / 19.3 | MUST 15-45 | yes |
-| Deaths before warden | 0.0 / 0.0 / 0.0 | MUST 0 | yes |
+| HP cost % of max HP, s1_r2 | 0.0 / 0.0 / 0.0 | MUST 15-45 | NO |
+| HP cost % of max HP, s1_r3 | 7.3 / 7.3 / 7.3 | MUST 15-45 | NO |
+| HP cost % of max HP, s2_r1 | 0.0 / 0.0 / 0.0 | MUST 15-45 | NO |
+| Deaths before warden | 0 / 0 / 0 | MUST 0 | yes |
 | Warden seconds | 66.7 / 66.7 / 66.7 | MUST 60-150 | yes |
-| Mana-starved % of combat ticks | 49.9 / 49.9 / 50.5 | REPORT ONLY (not tuned, v2 spec 2026-10-31) | n/a |
-| Basic bolt (slot 0 = GDD slot 1) % of casts | 78.6 / 77.1 / 78.6 | REPORT ONLY (not tuned, v2 spec 2026-10-31) | n/a |
-| Total slice sim time (min) | 2.22 / 2.22 / 2.24 | REPORT ONLY (not tuned, v2 spec 2026-10-31) | n/a |
+| Total slice sim time (min) | 1.71 / 1.71 / 1.75 | REPORT ONLY | n/a |
+
+Mana-starved and basic-bolt share are REPORT ONLY (not tuned): see the per-seed table (slot 0 is about 75% of casts).
 
 ## Changed keys
 
-Only `world/data/vertical_slice_v1.json` changed (baseline 7c81ad6); `combat/combat_tuning_v1.json` and `magic/data/magic_balance_v1.json` are unchanged.
+Only `world/data/vertical_slice_v1.json` differs from the baseline.
 
 - world/data/vertical_slice_v1.json: boss.hp 430 -> 590
-- world/data/vertical_slice_v1.json: s1_r1: unchanged
-- world/data/vertical_slice_v1.json: s1_r2: +2 waves, +4 enemies (bone_thrall, fallen_adept; bone_thrall x2)
-- world/data/vertical_slice_v1.json: s1_r3: +2 waves, +3 enemies (grave_hound; fallen_adept, grave_hound)
-- world/data/vertical_slice_v1.json: s2_r1: +2 waves, +5 enemies (bone_thrall, fallen_adept, grave_hound; fallen_adept, bone_thrall)

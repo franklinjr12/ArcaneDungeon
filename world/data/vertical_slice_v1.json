@@ -134,38 +134,6 @@
               650
             ]
           ]
-        },
-        {
-          "trigger": "on_clear",
-          "delay_ticks": 30,
-          "enemies": [
-            [
-              "bone_thrall",
-              1080,
-              255
-            ],
-            [
-              "fallen_adept",
-              1050,
-              500
-            ]
-          ]
-        },
-        {
-          "trigger": "on_clear",
-          "delay_ticks": 120,
-          "enemies": [
-            [
-              "bone_thrall",
-              700,
-              640
-            ],
-            [
-              "bone_thrall",
-              700,
-              640
-            ]
-          ]
         }
       ]
     },
@@ -206,33 +174,6 @@
               "grave_hound",
               390,
               510
-            ]
-          ]
-        },
-        {
-          "trigger": "on_clear",
-          "delay_ticks": 30,
-          "enemies": [
-            [
-              "grave_hound",
-              375,
-              450
-            ]
-          ]
-        },
-        {
-          "trigger": "on_clear",
-          "delay_ticks": 120,
-          "enemies": [
-            [
-              "fallen_adept",
-              440,
-              450
-            ],
-            [
-              "grave_hound",
-              1080,
-              255
             ]
           ]
         }
@@ -310,43 +251,6 @@
               "grave_hound",
               1100,
               640
-            ]
-          ]
-        },
-        {
-          "trigger": "on_clear",
-          "delay_ticks": 30,
-          "enemies": [
-            [
-              "bone_thrall",
-              700,
-              455
-            ],
-            [
-              "fallen_adept",
-              1050,
-              500
-            ],
-            [
-              "grave_hound",
-              1050,
-              500
-            ]
-          ]
-        },
-        {
-          "trigger": "on_clear",
-          "delay_ticks": 120,
-          "enemies": [
-            [
-              "fallen_adept",
-              440,
-              450
-            ],
-            [
-              "bone_thrall",
-              1080,
-              255
             ]
           ]
         }
