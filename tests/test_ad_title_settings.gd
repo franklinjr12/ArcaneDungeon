@@ -50,6 +50,8 @@ func _title(t) -> void:
 	var menu = load("res://scenes/main.tscn").instantiate()
 	menu.show_debug_entries = false
 	root.add_child(menu)
+	var first = menu.find_child("NewRunButton", true, false)
+	t.check(menu.get_viewport().gui_get_focus_owner() == first or first.has_focus(), "AD-067 title focuses New Run")
 	var texts := []
 	for b in menu.find_children("*", "Button", true, false):
 		texts.append(b.text)
@@ -59,6 +61,24 @@ func _title(t) -> void:
 	t.check(menu.settings_screen.visible and not menu.panel.visible, "AD-067 settings replaces title panel")
 	menu.settings_screen.back_requested.emit()
 	t.check(menu.panel.visible and not menu.settings_screen.visible, "AD-067 back restores title panel")
+	menu.open_settings()
+	var vp = menu.get_viewport()
+	var new_run = menu.find_child("NewRunButton", true, false)
+	var settings_btn = menu.find_child("SettingsButton", true, false)
+	t.check(vp.gui_get_focus_owner() == menu.settings_screen.volume_sliders["Master"] or menu.settings_screen.volume_sliders["Master"].has_focus(), "AD-067 settings focuses first slider")
+	var ctrls: Array = menu.settings_screen.volume_sliders.values()
+	ctrls.append_array([menu.settings_screen.flash_toggle, menu.settings_screen.shake_toggle, menu.settings_screen.telemetry_toggle, menu.settings_screen.back_button])
+	var all_focus := true
+	for c in ctrls:
+		all_focus = all_focus and c.focus_mode == Control.FOCUS_ALL
+	t.check(all_focus, "AD-067 settings controls keyboard focusable")
+	var ev := InputEventAction.new()
+	ev.action = "ui_cancel"
+	ev.pressed = true
+	menu.settings_screen._unhandled_input(ev)
+	t.check(menu.panel.visible and not menu.settings_screen.visible, "AD-067 ui_cancel returns to title")
+	t.check(vp.gui_get_focus_owner() == settings_btn or settings_btn.has_focus(), "AD-067 focus returns to SettingsButton")
+	t.check(new_run != null and new_run.focus_mode == Control.FOCUS_ALL, "AD-067 title buttons focusable")
 	menu.free()
 	var dbg = load("res://scenes/main.tscn").instantiate()
 	dbg.show_debug_entries = true
