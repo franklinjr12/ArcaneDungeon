@@ -1,6 +1,6 @@
 {
  "version": 1,
- "note": "Scale 2 is the game-art ruling 2026-10-30 (Art 01 \u00a74: 640x360 internal, integer x2, 1 art px = 2 world units, nearest). The state->tag mapping is PROPOSED (AD-030), hand-authored, not approved art direction. Not written by import_art_exports.py.",
+ "note": "Scale 2 is the game-art ruling 2026-10-30 (Art 01 \u00a74: 640x360 internal, integer x2, 1 art px = 2 world units, nearest). The state->tag mapping is PROPOSED (AD-030), hand-authored, not approved art direction. Not written by import_art_exports.py. The rune_icons/hud/ui_icons mapping is AD-040 (hand-authored); the essence.neutral icon is a placeholder (ad_ico_projectile) until a basic-bolt icon exists.",
  "scale": 2,
  "entities": {
   "mage": "ad_chr_mage",
@@ -209,5 +209,33 @@
   }
  },
  "damage_glyphs": "ad_vfx_damage_numbers",
- "icons": "ad_ico_atlas_mvp"
+ "icons": "ad_ico_atlas_mvp",
+ "hud": {
+  "spell_slot": "ad_ui_spell_slot",
+  "slot_bar": "ad_ui_hud_slot_bar",
+  "bar_hp": "ad_ui_bar_hp",
+  "bar_mana": "ad_ui_bar_mana",
+  "nine_slice": "res://art/export/ui/ad_ui_9slice_margins.json",
+  "reward_card": "ad_ui_reward_card"
+ },
+ "rune_icons": {
+  "essence.fire": "ad_ico_fire",
+  "essence.water": "ad_ico_water",
+  "essence.lightning": "ad_ico_lightning",
+  "form.projectile": "ad_ico_projectile",
+  "form.burst": "ad_ico_burst",
+  "form.orb": "ad_ico_orb",
+  "mod.homing": "ad_ico_homing",
+  "mod.split": "ad_ico_split",
+  "mod.pierce": "ad_ico_pierce",
+  "trigger.on_hit": "ad_ico_on_hit",
+  "essence.neutral": "ad_ico_projectile"
+ },
+ "ui_icons": {
+  "hp": "ad_ico_hp",
+  "mana": "ad_ico_mana",
+  "coin": "ad_ico_coin",
+  "upgrade": "ad_ico_upgrade",
+  "dash": "ad_ico_dash"
+ }
 }
