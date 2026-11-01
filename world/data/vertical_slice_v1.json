@@ -33,7 +33,7 @@
   "boss": {
     "kind": "undead_warden",
     "display_name": "Undead warden",
-    "hp": 430,
+    "hp": 590,
     "radius": 35,
     "position": [
       1030,

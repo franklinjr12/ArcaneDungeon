@@ -137,10 +137,10 @@ func _workshop(flow, earned: Array) -> Dictionary:
 		"runes": _runes(formula)}
 
 func _runes(formula: Dictionary) -> Array:
-	var root: Dictionary = formula["root"]
-	var list: Array = [str(root["essence_id"]), str(root["manifestation"]["id"])]
-	for modifier in root.get("modifiers", []):
-		list.append(str(modifier["id"] if typeof(modifier) == TYPE_DICTIONARY else modifier))
+	var root: Dictionary = formula.get("root", {})
+	var list: Array = [str(root.get("essence_id", "")), str(root.get("manifestation_id", ""))]
+	for modifier in root.get("modifier_ids", []):
+		list.append(str(modifier))
 	return list
 
 func _fight(flow, rate: int) -> Dictionary:
