@@ -77,18 +77,17 @@ func run(t) -> void:
 	t.check(flow.close_editor(true,3.0)["ok"],"TASK-044 editor apply")
 	t.equal(flow.run.formulas[0]["formula_id"],"custom.slot_1","TASK-044 custom formula gets stable ID")
 	t.equal(flow.run.formulas[0]["root"]["essence_id"],"essence.water","TASK-048 edited rune used post boss")
-	t.check(flow.range_sim.loadout.check_slot(0)=="READY","TASK-045 range recompiles applied formula immediately")
+	t.check(flow.range_sim.loadout.check_slot(1)=="READY","TASK-045 range recompiles applied formula immediately")
 	var currency_before_test: int = flow.run.currency
 	var hp_before_test: float = flow.run.hp
 	var count_before_test: int = flow.run.sequence_index
 	flow.enter_test_range()
 	var fresh = Runner.new(flow.run.seed)
 	fresh.loadout.unlocked = flow.run.unlocked.duplicate(true)
-	for i in 2:
-		fresh.equip(i,flow.run.formulas[i])
+	fresh.equip_starter_loadout(flow.run.formulas)
 	fresh.fill_targets()
-	var test_spell: Dictionary = flow.test_cast(0,Vector2.RIGHT)
-	var sandbox_spell: Dictionary = fresh.try_cast(0,fresh.actor.position,Vector2.RIGHT)
+	var test_spell: Dictionary = flow.test_cast(1,Vector2.RIGHT)
+	var sandbox_spell: Dictionary = fresh.try_cast(1,fresh.actor.position,Vector2.RIGHT)
 	t.equal(test_spell["accepted"],sandbox_spell["accepted"],"TASK-045 workshop casts same validated M1 plan")
 	for i in 60:
 		flow.range_sim.step()
@@ -102,7 +101,7 @@ func run(t) -> void:
 	var prep: Dictionary = flow.prepare_wet_cluster()
 	t.equal(prep["count"],2,"TASK-045 wet cluster preset prepares two statuses")
 	t.check(flow.range_sim.targets.get_target(2).status.has("wet"),"TASK-045 wet setup inspectable")
-	flow.test_cast(0,Vector2.RIGHT)
+	flow.test_cast(1,Vector2.RIGHT)
 	for i in 5:
 		flow.range_sim.step()
 	flow.refill_test_mana()
@@ -127,12 +126,13 @@ func run(t) -> void:
 	t.equal(flow.run.sequence_index,5,"TASK-038 correct stage-two sequence index")
 	t.equal(flow.run.purchases.size(),2,"TASK-046 purchases persist into next stage")
 	t.check(flow.run.unlocked.has(str(item["rune_id"])),"TASK-040 merchant rune persists into next stage")
-	t.equal(flow.session.sim.loadout.preview(0)["formula_id"],"custom.slot_1","TASK-048 custom formula equipped at next stage")
+	t.equal(flow.session.sim.loadout.preview(1)["formula_id"],"custom.slot_1","TASK-048 custom formula equipped at next stage")
 	t.equal(flow.session.sim.actor.health.maximum,max_before+float(health_offer["amount"]),"TASK-046 HP upgrade persists")
 	t.equal(flow.session.sim.queue.active_effect_count(),0,"TASK-048 no effects cross workshop transition")
 	t.equal(flow.session.enemy_shots.size(),0,"TASK-048 no bullets cross workshop transition")
 	var next_fight: Dictionary = Driver.fight(flow,4600)
-	t.equal(next_fight["state"],"cleared","TASK-048 next-stage room remains playable after workshop")
+	t.equal(next_fight["state"],"won","AD-018 first stage-2 room clear wins the slice")
+	t.equal(flow.win_events,1,"AD-018 win fires once")
 	var again = Flow.new(20261022)
 	again.session.enemies[0].target.receive_damage(1000,"fire",1,100)
 	again.step()

@@ -25,7 +25,7 @@ func run(t) -> void:
 	t.check(not invalid["ok"],"TASK-036 missing marker is invalid")
 	t.equal(invalid["issues"][0]["code"],"ROOM_MISSING_FIELD","TASK-036 precise missing marker diagnostic")
 	var overlapped: Dictionary = f.config["rooms"][0].duplicate(true)
-	overlapped["waves"][0]["enemies"][0] = ["pursuer",185,450]
+	overlapped["waves"][0]["enemies"][0] = ["bone_thrall",185,450]
 	var issue: Dictionary = room.initialize(overlapped,f.session.data["arena"],f.session.data["enemies"].keys())
 	t.check(not issue["ok"],"TASK-036 enemy spawn overlapping entrance rejected")
 	t.check(issue["issues"].any(func(x):return x["code"]=="ROOM_SPAWN_AT_ENTRANCE"),"TASK-036 blocked entrance diagnostic")
@@ -47,7 +47,20 @@ func run(t) -> void:
 	var stable = Reward.new(f.config)
 	var reward_a: Array = stable.choices(f.run,"s1_r1")
 	t.equal(reward_a,stable.choices(f.run,"s1_r1"),"TASK-041 identical seed and room choose same rewards")
-	t.check(reward_a.size() >= 2,"TASK-041 first room offers a rune and currency")
+	var ids: Array = []
+	for card in reward_a:
+		t.equal(card["kind"],"rune","AD-017 card is a rune while unowned runes remain")
+		t.check(card["id"] not in f.run.unlocked and card["id"] not in ids,"AD-017 card unowned and distinct")
+		t.check(str(card["behaviour"]) != "" and str(card["name"]) != "","AD-017 card states name and behaviour")
+		ids.append(card["id"])
+	t.equal(reward_a.size(),3,"AD-017 three distinct rune cards, no currency")
+	var builtin_ids: Array = f.session.sim.registry.get_builtin_ids()
+	t.check("essence.neutral" not in Reward.new(f.config,builtin_ids).choices(f.run,"s1_r1").map(func(c): return c.get("id","")),
+		"AD-017 no essence.neutral card")
+	var empty_cfg: Dictionary = f.config.duplicate(true)
+	empty_cfg["reward_pool"] = []
+	var fallback: Array = Reward.new(empty_cfg).choices(f.run,"s1_r1")
+	t.equal(fallback,[{"kind":"currency","amount":int(f.config["room_reward_currency"])}],"AD-017 currency fallback when pool empty")
 	var different := false
 	for seed in range(1,40):
 		var copy = RunState.new()
@@ -121,7 +134,7 @@ func run(t) -> void:
 	t.check(applied["ok"],"TASK-044 apply compiled valid draft")
 	t.equal(f.run.formulas[0]["root"]["essence_id"],"essence.water","TASK-044 edited spell persists in run")
 	t.equal(f.run.formulas[0]["display_name"],"Custom Spell 1","TASK-044 edited spell gets truthful display name")
-	t.equal(f.session.sim.loadout.preview(0)["formula_id"],"custom.slot_1","TASK-044 live loadout recompiles")
+	t.equal(f.session.sim.loadout.preview(1)["formula_id"],"custom.slot_1","TASK-044 live loadout recompiles")
 	var previous: Dictionary = f.run.formulas[0].duplicate(true)
 	t.check(f.open_editor(0)["ok"],"TASK-044 another edit opens")
 	f.editor.set_root("essence.fire","form.orb")

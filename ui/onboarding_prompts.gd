@@ -1,21 +1,41 @@
 extends RefCounted
-## TASK-053: nonblocking context hints; dismiss and reopen in same session.
-const TIPS := {
-	"combat":"Mouse aims. Left/right click cast the two starter spells; Space dodges. Water makes targets Wet; Lightning hitting Wet can arc to another Wet target.",
-	"reward":"Runes are reusable knowledge, not consumable items. Choose a new rune to expand the editor or choose currency.",
-	"editor":"A spell combines Essence (what), Manifestation (shape), optional Modifier (behavior). On Hit only works on Projectile and MUST include a Burst payload with its own Essence.",
-	"workshop":"Edit your spell, Apply a valid draft, then test on dummies without changing run HP or currency. Prepare Wet targets and use Lightning to discover arcs.",
-	"shop":"Spend boss currency to unlock a new reusable rune or a numeric HP upgrade; stock is fixed for this run seed.",
-	"door":"After combat and pending waves are complete, approach the green EXIT marker and press E."
-}
+## AD-042: R1 onboarding tips from flavour_v1.json; max one on screen, once per profile, nonblocking.
+const FLAVOUR_PATH := "res://world/data/flavour_v1.json"
+const TIP_IDS := ["room1", "first_reward", "first_workshop"]
+const MAX_CHARS := 90
+var tips: Dictionary = {}
+var seen: Array = []
 var dismissed := false
-var shown: Dictionary = {}
+var current := ""
+
+func _init() -> void:
+	if not FileAccess.file_exists(FLAVOUR_PATH):
+		return
+	var data = JSON.parse_string(FileAccess.get_file_as_string(FLAVOUR_PATH))
+	if data is Dictionary and data.get("onboarding") is Dictionary:
+		tips = data["onboarding"]
+
+func load_seen(ids: Array) -> void:
+	seen = []
+	for id in ids:
+		if TIP_IDS.has(str(id)) and not seen.has(str(id)):
+			seen.append(str(id))
+
+func trigger(id: String) -> String:
+	if not TIP_IDS.has(id) or not tips.has(id) or seen.has(id) or dismissed:
+		return ""
+	seen.append(id)
+	current = id
+	return str(tips[id])
+
+func text() -> String:
+	if dismissed or current.is_empty():
+		return ""
+	return str(tips.get(current, ""))
+
 func dismiss() -> void:
 	dismissed = true
+	current = ""
+
 func reopen() -> void:
 	dismissed = false
-func message(context: String) -> String:
-	if dismissed:
-		return ""
-	shown[context] = true
-	return str(TIPS.get(context,""))

@@ -12,6 +12,8 @@ var health
 var status
 var hit_count := 0
 var total_received := 0.0
+## Presentation only (AD-015): recent damage hits for damage numbers; never serialized.
+var damage_log: Array = []
 
 func _init(stable_id: int, target_team: int, point: Vector2, hp: float = 100.0, hit_radius: float = 18.0, defense: float = 0.0, channel_resistances: Dictionary = {}) -> void:
 	id = stable_id
@@ -34,4 +36,7 @@ func receive_damage(amount: float, channel: String, attacker_team: int, armor_sc
 	if dealt > 0:
 		hit_count += 1
 		total_received += dealt
+		damage_log.append({"amount": dealt, "channel": channel})
+		if damage_log.size() > 16:
+			damage_log.pop_front()
 	return dealt

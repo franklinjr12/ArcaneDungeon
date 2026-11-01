@@ -1,0 +1,250 @@
+{
+ "atlas": "ad_ico_atlas_mvp.png",
+ "grid": {
+  "cell": 16,
+  "stride": 18,
+  "extrude": 1,
+  "columns": 6,
+  "rows": 3,
+  "png_size": [
+   108,
+   54
+  ]
+ },
+ "icons": {
+  "ad_ico_fire": {
+   "cell": [
+    0,
+    0
+   ],
+   "index": 0,
+   "x": 1,
+   "y": 1,
+   "w": 16,
+   "h": 16,
+   "family": "rune_essence",
+   "frame_name": "ad_ico_atlas_mvp_icons_00"
+  },
+  "ad_ico_water": {
+   "cell": [
+    1,
+    0
+   ],
+   "index": 1,
+   "x": 19,
+   "y": 1,
+   "w": 16,
+   "h": 16,
+   "family": "rune_essence",
+   "frame_name": "ad_ico_atlas_mvp_icons_01"
+  },
+  "ad_ico_lightning": {
+   "cell": [
+    2,
+    0
+   ],
+   "index": 2,
+   "x": 37,
+   "y": 1,
+   "w": 16,
+   "h": 16,
+   "family": "rune_essence",
+   "frame_name": "ad_ico_atlas_mvp_icons_02"
+  },
+  "ad_ico_projectile": {
+   "cell": [
+    3,
+    0
+   ],
+   "index": 3,
+   "x": 55,
+   "y": 1,
+   "w": 16,
+   "h": 16,
+   "family": "rune_form",
+   "frame_name": "ad_ico_atlas_mvp_icons_03"
+  },
+  "ad_ico_burst": {
+   "cell": [
+    4,
+    0
+   ],
+   "index": 4,
+   "x": 73,
+   "y": 1,
+   "w": 16,
+   "h": 16,
+   "family": "rune_form",
+   "frame_name": "ad_ico_atlas_mvp_icons_04"
+  },
+  "ad_ico_orb": {
+   "cell": [
+    5,
+    0
+   ],
+   "index": 5,
+   "x": 91,
+   "y": 1,
+   "w": 16,
+   "h": 16,
+   "family": "rune_form",
+   "frame_name": "ad_ico_atlas_mvp_icons_05"
+  },
+  "ad_ico_split": {
+   "cell": [
+    0,
+    1
+   ],
+   "index": 6,
+   "x": 1,
+   "y": 19,
+   "w": 16,
+   "h": 16,
+   "family": "rune_modifier",
+   "frame_name": "ad_ico_atlas_mvp_icons_06"
+  },
+  "ad_ico_pierce": {
+   "cell": [
+    1,
+    1
+   ],
+   "index": 7,
+   "x": 19,
+   "y": 19,
+   "w": 16,
+   "h": 16,
+   "family": "rune_modifier",
+   "frame_name": "ad_ico_atlas_mvp_icons_07"
+  },
+  "ad_ico_homing": {
+   "cell": [
+    2,
+    1
+   ],
+   "index": 8,
+   "x": 37,
+   "y": 19,
+   "w": 16,
+   "h": 16,
+   "family": "rune_modifier",
+   "frame_name": "ad_ico_atlas_mvp_icons_08"
+  },
+  "ad_ico_on_hit": {
+   "cell": [
+    3,
+    1
+   ],
+   "index": 9,
+   "x": 55,
+   "y": 19,
+   "w": 16,
+   "h": 16,
+   "family": "rune_trigger",
+   "frame_name": "ad_ico_atlas_mvp_icons_09"
+  },
+  "ad_ico_wet": {
+   "cell": [
+    4,
+    1
+   ],
+   "index": 10,
+   "x": 73,
+   "y": 19,
+   "w": 16,
+   "h": 16,
+   "family": "status",
+   "frame_name": "ad_ico_atlas_mvp_icons_10"
+  },
+  "ad_ico_burning": {
+   "cell": [
+    5,
+    1
+   ],
+   "index": 11,
+   "x": 91,
+   "y": 19,
+   "w": 16,
+   "h": 16,
+   "family": "status",
+   "frame_name": "ad_ico_atlas_mvp_icons_11"
+  },
+  "ad_ico_charged": {
+   "cell": [
+    0,
+    2
+   ],
+   "index": 12,
+   "x": 1,
+   "y": 37,
+   "w": 16,
+   "h": 16,
+   "family": "status",
+   "frame_name": "ad_ico_atlas_mvp_icons_12"
+  },
+  "ad_ico_coin": {
+   "cell": [
+    1,
+    2
+   ],
+   "index": 13,
+   "x": 19,
+   "y": 37,
+   "w": 16,
+   "h": 16,
+   "family": "stat",
+   "frame_name": "ad_ico_atlas_mvp_icons_13"
+  },
+  "ad_ico_upgrade": {
+   "cell": [
+    2,
+    2
+   ],
+   "index": 14,
+   "x": 37,
+   "y": 37,
+   "w": 16,
+   "h": 16,
+   "family": "stat",
+   "frame_name": "ad_ico_atlas_mvp_icons_14"
+  },
+  "ad_ico_hp": {
+   "cell": [
+    3,
+    2
+   ],
+   "index": 15,
+   "x": 55,
+   "y": 37,
+   "w": 16,
+   "h": 16,
+   "family": "stat",
+   "frame_name": "ad_ico_atlas_mvp_icons_15"
+  },
+  "ad_ico_mana": {
+   "cell": [
+    4,
+    2
+   ],
+   "index": 16,
+   "x": 73,
+   "y": 37,
+   "w": 16,
+   "h": 16,
+   "family": "stat",
+   "frame_name": "ad_ico_atlas_mvp_icons_16"
+  },
+  "ad_ico_dash": {
+   "cell": [
+    5,
+    2
+   ],
+   "index": 17,
+   "x": 91,
+   "y": 37,
+   "w": 16,
+   "h": 16,
+   "family": "stat",
+   "frame_name": "ad_ico_atlas_mvp_icons_17"
+  }
+ }
+}

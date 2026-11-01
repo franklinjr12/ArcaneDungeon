@@ -10,6 +10,7 @@ const Session = preload("res://combat/combat_session.gd")
 const Runner = preload("res://magic/runtime/spell_runner.gd")
 const ExperimentLog = preload("res://debug/experiment_log.gd")
 const CONFIG := "res://world/data/vertical_slice_v1.json"
+const PRESET_SLOT_OFFSET := 1
 const SAMPLES := "res://magic/data/sandbox_samples_v1.json"
 var config: Dictionary = {}
 var formulas: Dictionary = {}
@@ -29,9 +30,20 @@ var transition_count := 0
 var edit_policy := "workshop_only"
 var mode := "combat"
 var initialized := false
+var outcome := ""
+var win_events := 0
+# Run-local summary counters (not in RunState, so the save schema is untouched).
+# ticks_elapsed counts fighting-state step() calls only (combat time, deterministic).
+var rooms_cleared := 0
+var kills := 0
+var ticks_elapsed := 0
+var spells_used := 0
+var _counted_kills: Dictionary = {}
 var logs: Array = []
 var experiment = ExperimentLog.new()
 var _prior_reactions := 0
+## AD-020: output-only audio sink (Callable(cue_id, position)); the simulation never reads it.
+var audio_sink: Callable
 
 func _init(run_seed: int = -1) -> void:
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(CONFIG))
@@ -45,11 +57,21 @@ func _init(run_seed: int = -1) -> void:
 	initialized = true
 	start_new(run_seed if run_seed >= 0 else int(config["seed"]))
 
+func _cue(id: String, at = null) -> void:
+	if audio_sink.is_valid():
+		audio_sink.call(id,at)
+
 func start_new(run_seed: int) -> void:
 	run = State.new()
 	run.initialize(run_seed,config,formulas)
 	boss_defeated_events = 0
 	transition_count = 0
+	outcome = ""
+	win_events = 0
+	rooms_cleared = 0
+	kills = 0
+	ticks_elapsed = 0
+	spells_used = 0
 	edit_policy = str(config["edit_policy"])
 	logs.clear()
 	experiment.record("run_restart")
@@ -66,21 +88,22 @@ func _enter_current() -> Dictionary:
 	mode = "workshop" if room.values["type"] == "workshop" else "combat"
 	session = Session.new(run.seed+run.sequence_index,"empty",0)
 	session.defer_clear = true
+	session.audio_sink = _cue
 	session.sim.actor.position = room.marker("entrance")
 	session.sim.actor.health.maximum = run.max_hp
 	session.sim.actor.health.current = run.hp
 	session.sim.mana = run.mana
 	session.sim.loadout.unlocked = run.unlocked.duplicate(true)
 	session.sim.loadout.allow_edit = true
-	for index in 2:
-		var result: Dictionary = session.sim.equip(index,run.formulas[index])
-		if not result["ok"]:
-			state = "error"
-			return {"ok":false,"reason":"RUN_LOADOUT_INVALID","issues":result["issues"]}
+	var result: Dictionary = session.sim.equip_starter_loadout(run.formulas)
+	if not result["ok"]:
+		state = "error"
+		return {"ok":false,"reason":"RUN_LOADOUT_INVALID","issues":result["issues"]}
 	session.sim.loadout.allow_edit = false
 	reward_options.clear()
 	reward_collected = false
-	editor = Editor.new(run,session.sim.registry)
+	_counted_kills.clear()
+	editor = Editor.new(run,session.sim.registry,session.sim.loadout.slots.size()-PRESET_SLOT_OFFSET)
 	merchant = null
 	range_sim = null
 	encounter = null
@@ -102,20 +125,31 @@ func _enter_current() -> Dictionary:
 		encounter.initialize(room,session,int(config["max_active_enemies"]))
 		state = "fighting"
 	_prior_reactions = 0
+	_cue("amb.workshop" if mode == "workshop" else "amb.ruins")
 	experiment.record("room_enter",{"room_index":run.sequence_index})
 	logs.append({"kind":"room_enter","id":room.values["id"],"index":run.sequence_index})
 	return {"ok":true}
+
+func _slot_has_spell(runner, slot: int) -> bool:
+	return slot >= 0 and slot < runner.loadout.slots.size() and runner.loadout.slots[slot]["compiled"] != null
 
 func step(command: Dictionary = {}) -> Dictionary:
 	if state != "fighting":
 		return {"ok":false,"reason":"NOT_FIGHTING"}
 	if not command.is_empty():
 		var issued: Dictionary = session.issue(command)
-		if int(command.get("cast",-1)) in [0,1]:
-			var cast_slot: int = int(command["cast"])
+		var cast_slot: int = int(command.get("cast",-1))
+		if _slot_has_spell(session.sim,cast_slot):
+			if bool(issued.get("accepted",false)):
+				spells_used += 1
 			experiment.record("dungeon_cast",{"room_index":run.sequence_index,"slot":cast_slot,
-				"cast_accepted":bool(issued.get("accepted",false))},run.formulas[cast_slot])
+				"cast_accepted":bool(issued.get("accepted",false))},session.sim.loadout.slots[cast_slot]["formula"])
 	session.step()
+	ticks_elapsed += 1
+	for enemy in session.enemies:
+		if not enemy.target.alive() and not _counted_kills.has(enemy.target.id):
+			_counted_kills[enemy.target.id] = true
+			kills += 1
 	experiment.mark_tick(session.sim.clock.tick)
 	var reactions_now: int = session.sim.trace.filter_records(-1,"","reaction").size()
 	if reactions_now > _prior_reactions:
@@ -125,6 +159,7 @@ func step(command: Dictionary = {}) -> Dictionary:
 		encounter.advance()
 	if session.state == "dead":
 		state = "dead"
+		outcome = "lost"
 		experiment.record("death",{"room_index":run.sequence_index})
 	elif session.state == "cleared" or (room.values["type"] == "boss" and session.alive_enemies() == 0):
 		_finish_combat()
@@ -136,22 +171,47 @@ func _finish_combat() -> void:
 	session.state = "cleared"
 	session.enemy_shots.clear()
 	# Exiting combat cancels dash locks so cleared-room walking obeys input.
-	session.player.dodge_left = 0
+	session.player.dash_left = 0
 	session.player.recovery_left = 0
 	session.player.invulnerable_left = 0
-	session.player.dodge_cooldown = 0
+	session.player.dash_cooldown = 0
 	# Old projectiles remain only in this room and are discarded on transition.
 	state = "cleared"
+	rooms_cleared += 1
+	_cue("sfx.room.cleared",session.sim.actor.position)
 	run.hp = session.sim.actor.health.current
 	run.mana = session.sim.mana
-	if room.values["type"] == "boss":
+	if int(room.values["stage"]) >= 1:
+		# First stage-2 room cleared: slice complete, no reward choice.
+		outcome = "won"
+		win_events += 1
+		state = "won"
+		reward_collected = true
+		reward_options.clear()
+	elif room.values["type"] == "boss":
 		boss_defeated_events += 1
 		run.currency += int(config["boss_currency"])
+		_cue("sfx.pickup.currency",session.sim.actor.position)
 		reward_collected = true
 	else:
 		reward_options = rewards.choices(run,str(room.values["id"]))
 	experiment.record("room_clear",{"room_index":run.sequence_index})
 	logs.append({"kind":"combat_clear","id":room.values["id"]})
+
+func summary() -> Dictionary:
+	return {"outcome":outcome,"seed":run.seed,"rooms_cleared":rooms_cleared,"kills":kills,
+		"ticks":ticks_elapsed,"seconds":float(ticks_elapsed)/float(session.sim.clock.tick_rate),
+		"spells_used":spells_used}
+
+func retry_same_seed() -> void:
+	start_new(run.seed)
+
+func start_new_seed() -> void:
+	# Deterministic successor seed (not a gameplay tunable): hash of the current seed, 31-bit positive.
+	var next_seed: int = ("%d:next" % run.seed).hash() & 0x7fffffff
+	if next_seed == run.seed:
+		next_seed += 1
+	start_new(next_seed)
 
 func choose_reward(index: int) -> Dictionary:
 	if state != "cleared" or room.values["type"] != "combat" or reward_collected:
@@ -171,6 +231,8 @@ func choose_reward(index: int) -> Dictionary:
 	run.collected.append(id)
 	reward_collected = true
 	session.sim.loadout.unlocked = run.unlocked.duplicate(true)
+	_cue("ui.reward_pick")
+	_cue("sfx.pickup.rune" if outcome.get("kind","") == "unlock" else "sfx.pickup.currency")
 	experiment.record("rune_choice",{"room_index":run.sequence_index,"rune_index":index})
 	logs.append({"kind":"reward","room":id,"item":option.duplicate(true)})
 	return outcome
@@ -179,7 +241,7 @@ func move_after_clear(command: Dictionary) -> Dictionary:
 	if state not in ["cleared","workshop"] or session.player.modal:
 		return {"accepted":false,"reason":"NO_MOVEMENT"}
 	# Only movement and aim are allowed between encounters.
-	var safe: Dictionary = {"move":command.get("move",Vector2.ZERO),"aim":command.get("aim",Vector2.RIGHT),"cast":-1,"dodge":false}
+	var safe: Dictionary = {"move":command.get("move",Vector2.ZERO),"aim":command.get("aim",Vector2.RIGHT),"cast":-1,"dash":false}
 	return session.player.process_command(safe)
 
 func try_exit(position: Vector2) -> Dictionary:
@@ -187,7 +249,8 @@ func try_exit(position: Vector2) -> Dictionary:
 		return {"ok":false,"reason":"EDITOR_OPEN"}
 	if state not in ["cleared","workshop"]:
 		return {"ok":false,"reason":"DOOR_LOCKED"}
-	if position.distance_to(room.marker("exit")) > 72.0:
+	# Workshop is drawn as the test range only (no visible door), so leaving it is a menu action.
+	if mode != "workshop" and position.distance_to(room.marker("exit")) > 72.0:
 		return {"ok":false,"reason":"EXIT_TOO_FAR"}
 	if run.sequence_index >= config["rooms"].size()-1:
 		return {"ok":false,"reason":"SLICE_COMPLETE"}
@@ -207,10 +270,9 @@ func enter_test_range() -> Dictionary:
 		return {"ok":false,"reason":"TEST_ONLY_WORKSHOP"}
 	range_sim = Runner.new(run.seed)
 	range_sim.loadout.unlocked = run.unlocked.duplicate(true)
-	for index in 2:
-		var result: Dictionary = range_sim.equip(index,run.formulas[index])
-		if not result["ok"]:
-			return result
+	var result: Dictionary = range_sim.equip_starter_loadout(run.formulas)
+	if not result["ok"]:
+		return result
 	range_sim.actor.health.maximum = float(config["workshop_restore_hp"])
 	range_sim.actor.health.reset()
 	range_sim.mana = float(config["workshop_restore_mana"])
@@ -242,8 +304,8 @@ func test_cast(slot: int, direction: Vector2) -> Dictionary:
 	if mode != "workshop" or range_sim == null:
 		return {"accepted":false,"reason":"TEST_ONLY_WORKSHOP"}
 	var result: Dictionary = range_sim.try_cast(slot,range_sim.actor.position,direction)
-	if slot in [0,1]:
-		experiment.record("test_cast",{"slot":slot,"is_workshop":true,"cast_accepted":result["accepted"]},run.formulas[slot])
+	if _slot_has_spell(range_sim,slot):
+		experiment.record("test_cast",{"slot":slot,"is_workshop":true,"cast_accepted":result["accepted"]},range_sim.loadout.slots[slot]["formula"])
 	return result
 
 func open_editor(slot: int) -> Dictionary:
@@ -253,7 +315,7 @@ func open_editor(slot: int) -> Dictionary:
 		return {"ok":false,"reason":"COMBAT_LOCKED"}
 	if mode != "workshop" and (state != "cleared" or edit_policy != "cleared_room"):
 		return {"ok":false,"reason":"POLICY_WORKSHOP_ONLY"}
-	editor = Editor.new(run,session.sim.registry)
+	editor = Editor.new(run,session.sim.registry,session.sim.loadout.slots.size()-PRESET_SLOT_OFFSET)
 	var result: Dictionary = editor.open(slot)
 	if result["ok"]:
 		session.player.modal = true
@@ -267,11 +329,12 @@ func close_editor(apply_changes: bool, duration_seconds: float = 0.0) -> Diction
 	if apply_changes:
 		var result: Dictionary = editor.apply()
 		if not result["ok"]:
+			_cue("ui.editor_error")
 			return result
 		var edit_slot: int = editor.slot
 		session.sim.loadout.allow_edit = true
 		session.sim.loadout.unlocked = run.unlocked.duplicate(true)
-		var equipped: Dictionary = session.sim.equip(edit_slot,run.formulas[edit_slot])
+		var equipped: Dictionary = session.sim.equip(edit_slot+PRESET_SLOT_OFFSET,run.formulas[edit_slot])
 		session.sim.loadout.allow_edit = false
 		if not equipped["ok"]:
 			return equipped
@@ -295,6 +358,9 @@ func buy(index: int) -> Dictionary:
 		return {"ok":false,"reason":"SHOP_ONLY_WORKSHOP"}
 	var outcome: Dictionary = merchant.purchase(index,run)
 	if outcome["ok"]:
+		_cue("ui.purchase")
+		if outcome["kind"] == "rune":
+			_cue("sfx.pickup.rune")
 		experiment.record("purchase",{"room_index":run.sequence_index,"price":int(merchant.stock[index]["price"])})
 		session.sim.loadout.unlocked = run.unlocked.duplicate(true)
 		if outcome["kind"] == "upgrade":
@@ -311,7 +377,8 @@ func change_edit_policy(value: String) -> bool:
 func snapshot() -> Dictionary:
 	return {"state":state,"room_id":room.values["id"],"index":run.sequence_index,
 		"mode":mode,"door_open":state in ["cleared","workshop"],"rewards":reward_options.duplicate(true),
-		"collected":reward_collected,"run":run.snapshot(),"boss_events":boss_defeated_events}
+		"collected":reward_collected,"run":run.snapshot(),"boss_events":boss_defeated_events,
+		"outcome":outcome,"win_events":win_events}
 
 func recover(saved: Variant) -> Dictionary:
 	var validated = State.new()

@@ -3,7 +3,7 @@ extends RefCounted
 const Flow = preload("res://world/run_flow.gd")
 const SEED := 20261022
 
-static func fight(flow, maximum_ticks: int = 4000) -> Dictionary:
+static func fight(flow, maximum_ticks: int = 4000, on_tick: Callable = Callable()) -> Dictionary:
 	for iteration in maximum_ticks:
 		if flow.state != "fighting":
 			break
@@ -32,23 +32,23 @@ static func fight(flow, maximum_ticks: int = 4000) -> Dictionary:
 		else:
 			# Waiting for delayed wave; do not accidentally transition early.
 			movement = Vector2.ZERO
-		var dodge := false
-		if session.player.dodge_cooldown == 0:
+		var dash := false
+		if session.player.dash_cooldown == 0:
 			for enemy in session.enemies:
 				if enemy.target.alive() and enemy.state == "windup":
 					var deadline: int = int(enemy.tuning["telegraph_ticks"])-enemy.state_tick
 					if deadline <= 7 and actor.distance_to(enemy.target.position) < float(enemy.tuning["attack_range"])+65:
-						dodge = true
+						dash = true
 						movement = direction.rotated(PI/2.0)
 						break
 			for shot in session.enemy_shots:
 				if actor.distance_to(shot["position"]) < 110:
-					dodge = true
+					dash = true
 					movement = shot["direction"].rotated(PI/2.0)
 					break
 		var slot := -1
-		if foe != null and session.player.dodge_left == 0 and session.player.recovery_left == 0:
-			for idx in [iteration%2,1-iteration%2]:
+		if foe != null and session.player.dash_left == 0 and session.player.recovery_left == 0:
+			for idx in [1+iteration%2,2-iteration%2]:
 				if session.sim.loadout.slots[idx]["cooldown"] > 0:
 					continue
 				var spell = session.sim.loadout.get_plan(idx)
@@ -64,7 +64,13 @@ static func fight(flow, maximum_ticks: int = 4000) -> Dictionary:
 				if form == "form.orb" and distance < 160:
 					slot = idx
 					break
-		flow.step({"move":movement,"aim":direction,"cursor":cursor,"cast":slot,"dodge":dodge})
+			if slot == -1 and sight:
+				var bolt = session.sim.loadout.get_plan(0)
+				if bolt != null and session.sim.loadout.slots[0]["cooldown"] == 0 and session.sim.mana >= float(bolt.snapshot()["mana_cost"]):
+					slot = 0
+		flow.step({"move":movement,"aim":direction,"cursor":cursor,"cast":slot,"dash":dash})
+		if on_tick.is_valid():
+			on_tick.call(flow)
 	return {"state":flow.state,"tick":flow.session.sim.clock.tick,
 		"hp":flow.session.sim.actor.health.current,"casts":flow.session.player.casts,
 		"enemies":flow.session.alive_enemies()}

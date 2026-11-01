@@ -2,6 +2,12 @@ extends Control
 ## Render-only reference-guided sprites. M2 and M3 collision/state remain authoritative.
 signal world_click(at: Vector2, button: int)
 const Art = preload("res://ui/pixel_art_renderer.gd")
+const DamageNumbers = preload("res://ui/damage_numbers.gd")
+var _damage_numbers = DamageNumbers.new()
+var _damage_session = null
+var _fx_memo: Dictionary = {}
+var _fx_session = null
+const SlotHUD = preload("res://ui/pixel_hud.gd")
 var session
 var hover := Vector2(440,440)
 var show_debug := false
@@ -9,8 +15,13 @@ var view_rect := Rect2(0,0,916,650)
 var environment_id := 0
 var last_player_at := Vector2.ZERO
 var last_enemy_at: Dictionary = {}
+var slot_hud
 
 func _ready() -> void:
+	slot_hud = SlotHUD.new()
+	slot_hud.name = "SlotHUD"
+	slot_hud.canvas = self
+	add_child(slot_hud)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	clip_contents = true
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -38,6 +49,8 @@ func _gui_input(event: InputEvent) -> void:
 		accept_event()
 
 func _draw() -> void:
+	if slot_hud != null:
+		slot_hud.queue_redraw()
 	var arena := Rect2(Vector2.ZERO,Vector2(1320,900))
 	var offset := Vector2.ZERO
 	var tick := 0
@@ -57,10 +70,12 @@ func _draw() -> void:
 	var actor_casting: bool = session.sim.active.size()>0 and tick%14<5
 	var player_velocity: Vector2 = mage.position-last_player_at
 	last_player_at = mage.position
-	Art.entity(self,"mage",at,tick,session.player.dodge_heading*16.0 if session.player.dodge_left>0 else player_velocity,
-		actor_casting,session.player.hit_flash>0 and not session.reduce_flashes,not mage.alive())
-	if session.player.invulnerable():
-		Art.effect(self,"dodge",at,tick,Vector2(65,65),0.85)
+	var mage_motion: Vector2 = session.player.dash_heading*16.0 if session.player.dash_left>0 else player_velocity
+	var mage_hurt: bool = session.player.hit_flash>0 and not session.reduce_flashes
+	if session.player.invulnerable() and Art.iframe_outline_on(tick):
+		for step in [Vector2.LEFT,Vector2.RIGHT,Vector2.UP,Vector2.DOWN]:
+			Art.entity(self,"mage",at+step*2.0,tick,mage_motion,actor_casting,mage_hurt,not mage.alive(),Art.IFRAME_OUTLINE)
+	Art.entity(self,"mage",at,tick,mage_motion,actor_casting,mage_hurt,not mage.alive())
 	_health_bar(at,25,mage.health.current/mage.health.maximum,Color("#da686e"))
 	if show_debug:
 		_label(at+Vector2(-17,-45),"MAGE",Color("#f8e7ba"))
@@ -70,56 +85,48 @@ func _draw() -> void:
 		var enemy_at: Vector2 = target.position-offset
 		var movement: Vector2 = target.position-last_enemy_at.get(target.id,target.position)
 		last_enemy_at[target.id] = target.position
-		Art.entity(self,enemy.kind,enemy_at,tick,movement,enemy.state=="windup",false,not target.alive())
+		var dissolved: int = int(_fx_memo.get("dead",{}).get(target.id,tick+1))
+		if tick-dissolved < 20 or target.alive():
+			Art.entity(self,enemy.kind,enemy_at,tick,movement,enemy.state=="windup",false,not target.alive())
 		if target.alive():
 			_health_bar(enemy_at,target.radius+12,target.health.current/target.health.maximum,Color("#dc7060"))
-			if enemy.kind == "boss" or show_debug:
-				_label(enemy_at+Vector2(-27,-(59 if enemy.kind=="boss" else 45)),enemy.kind.to_upper(),Color("#eec88b"))
-			Art.status_icons(self,target,tick,enemy_at+Vector2(-15,target.radius+21))
+			if enemy.kind == "undead_warden" or show_debug:
+				_label(enemy_at+Vector2(-27,-(59 if enemy.kind=="undead_warden" else 45)),str(enemy.tuning.get("display_name",enemy.kind)),Color("#eec88b"))
 		if enemy.state == "windup" and enemy.intent != null and target.alive():
 			var intent: Dictionary = enemy.intent.snapshot()
 			var time_left: int = maxi(0,int(enemy.tuning["telegraph_ticks"])-enemy.state_tick)
 			var f: float = 1.0-float(time_left)/maxf(1.0,float(enemy.tuning["telegraph_ticks"]))
-			var radius: float = float(intent["range"]) if enemy.kind in ["pursuer","boss"] else 33.0
-			draw_arc(enemy_at,radius,0,TAU,56,Color("#e9ad56",0.55+0.4*f),2.0+f*2.5)
-			draw_line(enemy_at,mage.position-offset,Color("#f7b765",0.35+0.3*f),1.7)
 			_label(enemy_at+Vector2(-26,-54),"! %d" % time_left,Color("#ffe4a0"))
 		if show_debug and target.alive():
 			_label(enemy_at+Vector2(-26,53),"#%d %s" % [target.id,enemy.state],Color("#b9e8fc"))
-	for shot in session.enemy_shots:
-		Art.effect(self,"enemy",shot["position"]-offset,tick,Vector2(28,28))
-	for entry in session.sim.active:
-		var effect = entry["effect"]
-		var element: String = str(effect.root["essence"]["id"])
-		var kind := "fire"
-		if element == "essence.water":
-			kind = "water"
-		elif element == "essence.lightning":
-			kind = "lightning"
-		if entry["kind"] == "orb":
-			kind = "orb"
-		var fx_at: Vector2 = effect.position-offset
-		var display_size := Vector2(34,34) if entry["kind"] != "orb" else Vector2(46,46)
-		Art.effect(self,kind,fx_at,tick,display_size)
+	if _fx_session != session:
+		_fx_session = session
+		_fx_memo = {}
+	for fx in Art.collect_fx(session,tick,_fx_memo):
+		Art.draw_fx(self,fx["event"],fx["at"]-offset,fx["age"],fx["rotation"],fx["length"],Color.WHITE,fx["slot"],fx.get("uniform",0.0))
 	for visual in session.sim.visuals:
-		var time_remaining := maxf(0.0,float(int(visual["until"])-tick))
-		var fade := clampf(time_remaining/18.0,0,1)
 		if visual["kind"] == "arc":
-			var p0: Vector2 = visual["from"]-offset
-			var p1: Vector2 = visual["to"]-offset
-			var shift := Vector2(0,5*sin(float(tick)*1.2))
-			draw_line(p0,p1+shift,Color("#def8fe",fade),3)
-			Art.effect(self,"arc",(p0+p1)/2.0,tick,Vector2(34,34),fade)
-			_label((p0+p1)/2.0+Vector2(-12,-15),"ARC!",Color("#ffeda4"))
-		else:
-			var size_hint: float = clampf(float(visual["radius"])*2.0,32,120)
-			var fx_type: String = "impact" if visual["kind"]=="burst" else "arc"
-			Art.effect(self,fx_type,visual["position"]-offset,tick,Vector2(size_hint,size_hint),fade)
+			_label((visual["from"]+visual["to"])/2.0-offset+Vector2(-12,-15),"ARC!",Color("#ffeda4"))
 	for item in session.feedback:
 		var age: float = float(tick-int(item["tick"]))
 		_label(item["position"]-offset+Vector2(-24,-30-age*.38),str(item["label"]),Color("#ffdf95"))
+	_draw_damage_numbers(offset,tick)
 	if show_debug:
 		_label(Vector2(18,20),"DEBUG: wall/attack geometry and live target state",Color("#d6edf7"))
+
+func _draw_damage_numbers(offset: Vector2, tick: int) -> void:
+	if session == null:
+		return
+	if _damage_session != session:
+		_damage_session = session
+		_damage_numbers.reset()
+	_damage_numbers.update(session.sim.targets.all(),tick)
+	for popup in _damage_numbers.popups:
+		var age: float = float(tick-int(popup["spawn_tick"]))
+		var at: Vector2 = popup["position"]-offset+Vector2(-8,-34-age*DamageNumbers.RISE_PER_TICK-float(popup["index"])*12)
+		var text: String = popup["text"]
+		var width: float = Art.damage_glyph_width(popup["symbol"],text)
+		Art.draw_damage_number(self,popup["symbol"],text,at+Vector2(-width/2.0,-7))
 
 func _label(point: Vector2, label: String, shade: Color) -> void:
 	draw_string(ThemeDB.fallback_font,point,label,HORIZONTAL_ALIGNMENT_LEFT,-1,12,shade)

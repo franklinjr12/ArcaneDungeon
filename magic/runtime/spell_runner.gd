@@ -12,6 +12,7 @@ const HitPayload = preload("res://combat/hit_payload.gd")
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 const Burst = preload("res://magic/runtime/burst_effect.gd")
 const Orb = preload("res://magic/runtime/orb_effect.gd")
+const Compiler = preload("res://magic/compile/spell_compiler.gd")
 const Loadout = preload("res://magic/runtime/spell_loadout.gd")
 const CONFIG := "res://magic/data/magic_balance_v1.json"
 
@@ -101,10 +102,28 @@ func fill_targets() -> void:
 func equip(slot: int, formula: Dictionary) -> Dictionary:
 	return loadout.equip(slot,formula)
 
+func equip_builtin(slot: int, definition: Dictionary) -> Dictionary:
+	return loadout.equip_builtin(slot,definition)
+
+func equip_starter_loadout(presets: Array) -> Dictionary:
+	if not loadout.is_locked(0):
+		var installed: Dictionary = loadout.install_locked_builtin(0,Compiler.load_builtin_definition()["definition"])
+		if not installed["ok"]:
+			return installed
+	for i in presets.size():
+		var equipped: Dictionary = loadout.equip(i+1,presets[i])
+		if not equipped["ok"]:
+			return equipped
+	for index in range(presets.size()+1,loadout.slots.size()):
+		var cleared: Dictionary = loadout.clear(index)
+		if not cleared["ok"]:
+			return cleared
+	return {"ok":true}
+
 func try_cast(slot: int, origin: Vector2, direction: Vector2) -> Dictionary:
 	var cast_id: int = clock.next_id("cast")
 	var formula_id := ""
-	if slot >= 0 and slot < 2:
+	if slot >= 0 and slot < loadout.slots.size():
 		formula_id = str(loadout.slots[slot]["formula_id"])
 	var ctx := {"cast_id":cast_id,"root_cast_id":cast_id,"formula_id":formula_id,"tick":clock.tick}
 	trace.record("cast_requested",ctx)
@@ -142,6 +161,11 @@ func _reject(ctx: Dictionary, reason: String) -> Dictionary:
 	var data := ctx.duplicate()
 	data["reason"] = reason
 	trace.record("rejected",data)
+	const REJECT_EVENT := {"SLOT_EMPTY":"empty_slot","INSUFFICIENT_MANA":"no_mana","COOLDOWN":"cooldown"}
+	if REJECT_EVENT.has(reason):
+		var rejected := ctx.duplicate()
+		rejected["reason"] = REJECT_EVENT[reason]
+		trace.record("cast_rejected",rejected)
 	return {"accepted":false,"reason":reason,"cast_id":int(ctx["cast_id"])}
 
 func _spawn_root(plan: Dictionary, origin: Vector2, aim: Vector2, context: Dictionary) -> void:
@@ -185,7 +209,7 @@ func _spawn_burst(effect_plan: Dictionary, origin: Vector2, context: Dictionary,
 	var effect_id: int = clock.next_id("effect")
 	_trace_spawn(context,effect_id,origin)
 	var radius: float = float(effect_plan["params"]["burst_radius"])
-	visuals.append({"kind":"burst","position":origin,"radius":radius,"until":clock.tick+int(settings["sandbox"]["visual_ticks"])})
+	visuals.append({"kind":"burst","position":origin,"radius":radius,"essence":str(effect_plan["essence"]["id"]),"until":clock.tick+int(settings["sandbox"]["visual_ticks"])})
 	for hit in Burst.contacts(origin,radius,int(context["team"]),targets):
 		_queue_hit(effect_plan,int(hit["target_id"]),hit["position"],context,effect_id,{})
 	# Hold the effect reservation until queued contacts finish resolving.
@@ -288,7 +312,7 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 	trace.record("hit",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
 		"formula_id":ctx["formula_id"],"effect_id":detail["effect_id"],
 		"target_id":target.id,"amount":roundi(float(result["damage"])),"tick":clock.tick})
-	visuals.append({"kind":"hit","position":target.position,"radius":20.0,"until":clock.tick+9})
+	visuals.append({"kind":"hit","position":target.position,"radius":20.0,"essence":str(effect_plan["essence"]["id"]),"until":clock.tick+9})
 	for state_change in result["status_events"]:
 		trace.record("status",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],"formula_id":ctx["formula_id"],
 			"target_id":target.id,"reason":state_change["state"]+":"+state_change["action"],"tick":clock.tick})

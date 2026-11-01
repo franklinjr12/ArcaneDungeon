@@ -6,11 +6,12 @@
     "essence.water",
     "essence.lightning",
     "form.projectile",
-    "form.burst"
+    "form.burst",
+    "mod.split"
   ],
   "initial_formulas": [
     "sample.fire_shot",
-    "sample.water_burst"
+    "sample.split_water"
   ],
   "initial_currency": 0,
   "duplicate_reward_currency": 12,
@@ -20,9 +21,19 @@
   "workshop_restore_mana": 120,
   "edit_policy": "workshop_only",
   "max_active_enemies": 8,
-  "reward_choices": 2,
+  "reward_choices": 3,
+  "reward_pool": ["mod.split","mod.homing","mod.pierce","form.orb","trigger.on_hit"],
+  "reward_cards": {
+    "mod.split": {"name": "Split", "behaviour": "projectiles fan out into 3"},
+    "mod.homing": {"name": "Homing", "behaviour": "projectiles curve toward nearby enemies"},
+    "mod.pierce": {"name": "Pierce", "behaviour": "projectiles pass through up to 3 enemies"},
+    "form.orb": {"name": "Orb", "behaviour": "spells orbit you and hit what they touch"},
+    "trigger.on_hit": {"name": "On Hit", "behaviour": "projectile hits release a Burst payload"}
+  },
   "boss": {
-    "hp": 430,
+    "kind": "undead_warden",
+    "display_name": "Undead warden",
+    "hp": 590,
     "radius": 35,
     "position": [
       1030,
@@ -70,7 +81,7 @@
           "delay_ticks": 0,
           "enemies": [
             [
-              "pursuer",
+              "bone_thrall",
               375,
               450
             ]
@@ -102,12 +113,12 @@
           "delay_ticks": 0,
           "enemies": [
             [
-              "pursuer",
+              "bone_thrall",
               375,
               270
             ],
             [
-              "ranged",
+              "fallen_adept",
               1080,
               255
             ]
@@ -118,7 +129,7 @@
           "delay_ticks": 30,
           "enemies": [
             [
-              "flanker",
+              "grave_hound",
               1110,
               650
             ]
@@ -150,17 +161,17 @@
           "delay_ticks": 0,
           "enemies": [
             [
-              "pursuer",
+              "bone_thrall",
               375,
               390
             ],
             [
-              "ranged",
+              "fallen_adept",
               440,
               450
             ],
             [
-              "flanker",
+              "grave_hound",
               390,
               510
             ]
@@ -232,12 +243,12 @@
           "delay_ticks": 0,
           "enemies": [
             [
-              "ranged",
+              "fallen_adept",
               1080,
               255
             ],
             [
-              "flanker",
+              "grave_hound",
               1100,
               640
             ]

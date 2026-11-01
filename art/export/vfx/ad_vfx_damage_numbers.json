@@ -1,0 +1,212 @@
+{
+ "id": "AD-VFX-036",
+ "name": "ad_vfx_damage_numbers",
+ "variant": "A",
+ "canvas": [
+  8,
+  8
+ ],
+ "cell_stride": 10,
+ "extrude": 1,
+ "atlas_png": "ad_vfx_damage_numbers.png",
+ "atlas_png_size": [
+  60,
+  30
+ ],
+ "palette": "arcane_palette_v02.gpl (67 entries, transparent index 66)",
+ "colours": {
+  "outline": "ui-navy-1 idx 0",
+  "ink": "ui-text-3 idx 8"
+ },
+ "tags": [
+  {
+   "name": "glyphs",
+   "from": 0,
+   "to": 14,
+   "frames": 15,
+   "direction": "forward"
+  }
+ ],
+ "frame_count": 15,
+ "per_frame_ms": [
+  100,
+  100,
+  100,
+  100,
+  100,
+  100,
+  100,
+  100,
+  100,
+  100,
+  100,
+  100,
+  100,
+  100,
+  100
+ ],
+ "frame_order": [
+  "0",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "plus",
+  "crit",
+  "flame",
+  "droplet",
+  "bolt"
+ ],
+ "slices": [
+  {
+   "name": "glyph_digit",
+   "x": 0,
+   "y": 0,
+   "w": 5,
+   "h": 7
+  },
+  {
+   "name": "glyph_symbol",
+   "x": 0,
+   "y": 0,
+   "w": 7,
+   "h": 7
+  }
+ ],
+ "line_height": 7,
+ "layout": {
+  "order": "symbol, digits, optional \"plus\", optional \"crit\"",
+  "advance": "px from this glyph x to next glyph x: digits/plus/crit 4, symbols 7 (symbol outline col is shared by nothing; 2 px navy gap before the number)",
+  "overlap": "cells overlap by their 1 px outline column; draw left to right, skip transparent px (never overwrite ink)",
+  "tint": "NONE - draw white constant, no colour/modulate; element = symbol only",
+  "symbol_vertical": "symbol cell is 7 px tall, same as digit cell: align tops"
+ },
+ "glyphs": {
+  "0": {
+   "x": 1,
+   "y": 1,
+   "w": 5,
+   "h": 7,
+   "advance": 4,
+   "kind": "digit"
+  },
+  "1": {
+   "x": 11,
+   "y": 1,
+   "w": 5,
+   "h": 7,
+   "advance": 4,
+   "kind": "digit"
+  },
+  "2": {
+   "x": 21,
+   "y": 1,
+   "w": 5,
+   "h": 7,
+   "advance": 4,
+   "kind": "digit"
+  },
+  "3": {
+   "x": 31,
+   "y": 1,
+   "w": 5,
+   "h": 7,
+   "advance": 4,
+   "kind": "digit"
+  },
+  "4": {
+   "x": 41,
+   "y": 1,
+   "w": 5,
+   "h": 7,
+   "advance": 4,
+   "kind": "digit"
+  },
+  "5": {
+   "x": 51,
+   "y": 1,
+   "w": 5,
+   "h": 7,
+   "advance": 4,
+   "kind": "digit"
+  },
+  "6": {
+   "x": 1,
+   "y": 11,
+   "w": 5,
+   "h": 7,
+   "advance": 4,
+   "kind": "digit"
+  },
+  "7": {
+   "x": 11,
+   "y": 11,
+   "w": 5,
+   "h": 7,
+   "advance": 4,
+   "kind": "digit"
+  },
+  "8": {
+   "x": 21,
+   "y": 11,
+   "w": 5,
+   "h": 7,
+   "advance": 4,
+   "kind": "digit"
+  },
+  "9": {
+   "x": 31,
+   "y": 11,
+   "w": 5,
+   "h": 7,
+   "advance": 4,
+   "kind": "digit"
+  },
+  "plus": {
+   "x": 41,
+   "y": 11,
+   "w": 5,
+   "h": 7,
+   "advance": 4,
+   "kind": "mark"
+  },
+  "crit": {
+   "x": 51,
+   "y": 11,
+   "w": 5,
+   "h": 7,
+   "advance": 4,
+   "kind": "mark"
+  },
+  "flame": {
+   "x": 1,
+   "y": 21,
+   "w": 7,
+   "h": 7,
+   "advance": 7,
+   "kind": "symbol"
+  },
+  "droplet": {
+   "x": 11,
+   "y": 21,
+   "w": 7,
+   "h": 7,
+   "advance": 7,
+   "kind": "symbol"
+  },
+  "bolt": {
+   "x": 21,
+   "y": 21,
+   "w": 7,
+   "h": 7,
+   "advance": 7,
+   "kind": "symbol"
+  }
+ },
+ "status": "CANDIDATE (FINAL needs Game Art chief APPROVE)"
+}

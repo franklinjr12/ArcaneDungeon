@@ -1,0 +1,79 @@
+{ "frames": [
+   {
+    "filename": "ad_ui_editor_loadout_list_row_states_00",
+    "frame": { "x": 0, "y": 0, "w": 96, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 32 },
+    "sourceSize": { "w": 96, "h": 32 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_editor_loadout_list_row_states_01",
+    "frame": { "x": 96, "y": 0, "w": 96, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 32 },
+    "sourceSize": { "w": 96, "h": 32 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_editor_loadout_list_row_states_02",
+    "frame": { "x": 192, "y": 0, "w": 96, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 32 },
+    "sourceSize": { "w": 96, "h": 32 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_editor_loadout_list_row_states_03",
+    "frame": { "x": 288, "y": 0, "w": 96, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 32 },
+    "sourceSize": { "w": 96, "h": 32 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_editor_loadout_list_scroll_00",
+    "frame": { "x": 384, "y": 0, "w": 96, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 32 },
+    "sourceSize": { "w": 96, "h": 32 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_editor_loadout_list_scroll_01",
+    "frame": { "x": 480, "y": 0, "w": 96, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 32 },
+    "sourceSize": { "w": 96, "h": 32 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_ui_editor_loadout_list.png",
+  "format": "I8",
+  "size": { "w": 576, "h": 32 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "row_states", "from": 0, "to": 3, "direction": "forward", "color": "#000000ff" },
+   { "name": "scroll", "from": 4, "to": 5, "direction": "forward", "color": "#000000ff" }
+  ],
+  "layers": [
+   { "name": "art", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+   { "name": "row_9slice", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 96, "h": 32 }, "center": {"x": 4, "y": 4, "w": 88, "h": 24 } }] },
+   { "name": "key_label", "keys": [{ "frame": 0, "bounds": {"x": 6, "y": 8, "w": 16, "h": 16 } }] },
+   { "name": "name", "keys": [{ "frame": 0, "bounds": {"x": 28, "y": 6, "w": 54, "h": 7 } }] },
+   { "name": "scroll_btn", "keys": [{ "frame": 0, "bounds": {"x": 40, "y": 8, "w": 16, "h": 16 } }] },
+   { "name": "pivot", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 1, "h": 1 } }] }
+  ]
+ }
+}

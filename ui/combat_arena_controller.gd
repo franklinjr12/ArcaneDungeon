@@ -3,6 +3,8 @@ const VisualTheme = preload("res://ui/pixel_theme.gd")
 ## Combat arena scene: input adapter and readable debug/HUD, gameplay lives in CombatSession.
 const Session = preload("res://combat/combat_session.gd")
 const Canvas = preload("res://ui/combat_canvas.gd")
+const Art = preload("res://ui/pixel_art_renderer.gd")
+const InputActions = preload("res://ui/input_actions.gd")
 var session
 var canvas
 var hud: Label
@@ -44,7 +46,9 @@ func _build() -> void:
 	header.add_theme_font_size_override("font_size",18)
 	column.add_child(header)
 	tips = Label.new()
-	tips.text = "WASD Move   Mouse Aim\nLMB / RMB: Cast 1 / Cast 2\nSPACE Dodge   F3: Debug\nR: Retry  P: Pause\n1 / 2 / 3: Arena scenario\nTAB: Starter loadout\nF4: Reduce hit flashes"
+	tips.text = "WASD/Arrows Move   Mouse Aim\nLMB / RMB / Q / E: Cast slot 1-4\nSPACE Dash   ESC Pause\nR: Retry  TAB: Starter loadout"
+	if InputActions.debug_keys_enabled():
+		tips.text += "\nF3: Debug  F4: Reduce hit flashes\n1 / 2 / 3: Arena scenario"
 	tips.add_theme_font_size_override("font_size",12)
 	column.add_child(tips)
 	var scenarios := GridContainer.new()
@@ -59,7 +63,7 @@ func _build() -> void:
 	var actions := GridContainer.new()
 	actions.columns = 2
 	column.add_child(actions)
-	for item in [["Retry","retry"],["Loadout","loadout"],["Pause","pause"],["Debug F3","debug"],["Flash F4","flash"]]:
+	for item in [["Retry","retry"],["Loadout","loadout"],["Pause Esc","pause"],["Debug F3","debug"],["Flash F4","flash"]]:
 		var b := Button.new()
 		b.text = item[0]
 		b.custom_minimum_size = Vector2(131,34)
@@ -89,20 +93,32 @@ func _click(point: Vector2, button: int) -> void:
 	if session.state != "playing" or session.sim.clock.paused:
 		return
 	target_point = point
-	pending_cast = 0 if button == MOUSE_BUTTON_LEFT else 1
+	pending_cast = InputActions.slot_for_mouse_button(button)
 
 func _input(event: InputEvent) -> void:
-	if not event is InputEventKey or not event.pressed or event.echo:
+	if not event.is_pressed() or event.is_echo():
 		return
-	match event.keycode:
-		KEY_1: _choose_scenario("single")
-		KEY_2: _choose_scenario("mixed")
-		KEY_3: _choose_scenario("cluster")
-		KEY_TAB: _command("loadout")
-		KEY_R: _command("retry")
-		KEY_P: _command("pause")
-		KEY_F3: _command("debug")
-		KEY_F4: _command("flash")
+	var slot := InputActions.cast_slot_for_event(event)
+	if slot >= 2:
+		if session.state == "playing" and not session.sim.clock.paused:
+			pending_cast = slot
+			target_point = canvas.world_from_local(canvas.get_local_mouse_position())
+	elif event.is_action_pressed("pause"):
+		_command("pause")
+	elif event is InputEventKey:
+		match event.keycode:
+			KEY_TAB: _command("loadout")
+			KEY_R: _command("retry")
+		if InputActions.debug_keys_enabled():
+			match event.keycode:
+				KEY_1: _choose_scenario("single")
+				KEY_2: _choose_scenario("mixed")
+				KEY_3: _choose_scenario("cluster")
+				KEY_F3: _command("debug")
+				KEY_F4: _command("flash")
+				KEY_F6:
+					Art.toggle_art_export()
+					canvas.queue_redraw()
 
 func _choose_scenario(key: String) -> void:
 	scenario = key
@@ -137,7 +153,7 @@ func _physics_process(_dt: float) -> void:
 	if aiming.is_zero_approx():
 		aiming = session.player.facing
 	var command := {"move":direction,"aim":aiming,"cast":pending_cast,
-		"cursor":target_point,"dodge":Input.is_action_just_pressed("dodge")}
+		"cursor":target_point,"dash":Input.is_action_just_pressed("dash")}
 	pending_cast = -1
 	if session.state == "playing" and not session.sim.clock.paused:
 		session.issue(command)
@@ -157,13 +173,13 @@ func _refresh() -> void:
 	var a: Dictionary = session.sim.loadout.preview(0)
 	var b: Dictionary = session.sim.loadout.preview(1)
 	var cds: Array = session.sim.loadout.slots
-	hud.text = "HP %d / %d\nMANA %d / %d\n\nSLOT 1: %s\nMana %d | CD %d | Complexity %d\n\nSLOT 2: %s\nMana %d | CD %d | Complexity %d\n\nDodge %s / %d ticks\nI-FRAMES %d / RECOVER %d\n\nEnemies: %d  Effects: %d" % [
+	hud.text = "HP %d / %d\nMANA %d / %d\n\nSLOT 1: %s\nMana %d | CD %d | Complexity %d\n\nSLOT 2: %s\nMana %d | CD %d | Complexity %d\n\nDash %s / %d ticks\nI-FRAMES %d / RECOVER %d\n\nEnemies: %d  Effects: %d" % [
 		roundi(snap["player_hp"]),roundi(session.sim.actor.health.maximum),roundi(snap["player_mana"]),
 		roundi(float(session.sim.settings["combat"]["player_max_mana"])),
 		a.get("formula_id",""),a.get("mana",0),cds[0]["cooldown"],a.get("complexity",0),
 		b.get("formula_id",""),b.get("mana",0),cds[1]["cooldown"],b.get("complexity",0),
-		"READY" if session.player.dodge_cooldown == 0 else "COOLDOWN",
-		session.player.dodge_cooldown,session.player.invulnerable_left,session.player.recovery_left,
+		"READY" if session.player.dash_cooldown == 0 else "COOLDOWN",
+		session.player.dash_cooldown,session.player.invulnerable_left,session.player.recovery_left,
 		snap["enemy_count"],snap["effects"]]
 	var last_cast: String = str(session.player.last_message)
 	var recent: Array = session.sim.trace.snapshot()
@@ -173,6 +189,6 @@ func _refresh() -> void:
 			latest = "ARC! Wet + Lightning"
 		elif entry["type"] == "status":
 			latest = str(entry.get("reason",""))
-	status_line.text = "State: %s\nCast: %s\nElement: %s\nDamage taken: %.1f\nDodges %d | Casts %d\nFPS %d | Logic %.2fms\n%s" % [
-		session.state.to_upper(),last_cast,latest,snap["damage_taken"],snap["dodges"],snap["casts"],
+	status_line.text = "State: %s\nCast: %s\nElement: %s\nDamage taken: %.1f\nDashes %d | Casts %d\nFPS %d | Logic %.2fms\n%s" % [
+		session.state.to_upper(),last_cast,latest,snap["damage_taken"],snap["dashes"],snap["casts"],
 		Engine.get_frames_per_second(),snap["frame_ms"],"FLASHES REDUCED" if session.reduce_flashes else ""]

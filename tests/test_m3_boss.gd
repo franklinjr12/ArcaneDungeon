@@ -20,6 +20,15 @@ func run(t) -> void:
 	var scenario = Session.new(1325,"empty",0)
 	scenario.defer_clear = true
 	var boss = scenario.spawn_boss(boss_config,Vector2(1030,450))
+	t.equal(boss.kind,"undead_warden","AD-016 boss kind is undead_warden")
+	t.equal(boss.tuning["display_name"],"Undead warden","AD-016 boss display name")
+	var roster: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))["enemies"]
+	var ids: Array = roster.keys()
+	ids.sort()
+	t.equal(ids,["bone_thrall","fallen_adept","grave_hound"],"AD-016 undead roster ids")
+	t.equal(roster["bone_thrall"]["display_name"],"Bone thrall","AD-016 bone_thrall display name")
+	t.equal(roster["fallen_adept"]["display_name"],"Fallen adept","AD-016 fallen_adept display name")
+	t.equal(roster["grave_hound"]["display_name"],"Grave hound","AD-016 grave_hound display name")
 	t.check(boss != null,"TASK-042 boss uses shared M2 target store")
 	t.equal(boss.state,"acquire","TASK-042 boss begins in acquire state")
 	t.equal(boss.target.health.maximum,float(boss_config["hp"]),"TASK-042 tunable boss HP loaded")

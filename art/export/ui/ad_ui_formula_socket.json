@@ -1,0 +1,166 @@
+{ "frames": [
+   {
+    "filename": "ad_ui_formula_socket_states_00",
+    "frame": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_formula_socket_states_01",
+    "frame": { "x": 20, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_formula_socket_states_02",
+    "frame": { "x": 40, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_formula_socket_states_03",
+    "frame": { "x": 60, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_formula_socket_states_04",
+    "frame": { "x": 80, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_formula_socket_states_05",
+    "frame": { "x": 100, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_formula_socket_states_06",
+    "frame": { "x": 120, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_formula_socket_states_07",
+    "frame": { "x": 140, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_formula_socket_states_08",
+    "frame": { "x": 160, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_formula_socket_states_09",
+    "frame": { "x": 180, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_formula_socket_states_10",
+    "frame": { "x": 200, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_formula_socket_states_11",
+    "frame": { "x": 220, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_formula_socket_states_12",
+    "frame": { "x": 240, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_formula_socket_states_13",
+    "frame": { "x": 260, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_formula_socket_states_14",
+    "frame": { "x": 280, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_formula_socket_states_15",
+    "frame": { "x": 300, "y": 0, "w": 20, "h": 20 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 20 },
+    "sourceSize": { "w": 20, "h": 20 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_ui_formula_socket.png",
+  "format": "I8",
+  "size": { "w": 320, "h": 20 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "states", "from": 0, "to": 15, "direction": "forward", "color": "#000000ff" }
+  ],
+  "layers": [
+   { "name": "art", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+   { "name": "socket_frame", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 20, "h": 20 } }] },
+   { "name": "socket_content", "keys": [{ "frame": 0, "bounds": {"x": 5, "y": 5, "w": 10, "h": 10 } }] },
+   { "name": "pivot", "keys": [{ "frame": 0, "bounds": {"x": 10, "y": 10, "w": 1, "h": 1 } }] }
+  ]
+ }
+}
