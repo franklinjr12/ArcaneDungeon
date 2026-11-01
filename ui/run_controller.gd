@@ -46,6 +46,7 @@ var _director
 var flavour: Dictionary = MerchantScript.load_flavour()
 var _rift_shown := false
 var pause_menu
+var scroll: ScrollContainer
 var _prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
 
 func _ready() -> void:
@@ -77,7 +78,7 @@ func _build() -> void:
 	panel.position = Vector2(6,5)
 	panel.size = Vector2(312,709)
 	add_child(panel)
-	var scroll := ScrollContainer.new()
+	scroll = ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	panel.add_child(scroll)
 	sidebar = VBoxContainer.new()
@@ -89,6 +90,10 @@ func _build() -> void:
 	portrait_hud = PortraitHUD.new()
 	portrait_hud.flow = flow
 	sidebar.add_child(portrait_hud)
+	_heading(sidebar,"Room / Workshop",15)
+	context = VBoxContainer.new()
+	context.add_theme_constant_override("separation",6)
+	sidebar.add_child(context)
 	info = Label.new()
 	sidebar.add_child(info)
 	tip = Label.new()
@@ -113,7 +118,7 @@ func _build() -> void:
 	sidebar.add_child(notices)
 	_heading(sidebar,"Actions",15)
 	_button(sidebar,"Restart run (R)",func(): _retry_same_seed())
-	_button(sidebar,"Next room at EXIT (E)",func(): _exit())
+	_button(sidebar,"Next room at EXIT (F)",func(): _exit())
 	_button(sidebar,"Toggle edit policy (F2)",func(): _policy())
 	_button(sidebar,"Toggle debug (F3)",func():
 		arena_canvas.show_debug = not arena_canvas.show_debug)
@@ -121,10 +126,6 @@ func _build() -> void:
 	loadout_list = VBoxContainer.new()
 	loadout_list.add_theme_constant_override("separation",4)
 	sidebar.add_child(loadout_list)
-	_heading(sidebar,"Room / Workshop",15)
-	context = VBoxContainer.new()
-	context.add_theme_constant_override("separation",6)
-	sidebar.add_child(context)
 	var help := Label.new()
 	help.text = "WASD/Arrows move, mouse aim\nLMB/RMB/Q/E cast slots 1-4\nSpace dash, Esc pause\nF exit (when nearby), R retry same seed\nWorkshop: test, buy, edit\nWorkshop: T reset range, Q/E test slots 3-4"
 	if InputActions.debug_keys_enabled():
@@ -229,6 +230,7 @@ func _button(parent: Node, label: String, action: Callable, press_cue: String = 
 	if _director != null:
 		_director.bind_button(b,press_cue)
 	b.text = label
+	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	b.custom_minimum_size.y = 31
 	b.pressed.connect(action)
 	parent.add_child(b)
@@ -274,6 +276,8 @@ func _input(event: InputEvent) -> void:
 		cast_pending = slot
 	elif slot >= 2 and flow.state == "workshop" and flow.range_sim != null:
 		_test_cast_slot(slot,test_canvas.get_local_mouse_position())
+	elif event is InputEventKey and event.keycode >= KEY_1 and event.keycode <= KEY_9 			and flow.state == "cleared" and not flow.reward_collected 			and event.keycode-KEY_1 < flow.reward_options.size():
+		_choose_reward(event.keycode-KEY_1)
 	elif event.is_action_pressed("interact"):
 		_exit()
 	elif event.is_action_pressed("pause"):
@@ -317,6 +321,7 @@ func _physics_process(_delta: float) -> void:
 			flow.move_after_clear({"move":Input.get_vector("move_left","move_right","move_up","move_down"),
 				"aim":flow.session.player.facing})
 		if flow.state == "workshop" and flow.range_sim != null:
+			_move_test_mage(Input.get_vector("move_left","move_right","move_up","move_down"))
 			flow.range_sim.step()
 	cast_pending = -1
 	arena_canvas.queue_redraw()
@@ -326,9 +331,18 @@ func _physics_process(_delta: float) -> void:
 	if refresh_counter%7 == 0:
 		var key: String = str(flow.run.sequence_index)+":"+flow.state+":"+str(flow.reward_collected)
 		if key != scene_key:
+			if flow.state == "cleared" and not flow.reward_collected and not flow.reward_options.is_empty():
+				current_notice = "Room cleared! Pick a reward (keys 1-%d), then walk to EXIT and press F" % flow.reward_options.size()
 			_redraw_panel()
 		else:
 			_update_labels()
+
+func _move_test_mage(dir: Vector2) -> void:
+	# The visible workshop mage lives in the test range; walk it inside the range canvas.
+	var speed: float = float(flow.session.player.tuning["move_speed"])/float(flow.range_sim.clock.tick_rate)
+	var bounds := Rect2(Vector2(20,20),test_canvas.size-Vector2(40,40))
+	var actor = flow.range_sim.actor
+	actor.position = (actor.position+dir.limit_length(1.0)*speed).clamp(bounds.position,bounds.end)
 
 func room_display_name(room_id: String) -> String:
 	return str(flavour.get("room_names", {}).get(room_id, room_id))
@@ -373,6 +387,8 @@ func _redraw_panel() -> void:
 	test_canvas.runner = flow.range_sim
 	_rebuild_loadout()
 	_clear(context)
+	if scroll != null:
+		scroll.scroll_vertical = 0
 	summary_retry_button = null
 	summary_new_seed_button = null
 	summary_title_button = null
@@ -395,7 +411,7 @@ func _redraw_panel() -> void:
 					caption = str(item["name"])+": "+str(item["behaviour"])
 				else:
 					caption = "+"+str(item["amount"])+" currency"
-				_button(context,caption,_choose_reward.bind(i))
+				_button(context,"%d) %s" % [i+1,caption],_choose_reward.bind(i))
 		if flow.edit_policy == "cleared_room":
 			_heading(context,"Quick edit allowed (no shop/test)",12)
 		_button(context,"Advance at exit →",func(): _exit())
@@ -431,7 +447,7 @@ func _redraw_panel() -> void:
 		_button(context,"Refill test mana",func():
 			flow.refill_test_mana()
 			current_notice = "Test mana refilled")
-		_button(context,"Continue to stage 2 at exit",func(): _exit())
+		_button(context,"Continue to stage 2 (F)",func(): _exit())
 	_update_labels()
 
 func _rebuild_loadout() -> void:

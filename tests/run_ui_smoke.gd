@@ -125,8 +125,17 @@ func _run() -> void:
 	expect(run.state=="cleared","first room advances to clear state")
 	expect(control.context.get_child_count()>2,"reward choice panel created")
 	expect(control.tip.text.contains("3 cards"),"AD-042 first_reward tip at first clear")
-	control._choose_reward(0)
-	expect(run.reward_collected,"reward button grants item")
+	var view_h: float = control.get_viewport_rect().size.y
+	var reward_buttons: Array = control.context.find_children("*","Button",true,false)
+	expect(not reward_buttons.is_empty() and reward_buttons.all(func(b): return b.get_global_rect().end.y <= view_h),
+		"reward buttons on screen at first clear")
+	expect(control.sidebar.get_global_rect().end.x <= control.arena_canvas.position.x,
+		"sidebar does not slide under the arena")
+	var key_one := InputEventKey.new()
+	key_one.keycode = KEY_1
+	key_one.pressed = true
+	control._input(key_one)
+	expect(run.reward_collected,"key 1 grants first reward")
 	expect(str(run.room.values["id"]) in run.run.collected,"collect event recorded")
 	control._exit()
 	expect(run.room.values["id"]=="s1_r1","far-away exit button cannot skip door")
@@ -219,7 +228,10 @@ func _run() -> void:
 	expect(run.range_sim.active.size()>0,"workshop test click spawns compiled spell")
 	control._redraw_panel()
 	expect(control.info.text.contains("Triggers"),"testing HUD contains trigger/reaction/status feedback")
-	run.session.sim.actor.position = run.room.marker("exit")
+	var mage0: Vector2 = run.range_sim.actor.position
+	control._move_test_mage(Vector2.RIGHT)
+	expect(run.range_sim.actor.position.x > mage0.x,"workshop WASD moves the visible test-range mage")
+	# No visible door in the workshop: the continue button/F works from wherever the player stands.
 	control._exit()
 	expect(run.room.values["id"]=="s2_r1","workshop exit leads into next stage")
 	for enemy in run.session.enemies:
