@@ -22,6 +22,27 @@ func _install_save_sandbox():
 	save.set_base_dir(dir)
 	return save
 
+func run_spawns(flow) -> Array:
+	var out: Array = []
+	for enemy in flow.session.enemies:
+		out.append([enemy.kind,enemy.target.position])
+	return out
+
+func spawns_equal(a: Array, b: Array) -> bool:
+	if a.size() != b.size() or a.is_empty():
+		return false
+	for i in a.size():
+		if a[i][0] != b[i][0] or not a[i][1].is_equal_approx(b[i][1]):
+			return false
+	return true
+
+func _esc_event() -> InputEventKey:
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_ESCAPE
+	ev.physical_keycode = KEY_ESCAPE
+	ev.pressed = true
+	return ev
+
 func _run() -> void:
 	var save = _install_save_sandbox()
 	var pack = load("res://scenes/run.tscn")
@@ -54,6 +75,45 @@ func _run() -> void:
 	expect(control.flow.experiment.summary()["events"]==0,"M4 opt-out clears in-memory records")
 	expect(control.flow.state=="fighting" and control.flow.room.values["id"]=="s1_r1",
 		"new game enters first combat")
+	var spawns_a: Array = run_spawns(control.flow)
+	var seed_a: int = control.flow.run.seed
+	var t0: int = control.flow.session.sim.clock.tick
+	var e0: int = control.flow.ticks_elapsed
+	control.open_pause()
+	expect(control.is_paused(),"AD-068 pause opens in combat room")
+	expect(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE,"AD-068 cursor visible while paused")
+	for i in 10:
+		await physics_frame
+	expect(control.flow.session.sim.clock.tick == t0 and control.flow.ticks_elapsed == e0,
+		"AD-068 sim tick does not advance while paused")
+	var rkey := InputEventKey.new()
+	rkey.keycode = KEY_R
+	rkey.pressed = true
+	control._input(rkey)
+	expect(control.flow.room.values["id"]=="s1_r1" and control.flow.session.sim.clock.tick == t0,
+		"AD-068 gameplay input blocked while paused")
+	control.pause_menu.open_settings()
+	expect(control.pause_menu.is_settings_open(),"AD-068 pause opens settings")
+	control.pause_menu.handle_cancel()
+	expect(not control.pause_menu.is_settings_open() and control.is_paused(),"AD-068 cancel closes settings only")
+	control._input(_esc_event())
+	expect(not control.is_paused(),"AD-068 Esc closes pause menu")
+	for i in 5:
+		await physics_frame
+	expect(control.flow.session.sim.clock.tick > t0,"AD-068 sim resumes after unpausing")
+	control.open_pause()
+	control.pause_menu.request_retry()
+	expect(control.pause_menu.is_confirm_open() and control.flow.run.seed == seed_a,"AD-068 retry asks for confirmation")
+	control.pause_menu.confirm_pending()
+	var spawns_b: Array = run_spawns(control.flow)
+	var kinds_a: Array = spawns_a.map(func(x): return x[0])
+	var kinds_b: Array = spawns_b.map(func(x): return x[0])
+	control.open_pause()
+	control.pause_menu.request_retry()
+	control.pause_menu.confirm_pending()
+	expect(not control.is_paused() and control.flow.room.values["id"]=="s1_r1" and control.flow.run.seed == seed_a
+		and kinds_a == kinds_b and spawns_equal(run_spawns(control.flow),spawns_b),
+		"AD-068 retry gives same seed and room-1 spawns")
 	expect(control.arena_canvas != null and control.arena_canvas.visible,"combat canvas visible")
 	expect(control.sidebar != null and control.sidebar.get_child_count()>5,"run sidebar built")
 	control._open_editor(1)
@@ -92,6 +152,16 @@ func _run() -> void:
 		control._exit()
 	expect(run.room.values["id"]=="workshop","UI traversal reaches workshop after boss")
 	expect(run.mode=="workshop" and control.test_canvas.visible,"test canvas enabled in safe workshop")
+	var w0: int = run.range_sim.clock.tick
+	var wpos: Vector2 = run.range_sim.actor.position
+	control.open_pause()
+	expect(control.is_paused(),"AD-068 pause opens in workshop")
+	for i in 10:
+		await physics_frame
+	expect(run.range_sim.clock.tick == w0 and run.range_sim.actor.position == wpos,
+		"AD-068 workshop sim frozen while paused")
+	control.close_pause()
+	expect(not control.is_paused(),"AD-068 workshop pause closes")
 	expect(not control.arena_canvas.visible,"combat canvas hidden during workshop")
 	expect(control.tip.text.contains("slot 4"),"AD-042 first_workshop tip on entering workshop")
 	expect(control.context.get_child_count()>5,"workshop merchant and test tools visible")
@@ -194,15 +264,21 @@ func _run() -> void:
 	control.summary_new_seed_button.emit_signal("pressed")
 	expect(run.run.seed != seed_before and run.room.values["id"]=="s1_r1" and run.run.currency==0
 		and run.run.unlocked==run.config["initial_unlocked"],"new seed differs and resets run-local state")
+	var runs_before: int = save.stats()["runs"]
+	control.open_pause()
+	control.pause_menu.request_quit()
+	expect(control.pause_menu.is_confirm_open(),"AD-068 quit asks for confirmation")
+	control.pause_menu.confirm_pending()
+	await process_frame
+	await process_frame
+	expect(current_scene != null and current_scene.scene_file_path=="res://scenes/main.tscn"
+		and save.stats()["runs"]==runs_before+1,"AD-068 quit lands on Title and records abandoned run")
 	var sources := ""
 	for path in ["res://ui/run_controller.gd","res://ui/main_menu.gd","res://ui/run_canvas.gd"]:
 		sources += FileAccess.get_file_as_string(path)
 	expect(not sources.contains("recover(") and not sources.contains(".restore("),"no UI path loads a saved run")
 	var menu_src := FileAccess.get_file_as_string("res://ui/main_menu.gd")
 	expect(not menu_src.contains("Continue") and not menu_src.contains("Resume"),"main menu has no Continue/Resume")
-	control._to_title()
-	await process_frame
-	await process_frame
 	expect(current_scene != null and current_scene.scene_file_path=="res://scenes/main.tscn","Title returns to main menu")
 	var menu = load("res://scenes/main.tscn").instantiate()
 	root.add_child(menu)
@@ -221,7 +297,7 @@ func _run() -> void:
 		and is_equal_approx(float(reborn.settings.volumes["Master"]),0.5),"AD-019 settings survive restart")
 	expect(FileAccess.file_exists("user://ad019_smoke/settings.cfg") and not FileAccess.file_exists("user://ad019_smoke/settings.cfg.tmp"),
 		"AD-019 settings file written atomically")
-	expect(reborn.stats()["runs"]==2,"AD-019 stats survive restart")
+	expect(reborn.stats()["runs"]==3,"AD-019 stats survive restart")
 	reborn.free()
 	save.set_base_dir("user://")
 	quit(1 if failures>0 else 0)
