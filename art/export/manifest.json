@@ -1718,6 +1718,96 @@
    "slices": {},
    "tags": {}
   },
+  "ad_ui_bar_hp": {
+   "canvas": [
+    16,
+    10
+   ],
+   "category": "ui",
+   "id": "AD-UI-003",
+   "json": "res://art/export/ui/ad_ui_bar_hp.json",
+   "pivot": [
+    0,
+    0
+   ],
+   "png": "res://art/export/ui/ad_ui_bar_hp.png",
+   "row": "AD-037",
+   "slices": {
+    "fill": {
+     "h": 4,
+     "w": 10,
+     "x": 3,
+     "y": 3
+    },
+    "hp_9slice": {
+     "h": 10,
+     "w": 16,
+     "x": 0,
+     "y": 0
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 0
+    }
+   },
+   "tags": {
+    "static": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      100
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_ui_bar_mana": {
+   "canvas": [
+    16,
+    6
+   ],
+   "category": "ui",
+   "id": "AD-UI-004",
+   "json": "res://art/export/ui/ad_ui_bar_mana.json",
+   "pivot": [
+    0,
+    0
+   ],
+   "png": "res://art/export/ui/ad_ui_bar_mana.png",
+   "row": "AD-037",
+   "slices": {
+    "fill": {
+     "h": 2,
+     "w": 10,
+     "x": 3,
+     "y": 2
+    },
+    "mana_9slice": {
+     "h": 6,
+     "w": 16,
+     "x": 0,
+     "y": 0
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 0
+    }
+   },
+   "tags": {
+    "static": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      100
+     ],
+     "to": 0
+    }
+   }
+  },
   "ad_ui_crosshair": {
    "canvas": [
     16,
@@ -1887,6 +1977,126 @@
     }
    }
   },
+  "ad_ui_hud_slot_bar": {
+   "canvas": [
+    128,
+    28
+   ],
+   "category": "ui",
+   "id": "AD-UI-014",
+   "json": "res://art/export/ui/ad_ui_hud_slot_bar.json",
+   "pivot": [
+    0,
+    0
+   ],
+   "png": "res://art/export/ui/ad_ui_hud_slot_bar.png",
+   "row": "AD-037",
+   "slices": {
+    "bar_9slice": {
+     "h": 28,
+     "w": 128,
+     "x": 0,
+     "y": 0
+    },
+    "dash": {
+     "h": 24,
+     "w": 12,
+     "x": 114,
+     "y": 2
+    },
+    "keycap_1": {
+     "h": 6,
+     "w": 13,
+     "x": 10,
+     "y": 17
+    },
+    "keycap_2": {
+     "h": 6,
+     "w": 13,
+     "x": 38,
+     "y": 17
+    },
+    "keycap_3": {
+     "h": 5,
+     "w": 5,
+     "x": 74,
+     "y": 18
+    },
+    "keycap_4": {
+     "h": 5,
+     "w": 5,
+     "x": 102,
+     "y": 18
+    },
+    "lock_slot1": {
+     "h": 6,
+     "w": 4,
+     "x": 19,
+     "y": 5
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 0
+    },
+    "slot_1": {
+     "h": 28,
+     "w": 28,
+     "x": 0,
+     "y": 0
+    },
+    "slot_2": {
+     "h": 28,
+     "w": 28,
+     "x": 28,
+     "y": 0
+    },
+    "slot_3": {
+     "h": 28,
+     "w": 28,
+     "x": 56,
+     "y": 0
+    },
+    "slot_4": {
+     "h": 28,
+     "w": 28,
+     "x": 84,
+     "y": 0
+    }
+   },
+   "tags": {
+    "dash_marker": {
+     "frames": 3,
+     "from": 5,
+     "ms": [
+      100,
+      100,
+      100
+     ],
+     "to": 7
+    },
+    "frame": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      100
+     ],
+     "to": 0
+    },
+    "keycaps": {
+     "frames": 4,
+     "from": 1,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 4
+    }
+   }
+  },
   "ad_ui_invalid_marker": {
    "canvas": [
     16,
@@ -1975,6 +2185,65 @@
       100
      ],
      "to": 0
+    }
+   }
+  },
+  "ad_ui_reward_card": {
+   "canvas": [
+    74,
+    110
+   ],
+   "category": "ui",
+   "id": "AD-UI-013",
+   "json": "res://art/export/ui/ad_ui_reward_card_aseprite.json",
+   "pivot": [
+    0,
+    0
+   ],
+   "png": "res://art/export/ui/ad_ui_reward_card.png",
+   "row": "AD-038",
+   "slices": {
+    "behaviour_line": {
+     "h": 48,
+     "w": 60,
+     "x": 7,
+     "y": 48
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 0
+    },
+    "reward_card_9slice": {
+     "h": 110,
+     "w": 74,
+     "x": 0,
+     "y": 0
+    },
+    "rune_icon_slot": {
+     "h": 16,
+     "w": 16,
+     "x": 29,
+     "y": 12
+    },
+    "rune_name": {
+     "h": 8,
+     "w": 60,
+     "x": 7,
+     "y": 34
+    }
+   },
+   "tags": {
+    "states": {
+     "frames": 3,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100
+     ],
+     "to": 2
     }
    }
   },
@@ -2070,6 +2339,87 @@
       100
      ],
      "to": 6
+    }
+   }
+  },
+  "ad_ui_spell_slot": {
+   "canvas": [
+    28,
+    28
+   ],
+   "category": "ui",
+   "id": "AD-UI-005",
+   "json": "res://art/export/ui/ad_ui_spell_slot.json",
+   "pivot": [
+    0,
+    0
+   ],
+   "png": "res://art/export/ui/ad_ui_spell_slot.png",
+   "row": "AD-037",
+   "slices": {
+    "anchor_core": {
+     "h": 24,
+     "w": 24,
+     "x": 2,
+     "y": 2
+    },
+    "icon": {
+     "h": 16,
+     "w": 16,
+     "x": 4,
+     "y": 4
+    },
+    "icon_area": {
+     "h": 14,
+     "w": 14,
+     "x": 5,
+     "y": 5
+    },
+    "keycap_badge": {
+     "h": 5,
+     "w": 5,
+     "x": 18,
+     "y": 18
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 0
+    },
+    "state_badge": {
+     "h": 5,
+     "w": 4,
+     "x": 19,
+     "y": 12
+    }
+   },
+   "tags": {
+    "cooldown": {
+     "frames": 8,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 11
+    },
+    "states": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 3
     }
    }
   },
@@ -3453,7 +3803,9 @@
   "AD-034",
   "AD-045",
   "AD-035",
-  "AD-036"
+  "AD-036",
+  "AD-037",
+  "AD-038"
  ],
  "version": 1
 }

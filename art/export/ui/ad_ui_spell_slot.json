@@ -1,0 +1,134 @@
+{ "frames": [
+   {
+    "filename": "ad_ui_spell_slot_states_00",
+    "frame": { "x": 0, "y": 0, "w": 28, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 28, "h": 28 },
+    "sourceSize": { "w": 28, "h": 28 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_spell_slot_states_01",
+    "frame": { "x": 28, "y": 0, "w": 28, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 28, "h": 28 },
+    "sourceSize": { "w": 28, "h": 28 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_spell_slot_states_02",
+    "frame": { "x": 56, "y": 0, "w": 28, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 28, "h": 28 },
+    "sourceSize": { "w": 28, "h": 28 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_spell_slot_states_03",
+    "frame": { "x": 84, "y": 0, "w": 28, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 28, "h": 28 },
+    "sourceSize": { "w": 28, "h": 28 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_spell_slot_cooldown_00",
+    "frame": { "x": 112, "y": 0, "w": 28, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 28, "h": 28 },
+    "sourceSize": { "w": 28, "h": 28 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_spell_slot_cooldown_01",
+    "frame": { "x": 140, "y": 0, "w": 28, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 28, "h": 28 },
+    "sourceSize": { "w": 28, "h": 28 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_spell_slot_cooldown_02",
+    "frame": { "x": 168, "y": 0, "w": 28, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 28, "h": 28 },
+    "sourceSize": { "w": 28, "h": 28 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_spell_slot_cooldown_03",
+    "frame": { "x": 196, "y": 0, "w": 28, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 28, "h": 28 },
+    "sourceSize": { "w": 28, "h": 28 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_spell_slot_cooldown_04",
+    "frame": { "x": 224, "y": 0, "w": 28, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 28, "h": 28 },
+    "sourceSize": { "w": 28, "h": 28 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_spell_slot_cooldown_05",
+    "frame": { "x": 252, "y": 0, "w": 28, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 28, "h": 28 },
+    "sourceSize": { "w": 28, "h": 28 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_spell_slot_cooldown_06",
+    "frame": { "x": 280, "y": 0, "w": 28, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 28, "h": 28 },
+    "sourceSize": { "w": 28, "h": 28 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_spell_slot_cooldown_07",
+    "frame": { "x": 308, "y": 0, "w": 28, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 28, "h": 28 },
+    "sourceSize": { "w": 28, "h": 28 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_ui_spell_slot.png",
+  "format": "I8",
+  "size": { "w": 336, "h": 28 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "states", "from": 0, "to": 3, "direction": "forward", "color": "#000000ff" },
+   { "name": "cooldown", "from": 4, "to": 11, "direction": "forward", "color": "#000000ff" }
+  ],
+  "layers": [
+   { "name": "art", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+   { "name": "pivot", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 1, "h": 1 } }] },
+   { "name": "icon", "keys": [{ "frame": 0, "bounds": {"x": 4, "y": 4, "w": 16, "h": 16 } }] },
+   { "name": "icon_area", "keys": [{ "frame": 0, "bounds": {"x": 5, "y": 5, "w": 14, "h": 14 } }] },
+   { "name": "keycap_badge", "keys": [{ "frame": 0, "bounds": {"x": 18, "y": 18, "w": 5, "h": 5 } }] },
+   { "name": "state_badge", "keys": [{ "frame": 0, "bounds": {"x": 19, "y": 12, "w": 4, "h": 5 } }] },
+   { "name": "anchor_core", "keys": [{ "frame": 0, "bounds": {"x": 2, "y": 2, "w": 24, "h": 24 } }] }
+  ]
+ }
+}

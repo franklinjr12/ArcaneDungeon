@@ -34,7 +34,7 @@
     "kind": "undead_warden",
     "display_name": "Undead warden",
     "hp": 590,
-    "radius": 35,
+    "radius": 49,
     "position": [
       1030,
       450

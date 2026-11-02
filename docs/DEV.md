@@ -41,6 +41,10 @@ These export commands require corresponding presets and templates and are exampl
 
 `scenes/` launcher, M1 sandbox, M2 arena and M0 placeholder legacy scenes; `ui/` launcher plus M1 sandbox controls and primitive debug canvas; `game/core/` clock and diagnostics; `magic/data/` immutable rune data + budget knobs; `magic/compile/` codec, registry, validation and compilation; `magic/runtime/` events and bounded queues; `debug/` opt-in trace; `tests/` headless runner, test scripts and golden fixtures. `combat/` now holds shared M1 target, health, status, and interaction logic; `world/` now contains M2 obstacle geometry; it does not implement M3 room progression.
 
+## Reduce flash / reduce shake (AD-083)
+
+`ui/reduce_motion.gd` is the single policy. "Reduce screen shake" (`screen_shake=false`) zeroes the hit camera shake in `combat_canvas.gd camera_offset()`. "Reduce flashes" (`reduce_flashes`, or the arena F4 session flag) removes the full-screen hit overlay and the room-transition veil, replaces the player hit sprite flash with a steady tint, and freezes the `hit.spark`, `reaction.arc` and `boss.phase` fx into a constant translucent tint (0 Hz, under the 3 Hz limit). `telegraph.*` fx are never altered. The shake amplitude (3 px peak) is [PROPOSED FOR PROTOTYPE].
+
 ## Debugging
 
 Runtime navigation failures are appended to `user://arcane_errors.log` and printed to stderr. `DebugTrace` stores normalized typed events and can export JSON; disable it without modifying simulation.

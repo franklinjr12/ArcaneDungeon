@@ -1,11 +1,12 @@
 extends Control
+const ReduceMotion = preload("res://ui/reduce_motion.gd")
 const VisualTheme = preload("res://ui/pixel_theme.gd")
 ## M3 playable vertical slice. This is only input/UI; all rules live in RunFlow.
 const Flow = preload("res://world/run_flow.gd")
 const ArenaCanvas = preload("res://ui/run_canvas.gd")
 const TestCanvas = preload("res://ui/sandbox_canvas.gd")
 const PortraitHUD = preload("res://ui/pixel_hud.gd")
-const RuneAtlas = preload("res://assets/pixel/rune_icons.png")
+const RewardCard = preload("res://art/export/ui/ad_ui_reward_card.png")
 const Prompts = preload("res://ui/onboarding_prompts.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
 const InputActions = preload("res://ui/input_actions.gd")
@@ -14,6 +15,9 @@ const MerchantScript = preload("res://world/merchant.gd")
 var flow
 var guide = Prompts.new()
 var tip: Label
+var _last_wet_kills := 0
+var _last_arcs := 0
+const TELEMETRY_INDEX := {"room1":3,"first_reward":4,"first_workshop":5}
 var arena_canvas
 var test_canvas
 var sidebar: VBoxContainer
@@ -61,6 +65,7 @@ func _ready() -> void:
 		_settings = save.settings
 		if _settings.telemetry_opt_in:
 			flow.experiment.configure(true)
+			flow.experiment.begin_session()
 		_settings.apply_audio()
 	if save != null:
 		guide.load_seen(save.profile["stats"].get("onboarding_seen", []))
@@ -105,11 +110,13 @@ func _build() -> void:
 	_button(help_actions,"Dismiss tips",func(): _guide(false))
 	_button(help_actions,"Show tips",func(): _guide(true))
 	_button(sidebar,"Opt in / out of local telemetry",func():
+		flow.experiment.end_session()
 		flow.experiment.configure(not flow.experiment.enabled)
 		var save = get_node_or_null("/root/SaveService")
 		if save != null:
 			save.settings.telemetry_opt_in = flow.experiment.enabled
 			save.save_settings()
+		flow.experiment.begin_session()
 		current_notice = "Local telemetry "+("ENABLED (export only)" if flow.experiment.enabled else "OFF / cleared")
 		_update_labels())
 	_button(sidebar,"Export opt-in JSON + CSV",func(): _export_metrics())
@@ -133,6 +140,7 @@ func _build() -> void:
 	help.add_theme_font_size_override("font_size",11)
 	sidebar.add_child(help)
 	arena_canvas = ArenaCanvas.new()
+	arena_canvas.settings = _settings
 	arena_canvas.position = Vector2(325,35)
 	arena_canvas.size = Vector2(916,650)
 	arena_canvas.session = flow.session
@@ -198,6 +206,11 @@ func close_pause() -> void:
 	_set_clocks_paused(false)
 	Input.mouse_mode = _prev_mouse_mode
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_PREDELETE:
+		if flow != null:
+			flow.experiment.end_session()
+
 func _set_clocks_paused(on: bool) -> void:
 	flow.session.sim.clock.set_paused(on)
 	if flow.range_sim != null and flow.range_sim.get("clock") != null:
@@ -250,6 +263,8 @@ func _test_click(point: Vector2, button: int) -> void:
 func _test_cast_slot(slot: int, point: Vector2) -> Dictionary:
 	var dir: Vector2 = (point-flow.range_sim.actor.position).normalized()
 	var result: Dictionary = flow.test_cast(slot,dir)
+	if bool(result.get("accepted",false)):
+		guide.note_test_cast()
 	current_notice = "Test cast slot %d: %s" % [slot+1,str(result.get("reason",""))]
 	_update_labels()
 	return result
@@ -411,7 +426,7 @@ func _redraw_panel() -> void:
 					caption = str(item["name"])+": "+str(item["behaviour"])
 				else:
 					caption = "+"+str(item["amount"])+" currency"
-				_button(context,"%d) %s" % [i+1,caption],_choose_reward.bind(i))
+				_skin_reward_button(_button(context,"%d) %s" % [i+1,caption],_choose_reward.bind(i)),item)
 		if flow.edit_policy == "cleared_room":
 			_heading(context,"Quick edit allowed (no shop/test)",12)
 		_button(context,"Advance at exit →",func(): _exit())
@@ -428,6 +443,9 @@ func _redraw_panel() -> void:
 			var b := _button(context,str(item["label"])+" / "+str(item["price"])+" coins",
 				_buy.bind(i))
 			b.disabled = flow.merchant.bought.has(item["id"]) or not affordable
+			b.icon = PortraitHUD.rune_icon_texture(str(item["rune_id"])) if item["kind"] == "rune" else PortraitHUD.ui_icon_texture("hp")
+			b.expand_icon = false
+			b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			var detail := Label.new()
 			detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			detail.add_theme_font_size_override("font_size",11)
@@ -490,6 +508,7 @@ func _update_labels() -> void:
 			",".join(statuses),reactions,triggers,caps]
 	notices.text = current_notice
 	if tip != null:
+		_watch_hint_signals()
 		var active := ""
 		if flow.mode == "workshop":
 			active = "first_workshop"
@@ -497,11 +516,33 @@ func _update_labels() -> void:
 			active = "room1"
 		elif flow.state == "cleared" and not flow.reward_collected:
 			active = "first_reward"
+		var hint: String = guide.next_hint()
+		if guide.HINT_IDS.has(guide.current) and not guide.dismissed and hint == "":
+			active = guide.current
+		elif hint != "" and (active == "" or guide.seen.has(active)):
+			active = hint  # an unseen AD-042 tip is shown first, then the pending hint takes over
 		if active != "" and not guide.trigger(active).is_empty():
 			_persist_tip(active)
+			guide.pending.erase(active)
+			var index: int = guide.HINT_INDEX[active] if guide.HINT_INDEX.has(active) else int(TELEMETRY_INDEX.get(active,-1))
+			flow.experiment.record("prompt_shown",{"prompt_index":index})
 		if guide.current != active:
 			guide.current = ""
 		tip.text = ("TIP: " + guide.text()) if guide.text() != "" else ""
+
+## AD-084: read-only watch on run-flow counters; never pauses the sim or opens dialogs.
+func _watch_hint_signals() -> void:
+	if flow.mode == "workshop":
+		guide.note_workshop(3 - flow.run.formulas.size())
+		if flow.run.formulas.size() >= 3 and guide.current == "workshop_empty_slot":
+			guide.current = ""
+	if flow.wet_kills > _last_wet_kills:
+		guide.note_wet_kill()
+	_last_wet_kills = flow.wet_kills
+	var arc_now: int = flow.arc_total()
+	if arc_now > _last_arcs and guide.note_arc():
+		_persist_tip("wet_try_lightning")
+	_last_arcs = arc_now
 
 func _persist_tip(id: String) -> void:
 	var save = get_node_or_null("/root/SaveService")
@@ -569,6 +610,7 @@ func _new_seed() -> void:
 	_redraw_panel()
 
 func _to_title() -> void:
+	flow.experiment.end_session()
 	close_pause()
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
 
@@ -582,7 +624,7 @@ func _exit() -> void:
 	_redraw_panel()
 
 func _flash_transition() -> void:
-	if _settings != null and _settings.reduce_flashes:
+	if ReduceMotion.flashes_reduced(_settings, null):
 		return
 	transition_veil.modulate.a = 0.85
 	var tween := create_tween()
@@ -671,15 +713,29 @@ func _editor_rebuild() -> void:
 	apply.disabled = not verdict["ok"]
 
 func _rune_icon(rune_id: String) -> Texture2D:
-	var names := ["essence.fire","essence.water","essence.lightning","form.projectile","form.burst","form.orb",
-		"mod.homing","mod.split","mod.pierce","trigger.on_hit"]
-	var index := names.find(rune_id)
-	if index<0:
-		return null
-	var texture := AtlasTexture.new()
-	texture.atlas = RuneAtlas
-	texture.region = Rect2(Vector2(float(index%8*32),float((index/8)*32)),Vector2(32,32))
-	return texture
+	return PortraitHUD.rune_icon_texture(rune_id)
+
+## AD-038 reward card art as the button skin (frames: normal, hover, pressed); layout is unchanged.
+func _skin_reward_button(b: Button, item: Dictionary) -> void:
+	var states := {"normal":0,"hover":1,"focus":1,"pressed":2}
+	for state in states:
+		var box := StyleBoxTexture.new()
+		var tex := AtlasTexture.new()
+		tex.atlas = RewardCard
+		tex.region = Rect2(states[state]*74,0,74,110)
+		box.texture = tex
+		box.texture_margin_left = 5
+		box.texture_margin_right = 5
+		box.texture_margin_top = 5
+		box.texture_margin_bottom = 5
+		box.content_margin_left = 8
+		box.content_margin_right = 8
+		box.content_margin_top = 6
+		box.content_margin_bottom = 6
+		b.add_theme_stylebox_override(state,box)
+	b.icon = PortraitHUD.rune_icon_texture(str(item["id"])) if item["kind"] == "rune" else PortraitHUD.ui_icon_texture("coin")
+	b.expand_icon = false
+	b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 func _option(parent: Node, list: Array, selection: String) -> OptionButton:
 	var option := OptionButton.new()
@@ -711,6 +767,8 @@ func _close_editor(apply_changes: bool) -> void:
 		current_notice = "Editor: "+str(result.get("reason","INVALID"))
 		_editor_rebuild()
 		return
+	if apply_changes:
+		guide.note_valid_edit()
 	current_notice = ("Formula applied" if apply_changes else "Formula cancelled")+" / %.1f s" % duration
 	_close_visual_editor()
 	_redraw_panel()

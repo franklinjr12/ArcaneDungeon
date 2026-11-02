@@ -1,0 +1,48 @@
+{ "frames": [
+   {
+    "filename": "ad_ui_reward_card_states_00",
+    "frame": { "x": 0, "y": 0, "w": 74, "h": 110 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 74, "h": 110 },
+    "sourceSize": { "w": 74, "h": 110 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_reward_card_states_01",
+    "frame": { "x": 74, "y": 0, "w": 74, "h": 110 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 74, "h": 110 },
+    "sourceSize": { "w": 74, "h": 110 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_ui_reward_card_states_02",
+    "frame": { "x": 148, "y": 0, "w": 74, "h": 110 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 74, "h": 110 },
+    "sourceSize": { "w": 74, "h": 110 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_ui_reward_card.png",
+  "format": "I8",
+  "size": { "w": 222, "h": 110 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "states", "from": 0, "to": 2, "direction": "forward", "color": "#000000ff" }
+  ],
+  "slices": [
+   { "name": "reward_card_9slice", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 74, "h": 110 }, "center": {"x": 5, "y": 5, "w": 64, "h": 100 } }] },
+   { "name": "rune_icon_slot", "keys": [{ "frame": 0, "bounds": {"x": 29, "y": 12, "w": 16, "h": 16 } }] },
+   { "name": "rune_name", "keys": [{ "frame": 0, "bounds": {"x": 7, "y": 34, "w": 60, "h": 8 } }] },
+   { "name": "behaviour_line", "keys": [{ "frame": 0, "bounds": {"x": 7, "y": 48, "w": 60, "h": 48 } }] },
+   { "name": "pivot", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 1, "h": 1 } }] }
+  ]
+ }
+}

@@ -1,0 +1,109 @@
+{
+ "ad_ui_hud_slot_bar": {
+  "id": "AD-UI-014",
+  "variant": "A",
+  "canvas": [
+   128,
+   28
+  ],
+  "slice": "bar_9slice",
+  "center": {
+   "x": 2,
+   "y": 2,
+   "w": 124,
+   "h": 24
+  },
+  "margins": {
+   "left": 2,
+   "top": 2,
+   "right": 2,
+   "bottom": 2
+  },
+  "godot_ninepatch": {
+   "patch_margin_left": 2,
+   "patch_margin_top": 2,
+   "patch_margin_right": 2,
+   "patch_margin_bottom": 2,
+   "axis_stretch": "STRETCH (centre is flat colour rows)"
+  },
+  "note": "height is fixed (28); runes sit in the left/right margins so vertical stretch is not intended. Slots at x = 28*i (i=0..3), dash at (114,2)."
+ },
+ "ad_ui_bar_hp": {
+  "id": "AD-UI-003",
+  "variant": "A",
+  "canvas": [
+   16,
+   10
+  ],
+  "slice": "hp_9slice",
+  "center": {
+   "x": 3,
+   "y": 3,
+   "w": 10,
+   "h": 4
+  },
+  "margins": {
+   "left": 3,
+   "top": 3,
+   "right": 3,
+   "bottom": 3
+  },
+  "godot_ninepatch": {
+   "patch_margin_left": 3,
+   "patch_margin_top": 3,
+   "patch_margin_right": 3,
+   "patch_margin_bottom": 3,
+   "axis_stretch": "STRETCH (centre is flat colour rows)"
+  },
+  "fill": {
+   "x": 3,
+   "y": 3,
+   "w": 10,
+   "h": 4
+  },
+  "trough": {
+   "index": 1,
+   "rgb": "#0f1b24",
+   "use": "paint the depleted part of the fill rect (from value*fill.w to fill.w) with this palette colour"
+  }
+ },
+ "ad_ui_bar_mana": {
+  "id": "AD-UI-004",
+  "variant": "A",
+  "canvas": [
+   16,
+   6
+  ],
+  "slice": "mana_9slice",
+  "center": {
+   "x": 3,
+   "y": 2,
+   "w": 10,
+   "h": 2
+  },
+  "margins": {
+   "left": 3,
+   "top": 2,
+   "right": 3,
+   "bottom": 2
+  },
+  "godot_ninepatch": {
+   "patch_margin_left": 3,
+   "patch_margin_top": 2,
+   "patch_margin_right": 3,
+   "patch_margin_bottom": 2,
+   "axis_stretch": "STRETCH (centre is flat colour rows)"
+  },
+  "fill": {
+   "x": 3,
+   "y": 2,
+   "w": 10,
+   "h": 2
+  },
+  "trough": {
+   "index": 1,
+   "rgb": "#0f1b24",
+   "use": "paint the depleted part of the fill rect (from value*fill.w to fill.w) with this palette colour"
+  }
+ }
+}

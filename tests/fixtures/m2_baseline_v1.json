@@ -1,6 +1,4 @@
 {
-  "schema_version": 1,
-  "purpose": "Deterministic input-only M2 baseline (not balance approval)",
   "cases": [
     {
       "casts": 16,
@@ -14,7 +12,7 @@
       "result": "cleared",
       "scenario": "single",
       "seed": 20261022,
-      "ticks": 27
+      "ticks": 26
     },
     {
       "casts": 14,
@@ -31,38 +29,38 @@
       "ticks": 29
     },
     {
-      "casts": 36,
+      "casts": 43,
       "completed": true,
-      "damage_received": 20.0,
-      "dashes": 6,
+      "damage_received": 29.0,
+      "dashes": 7,
       "enemies_remaining": 0,
-      "hp_remaining": 130.0,
+      "hp_remaining": 121.0,
       "loadout": 0,
       "reactions": 0,
       "result": "cleared",
       "scenario": "mixed",
       "seed": 20261022,
-      "ticks": 531
+      "ticks": 656
     },
     {
-      "casts": 49,
+      "casts": 37,
       "completed": true,
-      "damage_received": 56.0,
-      "dashes": 13,
+      "damage_received": 29.0,
+      "dashes": 8,
       "enemies_remaining": 0,
-      "hp_remaining": 94.0,
+      "hp_remaining": 121.0,
       "loadout": 2,
       "reactions": 2,
       "result": "cleared",
       "scenario": "mixed",
       "seed": 20261022,
-      "ticks": 1005
+      "ticks": 669
     },
     {
-      "casts": 32,
+      "casts": 29,
       "completed": true,
       "damage_received": 0.0,
-      "dashes": 7,
+      "dashes": 6,
       "enemies_remaining": 0,
       "hp_remaining": 150.0,
       "loadout": 0,
@@ -70,13 +68,13 @@
       "result": "cleared",
       "scenario": "cluster",
       "seed": 20261022,
-      "ticks": 406
+      "ticks": 335
     },
     {
-      "casts": 28,
+      "casts": 27,
       "completed": true,
       "damage_received": 0.0,
-      "dashes": 8,
+      "dashes": 6,
       "enemies_remaining": 0,
       "hp_remaining": 150.0,
       "loadout": 2,
@@ -84,7 +82,9 @@
       "result": "cleared",
       "scenario": "cluster",
       "seed": 20261022,
-      "ticks": 407
+      "ticks": 365
     }
-  ]
+  ],
+  "purpose": "Deterministic input-only M2 baseline (not balance approval)",
+  "schema_version": 1
 }

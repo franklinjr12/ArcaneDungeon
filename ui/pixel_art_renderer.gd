@@ -130,6 +130,125 @@ static func _entity_export(canvas: CanvasItem, kind: String, at: Vector2, tick: 
 	else:
 		canvas.draw_texture_rect_region(tex, Rect2(at - pivot * sc, region.size * sc), region, modulate)
 
+# AD-065 PROPOSED: actor animation sheets (art/export/actors) drive the default entity draw.
+# Frames are chosen from sim state by the canvas; nothing here writes to or reads back into the sim.
+const ACTOR_MANIFEST := "res://art/export/actors/actors_manifest.json"
+static var _actors: Dictionary = {}
+static var _actors_loaded := false
+static var _actor_scale := 2.0
+static var _actor_sheets: Dictionary = {}
+
+static func actor_manifest() -> Dictionary:
+	if not _actors_loaded:
+		_actors_loaded = true
+		var m = JSON.parse_string(FileAccess.get_file_as_string(ACTOR_MANIFEST))
+		if m is Dictionary:
+			_actors = m.get("actors", {})
+			_actor_scale = float(m.get("scale", 2))
+	return _actors
+
+static func actor_tag(kind: String, tag: String) -> Dictionary:
+	return actor_manifest().get(kind, {}).get("tags", {}).get(tag, {})
+
+static func actor_has_tag(kind: String, tag: String) -> bool:
+	return not actor_tag(kind, tag).is_empty()
+
+static func actor_tag_frames(kind: String, tag: String) -> int:
+	return int(actor_tag(kind, tag).get("frames", 0))
+
+static func actor_tag_total_ms(kind: String, tag: String) -> int:
+	var total := 0
+	for d in actor_tag(kind, tag).get("ms", []):
+		total += int(d)
+	return total
+
+## Whole ticks (60 Hz) a tag lasts at its authored ms.
+static func actor_tag_ticks(kind: String, tag: String) -> int:
+	return ceili(actor_tag_total_ms(kind, tag) * 60.0 / 1000.0)
+
+static func _actor_sheet(json_path: String, png_path: String) -> Dictionary:
+	if not _actor_sheets.has(json_path):
+		_actor_sheets[json_path] = {"json": JSON.parse_string(FileAccess.get_file_as_string(json_path)), "tex": load(png_path)}
+	return _actor_sheets[json_path]
+
+static func _actor_frame(kind: String, tag: String, index: int, left: bool) -> Dictionary:
+	var tg := actor_tag(kind, tag)
+	if tg.is_empty():
+		return {}
+	var sh: Dictionary = actor_manifest()[kind]["sheets"][tg["sheet"]]
+	var use_left: bool = left and sh.get("left_json") != null
+	var data := _actor_sheet(sh["left_json"], sh["left_png"]) if use_left else _actor_sheet(sh["json"], sh["png"])
+	index = clampi(index, 0, int(tg["frames"]) - 1)
+	var fr: Dictionary = data["json"]["frames"][int(tg["from"]) + index]
+	var r: Dictionary = fr["frame"]
+	var o: Dictionary = fr.get("spriteSourceSize", {"x": 0, "y": 0})
+	var piv: Array = sh["left_pivot"] if use_left and sh.get("left_pivot") != null else sh["pivot"]
+	var hb: Dictionary = sh["left_hurtbox"] if use_left and sh.get("left_hurtbox") != null else sh["hurtbox"]
+	return {"sheet": tg["sheet"], "tag": tag, "index": index, "tex": data["tex"], "left": use_left,
+		"region": Rect2(r["x"], r["y"], r["w"], r["h"]), "offset": Vector2(o["x"], o["y"]),
+		"pivot": Vector2(piv[0], piv[1]), "hurtbox": Rect2(hb["x"], hb["y"], hb["w"], hb["h"])}
+
+## Pure: tag frame after elapsed_ticks (60 Hz -> ms). loop=false holds the last frame.
+static func actor_tag_frame(kind: String, tag: String, elapsed_ticks: int, loop: bool, left: bool = false) -> Dictionary:
+	var ms: Array = actor_tag(kind, tag).get("ms", [])
+	if ms.is_empty():
+		return {}
+	var total := actor_tag_total_ms(kind, tag)
+	var elapsed := maxi(0, elapsed_ticks) * 1000 / 60
+	if loop and total > 0:
+		elapsed %= total
+	var index := ms.size() - 1
+	var acc := 0
+	for i in ms.size():
+		acc += int(ms[i])
+		if elapsed < acc:
+			index = i
+			break
+	return _actor_frame(kind, tag, index, left)
+
+## Each of frame_count frames holds window/frame_count ticks; the last ends exactly at window_ticks.
+static func stretched_index(state_tick: int, window_ticks: int, frame_count: int) -> int:
+	return clampi(state_tick * frame_count / maxi(1, window_ticks), 0, maxi(0, frame_count - 1))
+
+## Ticks covered by the stretched telegraph (sum of per-frame hold ticks); equals window_ticks.
+static func telegraph_anim_ticks(kind: String, window_ticks: int) -> int:
+	var tag := "telegraph_side" if actor_has_tag(kind, "telegraph_side") else "telegraph_burst_side"
+	var n := actor_tag_frames(kind, tag)
+	var covered := 0
+	for t in window_ticks:
+		if stretched_index(t, window_ticks, n) < n:
+			covered += 1
+	return covered
+
+## Mage facing from aim = hover - mage position: 3 directions, side is mirrored when aiming left.
+static func mage_facing(aim: Vector2) -> Dictionary:
+	if absf(aim.x) >= absf(aim.y):
+		return {"dir": "side", "face_left": aim.x < 0.0}
+	return {"dir": "down" if aim.y > 0.0 else "up", "face_left": false}
+
+## anim = {tag, elapsed (+loop) or index, face_left}. PROPOSED: the centre of the art hurtbox slice
+## lands on `at` (the sim position) so the drawn body lines up with the sim hurt circle.
+static func draw_actor(canvas: CanvasItem, kind: String, at: Vector2, anim: Dictionary, modulate: Color = Color.WHITE) -> void:
+	var tag := str(anim.get("tag", ""))
+	var left := bool(anim.get("face_left", false))
+	var fr: Dictionary
+	if anim.has("index"):
+		fr = _actor_frame(kind, tag, int(anim["index"]), left)
+	else:
+		fr = actor_tag_frame(kind, tag, int(anim.get("elapsed", 0)), bool(anim.get("loop", false)), left)
+	if fr.is_empty():
+		return
+	var hb: Rect2 = fr["hurtbox"]
+	var region: Rect2 = fr["region"]
+	var rect := Rect2((fr["offset"] - (hb.position + hb.size / 2.0)) * _actor_scale, region.size * _actor_scale)
+	if left and not fr["left"] and bool(actor_manifest()[kind].get("mirror", false)):
+		canvas.draw_set_transform(at, 0.0, Vector2(-1, 1))
+		canvas.draw_texture_rect_region(fr["tex"], rect, region, modulate)
+		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	else:
+		rect.position += at
+		canvas.draw_texture_rect_region(fr["tex"], rect, region, modulate)
+
 static func tile_floor(canvas: CanvasItem, view: Rect2, offset: Vector2, stage: int = 0) -> void:
 	if use_art_export:
 		_tile_floor_export(canvas, view, offset, stage)
@@ -201,7 +320,11 @@ static func _tile_floor_export(canvas: CanvasItem, view: Rect2, offset: Vector2,
 				Rect2(f["x"], f["y"], f["w"], f["h"]))
 
 static func entity(canvas: CanvasItem, kind: String, at: Vector2, tick: int, motion: Vector2 = Vector2.ZERO,
-		casting: bool = false, hurt: bool = false, dead: bool = false, modulate: Color = Color.WHITE) -> void:
+		casting: bool = false, hurt: bool = false, dead: bool = false, modulate: Color = Color.WHITE,
+		anim: Dictionary = {}) -> void:
+	if not anim.is_empty() and actor_has_tag(kind, str(anim.get("tag", ""))):
+		draw_actor(canvas, kind, at, anim, modulate)
+		return
 	if use_art_export and export_map().get("entities", {}).has(kind):
 		_entity_export(canvas, kind, at, tick, motion, casting, hurt, dead, modulate)
 		return

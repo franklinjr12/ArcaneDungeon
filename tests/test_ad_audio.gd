@@ -101,6 +101,14 @@ func _route(t) -> void:
 	var killer = arena.spawn_enemy("bone_thrall", Vector2(600, 450))
 	if killer == null:
 		killer = arena.enemies[arena.enemies.size() - 1]
+	# Dash i-frames: the autoplay route no longer evades by chance after the AD-065 radii.
+	for k in 120:
+		arena.step()
+	arena.issue({"dash": true, "move": Vector2.RIGHT})
+	arena.step()
+	arena.damage_player(killer.target.id, 5.0, "physical")
+	for k in 60:
+		arena.step()
 	for i in 40:
 		arena.damage_player(killer.target.id, 500.0, "physical")
 	arena.step()

@@ -76,7 +76,7 @@
     "bone_thrall": {
       "display_name": "Bone thrall",
       "hp": 95,
-      "radius": 19,
+      "radius": 23,
       "move_speed": 118,
       "perception_radius": 1250,
       "preferred_range": 42,
@@ -91,7 +91,7 @@
     "fallen_adept": {
       "display_name": "Fallen adept",
       "hp": 80,
-      "radius": 18,
+      "radius": 23,
       "move_speed": 101,
       "perception_radius": 1250,
       "preferred_range": 325,
@@ -108,7 +108,7 @@
     "grave_hound": {
       "display_name": "Grave hound",
       "hp": 85,
-      "radius": 17,
+      "radius": 23,
       "move_speed": 154,
       "perception_radius": 1250,
       "preferred_range": 250,

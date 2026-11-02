@@ -1,0 +1,813 @@
+{
+ "actors": {
+  "bone_thrall": {
+   "mirror": true,
+   "rows": [
+    "AD-052"
+   ],
+   "sheets": {
+    "main": {
+     "canvas": [
+      32,
+      32
+     ],
+     "hurtbox": {
+      "h": 25,
+      "w": 20,
+      "x": 6,
+      "y": 5
+     },
+     "json": "res://art/export/actors/ad_enm_bone_thrall.json",
+     "left_hurtbox": null,
+     "left_json": null,
+     "left_pivot": null,
+     "left_png": null,
+     "pivot": [
+      16,
+      30
+     ],
+     "png": "res://art/export/actors/ad_enm_bone_thrall.png"
+    }
+   },
+   "tags": {
+    "attack_side": {
+     "frames": 4,
+     "from": 11,
+     "ms": [
+      70,
+      70,
+      130,
+      200
+     ],
+     "sheet": "main",
+     "to": 14
+    },
+    "death_side": {
+     "frames": 5,
+     "from": 17,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "sheet": "main",
+     "to": 21
+    },
+    "hit_side": {
+     "frames": 2,
+     "from": 15,
+     "ms": [
+      60,
+      100
+     ],
+     "sheet": "main",
+     "to": 16
+    },
+    "idle_side": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "sheet": "main",
+     "to": 3
+    },
+    "move_side": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "sheet": "main",
+     "to": 7
+    },
+    "spawn_side": {
+     "frames": 4,
+     "from": 22,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "sheet": "main",
+     "to": 25
+    },
+    "telegraph_side": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      173,
+      173,
+      174
+     ],
+     "sheet": "main",
+     "to": 10
+    }
+   }
+  },
+  "fallen_adept": {
+   "mirror": false,
+   "rows": [
+    "AD-053",
+    "AD-063"
+   ],
+   "sheets": {
+    "main": {
+     "canvas": [
+      32,
+      32
+     ],
+     "hurtbox": {
+      "h": 27,
+      "w": 18,
+      "x": 5,
+      "y": 4
+     },
+     "json": "res://art/export/actors/ad_enm_fallen_adept.json",
+     "left_hurtbox": {
+      "h": 27,
+      "w": 18,
+      "x": 9,
+      "y": 4
+     },
+     "left_json": "res://art/export/actors/ad_enm_fallen_adept_left.json",
+     "left_pivot": [
+      15,
+      30
+     ],
+     "left_png": "res://art/export/actors/ad_enm_fallen_adept_left.png",
+     "pivot": [
+      16,
+      30
+     ],
+     "png": "res://art/export/actors/ad_enm_fallen_adept.png"
+    }
+   },
+   "tags": {
+    "attack_side": {
+     "frames": 4,
+     "from": 11,
+     "ms": [
+      70,
+      60,
+      180,
+      190
+     ],
+     "sheet": "main",
+     "to": 14
+    },
+    "death_side": {
+     "frames": 5,
+     "from": 17,
+     "ms": [
+      110,
+      110,
+      110,
+      110,
+      220
+     ],
+     "sheet": "main",
+     "to": 21
+    },
+    "hit_side": {
+     "frames": 2,
+     "from": 15,
+     "ms": [
+      70,
+      90
+     ],
+     "sheet": "main",
+     "to": 16
+    },
+    "idle_side": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "sheet": "main",
+     "to": 3
+    },
+    "move_side": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "sheet": "main",
+     "to": 7
+    },
+    "spawn_side": {
+     "frames": 4,
+     "from": 22,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "sheet": "main",
+     "to": 25
+    },
+    "telegraph_side": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      240,
+      240,
+      240
+     ],
+     "sheet": "main",
+     "to": 10
+    }
+   }
+  },
+  "grave_hound": {
+   "mirror": false,
+   "rows": [
+    "AD-054",
+    "AD-063"
+   ],
+   "sheets": {
+    "main": {
+     "canvas": [
+      32,
+      32
+     ],
+     "hurtbox": {
+      "h": 18,
+      "w": 27,
+      "x": 3,
+      "y": 13
+     },
+     "json": "res://art/export/actors/ad_enm_grave_hound.json",
+     "left_hurtbox": {
+      "h": 18,
+      "w": 27,
+      "x": 2,
+      "y": 13
+     },
+     "left_json": "res://art/export/actors/ad_enm_grave_hound_left.json",
+     "left_pivot": [
+      15,
+      30
+     ],
+     "left_png": "res://art/export/actors/ad_enm_grave_hound_left.png",
+     "pivot": [
+      16,
+      30
+     ],
+     "png": "res://art/export/actors/ad_enm_grave_hound.png"
+    }
+   },
+   "tags": {
+    "attack_side": {
+     "frames": 4,
+     "from": 11,
+     "ms": [
+      60,
+      70,
+      110,
+      190
+     ],
+     "sheet": "main",
+     "to": 14
+    },
+    "death_side": {
+     "frames": 5,
+     "from": 17,
+     "ms": [
+      110,
+      110,
+      110,
+      110,
+      220
+     ],
+     "sheet": "main",
+     "to": 21
+    },
+    "hit_side": {
+     "frames": 2,
+     "from": 15,
+     "ms": [
+      70,
+      90
+     ],
+     "sheet": "main",
+     "to": 16
+    },
+    "idle_side": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "sheet": "main",
+     "to": 3
+    },
+    "move_side": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      80,
+      80,
+      80,
+      80
+     ],
+     "sheet": "main",
+     "to": 7
+    },
+    "spawn_side": {
+     "frames": 4,
+     "from": 22,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "sheet": "main",
+     "to": 25
+    },
+    "telegraph_side": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      190,
+      190,
+      190
+     ],
+     "sheet": "main",
+     "to": 10
+    }
+   }
+  },
+  "mage": {
+   "mirror": true,
+   "rows": [
+    "AD-061",
+    "AD-062",
+    "AD-064"
+   ],
+   "sheets": {
+    "main": {
+     "canvas": [
+      32,
+      32
+     ],
+     "hurtbox": {
+      "h": 18,
+      "w": 12,
+      "x": 10,
+      "y": 12
+     },
+     "json": "res://art/export/actors/ad_chr_mage.json",
+     "left_hurtbox": null,
+     "left_json": null,
+     "left_pivot": null,
+     "left_png": null,
+     "pivot": [
+      16,
+      30
+     ],
+     "png": "res://art/export/actors/ad_chr_mage.png"
+    }
+   },
+   "tags": {
+    "cast_down": {
+     "frames": 5,
+     "from": 30,
+     "ms": [
+      90,
+      90,
+      90,
+      90,
+      90
+     ],
+     "sheet": "main",
+     "to": 34
+    },
+    "cast_side": {
+     "frames": 5,
+     "from": 39,
+     "ms": [
+      90,
+      90,
+      90,
+      90,
+      90
+     ],
+     "sheet": "main",
+     "to": 43
+    },
+    "cast_up": {
+     "frames": 5,
+     "from": 48,
+     "ms": [
+      90,
+      90,
+      90,
+      90,
+      90
+     ],
+     "sheet": "main",
+     "to": 52
+    },
+    "dash_down": {
+     "frames": 4,
+     "from": 35,
+     "ms": [
+      60,
+      60,
+      60,
+      60
+     ],
+     "sheet": "main",
+     "to": 38
+    },
+    "dash_side": {
+     "frames": 4,
+     "from": 44,
+     "ms": [
+      60,
+      60,
+      60,
+      60
+     ],
+     "sheet": "main",
+     "to": 47
+    },
+    "dash_up": {
+     "frames": 4,
+     "from": 53,
+     "ms": [
+      60,
+      60,
+      60,
+      60
+     ],
+     "sheet": "main",
+     "to": 56
+    },
+    "death_down": {
+     "frames": 6,
+     "from": 63,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "sheet": "main",
+     "to": 68
+    },
+    "death_side": {
+     "frames": 6,
+     "from": 69,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "sheet": "main",
+     "to": 74
+    },
+    "death_up": {
+     "frames": 6,
+     "from": 75,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "sheet": "main",
+     "to": 80
+    },
+    "hit_down": {
+     "frames": 2,
+     "from": 57,
+     "ms": [
+      80,
+      80
+     ],
+     "sheet": "main",
+     "to": 58
+    },
+    "hit_side": {
+     "frames": 2,
+     "from": 59,
+     "ms": [
+      80,
+      80
+     ],
+     "sheet": "main",
+     "to": 60
+    },
+    "hit_up": {
+     "frames": 2,
+     "from": 61,
+     "ms": [
+      80,
+      80
+     ],
+     "sheet": "main",
+     "to": 62
+    },
+    "idle_down": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "sheet": "main",
+     "to": 3
+    },
+    "idle_side": {
+     "frames": 4,
+     "from": 10,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "sheet": "main",
+     "to": 13
+    },
+    "idle_up": {
+     "frames": 4,
+     "from": 20,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "sheet": "main",
+     "to": 23
+    },
+    "walk_down": {
+     "frames": 6,
+     "from": 4,
+     "ms": [
+      83,
+      83,
+      84,
+      83,
+      83,
+      84
+     ],
+     "sheet": "main",
+     "to": 9
+    },
+    "walk_side": {
+     "frames": 6,
+     "from": 14,
+     "ms": [
+      83,
+      83,
+      84,
+      83,
+      83,
+      84
+     ],
+     "sheet": "main",
+     "to": 19
+    },
+    "walk_up": {
+     "frames": 6,
+     "from": 24,
+     "ms": [
+      83,
+      83,
+      84,
+      83,
+      83,
+      84
+     ],
+     "sheet": "main",
+     "to": 29
+    }
+   }
+  },
+  "undead_warden": {
+   "mirror": false,
+   "rows": [
+    "AD-055",
+    "AD-056",
+    "AD-063",
+    "AD-064"
+   ],
+   "sheets": {
+    "late": {
+     "canvas": [
+      64,
+      64
+     ],
+     "hurtbox": {
+      "h": 53,
+      "w": 44,
+      "x": 12,
+      "y": 10
+     },
+     "json": "res://art/export/actors/ad_bos_ossuary_warden_late.json",
+     "left_hurtbox": {
+      "h": 53,
+      "w": 44,
+      "x": 8,
+      "y": 10
+     },
+     "left_json": "res://art/export/actors/ad_bos_ossuary_warden_late_left.json",
+     "left_pivot": [
+      31,
+      62
+     ],
+     "left_png": "res://art/export/actors/ad_bos_ossuary_warden_late_left.png",
+     "pivot": [
+      32,
+      62
+     ],
+     "png": "res://art/export/actors/ad_bos_ossuary_warden_late.png"
+    },
+    "main": {
+     "canvas": [
+      64,
+      64
+     ],
+     "hurtbox": {
+      "h": 53,
+      "w": 44,
+      "x": 12,
+      "y": 10
+     },
+     "json": "res://art/export/actors/ad_bos_ossuary_warden.json",
+     "left_hurtbox": {
+      "h": 53,
+      "w": 44,
+      "x": 8,
+      "y": 10
+     },
+     "left_json": "res://art/export/actors/ad_bos_ossuary_warden_left.json",
+     "left_pivot": [
+      31,
+      62
+     ],
+     "left_png": "res://art/export/actors/ad_bos_ossuary_warden_left.png",
+     "pivot": [
+      32,
+      62
+     ],
+     "png": "res://art/export/actors/ad_bos_ossuary_warden.png"
+    }
+   },
+   "tags": {
+    "burst_side": {
+     "frames": 6,
+     "from": 12,
+     "ms": [
+      60,
+      60,
+      70,
+      80,
+      90,
+      110
+     ],
+     "sheet": "main",
+     "to": 17
+    },
+    "dash_side": {
+     "frames": 4,
+     "from": 21,
+     "ms": [
+      60,
+      60,
+      60,
+      90
+     ],
+     "sheet": "main",
+     "to": 24
+    },
+    "death_side": {
+     "frames": 10,
+     "from": 33,
+     "ms": [
+      100,
+      100,
+      100,
+      110,
+      110,
+      120,
+      120,
+      130,
+      160,
+      600
+     ],
+     "sheet": "late",
+     "to": 42
+    },
+    "hit_side": {
+     "frames": 2,
+     "from": 31,
+     "ms": [
+      60,
+      90
+     ],
+     "sheet": "late",
+     "to": 32
+    },
+    "idle_side": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      200,
+      200,
+      200,
+      200
+     ],
+     "sheet": "main",
+     "to": 3
+    },
+    "move_side": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "sheet": "main",
+     "to": 7
+    },
+    "phase_side": {
+     "frames": 6,
+     "from": 25,
+     "ms": [
+      100,
+      80,
+      80,
+      100,
+      120,
+      140
+     ],
+     "sheet": "late",
+     "to": 30
+    },
+    "telegraph_burst_side": {
+     "frames": 4,
+     "from": 8,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "sheet": "main",
+     "to": 11
+    },
+    "telegraph_dash_side": {
+     "frames": 3,
+     "from": 18,
+     "ms": [
+      140,
+      140,
+      140
+     ],
+     "sheet": "main",
+     "to": 20
+    }
+   }
+  }
+ },
+ "scale": 2,
+ "version": 1
+}
