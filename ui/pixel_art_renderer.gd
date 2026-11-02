@@ -18,7 +18,10 @@ const F = {"mage":MAGE,"bone_thrall":PURSUER,"fallen_adept":RANGED,"grave_hound"
 # AD-030: debug-only swap to art/export sprites (F6). Default stays assets/pixel.
 const EXPORT_MANIFEST := "res://art/export/manifest.json"
 const EXPORT_MAP := "res://art/export/engine_map.json"
+const PRESENTATION := "res://world/data/presentation_v1.json"
 static var use_art_export := false
+static var _telegraph_styles: Dictionary = {}
+static var last_telegraph_draw: Dictionary = {}
 static var _manifest: Dictionary = {}
 static var _map: Dictionary = {}
 static var _jsons: Dictionary = {}
@@ -432,10 +435,32 @@ static func _legacy_kind(event: String) -> String:
 static func iframe_outline_on(tick: int) -> bool:
 	return (tick * 1000 / 60) / 60 % 2 == 0
 
+## AD-088: telegraph style block for an event from presentation_v1.json ({} if unknown).
+static func telegraph_style(event: String) -> Dictionary:
+	if _telegraph_styles.is_empty():
+		var data = JSON.parse_string(FileAccess.get_file_as_string(PRESENTATION))
+		_telegraph_styles = data["telegraph_style"] if data is Dictionary and data.has("telegraph_style") else {"_": {}}
+	return _telegraph_styles.get(event, {})
+
+## AD-088: pure {fill, outline} colours; alpha swells linearly from pulse.start to 1.0 (monotonic, no oscillation).
+static func telegraph_colors(event: String, progress: float) -> Dictionary:
+	var st := telegraph_style(event)
+	var tint := Color(String(st.get("tint", "#f0a060")))
+	var pulse: Dictionary = st.get("pulse", {})
+	var fa := float(st.get("fill_alpha", 0.3))
+	var oa := float(st.get("outline_alpha", 0.75))
+	var start := float(pulse.get("start", 0.75))
+	var p := clampf(progress, 0.0, 1.0)
+	if p > start and start < 1.0:
+		var k := (p - start) / (1.0 - start)
+		fa = lerpf(fa, float(pulse.get("fill_alpha_peak", fa)), k)
+		oa = lerpf(oa, float(pulse.get("outline_alpha_peak", oa)), k)
+	return {"fill": Color(tint.r, tint.g, tint.b, fa), "outline": Color(tint.r, tint.g, tint.b, oa)}
+
 ## Draws region*scale around the pivot. uniform > 0 scales both axes to that world diameter (telegraph circle). length > 0 stretches only along x (lanes, lines, arcs).
 ## Status events also draw the AD-033 icon at the overlay's symbol slice (slot offsets stacked icons).
 static func draw_fx(canvas: CanvasItem, event: String, center: Vector2, age_ticks: int, rotation: float = 0.0,
-		length: float = 0.0, modulate: Color = Color.WHITE, slot: int = 0, uniform: float = 0.0) -> void:
+		length: float = 0.0, modulate: Color = Color.WHITE, slot: int = 0, uniform: float = 0.0, window: int = 0) -> void:
 	var fr := fx_frame(event, age_ticks)
 	if fr.is_empty():
 		if not fx_fallbacks.has(event):
@@ -450,8 +475,21 @@ static func draw_fx(canvas: CanvasItem, event: String, center: Vector2, age_tick
 		sc = uniform / region.size.x
 		sx = sc
 	canvas.draw_set_transform(center, rotation, Vector2.ONE)
-	canvas.draw_texture_rect_region(_texs[fr["stem"]],
-		Rect2(Vector2(-pivot.x * sx, -pivot.y * sc), Vector2(region.size.x * sx, region.size.y * sc)), region, modulate)
+	var dest := Rect2(Vector2(-pivot.x * sx, -pivot.y * sc), Vector2(region.size.x * sx, region.size.y * sc))
+	if event.begins_with("telegraph."):
+		var progress := float(age_ticks) / float(maxi(1, window)) if window > 0 else 0.0
+		var cols := telegraph_colors(event, progress)
+		var fill: Color = cols["fill"] * modulate
+		var line: Color = cols["outline"] * modulate
+		last_telegraph_draw = {"event": event, "fill": fill, "outline": line, "progress": progress}
+		canvas.draw_texture_rect_region(_texs[fr["stem"]], dest, region, fill)
+		if event == "telegraph.circle":
+			canvas.draw_arc(Vector2.ZERO, region.size.x * sc / 2.0, 0.0, TAU, 48, line, 2.0)
+		else:
+			canvas.draw_rect(dest, line, false, 2.0)
+		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		return
+	canvas.draw_texture_rect_region(_texs[fr["stem"]], dest, region, modulate)
 	if event.begins_with("status."):
 		_status_icon(canvas, event, fr, slot, modulate)
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
@@ -651,7 +689,8 @@ static func _collect_feedback(session, tick: int, memo: Dictionary, out: Array) 
 			continue
 		var intent: Dictionary = enemy.intent.snapshot()
 		var to_mage: Vector2 = mage - target.position
-		var item := {"at": target.position, "age": int(enemy.state_tick), "rotation": to_mage.angle(), "length": 0.0, "slot": 0}
+		var item := {"at": target.position, "age": int(enemy.state_tick), "rotation": to_mage.angle(), "length": 0.0, "slot": 0,
+			"window": int(enemy.tuning["telegraph_ticks"])}
 		if enemy.kind == "undead_warden":
 			if intent["kind"] == "radial":
 				item["event"] = "telegraph.circle"
