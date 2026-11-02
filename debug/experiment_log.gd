@@ -2,7 +2,7 @@ extends RefCounted
 ## TASK-052: opt-in local-only experiment events; never persist device/user IDs or free text.
 const SCHEMA := 1
 const KINDS := ["formula_edit","rune_choice","test_cast","dungeon_cast","reaction",
-	"death","room_clear","editor_open","editor_close","room_enter","purchase","run_restart","slice_complete","session_start"]
+	"death","room_clear","editor_open","editor_close","room_enter","purchase","run_restart","slice_complete","session_start","prompt_shown"]
 const SESSION_LOCK := "user://arcane_session.lock"
 var enabled := false
 var records: Array = []
@@ -71,7 +71,7 @@ func record(kind: String, properties: Dictionary = {}, formula: Dictionary = {})
 		properties["duration_ms"] = maxi(0,clock_ms-_run_start_ms)
 	var safe: Dictionary = {}
 	# Deliberate allowlist: no player strings, coordinates, identity or raw formulas.
-	for key in ["room_index","slot","count","duration_ms","cast_accepted","reaction_count","rune_index","price","is_workshop"]:
+	for key in ["room_index","slot","count","duration_ms","cast_accepted","reaction_count","rune_index","price","is_workshop","prompt_index"]:
 		if properties.has(key) and typeof(properties[key]) in [TYPE_INT,TYPE_FLOAT,TYPE_BOOL]:
 			safe[key] = properties[key]
 	if not formula.is_empty():
