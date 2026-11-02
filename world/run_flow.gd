@@ -249,7 +249,8 @@ func try_exit(position: Vector2) -> Dictionary:
 		return {"ok":false,"reason":"EDITOR_OPEN"}
 	if state not in ["cleared","workshop"]:
 		return {"ok":false,"reason":"DOOR_LOCKED"}
-	if position.distance_to(room.marker("exit")) > 72.0:
+	# Workshop is drawn as the test range only (no visible door), so leaving it is a menu action.
+	if mode != "workshop" and position.distance_to(room.marker("exit")) > 72.0:
 		return {"ok":false,"reason":"EXIT_TOO_FAR"}
 	if run.sequence_index >= config["rooms"].size()-1:
 		return {"ok":false,"reason":"SLICE_COMPLETE"}

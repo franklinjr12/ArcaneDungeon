@@ -1,0 +1,91 @@
+{
+ "id": "AD-UI-013",
+ "name": "ad_ui_reward_card",
+ "variant": "A",
+ "canvas": [
+  74,
+  110
+ ],
+ "sheet_png": "ad_ui_reward_card.png",
+ "sheet_png_size": [
+  222,
+  110
+ ],
+ "layout": "horizontal strip, 3 frames of 74x110, no extrude, no trim",
+ "palette": "arcane_palette_v02.gpl (67 entries, transparent index 66)",
+ "tags": [
+  {
+   "name": "states",
+   "from": 0,
+   "to": 2,
+   "frames": 3,
+   "direction": "forward",
+   "frame_names": [
+    "normal",
+    "hover",
+    "selected"
+   ]
+  }
+ ],
+ "frame_count": 3,
+ "per_frame_ms": [
+  100,
+  100,
+  100
+ ],
+ "slices": {
+  "reward_card_9slice": {
+   "x": 0,
+   "y": 0,
+   "w": 74,
+   "h": 110,
+   "center": {
+    "x": 5,
+    "y": 5,
+    "w": 64,
+    "h": 100
+   }
+  },
+  "rune_icon_slot": {
+   "x": 29,
+   "y": 12,
+   "w": 16,
+   "h": 16
+  },
+  "rune_name": {
+   "x": 7,
+   "y": 34,
+   "w": 60,
+   "h": 8
+  },
+  "behaviour_line": {
+   "x": 7,
+   "y": 48,
+   "w": 60,
+   "h": 48
+  },
+  "pivot": {
+   "x": 0,
+   "y": 0,
+   "w": 1,
+   "h": 1
+  }
+ },
+ "nine_slice": {
+  "corner_px": 5,
+  "stretch": "centre + edges; centre is a flat fill per state, so 74x110 is the design size and other sizes stay clean"
+ },
+ "text": {
+  "font": "arc_fnt_m5x7 (AD-029 atlas; caps, proportional advance = ink width + 1, space 3, line step 9)",
+  "rune_name": "centred in rune_name, 1 line, ui-gold-4 idx 5",
+  "behaviour_line": "word-wrapped, centred in behaviour_line (max 5 lines of 9 px), ui-text-3 idx 8",
+  "content": "ONE new-behaviour sentence per card (AD-017 supplies it), no title prefix"
+ },
+ "rune_icon": "AD-033 ad_ico_* 16x16 drawn at 1x in rune_icon_slot (icon brings its own plate)",
+ "state_cues": {
+  "normal": "dim frame, no studs",
+  "hover": "bright gold frame + 3-px corner studs; code lifts the card 4 px",
+  "selected": "brightest double frame (text-3 outer) + bright inner fill + studs"
+ },
+ "status": "CANDIDATE (FINAL needs Game Art chief APPROVE)"
+}

@@ -95,8 +95,7 @@ func _draw() -> void:
 		draw_rect(Rect2(px,82,119,35),Color("#132333"),true)
 		draw_rect(Rect2(px,82,119,35),Color("#97703b"),false,1)
 		var formula: Dictionary = flow.run.formulas[i]
-		var element: String = str(formula["root"]["essence_id"]).trim_prefix("essence.")
-		Art.icon(self,element,Vector2(px+2,83),Vector2(31,31))
+		draw_texture_rect(rune_icon_texture(str(formula["root"]["essence_id"])),Rect2(px+2,83,31,31),false)
 		var label := str(formula["display_name"])
 		if label.length()>11:
 			label = label.substr(0,11)
@@ -118,8 +117,11 @@ func _draw_combat_panel() -> void:
 	var live = _session()
 	if live == null:
 		return
+	_nine()
+	var sc: float = hud_scale()
+	var bar_px: Vector2 = Vector2(128.0,28.0)*sc
 	var slots_width: float = slot_count()*SLOT_SIZE+(slot_count()-1)*SLOT_GAP
-	var width: float = PANEL_PAD*2+slots_width+DASH_GAP+SLOT_SIZE
+	var width: float = maxf(PANEL_PAD*2+slots_width+DASH_GAP+SLOT_SIZE,bar_px.x+PANEL_PAD*2)
 	var origin := Vector2(floorf((size.x-width)/2.0),size.y-PANEL_HEIGHT-8.0)
 	draw_rect(Rect2(origin,Vector2(width,PANEL_HEIGHT)),Color("#0b131b",0.92))
 	draw_rect(Rect2(origin,Vector2(width,PANEL_HEIGHT)),Color("#b08042"),false,2)
@@ -129,77 +131,131 @@ func _draw_combat_panel() -> void:
 	var mana: float = live.sim.mana
 	var max_mana: float = float(live.sim.settings["combat"]["player_max_mana"])
 	var bar_width: float = (width-PANEL_PAD*2-10.0)/2.0
-	var bar_at := origin+Vector2(PANEL_PAD,10)
-	_bar(bar_at,bar_width,16,hp/maxf(1,max_hp),Color("#cb5552"),Color("#ee9862"))
-	_text(bar_at+Vector2(6,13),"HP %d/%d" % [ceili(hp),int(max_hp)],Color("#fff1d4"),11)
-	_bar(bar_at+Vector2(bar_width+10,0),bar_width,16,mana/maxf(1,max_mana),Color("#2b8cbf"),Color("#83d8ff"))
-	_text(bar_at+Vector2(bar_width+16,13),"MP %d/%d" % [int(mana),int(max_mana)],Color("#eff8ff"),11)
-	var row_y: float = origin.y+36.0
+	var bar_at := origin+Vector2(PANEL_PAD,8)
+	_draw_bar9("ad_ui_bar_hp",bar_at,bar_width,hp/maxf(1,max_hp))
+	_text(bar_at+Vector2(8,15),"HP %d/%d" % [ceili(hp),int(max_hp)],Color("#fff1d4"),11)
+	var mana_at := bar_at+Vector2(bar_width+10,0)
+	_draw_bar9("ad_ui_bar_mana",mana_at,bar_width,mana/maxf(1,max_mana))
+	_text(mana_at+Vector2(8,10),"MP %d/%d" % [int(mana),int(max_mana)],Color("#eff8ff"),10)
+	var bar_origin := Vector2(origin.x+floorf((width-bar_px.x)/2.0),origin.y+36.0)
+	var bar_tex: Texture2D = Art._texs[HUD_BAR]
+	draw_texture_rect_region(bar_tex,Rect2(bar_origin,bar_px),_frame(HUD_BAR,0))
+	var slot_px: float = 28.0*sc
+	var text_y: float = bar_origin.y+bar_px.y+12.0
 	for i in slot_count():
-		_draw_slot(Vector2(origin.x+PANEL_PAD+i*(SLOT_SIZE+SLOT_GAP),row_y),slot_view(i))
-	_draw_dash(Vector2(origin.x+PANEL_PAD+slots_width+DASH_GAP,row_y),dash_view())
-
-func _draw_slot(at: Vector2, view: Dictionary) -> void:
-	var box := Rect2(at,Vector2(SLOT_SIZE,SLOT_SIZE))
-	var state: String = view["state"]
-	var border := Color("#97703b")
-	if state == "no_mana":
-		border = Color("#cb5552")
-	elif state == "empty":
-		border = Color("#564226")
-	draw_rect(box,Color("#0b131b") if state == "empty" else Color("#132333"),true)
-	if state == "empty":
-		_text(at+Vector2(8,34),"EMPTY",Color("#6b6250"),11)
-	else:
-		var element: String = view["element"]
-		var icon_at := at+Vector2(13,11)
-		if not Art.ICONS.has(element):
-			element = "rune"
-		Art.icon(self,element,icon_at,Vector2(28,28))
-		if state == "no_mana":
-			draw_rect(Rect2(icon_at,Vector2(28,28)),Color("#2a0d10",0.45),true)
-		if state == "cooldown":
-			_sweep(box.get_center(),SLOT_SIZE/2.0-1.0,float(view["cooldown_fraction"]))
-			_text(at+Vector2(11,32),"%.1f" % (float(view["cooldown_left"])/TICKS_PER_SECOND),Color("#fff1d4"),12)
-		_text(at+Vector2(SLOT_SIZE/2.0-5.0,SLOT_SIZE-4),str(view["mana_cost"]),
-			Color("#ff8f8f") if state == "no_mana" else Color("#83d8ff"),11)
-	draw_rect(box,border,false,2 if state == "no_mana" else 1)
-	_keycap(at+Vector2(2,2),str(view["key_label"]))
-	if view["locked"]:
-		_lock_mark(at+Vector2(SLOT_SIZE-14,3))
-
-func _draw_dash(at: Vector2, view: Dictionary) -> void:
-	var box := Rect2(at,Vector2(SLOT_SIZE,SLOT_SIZE))
-	var ready: bool = view["ready"]
-	draw_rect(box,Color("#132333"),true)
-	Art.icon(self,"dodge",at+Vector2(13,11),Vector2(28,28))
-	if not ready:
-		_sweep(box.get_center(),SLOT_SIZE/2.0-1.0,float(view["cooldown_fraction"]))
-	_text(at+Vector2(SLOT_SIZE/2.0-15.0,SLOT_SIZE-4),"DASH" if ready else "%.1f" % (float(view["cooldown_left"])/TICKS_PER_SECOND),
+		var view := slot_view(i)
+		var at := bar_origin+Vector2(i*slot_px,0)
+		_draw_slot(at,view,sc)
+		draw_texture_rect_region(bar_tex,Rect2(bar_origin,bar_px),_frame(HUD_BAR,1+i))
+		if not view["empty"]:
+			var no_mana: bool = view["state"] == "no_mana"
+			_text(Vector2(at.x+slot_px/2.0-5.0,text_y),str(view["mana_cost"]),Color("#ff8f8f") if no_mana else Color("#83d8ff"),11)
+	var dash := dash_view()
+	draw_texture_rect_region(bar_tex,Rect2(bar_origin,bar_px),_frame(HUD_BAR,dash_frame(dash)))
+	var ready: bool = dash["ready"]
+	_text(bar_origin+Vector2(114.0*sc-6.0,bar_px.y+12.0),"DASH" if ready else "%.1f" % (float(dash["cooldown_left"])/TICKS_PER_SECOND),
 		Color("#8fe3c1") if ready else Color("#fff1d4"),11)
-	draw_rect(box,Color("#5edfc3") if ready else Color("#97703b"),false,1)
-	_keycap(at+Vector2(2,2),DASH_KEY)
 
-func _sweep(center: Vector2, radius: float, fraction: float) -> void:
-	# Dark wedge covering the remaining fraction, starting at 12 o'clock and shrinking clockwise as the cooldown ends.
-	var steps: int = maxi(2,ceili(48.0*fraction))
-	var points := PackedVector2Array([center])
-	for k in steps+1:
-		var angle: float = -PI/2.0+TAU*(1.0-fraction)+TAU*fraction*float(k)/float(steps)
-		points.append(center+Vector2(cos(angle),sin(angle))*radius*1.45)
-	var clipped := Geometry2D.intersect_polygons(points,PackedVector2Array([
-		center+Vector2(-radius,-radius),center+Vector2(radius,-radius),center+Vector2(radius,radius),center+Vector2(-radius,radius)]))
-	for poly in clipped:
-		draw_colored_polygon(poly,Color("#05080c",0.68))
+func _draw_slot(at: Vector2, view: Dictionary, sc: float) -> void:
+	var state: String = view["state"]
+	var slot_tex: Texture2D = Art._texs[HUD_SLOT]
+	var empty: bool = state == "empty"
+	if not empty:
+		var rune_id := "essence."+str(view["element"])
+		var icon_rect := Rect2(4,4,16,16) # 'icon' slice of ad_ui_spell_slot
+		draw_texture_rect(rune_icon_texture(rune_id),Rect2(at+icon_rect.position*sc,icon_rect.size*sc),false)
+	var frame := 0
+	if empty:
+		frame = 2
+	elif state == "no_mana":
+		frame = 3
+	elif state == "cooldown":
+		frame = cooldown_frame(float(view["cooldown_fraction"]))
+	draw_texture_rect_region(slot_tex,Rect2(at,Vector2(28,28)*sc),_frame(HUD_SLOT,frame))
+	if state == "cooldown":
+		_text(at+Vector2(14.0*sc-14.0,14.0*sc+4.0),"%.1f" % (float(view["cooldown_left"])/TICKS_PER_SECOND),Color("#fff1d4"),12)
 
-func _keycap(at: Vector2, label: String) -> void:
-	var text_width: float = ThemeDB.fallback_font.get_string_size(label,HORIZONTAL_ALIGNMENT_LEFT,-1,10).x
-	var cap := Rect2(at,Vector2(text_width+6,13))
-	draw_rect(cap,Color("#05080c",0.9),true)
-	draw_rect(cap,Color("#826436"),false,1)
-	_text(at+Vector2(3,10.5),label,Color("#fff1d4"),10)
+func _draw_bar9(stem: String,at: Vector2,width: float,fraction: float) -> void:
+	var sc: float = hud_scale()
+	var info: Dictionary = _nine()[stem]
+	var m: Dictionary = info["margins"]
+	var tex: Texture2D = Art._texs[stem]
+	var sb := StyleBoxTexture.new()
+	sb.texture = tex
+	sb.texture_margin_left = m["left"]
+	sb.texture_margin_top = m["top"]
+	sb.texture_margin_right = m["right"]
+	sb.texture_margin_bottom = m["bottom"]
+	var h: float = float(tex.get_height())
+	var w: float = width/sc
+	draw_set_transform(at,0.0,Vector2(sc,sc))
+	draw_style_box(sb,Rect2(0,0,w,h))
+	var fill: Dictionary = info["fill"]
+	var fill_w: float = w-float(m["left"])-float(m["right"])
+	var used: float = fill_w*clampf(fraction,0.0,1.0)
+	draw_rect(Rect2(float(fill["x"])+used,float(fill["y"]),fill_w-used,float(fill["h"])),Color(str(info["trough"]["rgb"])))
+	draw_set_transform(Vector2.ZERO,0.0,Vector2.ONE)
 
-func _lock_mark(at: Vector2) -> void:
-	draw_arc(at+Vector2(5,4),3.0,PI,TAU,10,Color("#e9d5a8"),1.5)
-	draw_rect(Rect2(at+Vector2(0,4),Vector2(10,7)),Color("#b08042"),true)
-	draw_rect(Rect2(at+Vector2(4,6),Vector2(2,3)),Color("#0b131b"),true)
+# --- AD-040 art lookups (P1 default visuals; independent of Art.use_art_export) ---
+const HUD_SLOT := "ad_ui_spell_slot"
+const HUD_BAR := "ad_ui_hud_slot_bar"
+const NINE := "res://art/export/ui/ad_ui_9slice_margins.json"
+const ATLAS := "res://art/export/ico/ad_ico_atlas_mvp.png"
+const ATLAS_INDEX := "res://art/export/ico/ad_ico_atlas_mvp_index.json"
+static var _atlas: Texture2D
+static var _icons: Dictionary = {}
+static var _nine_cache: Dictionary = {}
+
+static func hud_scale() -> float:
+	return float(Art.export_map().get("scale",2))
+
+static func _nine() -> Dictionary:
+	if _nine_cache.is_empty():
+		_nine_cache = JSON.parse_string(FileAccess.get_file_as_string(NINE))
+		for stem in ["ad_ui_bar_hp","ad_ui_bar_mana"]:
+			Art._export_json(stem)
+		Art._export_json(HUD_SLOT)
+		Art._export_json(HUD_BAR)
+	return _nine_cache
+
+static func _frame(stem: String, index: int) -> Rect2:
+	var f: Dictionary = Art._export_json(stem)["frames"][index]["frame"]
+	return Rect2(f["x"],f["y"],f["w"],f["h"])
+
+static func cooldown_frame(fraction: float) -> int:
+	return 4+clampi(floori((1.0-fraction)*8.0),0,7)
+
+static func dash_frame(view: Dictionary) -> int:
+	return 5 if view["ready"] else 6
+
+static func _load_atlas() -> void:
+	if _atlas == null:
+		_atlas = load(ATLAS)
+		_icons = JSON.parse_string(FileAccess.get_file_as_string(ATLAS_INDEX))["icons"]
+
+static func _icon_cell(key: String) -> Rect2:
+	_load_atlas()
+	if not _icons.has(key):
+		return Rect2()
+	var c: Dictionary = _icons[key]
+	return Rect2(c["x"],c["y"],c["w"],c["h"])
+
+static func rune_icon_rect(rune_id: String) -> Rect2:
+	var map: Dictionary = Art.export_map()["rune_icons"]
+	if not map.has(rune_id):
+		rune_id = "essence.neutral"
+	return _icon_cell(str(map[rune_id]))
+
+static func rune_icon_texture(rune_id: String) -> AtlasTexture:
+	var t := AtlasTexture.new()
+	t.region = rune_icon_rect(rune_id)
+	t.atlas = _atlas
+	return t
+
+static func ui_icon_texture(key: String) -> AtlasTexture:
+	var t := AtlasTexture.new()
+	_load_atlas()
+	t.atlas = _atlas
+	var map: Dictionary = Art.export_map()["ui_icons"]
+	t.region = _icon_cell(str(map[key])) if map.has(key) else Rect2()
+	return t

@@ -4,6 +4,8 @@
 P0 (default rows): AD-024 AD-025 AD-029.
 P1 (AD-039): python3 scripts/import_art_exports.py \\
     --rows AD-024 AD-025 AD-029 AD-032 AD-033 AD-034 AD-045 AD-035 AD-036 --supersede AD-045
+P1 UI (AD-040): same plus "AD-037 AD-038" before --supersede (HUD parts, reward card). A json with no
+card and no png (ad_ui_9slice_margins) is a side file; a card json without 'frames' uses <stem>_aseprite.json.
 AD-045 status_* / extinguish_puff replace the AD-034 ones (--supersede). vfx/ico stems have no
 pivot slice requirement (pivot = canvas centre); the AD-036 glyph atlas is kind 'glyph_atlas'.
 """
@@ -44,8 +46,10 @@ def load_cards(rowdir):
     return cards
 
 
-def is_side_file(stem, cards):
-    return stem not in cards and any(stem.startswith(n + "_") for n in cards if n)
+def is_side_file(stem, cards, rowdir):
+    if stem in cards:
+        return False
+    return any(stem.startswith(n + "_") for n in cards if n) or not (rowdir / "export" / (stem + ".png")).is_file()
 
 
 def build_entry(stem, row, rowdir, cards, errors):
@@ -67,11 +71,17 @@ def build_entry(stem, row, rowdir, cards, errors):
                 "png": f"res://art/export/{cat}/{stem}.png",
                 "json": f"res://art/export/{cat}/{stem}.json",
                 "canvas": data["canvas"], "tags": {}, "slices": {}, "pivot": None}
+    aseprite = jpath.with_name(stem + "_aseprite.json")
+    if "frames" not in data and aseprite.is_file():
+        data = json.loads(aseprite.read_text())
+        jname = aseprite.name
+    else:
+        jname = jpath.name
     frames = data.get("frames", [])
     meta = data.get("meta", {})
     entry = {"id": card["id"], "row": row, "category": cat,
              "png": f"res://art/export/{cat}/{stem}.png" if frames else None,
-             "json": f"res://art/export/{cat}/{stem}.json",
+             "json": f"res://art/export/{cat}/{jname}",
              "canvas": None, "tags": {}, "slices": {}, "pivot": None}
     if not frames:
         entry["kind"] = "swap_table"
@@ -118,7 +128,7 @@ def main():
             continue
         cards = load_cards(rowdir)
         for j in sorted((rowdir / "export").glob("*.json")):
-            if is_side_file(j.stem, cards):
+            if is_side_file(j.stem, cards, rowdir):
                 side = a.dest / category(j.stem) / j.name
                 copies.append((j, side))
                 continue
