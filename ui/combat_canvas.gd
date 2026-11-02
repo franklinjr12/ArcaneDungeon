@@ -55,6 +55,19 @@ func _gui_input(event: InputEvent) -> void:
 		world_click.emit(world_from_local(event.position),event.button_index)
 		accept_event()
 
+## AD-089: the mage aim line is a short tick; the countdown label is debug-only.
+const AIM_TICK_LEN := 24.0
+
+static func countdown_visible(debug: bool) -> bool:
+	return debug
+
+static func aim_tick_segment(at: Vector2, hover: Vector2) -> Array:
+	var dir := hover-at
+	if dir.length() <= 0.001:
+		return []
+	var d := dir.normalized()
+	return [at+d*14.0,at+d*(14.0+AIM_TICK_LEN)]
+
 func _draw() -> void:
 	if slot_hud != null:
 		slot_hud.queue_redraw()
@@ -76,7 +89,9 @@ func _draw() -> void:
 		_anim_memo = {"actors":{}}
 	var mage = session.sim.actor
 	var at: Vector2 = mage.position-offset
-	draw_line(at,hover-offset,Color("#6adbea",0.20),1)
+	var tick_seg := aim_tick_segment(at,hover-offset)
+	if not tick_seg.is_empty():
+		draw_line(tick_seg[0],tick_seg[1],Color("#6adbea",0.20),1)
 	var actor_casting: bool = session.sim.active.size()>0 and tick%14<5
 	var player_velocity: Vector2 = mage.position-last_player_at
 	last_player_at = mage.position
@@ -113,8 +128,8 @@ func _draw() -> void:
 		if enemy.state == "windup" and enemy.intent != null and target.alive():
 			var intent: Dictionary = enemy.intent.snapshot()
 			var time_left: int = maxi(0,int(enemy.tuning["telegraph_ticks"])-enemy.state_tick)
-			var f: float = 1.0-float(time_left)/maxf(1.0,float(enemy.tuning["telegraph_ticks"]))
-			_label(enemy_at+Vector2(-26,-54),"! %d" % time_left,Color("#ffe4a0"))
+			if countdown_visible(show_debug):
+				_label(enemy_at+Vector2(-26,-54),"! %d" % time_left,Color("#ffe4a0"))
 		if show_debug and target.alive():
 			draw_arc(enemy_at,target.radius,0.0,TAU,32,HITBOX_COLOR,1.0)
 			_label(enemy_at+Vector2(-26,53),"#%d %s" % [target.id,enemy.state],Color("#b9e8fc"))

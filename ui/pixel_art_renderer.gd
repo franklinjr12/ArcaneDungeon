@@ -633,12 +633,21 @@ static func collect_fx(session, tick: int, memo: Dictionary) -> Array:
 	_collect_feedback(session, tick, memo, out)
 	return out
 
+## AD-089: ranged telegraphs are a short aim line, never longer than this (px).
+const RANGED_TELEGRAPH_MAX := 96.0
+
+static func ranged_telegraph_length(intent_range: float) -> float:
+	if intent_range <= 0.0:
+		return RANGED_TELEGRAPH_MAX
+	return minf(intent_range, RANGED_TELEGRAPH_MAX)
+
 ## AD-035 feedback, telegraphs and hostile shots (presentation only).
 static func _collect_feedback(session, tick: int, memo: Dictionary, out: Array) -> void:
 	var sim = session.sim
 	var mage: Vector2 = sim.actor.position
 	var shots: Array = memo["shots"]
 	var pending: Array = []
+	var hostile: Array = []
 	# Hostile shots; a vanished id leaves an impact at its last position.
 	var current: Dictionary = {}
 	for s in session.enemy_shots:
@@ -646,7 +655,7 @@ static func _collect_feedback(session, tick: int, memo: Dictionary, out: Array) 
 		var boss := _is_boss_id(session, int(s["source_id"]))
 		current[sid] = true
 		memo["eshots"][sid] = {"at": s["position"], "boss": boss}
-		out.append({"event": "boss.bullet" if boss else "enemy.bolt", "at": s["position"], "age": tick,
+		hostile.append({"event": "boss.bullet" if boss else "enemy.bolt", "at": s["position"], "age": tick,
 			"rotation": Vector2(s["direction"]).angle(), "length": 0.0, "slot": 0})
 	for sid in memo["eshots"].keys():
 		if not current.has(sid):
@@ -703,8 +712,12 @@ static func _collect_feedback(session, tick: int, memo: Dictionary, out: Array) 
 			item["uniform"] = 2.0 * float(intent["range"])
 		else:
 			item["event"] = "telegraph.line"
-			item["length"] = to_mage.length()
+			item["length"] = ranged_telegraph_length(float(intent.get("range", 0.0)))
+			var dir = intent.get("direction", Vector2.ZERO)
+			if dir is Vector2 and dir.length() > 0.001:
+				item["rotation"] = dir.angle()
 		out.append(item)
+	out.append_array(hostile)
 	for p in pending:
 		_shot(shots, p[0], p[1], tick)
 		var shot: Dictionary = shots[shots.size() - 1]

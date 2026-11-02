@@ -4,6 +4,7 @@ const Art = preload("res://ui/pixel_art_renderer.gd")
 const RM = preload("res://ui/reduce_motion.gd")
 const Flow = preload("res://world/run_flow.gd")
 const Driver = preload("res://tests/m3_run_driver.gd")
+const Canvas = preload("res://ui/combat_canvas.gd")
 const EVENTS := ["telegraph.circle", "telegraph.line", "telegraph.dash_lane"]
 
 func run(t) -> void:
@@ -59,3 +60,58 @@ func run(t) -> void:
 	t.check(not found.is_empty(), "live session produced a telegraph item")
 	if not found.is_empty():
 		t.check(int(found.get("window", 0)) > 0 and int(found["age"]) <= int(found["window"]), "telegraph item carries window >= age")
+
+	_ad089(t)
+
+func _ad089(t) -> void:
+	t.check(Art.ranged_telegraph_length(560.0) == 96.0, "AD-089 long range capped at 96")
+	t.check(Art.ranged_telegraph_length(60.0) == 60.0, "AD-089 short range kept")
+	t.check(Art.ranged_telegraph_length(0.0) == 96.0, "AD-089 no range -> cap")
+	var capped := true
+	for r in [1.0, 50.0, 96.0, 97.0, 300.0, 5000.0]:
+		capped = capped and Art.ranged_telegraph_length(r) <= 96.0
+	t.check(capped, "AD-089 telegraph length never above 96")
+	t.check(not Canvas.countdown_visible(false) and Canvas.countdown_visible(true), "AD-089 countdown only in debug")
+	var seg: Array = Canvas.aim_tick_segment(Vector2(10, 10), Vector2(300, 90))
+	t.check(seg.size() == 2 and is_equal_approx(seg[0].distance_to(seg[1]), 24.0), "AD-089 aim tick is 24 px")
+	t.check(Canvas.aim_tick_segment(Vector2(5, 5), Vector2(5, 5)).is_empty(), "AD-089 degenerate aim tick empty")
+	var flow = Flow.new(20261022)
+	var seen_line := false
+	var order_ok := true
+	var both := 0
+	for room_index in 4:
+		if room_index == 3:
+			flow.run.sequence_index = 3
+			flow._enter_current()
+		var memo: Dictionary = {}
+		for i in 4600:
+			if flow.state != "fighting":
+				break
+			Driver.fight(flow, 1)
+			var last_tel := -1
+			var first_hostile := 1 << 30
+			var list: Array = Art.collect_fx(flow.session, flow.session.sim.clock.tick, memo)
+			for idx in list.size():
+				var ev := String(list[idx]["event"])
+				if ev.begins_with("telegraph."):
+					last_tel = idx
+					if ev == "telegraph.line":
+						seen_line = true
+						var range_cap := 96.0
+						for e in flow.session.enemies:
+							if e.kind == "fallen_adept":
+								range_cap = maxf(range_cap, 0.0)
+								t.check(float(list[idx]["length"]) <= minf(96.0, float(e.tuning["attack_range"])) + 0.001, "AD-089 adept telegraph length capped")
+								break
+				elif ev == "enemy.bolt" or ev == "boss.bullet":
+					first_hostile = mini(first_hostile, idx)
+			if last_tel >= 0 and first_hostile < (1 << 30):
+				both += 1
+				order_ok = order_ok and last_tel < first_hostile
+		if room_index < 3 and flow.state == "fighting":
+			break
+		if room_index < 3:
+			flow.choose_reward(0)
+			Driver.reach_exit(flow)
+	t.check(seen_line, "AD-089 live session produced a fallen_adept telegraph.line")
+	t.check(order_ok, "AD-089 telegraphs drawn before hostile bolts (%d mixed frames)" % both)
