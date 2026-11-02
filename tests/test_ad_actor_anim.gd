@@ -1,6 +1,9 @@
 extends RefCounted
 ## AD-065: actor animation manifest matches its Aseprite jsons and the Art 02 card frame counts.
+const Art = preload("res://ui/pixel_art_renderer.gd")
 const MANIFEST := "res://art/export/actors/actors_manifest.json"
+const COMBAT := "res://combat/combat_tuning_v1.json"
+const SLICE := "res://world/data/vertical_slice_v1.json"
 const ENEMY := {"idle_side": 4, "move_side": 4, "telegraph_side": 3, "attack_side": 4, "hit_side": 2, "death_side": 5, "spawn_side": 4}
 const WARDEN := {"idle_side": 4, "move_side": 4, "telegraph_burst_side": 4, "burst_side": 6, "telegraph_dash_side": 3,
 		"dash_side": 4, "phase_side": 6, "hit_side": 2, "death_side": 10}
@@ -39,7 +42,52 @@ func _check_json(t, path: String, tags: Dictionary, label: String) -> void:
 			got.append(int(v))
 		t.equal(got, ms, "AD-065 ms: %s/%s" % [label, n])
 
+func _check_window(t, kind: String, tag: String, window: int, label: String) -> void:
+	var n := Art.actor_tag_frames(kind, tag)
+	t.check(n > 0, "AD-065 telegraph tag exists: " + label)
+	t.equal(Art.stretched_index(0, window, n), 0, "AD-065 stretch starts at frame 0: " + label)
+	t.equal(Art.stretched_index(window - 1, window, n), n - 1, "AD-065 stretch ends on last frame at window-1: " + label)
+	var shown := {}
+	var last := 0
+	var monotonic := true
+	for k in window:
+		var i := Art.stretched_index(k, window, n)
+		shown[i] = true
+		monotonic = monotonic and i >= last
+		last = i
+	t.equal(shown.size(), n, "AD-065 every telegraph frame shown at least once: " + label)
+	t.check(monotonic, "AD-065 telegraph frames never go backwards: " + label)
+
+func _check_telegraphs(t) -> void:
+	var tuning = JSON.parse_string(FileAccess.get_file_as_string(COMBAT))
+	for kind in ["bone_thrall", "fallen_adept", "grave_hound"]:
+		var window := int(tuning["enemies"][kind]["telegraph_ticks"])
+		t.equal(Art.telegraph_anim_ticks(kind, window), window, "AD-065 telegraph covers windup: " + kind)
+		_check_window(t, kind, "telegraph_side", window, kind)
+	var boss = JSON.parse_string(FileAccess.get_file_as_string(SLICE))["boss"]
+	for window in [int(boss["windup_ticks"]), int(boss["second_phase_windup_ticks"])]:
+		t.equal(Art.telegraph_anim_ticks("undead_warden", window), window, "AD-065 warden telegraph covers windup %d" % window)
+		for tag in ["telegraph_burst_side", "telegraph_dash_side"]:
+			_check_window(t, "undead_warden", tag, window, "undead_warden/%s/%d" % [tag, window])
+
+func _check_frames(t) -> void:
+	var total := Art.actor_tag_total_ms("bone_thrall", "death_side")
+	var last := Art.actor_tag_frames("bone_thrall", "death_side") - 1
+	var after := Art.actor_tag_frame("bone_thrall", "death_side", total * 60 / 1000 + 30, false)
+	t.equal(int(after["index"]), last, "AD-065 non-looping tag holds the last frame")
+	t.equal(int(Art.actor_tag_frame("bone_thrall", "death_side", 0, false)["index"]), 0, "AD-065 tag starts on frame 0")
+	var looped := Art.actor_tag_frame("bone_thrall", "idle_side", 36, true)
+	t.equal(int(looped["index"]), 0, "AD-065 looping tag wraps (600 ms of 4x150)")
+	t.check(looped["region"] is Rect2 and looped["hurtbox"] is Rect2 and looped["offset"] is Vector2, "AD-065 frame dictionary shape")
+	var side := Art.mage_facing(Vector2(-1, 0))
+	t.check(side["dir"] == "side" and side["face_left"] == true, "AD-065 mage aim left = side + face_left")
+	t.check(Art.mage_facing(Vector2(1, 0)) == {"dir": "side", "face_left": false}, "AD-065 mage aim right = side")
+	t.check(Art.mage_facing(Vector2(0, -1)) == {"dir": "up", "face_left": false}, "AD-065 mage aim up")
+	t.check(Art.mage_facing(Vector2(0, 1)) == {"dir": "down", "face_left": false}, "AD-065 mage aim down")
+
 func run(t) -> void:
+	_check_telegraphs(t)
+	_check_frames(t)
 	var m = JSON.parse_string(FileAccess.get_file_as_string(MANIFEST))
 	t.check(m is Dictionary, "AD-065 actor manifest parses")
 	if not m is Dictionary:
