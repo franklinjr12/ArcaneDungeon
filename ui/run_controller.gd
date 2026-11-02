@@ -61,6 +61,7 @@ func _ready() -> void:
 		_settings = save.settings
 		if _settings.telemetry_opt_in:
 			flow.experiment.configure(true)
+			flow.experiment.begin_session()
 		_settings.apply_audio()
 	if save != null:
 		guide.load_seen(save.profile["stats"].get("onboarding_seen", []))
@@ -105,11 +106,13 @@ func _build() -> void:
 	_button(help_actions,"Dismiss tips",func(): _guide(false))
 	_button(help_actions,"Show tips",func(): _guide(true))
 	_button(sidebar,"Opt in / out of local telemetry",func():
+		flow.experiment.end_session()
 		flow.experiment.configure(not flow.experiment.enabled)
 		var save = get_node_or_null("/root/SaveService")
 		if save != null:
 			save.settings.telemetry_opt_in = flow.experiment.enabled
 			save.save_settings()
+		flow.experiment.begin_session()
 		current_notice = "Local telemetry "+("ENABLED (export only)" if flow.experiment.enabled else "OFF / cleared")
 		_update_labels())
 	_button(sidebar,"Export opt-in JSON + CSV",func(): _export_metrics())
@@ -197,6 +200,11 @@ func close_pause() -> void:
 	pause_menu.visible = false
 	_set_clocks_paused(false)
 	Input.mouse_mode = _prev_mouse_mode
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_PREDELETE:
+		if flow != null:
+			flow.experiment.end_session()
 
 func _set_clocks_paused(on: bool) -> void:
 	flow.session.sim.clock.set_paused(on)
@@ -572,6 +580,7 @@ func _new_seed() -> void:
 	_redraw_panel()
 
 func _to_title() -> void:
+	flow.experiment.end_session()
 	close_pause()
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
 
