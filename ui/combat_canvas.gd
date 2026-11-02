@@ -123,7 +123,7 @@ func _draw() -> void:
 		_fx_memo = {}
 	for fx in Art.collect_fx(session,tick,_fx_memo):
 		var fp := ReduceMotion.fx_draw_params(reduced,fx["event"],fx["age"])
-		Art.draw_fx(self,fx["event"],fx["at"]-offset,fp["age"],fx["rotation"],fx["length"],fp["modulate"],fx["slot"],fx.get("uniform",0.0))
+		Art.draw_fx(self,fx["event"],fx["at"]-offset,fp["age"],fx["rotation"],fx["length"],fp["modulate"],fx["slot"],fx.get("uniform",0.0),int(fx.get("window",0)))
 	for visual in session.sim.visuals:
 		if visual["kind"] == "arc":
 			_label((visual["from"]+visual["to"])/2.0-offset+Vector2(-12,-15),"ARC!",Color("#ffeda4"))

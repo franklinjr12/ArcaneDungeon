@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "note": "AD-088 [PROPOSED FOR PROTOTYPE] telegraph presentation; game-design targets fill 0.25-0.35, outline 0.70-0.85, warm danger tint (no pure red), brighten in last 25% of windup. Presentation only.",
+  "telegraph_style": {
+    "telegraph.circle": {"fill_alpha": 0.27, "outline_alpha": 0.74, "tint": "#f0a060", "pulse": {"start": 0.75, "fill_alpha_peak": 0.35, "outline_alpha_peak": 0.85}},
+    "telegraph.line": {"fill_alpha": 0.28, "outline_alpha": 0.75, "tint": "#f0a060", "pulse": {"start": 0.75, "fill_alpha_peak": 0.35, "outline_alpha_peak": 0.85}},
+    "telegraph.dash_lane": {"fill_alpha": 0.28, "outline_alpha": 0.75, "tint": "#e8925a", "pulse": {"start": 0.75, "fill_alpha_peak": 0.35, "outline_alpha_peak": 0.85}}
+  }
+}

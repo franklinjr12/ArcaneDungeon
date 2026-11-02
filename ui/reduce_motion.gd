@@ -32,6 +32,7 @@ static func overlay_alpha(reduced: bool, hit_flash: int) -> float:
 		return 0.0
 	return 0.055 if hit_flash > 0 and hit_flash % 3 == 0 else 0.0
 
+## AD-088: telegraphs are never suppressed/dimmed by reduce-flash; softness and swell come from world/data/presentation_v1.json.
 static func fx_draw_params(reduced: bool, event: String, age: int) -> Dictionary:
 	if not reduced or event.begins_with("telegraph.") or not FLASH_EVENTS.has(event):
 		return {"age": age, "modulate": Color.WHITE}
