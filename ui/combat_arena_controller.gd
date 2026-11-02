@@ -2,6 +2,7 @@ extends Control
 const VisualTheme = preload("res://ui/pixel_theme.gd")
 ## Combat arena scene: input adapter and readable debug/HUD, gameplay lives in CombatSession.
 const Session = preload("res://combat/combat_session.gd")
+const ReduceMotion = preload("res://ui/reduce_motion.gd")
 const Canvas = preload("res://ui/combat_canvas.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
 const InputActions = preload("res://ui/input_actions.gd")
@@ -163,8 +164,9 @@ func _physics_process(_dt: float) -> void:
 	if refresh_counter % 5 == 0:
 		_refresh()
 	if overlay != null:
-		overlay.visible = session.player.hit_flash > 0 and not session.reduce_flashes and session.player.hit_flash % 3 == 0
-		overlay.color = Color(0.95,0.88,0.8,0.055)
+		var alpha := ReduceMotion.overlay_alpha(ReduceMotion.flashes_reduced(null,session),session.player.hit_flash)
+		overlay.visible = alpha > 0.0
+		overlay.color = Color(0.95,0.88,0.8,alpha)
 
 func _refresh() -> void:
 	if session == null or hud == null:

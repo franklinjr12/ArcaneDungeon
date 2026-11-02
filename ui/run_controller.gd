@@ -1,4 +1,5 @@
 extends Control
+const ReduceMotion = preload("res://ui/reduce_motion.gd")
 const VisualTheme = preload("res://ui/pixel_theme.gd")
 ## M3 playable vertical slice. This is only input/UI; all rules live in RunFlow.
 const Flow = preload("res://world/run_flow.gd")
@@ -136,6 +137,7 @@ func _build() -> void:
 	help.add_theme_font_size_override("font_size",11)
 	sidebar.add_child(help)
 	arena_canvas = ArenaCanvas.new()
+	arena_canvas.settings = _settings
 	arena_canvas.position = Vector2(325,35)
 	arena_canvas.size = Vector2(916,650)
 	arena_canvas.session = flow.session
@@ -594,7 +596,7 @@ func _exit() -> void:
 	_redraw_panel()
 
 func _flash_transition() -> void:
-	if _settings != null and _settings.reduce_flashes:
+	if ReduceMotion.flashes_reduced(_settings, null):
 		return
 	transition_veil.modulate.a = 0.85
 	var tween := create_tween()

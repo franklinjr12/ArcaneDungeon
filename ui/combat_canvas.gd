@@ -2,6 +2,7 @@ extends Control
 ## Render-only reference-guided sprites. M2 and M3 collision/state remain authoritative.
 signal world_click(at: Vector2, button: int)
 const Art = preload("res://ui/pixel_art_renderer.gd")
+const ReduceMotion = preload("res://ui/reduce_motion.gd")
 const DamageNumbers = preload("res://ui/damage_numbers.gd")
 var _damage_numbers = DamageNumbers.new()
 var _damage_session = null
@@ -11,6 +12,7 @@ var _anim_memo: Dictionary = {}
 var _anim_session = null
 const SlotHUD = preload("res://ui/pixel_hud.gd")
 var session
+var settings = null
 var hover := Vector2(440,440)
 var show_debug := false
 ## AD-065 debug hitbox overlay colour (sim radii, not art).
@@ -37,7 +39,8 @@ func camera_offset() -> Vector2:
 	var camera: Vector2 = session.sim.actor.position
 	return Vector2(
 		clampf(camera.x-size.x/2.0,arena.position.x,maxf(arena.position.x,arena.end.x-size.x)),
-		clampf(camera.y-size.y/2.0,arena.position.y,maxf(arena.position.y,arena.end.y-size.y)))
+		clampf(camera.y-size.y/2.0,arena.position.y,maxf(arena.position.y,arena.end.y-size.y))
+	)+ReduceMotion.shake_offset(settings,session.player.hit_flash,session.sim.clock.tick)
 
 func world_from_local(point: Vector2) -> Vector2:
 	return point+camera_offset()
@@ -78,12 +81,14 @@ func _draw() -> void:
 	var player_velocity: Vector2 = mage.position-last_player_at
 	last_player_at = mage.position
 	var mage_motion: Vector2 = session.player.dash_heading*16.0 if session.player.dash_left>0 else player_velocity
-	var mage_hurt: bool = session.player.hit_flash>0 and not session.reduce_flashes
+	var reduced := ReduceMotion.flashes_reduced(settings,session)
+	var mage_hurt: bool = session.player.hit_flash>0 and not reduced
+	var mage_tint := ReduceMotion.hurt_tint(reduced,session.player.hit_flash)
 	var mage_anim := _mage_anim(mage,tick,player_velocity,mage_hurt)
 	if session.player.invulnerable() and Art.iframe_outline_on(tick):
 		for step in [Vector2.LEFT,Vector2.RIGHT,Vector2.UP,Vector2.DOWN]:
 			Art.entity(self,"mage",at+step*2.0,tick,mage_motion,actor_casting,mage_hurt,not mage.alive(),Art.IFRAME_OUTLINE,mage_anim)
-	Art.entity(self,"mage",at,tick,mage_motion,actor_casting,mage_hurt,not mage.alive(),Color.WHITE,mage_anim)
+	Art.entity(self,"mage",at,tick,mage_motion,actor_casting,mage_hurt,not mage.alive(),mage_tint,mage_anim)
 	_health_bar(at,25,mage.health.current/mage.health.maximum,Color("#da686e"))
 	if show_debug:
 		_label(at+Vector2(-17,-45),"MAGE",Color("#f8e7ba"))
@@ -117,7 +122,8 @@ func _draw() -> void:
 		_fx_session = session
 		_fx_memo = {}
 	for fx in Art.collect_fx(session,tick,_fx_memo):
-		Art.draw_fx(self,fx["event"],fx["at"]-offset,fx["age"],fx["rotation"],fx["length"],Color.WHITE,fx["slot"],fx.get("uniform",0.0))
+		var fp := ReduceMotion.fx_draw_params(reduced,fx["event"],fx["age"])
+		Art.draw_fx(self,fx["event"],fx["at"]-offset,fp["age"],fx["rotation"],fx["length"],fp["modulate"],fx["slot"],fx.get("uniform",0.0))
 	for visual in session.sim.visuals:
 		if visual["kind"] == "arc":
 			_label((visual["from"]+visual["to"])/2.0-offset+Vector2(-12,-15),"ARC!",Color("#ffeda4"))
