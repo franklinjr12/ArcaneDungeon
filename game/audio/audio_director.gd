@@ -1,8 +1,15 @@
 extends Node
 ## AD-020: AudioDirector. Cue table + voice limits; silent stubs when streams are missing.
+## AD-082: telegraph cues duck Ambience + non-telegraph SFX (SFXBed sub-bus) by DUCK_DB via
+## AudioEffectAmplify, never touching bus volume_db (owned by user settings).
 ## See GDD §12 (audio) and Tech Outline §3/§5. Audio never affects the simulation.
 const ErrorLog = preload("res://game/core/error_log.gd")
 const CUES_FILE := "res://game/audio/audio_cues_v1.json"
+
+const DUCK_DB := -6.0
+const DUCK_BUSES := ["Ambience", "SFXBed"]
+const BED_BUS := "SFXBed"
+const DUCK_MIN_SEC := 0.25
 
 signal cue_played(cue_id: String, pos, played: bool)
 
@@ -11,6 +18,7 @@ var voices: Array = []
 var _warned: Dictionary = {}
 var _overrides: Dictionary = {}
 var _serial := 0
+var _duck_left := 0.0
 
 func _init() -> void:
 	var f := FileAccess.open(CUES_FILE, FileAccess.READ)
@@ -79,7 +87,7 @@ func _play(cue_id: String, pos) -> bool:
 	if is_inside_tree() and DisplayServer.get_name() != "headless":
 		var p: Node = AudioStreamPlayer2D.new() if pos is Vector2 else AudioStreamPlayer.new()
 		p.stream = stream
-		p.bus = str(cue.get("bus", "SFX"))
+		p.bus = route_bus(cue)
 		if pos is Vector2:
 			p.position = pos
 		p.finished.connect(release_voice.bind(_serial))
@@ -87,7 +95,51 @@ func _play(cue_id: String, pos) -> bool:
 		p.play()
 		voice["player"] = p
 	voices.append(voice)
+	if is_telegraph(cue):
+		duck_for(maxf(stream.get_length(), DUCK_MIN_SEC))
 	return true
+
+func is_telegraph(cue: Dictionary) -> bool:
+	return int(cue.get("priority", 1)) >= int(table.get("unstealable_priority", 3))
+
+## Non-telegraph SFX go through the SFXBed sub-bus (sends to SFX) so they can be ducked.
+func route_bus(cue: Dictionary) -> String:
+	var bus := str(cue.get("bus", "SFX"))
+	if bus == "SFX" and not is_telegraph(cue) and AudioServer.get_bus_index(BED_BUS) >= 0:
+		return BED_BUS
+	return bus
+
+func duck_for(sec: float) -> void:
+	_duck_left = maxf(_duck_left, sec)
+	_apply_duck(DUCK_DB)
+
+func is_ducking() -> bool:
+	return _duck_left > 0.0
+
+func _process(delta: float) -> void:
+	if _duck_left <= 0.0:
+		return
+	_duck_left -= delta
+	if _duck_left <= 0.0:
+		_duck_left = 0.0
+		_apply_duck(0.0)
+
+func _amp(bus: String) -> AudioEffectAmplify:
+	var idx := AudioServer.get_bus_index(bus)
+	if idx < 0 or AudioServer.get_bus_effect_count(idx) <= 0:
+		return null
+	return AudioServer.get_bus_effect(idx, 0) as AudioEffectAmplify
+
+func _apply_duck(db: float) -> void:
+	for bus in DUCK_BUSES:
+		var a := _amp(bus)
+		if a != null:
+			a.volume_db = db
+
+## Probe helper: current duck amount (dB) on a bus; 0.0 when it has no Amplify.
+func duck_db(bus: String) -> float:
+	var a := _amp(bus)
+	return a.volume_db if a != null else 0.0
 
 ## Steal the oldest lowest-priority stealable voice from candidates.
 func _steal(candidates: Array, prio: int, unstealable: int) -> bool:
