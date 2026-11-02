@@ -1,0 +1,37 @@
+# AD-090 UI test matrix (baseline)
+
+Baseline screenshots of every UI state at every target resolution, captured **before** the U-series UI fixes so later rows can be compared the same way.
+Captured 2026-11-02 on hermes-vm (xvfb-run, software rendering).
+
+## Run
+
+```
+bash tools/ui_matrix.sh [--godot PATH] [--out DIR] [--states "title combat"] [--sizes "1280x720 1920x1080"]
+```
+
+Full run = 104 shots, about 10 min. Each shot uses a fresh `XDG_DATA_HOME`, `timeout 60`, `xvfb-run -s "-screen 0 WxHx24"` and `godot --resolution WxH` (`window_set_size` does not resize under Xvfb). Output: `<WxH>/<state>.png` plus `sheets/<state>.png` contact sheets (ImageMagick montage). The script prints the actual PNG size of each shot and exits non-zero only if a shot is missing.
+
+## States and env vars (debug builds only)
+
+States: `title settings combat reward workshop_editor merchant pause summary`.
+`AD_UI_SHOT_STATE`, `AD_UI_SHOT_OUT` (absolute PNG path; the game saves and quits), `AD_UI_SHOT_DELAY_MS` (default 800), `AD_UI_SHOT_FULLSCREEN=1`.
+
+## Matrix
+
+16:9 1280x720 (base), 1366x768, 1600x900, 1920x1080, 2560x1440, 3840x2160; 16:10 1280x800 (Steam Deck), 1920x1200; 21:9 2560x1080, 3440x1440; 4:3 1024x768; plus `fullscreen_1280x720_on_1920x1080/` and `resize_1280x720_to_1920x1080/`.
+
+## Reading the baseline (important)
+
+The shot is the game viewport image, not the window. The project keeps the 16:9 base aspect, so the identify sizes are:
+
+- 16:9 sizes match the window exactly (1366x768 gives 1365x768, a rounding quirk).
+- Non-16:9 windows produce a letterboxed 16:9 viewport: 1280x800 -> 1280x720, 1920x1200 -> 1920x1080, 2560x1080 -> 1920x1080, 3440x1440 -> 2560x1440, 1024x768 -> 1024x576. The black bars are not in the PNG.
+- **Fullscreen** (the script prints a NOTE, not a WARN, because no window manager exists under Xvfb): with `AD_UI_SHOT_FULLSCREEN=1` on a 1920x1080 screen the saved image is still 1280x720, so the viewport was not enlarged; treat this set as showing the base-size layout (the fullscreen toggle did not change the rendered viewport under Xvfb).
+- **Live resize**: `xdotool windowsize 1920 1080` after start **did take effect**; all `resize_*` PNGs are 1920x1080. They are taken after a 3000 ms delay.
+
+All 8 sheets were inspected: real content (HUD, workshop, etc.), no black frames. No hook problems found.
+
+## Bounds test
+
+`tests/test_ad_ui_bounds.gd` checks at each matrix size that visible Controls are inside the viewport and interactive Controls do not overlap. It runs in `REPORT_ONLY` mode until U2 (failures are printed, not asserted). Look for lines starting `AD-090 UI-BOUNDS REPORT`; each lists one issue, and the final line gives the total. Run: `godot --headless --path . --script res://tests/run_tests.gd`.
+Current result: `AD-090 UI-BOUNDS REPORT total issues: 0 (report_only=true)`. Note the headless test measures layout in the viewport, so letterbox and fullscreen behaviour above is not covered by it.
