@@ -23,6 +23,7 @@ func run(t) -> void:
 	if not (m is Dictionary and map is Dictionary and index is Dictionary and runes is Dictionary):
 		return
 	_check_hud_helpers(t, runes)
+	_check_reward_card(t)
 	var icons: Dictionary = index["icons"]
 	var atlas: Texture2D = load(ATLAS)
 	t.check(atlas != null, "AD-040 icon atlas png loads")
@@ -86,3 +87,16 @@ func _check_hud_helpers(t, runes: Dictionary) -> void:
 func _check_cell(t, c: Dictionary, atlas: Texture2D, key: String) -> void:
 	t.check(int(c["w"]) == 16 and int(c["h"]) == 16, "AD-040 icon %s is 16x16" % key)
 	t.check(int(c["x"]) >= 0 and int(c["y"]) >= 0 and int(c["x"]) + int(c["w"]) <= atlas.get_width() and int(c["y"]) + int(c["h"]) <= atlas.get_height(), "AD-040 icon %s inside atlas" % key)
+
+func _check_reward_card(t) -> void:
+	var tex: Texture2D = load("res://art/export/ui/ad_ui_reward_card.png")
+	t.check(tex != null, "AD-040 reward card png loads")
+	if tex == null:
+		return
+	var j = _load_json("res://art/export/ui/ad_ui_reward_card_aseprite.json")
+	t.check(j is Dictionary and j["frames"].size() == 3, "AD-040 reward card has 3 frames")
+	if not (j is Dictionary):
+		return
+	for f in j["frames"]:
+		var r: Dictionary = f["frame"]
+		t.check(int(r["w"]) == 74 and int(r["h"]) == 110 and int(r["x"]) + 74 <= tex.get_width() and int(r["y"]) + 110 <= tex.get_height(), "AD-040 reward card frame %s is 74x110 inside png" % f["filename"])

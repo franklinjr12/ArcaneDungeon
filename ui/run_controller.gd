@@ -5,7 +5,7 @@ const Flow = preload("res://world/run_flow.gd")
 const ArenaCanvas = preload("res://ui/run_canvas.gd")
 const TestCanvas = preload("res://ui/sandbox_canvas.gd")
 const PortraitHUD = preload("res://ui/pixel_hud.gd")
-const RuneAtlas = preload("res://assets/pixel/rune_icons.png")
+const RewardCard = preload("res://art/export/ui/ad_ui_reward_card.png")
 const Prompts = preload("res://ui/onboarding_prompts.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
 const InputActions = preload("res://ui/input_actions.gd")
@@ -411,7 +411,7 @@ func _redraw_panel() -> void:
 					caption = str(item["name"])+": "+str(item["behaviour"])
 				else:
 					caption = "+"+str(item["amount"])+" currency"
-				_button(context,"%d) %s" % [i+1,caption],_choose_reward.bind(i))
+				_skin_reward_button(_button(context,"%d) %s" % [i+1,caption],_choose_reward.bind(i)),item)
 		if flow.edit_policy == "cleared_room":
 			_heading(context,"Quick edit allowed (no shop/test)",12)
 		_button(context,"Advance at exit →",func(): _exit())
@@ -428,6 +428,9 @@ func _redraw_panel() -> void:
 			var b := _button(context,str(item["label"])+" / "+str(item["price"])+" coins",
 				_buy.bind(i))
 			b.disabled = flow.merchant.bought.has(item["id"]) or not affordable
+			b.icon = PortraitHUD.rune_icon_texture(str(item["rune_id"])) if item["kind"] == "rune" else PortraitHUD.ui_icon_texture("hp")
+			b.expand_icon = false
+			b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			var detail := Label.new()
 			detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			detail.add_theme_font_size_override("font_size",11)
@@ -671,15 +674,29 @@ func _editor_rebuild() -> void:
 	apply.disabled = not verdict["ok"]
 
 func _rune_icon(rune_id: String) -> Texture2D:
-	var names := ["essence.fire","essence.water","essence.lightning","form.projectile","form.burst","form.orb",
-		"mod.homing","mod.split","mod.pierce","trigger.on_hit"]
-	var index := names.find(rune_id)
-	if index<0:
-		return null
-	var texture := AtlasTexture.new()
-	texture.atlas = RuneAtlas
-	texture.region = Rect2(Vector2(float(index%8*32),float((index/8)*32)),Vector2(32,32))
-	return texture
+	return PortraitHUD.rune_icon_texture(rune_id)
+
+## AD-038 reward card art as the button skin (frames: normal, hover, pressed); layout is unchanged.
+func _skin_reward_button(b: Button, item: Dictionary) -> void:
+	var states := {"normal":0,"hover":1,"focus":1,"pressed":2}
+	for state in states:
+		var box := StyleBoxTexture.new()
+		var tex := AtlasTexture.new()
+		tex.atlas = RewardCard
+		tex.region = Rect2(states[state]*74,0,74,110)
+		box.texture = tex
+		box.texture_margin_left = 5
+		box.texture_margin_right = 5
+		box.texture_margin_top = 5
+		box.texture_margin_bottom = 5
+		box.content_margin_left = 8
+		box.content_margin_right = 8
+		box.content_margin_top = 6
+		box.content_margin_bottom = 6
+		b.add_theme_stylebox_override(state,box)
+	b.icon = PortraitHUD.rune_icon_texture(str(item["id"])) if item["kind"] == "rune" else PortraitHUD.ui_icon_texture("coin")
+	b.expand_icon = false
+	b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 func _option(parent: Node, list: Array, selection: String) -> OptionButton:
 	var option := OptionButton.new()
