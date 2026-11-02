@@ -76,3 +76,23 @@ The regression covers Godot parser/import, all scene navigation and UI smoke tes
 The uploaded board includes several playable classes, bosses, equipment systems, inventory, bestiary, journal and biome options which the **current ArcaneDungeon game does not implement**. This execution creates art for all current gameplay categories, not fictitious art for unapproved mechanics. The asset pass is not a claim of final studio-polished textures or a perfect recreation of the reference.
 
 Owner review is still needed for more intricate character detailing, directional animations, richer boss poses, unique room compositions, VFX timing and final palette/render-scale choices. The previously deferred first-human playtest (TASK-054), decision gate (TASK-055) and any new magic features remain pending.
+
+## AD-065 actor animation import
+
+- **Source rows:** mage AD-061, AD-062, AD-064; fallen adept AD-053 + AD-063; grave hound AD-054 + AD-063; Undead warden AD-055 + AD-056 + AD-063 (`main` sheet) and AD-064 (`late` sheet); bone thrall AD-052. Tag names, frame counts and per-frame ms come from the Art 02 cards and are recorded in `art/export/actors/actors_manifest.json`.
+- **Import:** `python3 scripts/import_art_exports.py --actors` writes `art/export/actors/` and the manifest.
+- **State -> tag:** mage idle/walk from velocity, facing from aim (3 directions, side mirrored), cast on cast event, dash for the dash window, hit on damage, death at HP 0. Enemies/warden: idle, move, telegraph, attack, hit, death, spawn from the AI state. Sprites draw at scale 2.
+- **Telegraph stretch:** the telegraph tag is stretched/held to exactly `telegraph_ticks` (warden: `windup_ticks` / `second_phase_windup_ticks`) from data so the read and the hit line up. Sim timing is never changed.
+- **Hurtbox-centre anchoring (PROPOSED):** the centre of the art hurtbox slice is drawn on the sim position.
+- **Hurtbox radii (PROPOSED rule):** `radius = ceil((w + h) / 2)` of the hurtbox slice (= mean(w, h) * scale 2 / 2); raised only if larger than the current radius. Player radius stays 17.
+
+  | actor | slice w x h | old -> new radius |
+  |---|---|---|
+  | bone_thrall | 20x25 | 19 -> 23 |
+  | fallen_adept | 18x27 | 18 -> 23 |
+  | grave_hound | 27x18 | 17 -> 23 |
+  | undead_warden | 44x53 | 35 -> 49 |
+
+  Edited: `combat/combat_tuning_v1.json` `enemies.<kind>.radius`, `world/data/vertical_slice_v1.json` `boss.radius`. Regenerated: `tests/fixtures/m2_baseline_v1.json` (via `tests/m2_baseline_probe.gd`; ticks/hits shift only because targets are bigger). M1 magic goldens are untouched. `tests/test_ad_audio.gd` got a scripted dash-through-hit so the `sfx.dash.iframe` cue is still covered (the autoplay route no longer hit it by chance).
+- **Debug overlay:** with `show_debug` on, `ui/combat_canvas.gd` draws the sim radius (magenta arc) around the mage and every live enemy/warden.
+- **Capture (developer only):** `xvfb-run -a /usr/local/bin/godot --path . --script res://tests/capture_actor_anim.gd -- /tmp/ad065_captures` writes a scale-2 frame strip per actor per tag and one in-play shot per actor with the overlay. Outputs are not committed.

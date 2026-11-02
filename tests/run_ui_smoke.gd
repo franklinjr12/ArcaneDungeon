@@ -129,6 +129,9 @@ func _run() -> void:
 	var reward_buttons: Array = control.context.find_children("*","Button",true,false)
 	expect(not reward_buttons.is_empty() and reward_buttons.all(func(b): return b.get_global_rect().end.y <= view_h),
 		"reward buttons on screen at first clear")
+	var cards: Array = reward_buttons.filter(func(b): return b.text.substr(1,2)==") ")
+	expect(cards.size()==3 and cards.all(func(b): return b.get_theme_stylebox("normal") is StyleBoxTexture and b.icon != null),
+		"AD-040 3 reward cards have texture skin and icon")
 	expect(control.sidebar.get_global_rect().end.x <= control.arena_canvas.position.x,
 		"sidebar does not slide under the arena")
 	var key_one := InputEventKey.new()
@@ -179,6 +182,8 @@ func _run() -> void:
 		if label.text.contains("Affordable") or label.text.contains("Need "):
 			previews = true
 	expect(previews,"merchant displays effect preview and affordability")
+	var stock_buttons: Array = control.context.find_children("*","Button",true,false).filter(func(b): return b.text.contains(" coins"))
+	expect(not stock_buttons.is_empty() and stock_buttons.all(func(b): return b.icon != null),"AD-040 merchant stock buttons have icons")
 	control._open_editor(1)
 	expect(control.editor_open and control.editor_panel.visible,"structured editor panel opens")
 	expect(control.editor_controls.find_children("*","OptionButton",true,false).size()>=2,
