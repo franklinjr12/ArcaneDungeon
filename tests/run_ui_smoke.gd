@@ -184,6 +184,12 @@ func _run() -> void:
 	expect(previews,"merchant displays effect preview and affordability")
 	var stock_buttons: Array = control.context.find_children("*","Button",true,false).filter(func(b): return b.text.contains(" coins"))
 	expect(not stock_buttons.is_empty() and stock_buttons.all(func(b): return b.icon != null),"AD-040 merchant stock buttons have icons")
+	control.flow.experiment.configure(true)
+	control._update_labels()
+	control._update_labels()
+	expect(run.run.formulas.size()<3 and control.guide.current=="workshop_empty_slot"
+		and control.tip.text.contains(control.guide.tips["workshop_empty_slot"]),
+		"AD-084 workshop shows empty-slot hint")
 	control._open_editor(1)
 	expect(control.editor_open and control.editor_panel.visible,"structured editor panel opens")
 	expect(control.editor_controls.find_children("*","OptionButton",true,false).size()>=2,
@@ -199,6 +205,12 @@ func _run() -> void:
 	control._editor_rebuild()
 	control._close_editor(true)
 	expect(run.run.formulas[0]["formula_id"]=="custom.slot_1","editor apply persists formula")
+	expect(control.guide.current=="test_on_dummy" and control.tip.text.contains(control.guide.tips["test_on_dummy"]),
+		"AD-084 test_on_dummy shown after first valid edit")
+	control._test_cast_slot(1,run.range_sim.actor.position+Vector2(200,0))
+	control._update_labels()
+	expect(control.guide.current!="test_on_dummy" and control.guide.seen.count("test_on_dummy")==1,
+		"AD-084 test cast clears test_on_dummy")
 	expect(run.range_sim.loadout.preview(1)["formula_id"]=="custom.slot_1",
 		"test range refreshes after apply")
 	control._open_editor(0)
@@ -227,6 +239,26 @@ func _run() -> void:
 		"valid slot 4 applied")
 	var cast4: Dictionary = control._test_cast_slot(3,run.range_sim.actor.position+Vector2(200,0))
 	expect(cast4.get("accepted",false),"slot 4 casts in range")
+	run.wet_kills += 1
+	control._update_labels()
+	expect(control.guide.current=="wet_try_lightning" and control.tip.text.contains("Lightning") and not control.is_paused()
+		and not control.editor_open and control.guide.seen.count("wet_try_lightning")==1,
+		"AD-084 wet kill shows hint without pausing")
+	var shown_before: int = control.guide.shown_count
+	run.arcs += 1
+	control._update_labels()
+	expect(control.guide.arc_seen and control.guide.current=="" and control.guide.shown_count==shown_before,
+		"AD-084 arc turns the wet hint off")
+	run.wet_kills += 1
+	control._update_labels()
+	expect(control.guide.current!="wet_try_lightning" and control.guide.seen.count("wet_try_lightning")==1,
+		"AD-084 no wet hint after an arc")
+	var prompt_records := 0
+	for rec in run.experiment.records:
+		if rec["type"]=="prompt_shown":
+			prompt_records += 1
+	expect(prompt_records>=3 and prompt_records<=control.guide.shown_count,
+		"AD-084 telemetry counts prompt_shown")
 	control._reset_test_range()
 	expect(run.range_sim.active.size()==0,"reset range clears spells")
 	control._test_click(run.range_sim.actor.position+Vector2(200,0),MOUSE_BUTTON_LEFT)
