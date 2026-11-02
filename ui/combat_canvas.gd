@@ -13,6 +13,8 @@ const SlotHUD = preload("res://ui/pixel_hud.gd")
 var session
 var hover := Vector2(440,440)
 var show_debug := false
+## AD-065 debug hitbox overlay colour (sim radii, not art).
+const HITBOX_COLOR := Color("#ff4fd8")
 var view_rect := Rect2(0,0,916,650)
 var environment_id := 0
 var last_player_at := Vector2.ZERO
@@ -85,6 +87,7 @@ func _draw() -> void:
 	_health_bar(at,25,mage.health.current/mage.health.maximum,Color("#da686e"))
 	if show_debug:
 		_label(at+Vector2(-17,-45),"MAGE",Color("#f8e7ba"))
+		draw_arc(at,mage.radius,0.0,TAU,32,HITBOX_COLOR,1.0)
 	Art.icon(self,"health",at+Vector2(-40,23),Vector2(15,15))
 	for enemy in session.enemies:
 		var target = enemy.target
@@ -108,6 +111,7 @@ func _draw() -> void:
 			var f: float = 1.0-float(time_left)/maxf(1.0,float(enemy.tuning["telegraph_ticks"]))
 			_label(enemy_at+Vector2(-26,-54),"! %d" % time_left,Color("#ffe4a0"))
 		if show_debug and target.alive():
+			draw_arc(enemy_at,target.radius,0.0,TAU,32,HITBOX_COLOR,1.0)
 			_label(enemy_at+Vector2(-26,53),"#%d %s" % [target.id,enemy.state],Color("#b9e8fc"))
 	if _fx_session != session:
 		_fx_session = session
