@@ -72,6 +72,7 @@ func _ready() -> void:
 	_build()
 	current_notice = stage_banner()
 	_redraw_panel()
+	_debug_shot_entry()
 
 func _build() -> void:
 	var bg := ColorRect.new()
@@ -772,3 +773,50 @@ func _close_editor(apply_changes: bool) -> void:
 	current_notice = ("Formula applied" if apply_changes else "Formula cancelled")+" / %.1f s" % duration
 	_close_visual_editor()
 	_redraw_panel()
+
+## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.
+func apply_debug_shot_state(state: String) -> bool:
+	if not OS.is_debug_build() or not state in ["combat","reward","workshop_editor","merchant","pause","summary"]:
+		return false
+	if state == "reward":
+		for i in 3000:
+			if flow.state != "fighting":
+				break
+			for enemy in flow.session.enemies:
+				if enemy.target.alive():
+					enemy.target.receive_damage(100000,"fire",1,100)
+			flow.step()
+	elif state == "workshop_editor" or state == "merchant":
+		flow.run.sequence_index = flow.config["rooms"].size()-2
+		flow._enter_current()
+	elif state == "summary":
+		flow.session.sim.actor.receive_damage(100000,"fire",2,100)
+		flow.step({"cast":0})
+	_redraw_panel()
+	if state == "workshop_editor":
+		_open_editor(1) # slot 0 (Basic Bolt) is locked; slot 1 is the first editable one
+	elif state == "merchant":
+		for child in context.get_children():
+			if child is Label and "buy once per item" in child.text:
+				scroll.ensure_control_visible.call_deferred(child)
+				break
+	elif state == "pause":
+		open_pause()
+	return true
+
+func _debug_shot_entry() -> void:
+	var state := OS.get_environment("AD_UI_SHOT_STATE") if OS.is_debug_build() else ""
+	if state == "" or not apply_debug_shot_state(state):
+		return
+	var path := OS.get_environment("AD_UI_SHOT_OUT")
+	if path == "":
+		return
+	if OS.get_environment("AD_UI_SHOT_FULLSCREEN") == "1":
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	var delay := OS.get_environment("AD_UI_SHOT_DELAY_MS")
+	await get_tree().create_timer((int(delay) if delay != "" else 800) / 1000.0).timeout
+	await RenderingServer.frame_post_draw
+	var image := get_viewport().get_texture().get_image()
+	var error := image.save_png(path)
+	print("AD_UI_SHOT saved %s %dx%d" % [path, image.get_width(), image.get_height()])
+	get_tree().quit(0 if error == OK else 1)
