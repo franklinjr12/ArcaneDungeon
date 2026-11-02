@@ -59,3 +59,74 @@ func run(t) -> void:
 			t.check(c.get("loop", false), "AD-082 ambience loops: " + id)
 		t.check(readme.contains(id), "AD-082 README lists: " + id)
 	d.free()
+	_ducking(t)
+
+func _ducking(t) -> void:
+	if AudioServer.get_bus_index("SFXBed") < 0:
+		AudioServer.set_bus_layout(load("res://default_bus_layout.tres"))
+	var bed := AudioServer.get_bus_index("SFXBed")
+	t.check(bed >= 0, "AD-082 SFXBed bus exists")
+	if bed < 0:
+		return
+	t.equal(str(AudioServer.get_bus_send(bed)), "SFX", "AD-082 SFXBed sends to SFX")
+	var sfx := AudioServer.get_bus_index("SFX")
+	t.equal(AudioServer.get_bus_effect_count(sfx), 0, "AD-082 SFX bus has no ducking effect")
+	var d = Director.new()
+	var cues: Dictionary = d.table["cues"]
+	var teles: Array = []
+	d._apply_duck(0.0) # earlier suites may have left the shared bus ducked
+	t.equal(d.duck_db("Ambience"), 0.0, "AD-082 Ambience unducked at start")
+	t.equal(d.duck_db("SFXBed"), 0.0, "AD-082 SFXBed unducked at start")
+	for id in cues:
+		var c: Dictionary = cues[id]
+		var want: String = c["bus"]
+		if want == "SFX":
+			if d.is_telegraph(c):
+				teles.append(id)
+			else:
+				want = "SFXBed"
+		t.equal(d.route_bus(c), want, "AD-082 route_bus: " + id)
+	t.equal(teles.size(), 5, "AD-082 five telegraph cues")
+	d.play("sfx.hit.generic")
+	t.equal(d.duck_db("Ambience"), 0.0, "AD-082 non-telegraph does not duck")
+	t.check(not d.is_ducking(), "AD-082 not ducking after non-telegraph")
+	var sfx_db := AudioServer.get_bus_volume_db(sfx)
+	for id in teles:
+		d.voices.clear()
+		d._process(10.0)
+		t.check(d.play(id), "AD-082 telegraph plays: " + id)
+		t.check(absf(d.duck_db("Ambience") - -6.0) < 0.01, "AD-082 Ambience ducked: " + id)
+		t.check(absf(d.duck_db("SFXBed") - -6.0) < 0.01, "AD-082 SFXBed ducked: " + id)
+		t.equal(AudioServer.get_bus_volume_db(sfx), sfx_db, "AD-082 SFX bus volume untouched: " + id)
+		t.equal(AudioServer.get_bus_effect_count(sfx), 0, "AD-082 telegraph path unducked: " + id)
+		var length := maxf((load(cues[id]["stream"]) as AudioStream).get_length(), d.DUCK_MIN_SEC)
+		d._process(length * 0.5)
+		t.check(d.is_ducking() and d.duck_db("Ambience") < -5.9, "AD-082 still ducked mid-cue: " + id)
+		d._process(length)
+		t.equal(d.duck_db("Ambience"), 0.0, "AD-082 Ambience restored: " + id)
+		t.equal(d.duck_db("SFXBed"), 0.0, "AD-082 SFXBed restored: " + id)
+		t.check(not d.is_ducking(), "AD-082 not ducking after cue: " + id)
+	# overlap: ducking lasts until the longer remaining cue ends
+	d.voices.clear()
+	d._process(10.0)
+	d.play("sfx.boss.tele_a")
+	d._process(0.1)
+	d.play("sfx.boss.tele_b")
+	var la := maxf((load(cues["sfx.boss.tele_a"]["stream"]) as AudioStream).get_length(), d.DUCK_MIN_SEC)
+	var lb := maxf((load(cues["sfx.boss.tele_b"]["stream"]) as AudioStream).get_length(), d.DUCK_MIN_SEC)
+	var rest := maxf(la - 0.1, lb)
+	d._process(rest - 0.01)
+	t.check(d.is_ducking(), "AD-082 overlap still ducked before longest ends")
+	d._process(0.02)
+	t.check(not d.is_ducking(), "AD-082 overlap released after longest ends")
+	# voice caps
+	for id in teles:
+		d.voices.clear()
+		for i in 10:
+			d.play(id)
+		var n: int = d.voices.filter(func(v): return v["cue_id"] == id).size()
+		t.equal(n, int(cues[id]["max_voices"]), "AD-082 voice cap: " + id)
+	d.voices.clear()
+	d._process(10.0)
+	d._apply_duck(0.0)
+	d.free()

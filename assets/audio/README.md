@@ -41,4 +41,4 @@ Format: 44.1 kHz mono 16-bit WAV; ambience loops are imported looping.
 
 - Telegraph cues (priority 3, `unstealable_priority`) are never stolen by other voices.
 - Per-cue voice caps come from `max_voices`; the total cap is `max_voices_total` = 24.
-- Telegraphs duck Ambience and non-telegraph SFX by ~6 dB for the cue length (implemented in the next AD-082 step).
+- Telegraphs duck Ambience and non-telegraph SFX by ~6 dB for the cue length (min 0.25 s). Non-telegraph SFX play on the internal `SFXBed` bus (sends to SFX); ducking sets an AudioEffectAmplify (-6 dB) in slot 0 of `Ambience` and `SFXBed`, never bus volume_db, so user volume settings are untouched. Telegraphs stay on SFX and UI is never ducked.
