@@ -42,6 +42,9 @@ var _counted_kills: Dictionary = {}
 var logs: Array = []
 var experiment = ExperimentLog.new()
 var _prior_reactions := 0
+## AD-084: read-only UI signals. arcs banks arcs from replaced sims; use arc_total() for the live count.
+var wet_kills := 0
+var arcs := 0
 ## AD-020: output-only audio sink (Callable(cue_id, position)); the simulation never reads it.
 var audio_sink: Callable
 
@@ -77,7 +80,23 @@ func start_new(run_seed: int) -> void:
 	experiment.record("run_restart")
 	_enter_current()
 
+func _live_arcs(sim) -> int:
+	if sim == null:
+		return 0
+	var count := 0
+	for entry in sim.trace.filter_records(-1,"","reaction"):
+		if str(entry.get("reason","")) == "wet_lightning_arc":
+			count += 1
+	return count
+
+func arc_total() -> int:
+	return arcs + _live_arcs(session.sim if session != null else null) + _live_arcs(range_sim)
+
+func _bank_arcs() -> void:
+	arcs += _live_arcs(session.sim if session != null else null) + _live_arcs(range_sim)
+
 func _enter_current() -> Dictionary:
+	_bank_arcs()
 	var template = Room.new()
 	var geometry: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))
 	var verdict: Dictionary = template.initialize(config["rooms"][run.sequence_index],geometry["arena"],geometry["enemies"].keys())
@@ -144,8 +163,15 @@ func step(command: Dictionary = {}) -> Dictionary:
 				spells_used += 1
 			experiment.record("dungeon_cast",{"room_index":run.sequence_index,"slot":cast_slot,
 				"cast_accepted":bool(issued.get("accepted",false))},session.sim.loadout.slots[cast_slot]["formula"])
+	var wet_ids: Array = []
+	for enemy in session.enemies:
+		if enemy.target.alive() and enemy.target.status.has("wet",session.sim.clock.tick):
+			wet_ids.append(enemy)
 	session.step()
 	ticks_elapsed += 1
+	for enemy in wet_ids:
+		if not enemy.target.alive():
+			wet_kills += 1
 	for enemy in session.enemies:
 		if not enemy.target.alive() and not _counted_kills.has(enemy.target.id):
 			_counted_kills[enemy.target.id] = true
@@ -269,6 +295,7 @@ func try_exit(position: Vector2) -> Dictionary:
 func enter_test_range() -> Dictionary:
 	if mode != "workshop":
 		return {"ok":false,"reason":"TEST_ONLY_WORKSHOP"}
+	arcs += _live_arcs(range_sim)
 	range_sim = Runner.new(run.seed)
 	range_sim.loadout.unlocked = run.unlocked.duplicate(true)
 	var result: Dictionary = range_sim.equip_starter_loadout(run.formulas)

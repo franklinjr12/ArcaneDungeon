@@ -15,6 +15,9 @@ const MerchantScript = preload("res://world/merchant.gd")
 var flow
 var guide = Prompts.new()
 var tip: Label
+var _last_wet_kills := 0
+var _last_arcs := 0
+const TELEMETRY_INDEX := {"room1":3,"first_reward":4,"first_workshop":5}
 var arena_canvas
 var test_canvas
 var sidebar: VBoxContainer
@@ -260,6 +263,8 @@ func _test_click(point: Vector2, button: int) -> void:
 func _test_cast_slot(slot: int, point: Vector2) -> Dictionary:
 	var dir: Vector2 = (point-flow.range_sim.actor.position).normalized()
 	var result: Dictionary = flow.test_cast(slot,dir)
+	if bool(result.get("accepted",false)):
+		guide.note_test_cast()
 	current_notice = "Test cast slot %d: %s" % [slot+1,str(result.get("reason",""))]
 	_update_labels()
 	return result
@@ -503,6 +508,7 @@ func _update_labels() -> void:
 			",".join(statuses),reactions,triggers,caps]
 	notices.text = current_notice
 	if tip != null:
+		_watch_hint_signals()
 		var active := ""
 		if flow.mode == "workshop":
 			active = "first_workshop"
@@ -510,11 +516,33 @@ func _update_labels() -> void:
 			active = "room1"
 		elif flow.state == "cleared" and not flow.reward_collected:
 			active = "first_reward"
+		var hint: String = guide.next_hint()
+		if guide.HINT_IDS.has(guide.current) and not guide.dismissed and hint == "":
+			active = guide.current
+		elif hint != "" and (active == "" or guide.seen.has(active)):
+			active = hint  # an unseen AD-042 tip is shown first, then the pending hint takes over
 		if active != "" and not guide.trigger(active).is_empty():
 			_persist_tip(active)
+			guide.pending.erase(active)
+			var index: int = guide.HINT_INDEX[active] if guide.HINT_INDEX.has(active) else int(TELEMETRY_INDEX.get(active,-1))
+			flow.experiment.record("prompt_shown",{"prompt_index":index})
 		if guide.current != active:
 			guide.current = ""
 		tip.text = ("TIP: " + guide.text()) if guide.text() != "" else ""
+
+## AD-084: read-only watch on run-flow counters; never pauses the sim or opens dialogs.
+func _watch_hint_signals() -> void:
+	if flow.mode == "workshop":
+		guide.note_workshop(3 - flow.run.formulas.size())
+		if flow.run.formulas.size() >= 3 and guide.current == "workshop_empty_slot":
+			guide.current = ""
+	if flow.wet_kills > _last_wet_kills:
+		guide.note_wet_kill()
+	_last_wet_kills = flow.wet_kills
+	var arc_now: int = flow.arc_total()
+	if arc_now > _last_arcs and guide.note_arc():
+		_persist_tip("wet_try_lightning")
+	_last_arcs = arc_now
 
 func _persist_tip(id: String) -> void:
 	var save = get_node_or_null("/root/SaveService")
@@ -739,6 +767,8 @@ func _close_editor(apply_changes: bool) -> void:
 		current_notice = "Editor: "+str(result.get("reason","INVALID"))
 		_editor_rebuild()
 		return
+	if apply_changes:
+		guide.note_valid_edit()
 	current_notice = ("Formula applied" if apply_changes else "Formula cancelled")+" / %.1f s" % duration
 	_close_visual_editor()
 	_redraw_panel()
