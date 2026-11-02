@@ -31,3 +31,38 @@ Each image shows circle (bone_thrall), line (fallen_adept) and dash lane (undead
 | Ruins, greyscale | ![](before/ruins_grey.png) | ![](after/ruins_grey.png) |
 | Workshop | ![](before/workshop.png) | ![](after/workshop.png) |
 | Workshop, greyscale | ![](before/workshop_grey.png) | ![](after/workshop_grey.png) |
+
+# AD-089: projectile telegraph
+Franklin feedback: a line crossed through enemy projectile telegraphs. **All values are [PROPOSED FOR PROTOTYPE].**
+
+## Causes
+- The `telegraph.line` sprite was stretched from the enemy to the mage (length = distance to mage), so it ran straight through the bolt.
+- Hostile bolts were drawn under telegraph sprites, so the line covered them.
+- The mage aim line ran the full distance to the cursor and could cross enemy bolts.
+- The `! N` tick countdown was drawn above every winding-up enemy.
+
+## Fix
+- Ranged telegraph length = min(attack range, 96 px) along the frozen intent direction (`Art.ranged_telegraph_length`).
+- Hostile bolts (`enemy.bolt`, `boss.bullet`) are drawn after all telegraphs.
+- Mage aim line is a 24 px tick (`Canvas.aim_tick_segment`).
+- The `! N` countdown shows only when the debug overlay is on (`Canvas.countdown_visible`).
+
+## Before / after (fallen_adept, seed 20261022, 1280x720)
+| Shot | Before | After |
+|---|---|---|
+| adept_windup | ![](ad089/before/adept_windup.png) | ![](ad089/after/adept_windup.png) |
+| bolt_in_flight | ![](ad089/before/bolt_in_flight.png) | ![](ad089/after/bolt_in_flight.png) |
+
+`ad089/after/seq_00.png` to `seq_19.png` cover 10 s (600 ticks at 60 Hz, every 30th tick); no line passes through any hostile bolt. The mage stands idle so the adept's bolt actually flies.
+
+## Regenerate
+```
+# after (this branch)
+xvfb-run -a godot --path . --resolution 1280x720 --script res://tests/capture_ad_projectile_telegraph.gd -- docs/ui/telegraphs/ad089/after
+# before (origin/master)
+git worktree add /tmp/ad089_before origin/master
+cp tests/capture_ad_projectile_telegraph.gd /tmp/ad089_before/tests/
+godot --headless --path /tmp/ad089_before --import
+xvfb-run -a godot --path /tmp/ad089_before --resolution 1280x720 --script res://tests/capture_ad_projectile_telegraph.gd -- $PWD/docs/ui/telegraphs/ad089/before
+git worktree remove --force /tmp/ad089_before
+```
