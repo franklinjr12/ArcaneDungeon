@@ -26,7 +26,7 @@ The shot is the game viewport image, not the window. The project keeps the 16:9 
 
 - 16:9 sizes match the window exactly (1366x768 gives 1365x768, a rounding quirk).
 - Non-16:9 windows produce a letterboxed 16:9 viewport: 1280x800 -> 1280x720, 1920x1200 -> 1920x1080, 2560x1080 -> 1920x1080, 3440x1440 -> 2560x1440, 1024x768 -> 1024x576. The black bars are not in the PNG.
-- **Fullscreen**: with `AD_UI_SHOT_FULLSCREEN=1` on a 1920x1080 screen the saved image is still 1280x720, so the viewport was not enlarged; treat this set as showing the base-size layout (the fullscreen toggle did not change the rendered viewport under Xvfb).
+- **Fullscreen** (the script prints a NOTE, not a WARN, because no window manager exists under Xvfb): with `AD_UI_SHOT_FULLSCREEN=1` on a 1920x1080 screen the saved image is still 1280x720, so the viewport was not enlarged; treat this set as showing the base-size layout (the fullscreen toggle did not change the rendered viewport under Xvfb).
 - **Live resize**: `xdotool windowsize 1920 1080` after start **did take effect**; all `resize_*` PNGs are 1920x1080. They are taken after a 3000 ms delay.
 
 All 8 sheets were inspected: real content (HUD, workshop, etc.), no black frames. No hook problems found.
