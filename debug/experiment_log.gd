@@ -2,22 +2,30 @@ extends RefCounted
 ## TASK-052: opt-in local-only experiment events; never persist device/user IDs or free text.
 const SCHEMA := 1
 const KINDS := ["formula_edit","rune_choice","test_cast","dungeon_cast","reaction",
-	"death","room_clear","editor_open","editor_close","room_enter","purchase","run_restart"]
+	"death","room_clear","editor_open","editor_close","room_enter","purchase","run_restart","slice_complete","session_start"]
+const SESSION_LOCK := "user://arcane_session.lock"
 var enabled := false
 var records: Array = []
 var clock_ms: int = 0
 var _start_ms: int = 0
 var _last_edit_tick := -1
 var _signatures: Dictionary = {}
+var _built: Dictionary = {}
+var _run_start_ms := 0
+var _crashes := 0
 
 func configure(opt_in: bool) -> void:
 	enabled = opt_in
 	if enabled:
 		_start_ms = Time.get_ticks_msec()
 		clock_ms = 0
+		_run_start_ms = 0
 	if not enabled:
 		records.clear()
 		_signatures.clear()
+		_built.clear()
+		_run_start_ms = 0
+		_crashes = 0
 		_last_edit_tick = -1
 
 static func signature(formula: Dictionary) -> String:
@@ -33,6 +41,21 @@ static func signature(formula: Dictionary) -> String:
 		parts.append(str(payload.get("manifestation_id","")))
 	return "|".join(parts).sha256_text().substr(0,16)
 
+## Crash = previous session left its lock behind. Local file with a schema int only, no identity.
+func begin_session(lock_path: String = SESSION_LOCK) -> void:
+	if not enabled:
+		return
+	if FileAccess.file_exists(lock_path):
+		_crashes += 1
+	var file := FileAccess.open(lock_path,FileAccess.WRITE)
+	if file != null:
+		file.store_string(str(SCHEMA))
+	record("session_start")
+
+func end_session(lock_path: String = SESSION_LOCK) -> void:
+	if enabled and FileAccess.file_exists(lock_path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(lock_path))
+
 func mark_tick(_sim_tick: int) -> void:
 	if enabled:
 		clock_ms = maxi(0,Time.get_ticks_msec()-_start_ms)
@@ -41,6 +64,11 @@ func record(kind: String, properties: Dictionary = {}, formula: Dictionary = {})
 	if not enabled or kind not in KINDS:
 		return
 	mark_tick(0)
+	if kind == "run_restart":
+		_run_start_ms = clock_ms
+	if kind == "slice_complete":
+		properties = properties.duplicate()
+		properties["duration_ms"] = maxi(0,clock_ms-_run_start_ms)
 	var safe: Dictionary = {}
 	# Deliberate allowlist: no player strings, coordinates, identity or raw formulas.
 	for key in ["room_index","slot","count","duration_ms","cast_accepted","reaction_count","rune_index","price","is_workshop"]:
@@ -51,6 +79,7 @@ func record(kind: String, properties: Dictionary = {}, formula: Dictionary = {})
 		safe["formula_signature"] = token
 		_signatures[token] = true
 		if kind == "formula_edit":
+			_built[token] = true
 			_last_edit_tick = clock_ms
 	if kind == "test_cast" and _last_edit_tick >= 0:
 		safe["edit_to_test_ms"] = maxi(0,clock_ms-_last_edit_tick)
@@ -62,12 +91,22 @@ func record(kind: String, properties: Dictionary = {}, formula: Dictionary = {})
 func summary() -> Dictionary:
 	var counts: Dictionary = {}
 	var tests: Array = []
+	var slice_times: Array = []
 	for event in records:
 		var kind: String = event["type"]
 		counts[kind] = int(counts.get(kind,0))+1
 		if event["fields"].has("edit_to_test_ms"):
 			tests.append(event["fields"]["edit_to_test_ms"])
-	return {"enabled":enabled,"events":records.size(),"counts":counts,
+		if kind == "slice_complete" and event["fields"].has("duration_ms"):
+			slice_times.append(event["fields"]["duration_ms"])
+	var sorted: Array = tests.duplicate()
+	sorted.sort()
+	var median := -1
+	if not sorted.is_empty():
+		var mid: int = sorted.size()/2
+		median = int(sorted[mid]) if sorted.size()%2==1 else int((int(sorted[mid-1])+int(sorted[mid]))/2)
+	return {"distinct_spells_built":_built.size(),"edit_to_test_median_ms":median,
+		"slice_time_ms":slice_times,"crashes":_crashes,"enabled":enabled,"events":records.size(),"counts":counts,
 		"distinct_formulas":_signatures.size(),"edit_to_test_ms":tests.duplicate()}
 
 func snapshot() -> Dictionary:
@@ -89,11 +128,11 @@ func export_csv(path: String = "user://arcane_m4_experiment.csv") -> Error:
 	var file := FileAccess.open(path,FileAccess.WRITE)
 	if file == null:
 		return FileAccess.get_open_error()
-	file.store_line("type,elapsed_ms,room_index,slot,formula_signature,edit_to_test_ms,cast_accepted,reaction_count")
+	file.store_line("type,elapsed_ms,room_index,slot,formula_signature,edit_to_test_ms,cast_accepted,reaction_count,duration_ms")
 	for event in records:
 		var fields: Dictionary = event["fields"]
 		var line: Array = [event["type"],event["elapsed_ms"]]
-		for key in ["room_index","slot","formula_signature","edit_to_test_ms","cast_accepted","reaction_count"]:
+		for key in ["room_index","slot","formula_signature","edit_to_test_ms","cast_accepted","reaction_count","duration_ms"]:
 			line.append(fields.get(key,""))
 		# Numeric / hashed / fixed type values only; no CSV injection content accepted.
 		file.store_line(",".join(line.map(func(v):return str(v))))

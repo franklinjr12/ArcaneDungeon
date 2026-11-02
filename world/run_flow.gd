@@ -185,6 +185,7 @@ func _finish_combat() -> void:
 		# First stage-2 room cleared: slice complete, no reward choice.
 		outcome = "won"
 		win_events += 1
+		experiment.record("slice_complete",{"room_index":run.sequence_index})
 		state = "won"
 		reward_collected = true
 		reward_options.clear()

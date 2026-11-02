@@ -3,6 +3,7 @@ extends RefCounted
 ## two-build warden check (no single element required, GDD v1.0 section 4 step 4). Real commands only.
 const Flow = preload("res://world/run_flow.gd")
 const Driver = preload("res://tests/m3_run_driver.gd")
+const Art = preload("res://ui/pixel_art_renderer.gd")
 const SEED := 20261022
 const FIRE_B := "sample.orbit_fire"
 const FIRE_UNLOCKS := ["form.orb"]
@@ -10,6 +11,7 @@ const ESSENCES := ["essence.fire","essence.lightning","essence.water"]
 
 func _slice(t) -> Dictionary:
 	var flow = Flow.new(SEED)
+	flow.experiment.configure(true)
 	var loadout = flow.session.sim.loadout
 	t.equal(loadout.slots.size(),4,"AD-031 loadout has 4 slots")
 	for slot in 3:
@@ -31,7 +33,9 @@ func _slice(t) -> Dictionary:
 	var last: Dictionary = Driver.fight(flow,4600)
 	casts += int(last["casts"])
 	return {"state":flow.state,"win_events":flow.win_events,"boss_defeated_events":flow.boss_defeated_events,
-		"tick":last["tick"],"hp":last["hp"],"casts":casts,"rooms":rooms,"summary":flow.summary()}
+		"tick":last["tick"],"hp":last["hp"],"casts":casts,"rooms":rooms,"summary":flow.summary(),
+		"slice_complete":int(flow.experiment.summary()["counts"].get("slice_complete",0)),
+		"distinct_spells_built":flow.experiment.summary()["distinct_spells_built"]}
 
 func _boss_build(ids: Array, extra_unlocks: Array = []) -> Dictionary:
 	var flow = Flow.new(SEED)
@@ -59,8 +63,24 @@ func _elements(ids: Array) -> Array:
 	found.sort()
 	return found
 
+func _check_p1_default(t, when: String) -> void:
+	t.check(not Art.use_art_export,"AD-041 F6 art-export flag is off %s" % when)
+	var map: Dictionary = Art.export_map()
+	var manifest: Dictionary = Art.export_manifest()
+	t.check(not Art.fx_frame("projectile.fire",0).is_empty(),"AD-041 P1 FX resolves by default %s" % when)
+	for key in ["hud/slot_bar","hud/reward_card","damage_glyphs","icons"]:
+		var parts: PackedStringArray = key.split("/")
+		var stem = map[parts[0]][parts[1]] if parts.size() > 1 else map[parts[0]]
+		t.check(manifest.has(stem) and str(manifest[stem].get("png","")) != "","AD-041 P1 %s asset %s present %s" % [key,stem,when])
+	t.check(str(map["rune_icons"].get("essence.fire","")) != "","AD-041 P1 rune icon mapped %s" % when)
+	t.check(not Art.damage_glyph_layout("flame","12").is_empty(),"AD-041 P1 damage glyph layout %s" % when)
+
 func run(t) -> void:
+	_check_p1_default(t,"at start")
 	var first: Dictionary = _slice(t)
+	_check_p1_default(t,"after route")
+	t.equal(first["slice_complete"],1,"AD-041 scripted route records slice_complete once")
+	t.check(first["distinct_spells_built"] >= 0,"AD-041 distinct spells built reported")
 	t.equal(first["state"],"won","AD-031 scripted slice reaches slice complete")
 	t.equal(first["win_events"],1,"AD-031 win fires exactly once")
 	t.equal(first["boss_defeated_events"],1,"AD-031 boss defeated exactly once")
