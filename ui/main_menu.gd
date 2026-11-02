@@ -20,6 +20,9 @@ var panel: VBoxContainer
 
 func _ready() -> void:
 	VisualTheme.apply(self)
+	var save_service = get_node_or_null("/root/SaveService")
+	if save_service != null:
+		save_service.settings.apply_display(get_window())
 	if show_debug_entries == null:
 		show_debug_entries = OS.is_debug_build()
 	var backdrop := TextureRect.new()
@@ -28,12 +31,13 @@ func _ready() -> void:
 	backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(backdrop)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(center)
 	panel = VBoxContainer.new()
-	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	panel.custom_minimum_size = Vector2(370, 300)
-	panel.position = Vector2(-185, -150)
 	panel.add_theme_constant_override("separation", 18)
-	add_child(panel)
+	center.add_child(panel)
 	var heading := Label.new()
 	heading.text = TEXT["title"]
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

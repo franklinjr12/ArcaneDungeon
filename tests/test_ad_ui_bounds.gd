@@ -32,6 +32,7 @@ func logical_size(window: Vector2i) -> Vector2i:
 
 func run(t) -> void:
 	var root := (Engine.get_main_loop() as SceneTree).root
+	_display_settings(t)
 	for window in SIZES:
 		var logical := logical_size(window)
 		for state in MENU_STATES + RUN_STATES:
@@ -39,6 +40,32 @@ func run(t) -> void:
 	print("AD-090 UI-BOUNDS REPORT total issues: %d (report_only=%s)" % [issues, REPORT_ONLY])
 	if REPORT_ONLY:
 		t.check(true, "AD-090 bounds report-only (%d issues)" % issues)
+
+func _display_settings(t) -> void:
+	const Settings = preload("res://game/core/settings.gd")
+	var s := Settings.new()
+	t.equal(s.window_mode, "windowed", "AD-091 default window_mode")
+	t.equal(s.ui_scale, 1.0, "AD-091 default ui_scale")
+	s.window_mode = "borderless"
+	s.ui_scale = 1.3
+	var cfg := ConfigFile.new()
+	s.to_config(cfg)
+	var back := Settings.new()
+	back.from_config(cfg)
+	t.equal(back.window_mode, "borderless", "AD-091 window_mode round trip")
+	t.check(is_equal_approx(back.ui_scale, 1.3), "AD-091 ui_scale round trip")
+	var bad := ConfigFile.new()
+	bad.set_value("display", "window_mode", "bogus")
+	bad.set_value("display", "ui_scale", 9.0)
+	back.from_config(bad)
+	t.equal(back.window_mode, "windowed", "AD-091 bogus mode falls back")
+	t.check(is_equal_approx(back.ui_scale, 1.5), "AD-091 ui_scale clamps high")
+	bad.set_value("display", "ui_scale", 0.1)
+	back.from_config(bad)
+	t.check(is_equal_approx(back.ui_scale, 0.9), "AD-091 ui_scale clamps low")
+	bad.set_value("display", "ui_scale", "x")
+	back.from_config(bad)
+	t.equal(back.ui_scale, 1.0, "AD-091 non-number ui_scale falls back")
 
 func _case(t, root: Node, window: Vector2i, logical: Vector2i, state: String) -> void:
 	var viewport := SubViewport.new()

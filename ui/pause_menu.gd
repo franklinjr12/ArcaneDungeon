@@ -40,13 +40,13 @@ func _ready() -> void:
 	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(dim)
 	var director = get_node_or_null("/root/AudioDirector")
-	panel = _column(Vector2(-150, -150))
+	panel = _column()
 	_heading(panel, TEXT["title"])
 	resume_button = _button(panel, "ResumeButton", TEXT["resume"], director, func(): resume_requested.emit())
 	settings_button = _button(panel, "SettingsButton", TEXT["settings"], director, func(): open_settings())
 	retry_button = _button(panel, "RetryButton", TEXT["retry"], director, func(): request_retry())
 	quit_button = _button(panel, "QuitButton", TEXT["quit"], director, func(): request_quit())
-	confirm_box = _column(Vector2(-200, -100))
+	confirm_box = _column()
 	confirm_box.custom_minimum_size.x = 400
 	confirm_box.visible = false
 	confirm_label = Label.new()
@@ -58,13 +58,15 @@ func _ready() -> void:
 	visibility_changed.connect(_on_visibility_changed)
 	_focus_resume()
 
-func _column(offset: Vector2) -> VBoxContainer:
+func _column() -> VBoxContainer:
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(center)
 	var box := VBoxContainer.new()
-	box.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	box.custom_minimum_size = Vector2(300, 0)
-	box.position = offset
 	box.add_theme_constant_override("separation", 12)
-	add_child(box)
+	center.add_child(box)
 	return box
 
 func _heading(parent: Control, text: String) -> void:
