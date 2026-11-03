@@ -53,3 +53,14 @@ Regenerated 2026-11-03 (`bash tools/ui_matrix.sh`, 104 shots, 0 failed).
 - **What changed:** the permanent run sidebar is gone and the arena takes the full width. The bottom-centre HUD (portrait, HP, MP, 4 slots with keys, mana cost and the dash) is the only HP/MP display. Top-left shows the objective (room name + goal) and coins, top-right the Pause button, with toasts at the top centre. The run summary and the reward cards are centred overlays. The pause menu now has Controls and Back to Menu. The dev overlay (F3) exists only in debug builds.
 - **Release-like shots:** the screenshot hook sets `show_dev_tools = false`, so no dev overlay or dev text appears in any PNG in this folder. The workshop/merchant side panel remains the only scrolling panel besides the spell editor.
 - **Bounds test:** `tests/test_ad_ui_bounds.gd` runs the run states with dev tools off and enforces at every size: no dev text, no ScrollContainer around the HUD/objective/reward/pause UI, HUD slot keys LMB/RMB/Q/E with slot 1 a locked Basic Bolt, loadout buttons numbered Slot 1-4, and text of at least 14 px at 1280x720. Result: `AD-090 UI-BOUNDS REPORT total issues: 0 (report_only=false)`; `validate_godot.py` exit 0.
+
+## AD-093 (contextual panels)
+
+Regenerated 2026-11-03 for reward, merchant, workshop_editor and summary (`bash tools/ui_matrix.sh --godot /usr/local/bin/godot --states "reward merchant workshop_editor summary"`; the run ended with `SUMMARY: ... 0 failed`).
+
+- **Reward pick:** three side-by-side centred cards (art AD-038), keys 1-3 or a click.
+- **Merchant:** a centred shop panel with card-framed items over the test range. It opens on workshop entry and from "Open merchant" in the side panel. The shop card art bakes in a RUNE label and price, so only its frame is used (`draw_center = false`).
+- **Workshop editor:** docked to the right of the test range; the range is scaled to fit so no dummy is covered. Tip/notice toasts are hidden while it is open so they do not cover its heading. Toasts are now centred on the screen.
+- **Run summary:** a centred modal with a Retry same seed / New seed / Title button row (buttons no longer wrap).
+- **Floating text:** damage numbers, status labels and ARC! stack per actor without overlap; the DEFEATED banner is screen-centre text, not over the mage.
+- **Tests:** the floating-text overlap test (6 damage numbers + a status label on one enemy) and the editor-vs-dummies check in `tests/test_ad_ui_bounds.gd`, plus per-panel coverage in `tests/run_ui_smoke.gd`.

@@ -37,6 +37,7 @@ func run(t) -> void:
 	var root := (Engine.get_main_loop() as SceneTree).root
 	_display_settings(t)
 	_arena_scale(t)
+	_floating_text_overlap(t)
 	for window in SIZES:
 		var logical := logical_size(window)
 		for state in MENU_STATES + RUN_STATES:
@@ -71,6 +72,31 @@ func _display_settings(t) -> void:
 	back.from_config(bad)
 	t.equal(back.ui_scale, 1.0, "AD-091 non-number ui_scale falls back")
 
+func _floating_text_overlap(t) -> void:
+	const Art = preload("res://ui/pixel_art_renderer.gd")
+	const Numbers = preload("res://ui/damage_numbers.gd")
+	const Target = preload("res://combat/magic_target.gd")
+	var target := Target.new(5,2,Vector2(400,300),100.0)
+	var tracker := Numbers.new()
+	tracker.update([target],0)
+	for channel in ["essence.fire","essence.water","essence.lightning","essence.fire","essence.water","essence.lightning"]:
+		target.receive_damage(3.0,channel,1,1.0)
+	tracker.update([target],5)
+	t.equal(tracker.popups.size(), 6, "AD-093 six simultaneous popups")
+	var items: Array = []
+	for popup in tracker.popups:
+		var w := Art.damage_glyph_width(popup["symbol"],popup["text"])
+		items.append({"anchor":Vector2(392,250)-Vector2(w/2.0,0),"size":Vector2(w,Numbers.LINE_HEIGHT),"group":popup["target_id"],"order":items.size()})
+	items.append({"anchor":Vector2(376,250),"size":Vector2(56,12),"group":5,"order":items.size()})
+	items.append({"anchor":Vector2(380,250),"size":Vector2(34,12),"group":"arc0","order":items.size()})
+	var rects := Numbers.stack_layout(items)
+	var clear := true
+	for i in rects.size():
+		for j in range(i+1,rects.size()):
+			if rects[i].intersection(rects[j]).has_area():
+				clear = false
+	t.check(clear, "AD-093 floating text rects do not overlap (6 damage + status + ARC!)")
+
 func _arena_scale(t) -> void:
 	const Run = preload("res://ui/run_controller.gd")
 	const Canvas = preload("res://ui/combat_canvas.gd")
@@ -101,12 +127,35 @@ func _case(t, root: Node, window: Vector2i, logical: Vector2i, state: String) ->
 	var ok: bool = scene.apply_debug_shot_state(state)
 	t.check(ok, "AD-090 shot state %s applies at %dx%d" % [state, window.x, window.y])
 	if ok:
+		if state == "workshop_editor":
+			_layout(viewport)
+			scene._fit_test_canvas()
 		_layout(viewport)
 		_layout(viewport)
+		if state == "workshop_editor":
+			_check_editor_dummies(t, scene, "%dx%d" % [window.x, window.y], logical)
 		_check_controls(t, viewport, "%dx%d" % [window.x, window.y], state, Rect2(Vector2.ZERO, Vector2(logical)))
 		if state in RUN_STATES:
 			_check_release_run(t, viewport, scene, window, state)
 	viewport.queue_free()
+
+## AD-093: the docked editor must not cover any live test-range dummy (labels included).
+func _check_editor_dummies(t, scene: Node, size_label: String, logical: Vector2i) -> void:
+	var range_sim = scene.flow.range_sim
+	var panel: Rect2 = scene.editor_panel.get_global_rect()
+	var view := Rect2(Vector2.ZERO, Vector2(logical))
+	var checked := 0
+	for target in range_sim.targets.all():
+		if target.id == range_sim.actor.id:
+			continue
+		var r: float = target.radius + 8.0
+		var rect: Rect2 = scene.test_canvas.get_global_transform() * Rect2(target.position - Vector2(r, r), Vector2(2.0*r, 2.0*r))
+		if rect.size.y < 24.0:
+			rect.size.y = 24.0
+		checked += 1
+		t.check(not rect.intersects(panel), "AD-093 editor covers dummy %s at %s: %s vs %s" % [target.id, size_label, rect, panel])
+		t.check(view.encloses(rect), "AD-093 dummy %s outside viewport at %s: %s" % [target.id, size_label, rect])
+	t.check(checked > 0, "AD-093 workshop has dummies to check at %s" % size_label)
 
 func _layout(node: Node) -> void:
 	if node is Container:
@@ -205,10 +254,12 @@ func _check_release_run(t, viewport: Node, scene: Node, window: Vector2i, state:
 	t.check(dev_hits == 0, "AD-092 no dev text at %s" % tag)
 	if window == Vector2i(1280,720):
 		t.check(small_hits == 0, "AD-092 all visible text >= 14 px at %s" % tag)
-	if state in ["combat","reward","pause"]:
+	if state in ["combat","reward","merchant","pause"]:
 		var guarded: Array = [scene.arena_canvas.slot_hud, scene.objective, scene.coins_label, scene.pause_button]
 		if state == "reward":
 			guarded.append(scene.context)
+		elif state == "merchant":
+			guarded.append(scene.shop_panel)
 		for c in guarded:
 			t.check(not _has_scroll_ancestor(c), "AD-092 %s not inside a ScrollContainer at %s" % [c.name, tag])
 	if state == "combat":

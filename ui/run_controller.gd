@@ -6,6 +6,7 @@ const Flow = preload("res://world/run_flow.gd")
 const ArenaCanvas = preload("res://ui/run_canvas.gd")
 const TestCanvas = preload("res://ui/sandbox_canvas.gd")
 const PortraitHUD = preload("res://ui/pixel_hud.gd")
+const ShopCard = preload("res://art/export/ui/ad_ui_tooltip_and_shop_card.png")
 const RewardCard = preload("res://art/export/ui/ad_ui_reward_card.png")
 const Prompts = preload("res://ui/onboarding_prompts.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
@@ -25,6 +26,13 @@ var workshop_column: VBoxContainer
 var reward_overlay: CenterContainer
 var reward_panel: PanelContainer
 var summary_overlay: Control
+var shop_overlay: Control
+var shop_panel: PanelContainer
+var shop_list: VBoxContainer
+var shop_open := false
+var _shop_offered := false
+var shop_reopen_button: Button
+var shop_close_button: Button
 var summary_panel: PanelContainer
 var dev_panel: PanelContainer
 var dev_label: Label
@@ -42,6 +50,7 @@ var info: Label
 var notices: Label
 var context: VBoxContainer
 var editor_panel: PanelContainer
+var editor_dock: MarginContainer
 var editor_controls: VBoxContainer
 var editor_preview: Label
 var transition_veil: ColorRect
@@ -141,19 +150,35 @@ func _build() -> void:
 	transition_veil.modulate.a = 0
 	transition_veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	arena_area.add_child(transition_veil)
+	shop_overlay = Control.new()
+	shop_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shop_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shop_overlay.visible = false
+	arena_area.add_child(shop_overlay)
+	var shop_centre := CenterContainer.new()
+	shop_centre.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shop_centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shop_overlay.add_child(shop_centre)
+	shop_panel = PanelContainer.new()
+	shop_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	shop_centre.add_child(shop_panel)
+	shop_list = VBoxContainer.new()
+	shop_list.add_theme_constant_override("separation",6)
+	shop_panel.add_child(shop_list)
 	arena_area.resized.connect(_fit_test_canvas)
 	arena_area.resized.connect(_fit_arena)
 	get_window().size_changed.connect(_fit_arena)
 	_build_workshop_panel(layout)
 	_build_top_bar()
 	_build_overlays()
-	var editor_holder := CenterContainer.new()
-	editor_holder.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	editor_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(editor_holder)
+	editor_dock = MarginContainer.new()
+	editor_dock.add_theme_constant_override("margin_top",TOP_BAR_HEIGHT)
+	editor_dock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	editor_dock.visible = false
+	layout.add_child(editor_dock)
 	editor_panel = PanelContainer.new()
 	editor_panel.visible = false
-	editor_holder.add_child(editor_panel)
+	editor_dock.add_child(editor_panel)
 	resized.connect(_fit_editor_panel)
 	var editor_scroll := ScrollContainer.new()
 	editor_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -257,6 +282,8 @@ func _build_top_bar() -> void:
 	toasts.custom_minimum_size.x = 460
 	toasts.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP,Control.PRESET_MODE_MINSIZE)
 	toasts.offset_top = SCREEN_MARGIN+4
+	toasts.offset_left = -230 # centred on the screen, clear of the right-hand panel
+	toasts.offset_right = 230
 	toasts.add_theme_constant_override("separation",4)
 	bar.add_child(toasts)
 	tip = Label.new()
@@ -272,7 +299,6 @@ func _build_overlays() -> void:
 	reward_overlay.visible = false
 	add_child(reward_overlay)
 	reward_panel = PanelContainer.new()
-	reward_panel.custom_minimum_size.x = 420
 	reward_overlay.add_child(reward_panel)
 	summary_overlay = Control.new()
 	summary_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -360,8 +386,7 @@ func _fit_test_canvas() -> void:
 func _fit_editor_panel() -> void:
 	if editor_panel == null:
 		return
-	editor_panel.custom_minimum_size = Vector2(minf(EDITOR_SIZE.x,size.x-2.0*SCREEN_MARGIN),
-		minf(EDITOR_SIZE.y,size.y-2.0*SCREEN_MARGIN))
+	editor_panel.custom_minimum_size = Vector2(minf(EDITOR_SIZE.x,size.x*0.45),0)
 
 func is_paused() -> bool:
 	return pause_menu != null and pause_menu.visible
@@ -600,7 +625,7 @@ func _redraw_panel() -> void:
 	var in_summary: bool = flow.state in ["dead","won"]
 	var reward_choice: bool = flow.state == "cleared" and flow.room.values["type"] != "boss" and not flow.reward_collected
 	var in_workshop: bool = flow.state == "workshop"
-	workshop_holder.visible = in_workshop
+	workshop_holder.visible = in_workshop and not editor_open
 	reward_overlay.visible = reward_choice
 	summary_overlay.visible = in_summary
 	_place_context(summary_panel if in_summary else (reward_panel if reward_choice else workshop_column))
@@ -609,43 +634,37 @@ func _redraw_panel() -> void:
 	elif flow.state == "error":
 		_heading(context,"RUN DATA ERROR")
 	elif reward_choice:
-		_heading(context,"ROOM CLEARED — choose ONE reward:")
+		var heading := Label.new()
+		heading.text = "ROOM CLEARED — choose ONE reward"
+		heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		heading.add_theme_color_override("font_color",Color("#efbc65"))
+		context.add_child(heading)
+		var row := HBoxContainer.new()
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_theme_constant_override("separation",12)
+		context.add_child(row)
 		for i in flow.reward_options.size():
 			var item: Dictionary = flow.reward_options[i]
 			var caption := ""
 			if item["kind"] == "rune":
-				caption = str(item["name"])+": "+str(item["behaviour"])
+				caption = str(item["name"])+"\n"+str(item["behaviour"])
 			else:
 				caption = "+"+str(item["amount"])+" currency"
-			_skin_reward_button(_button(context,"%d) %s" % [i+1,caption],_choose_reward.bind(i)),item)
+			var card := _button(row,"%d) %s" % [i+1,caption],_choose_reward.bind(i))
+			card.custom_minimum_size = Vector2(180,240)
+			card.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			card.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			card.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+			_skin_reward_button(card,item)
+		var keys := Label.new()
+		keys.text = "Keys 1-3 or click a card"
+		keys.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		context.add_child(keys)
 		if flow.edit_policy == "cleared_room":
 			_hint(context,"Quick edit allowed (no shop/test)")
 		_hint(context,"Advance at exit (F) after choosing")
 	elif in_workshop:
-		_heading(context,str(flavour.get("merchant", {}).get("title", "Merchant"))+" — buy once per item")
-		var greet := Label.new()
-		greet.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		greet.text = flow.merchant.greeting(flow.run.seed)
-		context.add_child(greet)
-		for i in flow.merchant.stock.size():
-			var item: Dictionary = flow.merchant.stock[i]
-			var affordable: bool = int(item["price"]) <= flow.run.currency
-			var b := _button(context,str(item["label"])+" / "+str(item["price"])+" coins",
-				_buy.bind(i))
-			b.disabled = flow.merchant.bought.has(item["id"]) or not affordable
-			b.icon = PortraitHUD.rune_icon_texture(str(item["rune_id"])) if item["kind"] == "rune" else PortraitHUD.ui_icon_texture("hp")
-			b.expand_icon = false
-			b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			var detail := Label.new()
-			detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			var explanation := ""
-			if item["kind"] == "rune":
-				var rune = flow.session.sim.registry.get_rune(str(item["rune_id"]))
-				explanation = str(rune.snapshot()["description"]) if rune != null else str(item["rune_id"])
-			else:
-				explanation = "Increase max HP by %d (run-persistent)" % int(item["amount"])
-			detail.text = explanation+" | "+("Purchased" if flow.merchant.bought.has(item["id"]) else ("Affordable" if affordable else "Need "+str(int(item["price"])-flow.run.currency)+" coins"))
-			context.add_child(detail)
+		shop_reopen_button = _button(context,"Open merchant",func(): _set_shop_open(true))
 		_heading(context,"Testing range: no progression/rewards")
 		_button(context,"Reset test targets + mana (T)",func(): _reset_test_range())
 		_button(context,"Prepare Wet cluster (2 targets)",func():
@@ -655,7 +674,86 @@ func _redraw_panel() -> void:
 			flow.refill_test_mana()
 			current_notice = "Test mana refilled")
 		_button(context,"Continue to stage 2 (F)",func(): _exit())
+	if in_workshop:
+		if not _shop_offered:
+			_shop_offered = true
+			shop_open = true
+		_build_shop_panel()
+	else:
+		_shop_offered = false
+		shop_open = false
+	_sync_shop()
 	_update_labels()
+
+func _sync_shop() -> void:
+	if shop_overlay != null:
+		shop_overlay.visible = shop_open and flow != null and flow.state == "workshop" and not editor_open
+	if workshop_holder != null and flow != null:
+		workshop_holder.visible = flow.state == "workshop" and not editor_open
+	if editor_dock != null:
+		editor_dock.visible = editor_open
+		_fit_editor_panel()
+		_fit_test_canvas.call_deferred()
+
+func _set_shop_open(on: bool) -> void:
+	shop_open = on
+	_sync_shop()
+
+func _build_shop_panel() -> void:
+	_clear(shop_list)
+	var title := Label.new()
+	title.text = str(flavour.get("merchant", {}).get("title", "Merchant"))+" — buy once per item"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_color_override("font_color",Color("#efbc65"))
+	shop_list.add_child(title)
+	var greet := Label.new()
+	greet.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	greet.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	greet.custom_minimum_size.x = 380
+	greet.text = flow.merchant.greeting(flow.run.seed)
+	shop_list.add_child(greet)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation",8)
+	shop_list.add_child(row)
+	for i in flow.merchant.stock.size():
+		var item: Dictionary = flow.merchant.stock[i]
+		var affordable: bool = int(item["price"]) <= flow.run.currency
+		var card := PanelContainer.new()
+		var box := StyleBoxTexture.new()
+		var tex := AtlasTexture.new()
+		tex.atlas = ShopCard
+		tex.region = Rect2(48,0,48,48)
+		box.texture = tex
+		box.draw_center = false # the card art bakes in a RUNE label and price; keep only its frame
+		for side in ["left","right","top","bottom"]:
+			box.set("texture_margin_"+side,4)
+			box.set("content_margin_"+side,8)
+		card.add_theme_stylebox_override("panel",box)
+		card.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		row.add_child(card)
+		var col := VBoxContainer.new()
+		col.custom_minimum_size.x = 150
+		col.add_theme_constant_override("separation",4)
+		card.add_child(col)
+		var b := _button(col,str(item["label"])+" / "+str(item["price"])+" coins",_buy.bind(i))
+		b.disabled = flow.merchant.bought.has(item["id"]) or not affordable
+		b.icon = PortraitHUD.rune_icon_texture(str(item["rune_id"])) if item["kind"] == "rune" else PortraitHUD.ui_icon_texture("hp")
+		b.expand_icon = false
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var detail := Label.new()
+		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		detail.custom_minimum_size.x = 150 # a wrapped label needs a width or it measures one character per line
+		var explanation := ""
+		if item["kind"] == "rune":
+			var rune = flow.session.sim.registry.get_rune(str(item["rune_id"]))
+			explanation = str(rune.snapshot()["description"]) if rune != null else str(item["rune_id"])
+		else:
+			explanation = "Increase max HP by %d (run-persistent)" % int(item["amount"])
+		detail.text = explanation+" | "+("Purchased" if flow.merchant.bought.has(item["id"]) else ("Affordable" if affordable else "Need "+str(int(item["price"])-flow.run.currency)+" coins"))
+		col.add_child(detail)
+	shop_close_button = _button(shop_list,"Close shop",func(): _set_shop_open(false),"ui.cancel")
 
 func _hint(parent: Node, text: String) -> void:
 	var label := Label.new()
@@ -736,6 +834,9 @@ func _update_labels() -> void:
 			guide.current = ""
 		tip.text = ("TIP: " + guide.text()) if guide.text() != "" else ""
 		tip_panel.visible = tip.text != ""
+	if editor_open: # the docked editor owns the top-right; toasts must not cover its heading
+		tip_panel.visible = false
+		notice_panel.visible = false
 
 ## Compact top-left objective: room display name + goal for the current state, then the coin count.
 func _update_objective() -> void:
@@ -820,9 +921,16 @@ func _build_summary_panel() -> void:
 		label.text = "Runs: %d  Wins: %d  Best: %s" % [totals["runs"],totals["wins"],
 			("%d:%02d" % [int(best)/60,int(best)%60]) if best >= 0.0 else "--"]
 		context.add_child(label)
-	summary_retry_button = _button(context,"Retry same seed",func(): _retry_same_seed())
-	summary_new_seed_button = _button(context,"New seed",func(): _new_seed())
-	summary_title_button = _button(context,"Title",func(): _to_title(),"ui.cancel")
+	var buttons := HBoxContainer.new()
+	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
+	buttons.add_theme_constant_override("separation",8)
+	context.add_child(buttons)
+	summary_retry_button = _button(buttons,"Retry same seed",func(): _retry_same_seed())
+	summary_new_seed_button = _button(buttons,"New seed",func(): _new_seed())
+	summary_title_button = _button(buttons,"Title",func(): _to_title(),"ui.cancel")
+	for b in [summary_retry_button,summary_new_seed_button,summary_title_button]:
+		b.autowrap_mode = TextServer.AUTOWRAP_OFF # a wrapping button in a row shrinks to one character per line
+		b.custom_minimum_size.x = 110
 
 func _retry_same_seed() -> void:
 	close_pause()
@@ -885,6 +993,7 @@ func _open_editor(index: int) -> void:
 		_update_labels()
 		return
 	editor_open = true
+	_sync_shop()
 	opened_editor_ms = Time.get_ticks_msec()
 	editor_panel.visible = true
 	_editor_rebuild()
@@ -992,6 +1101,7 @@ func _close_visual_editor() -> void:
 	editor_open = false
 	if editor_panel != null:
 		editor_panel.visible = false
+	_sync_shop()
 
 func _close_editor(apply_changes: bool) -> void:
 	var duration := float(Time.get_ticks_msec()-opened_editor_ms)/1000.0
@@ -1026,12 +1136,10 @@ func apply_debug_shot_state(state: String) -> bool:
 		flow.step({"cast":0})
 	_redraw_panel()
 	if state == "workshop_editor":
+		_set_shop_open(false)
 		_open_editor(1) # slot 0 (Basic Bolt) is locked; slot 1 is the first editable one
 	elif state == "merchant":
-		for child in context.get_children():
-			if child is Label and "buy once per item" in child.text:
-				scroll.ensure_control_visible.call_deferred(child)
-				break
+		_set_shop_open(true)
 	elif state == "pause":
 		open_pause()
 	return true

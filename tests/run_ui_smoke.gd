@@ -179,6 +179,16 @@ func _run() -> void:
 		"AD-040 3 reward cards have texture skin and icon")
 	expect(control.reward_overlay.visible and control.context.is_visible_in_tree() and control.reward_panel.is_ancestor_of(control.context),
 		"AD-092 reward cards sit in the centred overlay")
+	var card_row: Node = cards[0].get_parent() if not cards.is_empty() else null
+	expect(card_row is HBoxContainer and cards.all(func(b): return b.get_parent()==card_row)
+		and cards.all(func(b): return b.get_global_rect().end.x <= control.get_viewport_rect().size.x and b.get_global_rect().position.x >= 0.0),
+		"AD-093 3 reward cards share one on-screen HBoxContainer row")
+	var in_scroll := false
+	var walker: Node = control.context
+	while walker != null:
+		if walker is ScrollContainer: in_scroll = true
+		walker = walker.get_parent()
+	expect(not in_scroll,"AD-093 reward cards not inside a ScrollContainer")
 	var key_one := InputEventKey.new()
 	key_one.keycode = KEY_1
 	key_one.pressed = true
@@ -221,14 +231,19 @@ func _run() -> void:
 	expect(not control.is_paused(),"AD-068 workshop pause closes")
 	expect(not control.arena_canvas.visible,"combat canvas hidden during workshop")
 	expect(control.tip.text.contains("slot 4"),"AD-042 first_workshop tip on entering workshop")
-	expect(control.context.get_child_count()>5,"workshop merchant and test tools visible")
+	expect(control.context.get_child_count()>3,"workshop test tools visible")
+	expect(control.shop_overlay.visible and control.arena_area.is_ancestor_of(control.shop_panel),"AD-093 shop overlay opens on workshop entry")
 	var previews := false
-	for label in control.context.find_children("*","Label",true,false):
+	for label in control.shop_list.find_children("*","Label",true,false):
 		if label.text.contains("Affordable") or label.text.contains("Need "):
 			previews = true
 	expect(previews,"merchant displays effect preview and affordability")
-	var stock_buttons: Array = control.context.find_children("*","Button",true,false).filter(func(b): return b.text.contains(" coins"))
+	var stock_buttons: Array = control.shop_list.find_children("*","Button",true,false).filter(func(b): return b.text.contains(" coins"))
 	expect(not stock_buttons.is_empty() and stock_buttons.all(func(b): return b.icon != null),"AD-040 merchant stock buttons have icons")
+	control.shop_close_button.emit_signal("pressed")
+	expect(not control.shop_overlay.visible,"AD-093 Close shop hides the shop overlay")
+	control.shop_reopen_button.emit_signal("pressed")
+	expect(control.shop_overlay.visible,"AD-093 Open merchant reopens the shop overlay")
 	control.flow.experiment.configure(true)
 	control._update_labels()
 	control._update_labels()
@@ -237,6 +252,8 @@ func _run() -> void:
 		"AD-084 workshop shows empty-slot hint")
 	control._open_editor(1)
 	expect(control.editor_open and control.editor_panel.visible,"structured editor panel opens")
+	expect(not (control.editor_panel.get_parent() is CenterContainer),"AD-093 editor is docked, not centred")
+	expect(not control.workshop_holder.visible,"AD-093 workshop side panel hidden while editor open")
 	expect(control.editor_controls.find_children("*","OptionButton",true,false).size()>=2,
 		"editor has root Essence and Manifestation selectors")
 	var old: Dictionary = run.run.formulas[0].duplicate(true)
@@ -245,6 +262,7 @@ func _run() -> void:
 	expect(control.editor_preview.text.contains("VALID"),"editor live validation shows valid draft")
 	control._close_editor(false)
 	expect(not control.editor_open and run.run.formulas[0]==old,"editor cancel restores original")
+	expect(control.workshop_holder.visible,"AD-093 workshop side panel visible again after cancel")
 	control._open_editor(1)
 	run.editor.set_root("essence.water","form.projectile")
 	control._editor_rebuild()
