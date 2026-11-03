@@ -11,17 +11,34 @@ const SLOT_GAP := 10.0
 const PANEL_PAD := 14.0
 const DASH_GAP := 16.0
 const PANEL_HEIGHT := 112.0
+const SAFE_MARGIN := 16.0 # logical px between the combat panel and the bottom edge of the canvas
 var flow
 var session
 var canvas
 
 func _ready() -> void:
 	if canvas != null:
-		set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		custom_minimum_size = Vector2(panel_width(slot_count()),PANEL_HEIGHT)
+		canvas.resized.connect(fit_to_canvas)
+		fit_to_canvas()
 	else:
 		custom_minimum_size = Vector2(277,124)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+## Bottom-centre of the canvas with a safe margin. The canvas node is scaled by the arena zoom, so this counter-scales to stay logical-sized.
+func fit_to_canvas() -> void:
+	if canvas == null:
+		return
+	var k: float = 1.0/maxf(canvas.scale.x,0.01)
+	var panel := Vector2(panel_width(slot_count()),PANEL_HEIGHT)
+	scale = Vector2(k,k)
+	size = panel
+	position = Vector2(floorf((canvas.size.x-panel.x*k)/2.0),canvas.size.y-(panel.y+SAFE_MARGIN)*k)
+
+static func panel_width(slots: int) -> float:
+	var slots_width: float = slots*SLOT_SIZE+(slots-1)*SLOT_GAP
+	return maxf(PANEL_PAD*2+slots_width+DASH_GAP+SLOT_SIZE,128.0*hud_scale()+PANEL_PAD*2)
 
 func _session():
 	if canvas != null:
@@ -120,9 +137,8 @@ func _draw_combat_panel() -> void:
 	_nine()
 	var sc: float = hud_scale()
 	var bar_px: Vector2 = Vector2(128.0,28.0)*sc
-	var slots_width: float = slot_count()*SLOT_SIZE+(slot_count()-1)*SLOT_GAP
-	var width: float = maxf(PANEL_PAD*2+slots_width+DASH_GAP+SLOT_SIZE,bar_px.x+PANEL_PAD*2)
-	var origin := Vector2(floorf((size.x-width)/2.0),size.y-PANEL_HEIGHT-8.0)
+	var width: float = panel_width(slot_count())
+	var origin := Vector2.ZERO # the control itself is anchored bottom-centre with SAFE_MARGIN
 	draw_rect(Rect2(origin,Vector2(width,PANEL_HEIGHT)),Color("#0b131b",0.92))
 	draw_rect(Rect2(origin,Vector2(width,PANEL_HEIGHT)),Color("#b08042"),false,2)
 	draw_rect(Rect2(origin+Vector2(4,4),Vector2(width-8,PANEL_HEIGHT-8)),Color("#564226"),false,1)

@@ -51,6 +51,11 @@ var flavour: Dictionary = MerchantScript.load_flavour()
 var _rift_shown := false
 var pause_menu
 var scroll: ScrollContainer
+var arena_area: Control
+const SCREEN_MARGIN := 6
+const SIDEBAR_WIDTH := 312.0
+const TEST_RANGE_SIZE := Vector2(916,650)
+const EDITOR_SIZE := Vector2(500,665)
 var _prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
 
 func _ready() -> void:
@@ -80,10 +85,20 @@ func _build() -> void:
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for side in ["left","top","right","bottom"]:
+		margin.add_theme_constant_override("margin_"+side,SCREEN_MARGIN)
+	add_child(margin)
+	var layout := HBoxContainer.new()
+	layout.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layout.add_theme_constant_override("separation",SCREEN_MARGIN)
+	margin.add_child(layout)
 	var panel := PanelContainer.new()
-	panel.position = Vector2(6,5)
-	panel.size = Vector2(312,709)
-	add_child(panel)
+	panel.custom_minimum_size = Vector2(SIDEBAR_WIDTH,0)
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_child(panel)
 	scroll = ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	panel.add_child(scroll)
@@ -140,33 +155,42 @@ func _build() -> void:
 		help.text += "\nF2 edit policy / F3 debug"
 	help.add_theme_font_size_override("font_size",11)
 	sidebar.add_child(help)
+	arena_area = Control.new()
+	arena_area.name = "ArenaArea"
+	arena_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	arena_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	arena_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	arena_area.clip_contents = true
+	layout.add_child(arena_area)
 	arena_canvas = ArenaCanvas.new()
 	arena_canvas.settings = _settings
-	arena_canvas.position = Vector2(325,35)
-	arena_canvas.size = Vector2(916,650)
 	arena_canvas.session = flow.session
 	arena_canvas.run_flow = flow
-	add_child(arena_canvas)
+	arena_area.add_child(arena_canvas)
 	arena_canvas.world_click.connect(_world_click)
 	test_canvas = TestCanvas.new()
-	test_canvas.position = arena_canvas.position
-	test_canvas.size = arena_canvas.size
+	test_canvas.size = TEST_RANGE_SIZE
 	test_canvas.runner = flow.range_sim
 	test_canvas.visible = false
-	add_child(test_canvas)
+	arena_area.add_child(test_canvas)
 	test_canvas.world_click.connect(_test_click)
 	transition_veil = ColorRect.new()
-	transition_veil.position = arena_canvas.position
-	transition_veil.size = arena_canvas.size
+	transition_veil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	transition_veil.color = Color("#0b1320")
 	transition_veil.modulate.a = 0
 	transition_veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(transition_veil)
+	arena_area.add_child(transition_veil)
+	arena_area.resized.connect(_fit_test_canvas)
+	arena_area.resized.connect(_fit_arena)
+	get_window().size_changed.connect(_fit_arena)
+	var editor_holder := CenterContainer.new()
+	editor_holder.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	editor_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(editor_holder)
 	editor_panel = PanelContainer.new()
-	editor_panel.position = Vector2(380,30)
-	editor_panel.size = Vector2(500,665)
 	editor_panel.visible = false
-	add_child(editor_panel)
+	editor_holder.add_child(editor_panel)
+	resized.connect(_fit_editor_panel)
 	var editor_scroll := ScrollContainer.new()
 	editor_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	editor_panel.add_child(editor_scroll)
@@ -181,6 +205,53 @@ func _build() -> void:
 	pause_menu.resume_requested.connect(close_pause)
 	pause_menu.retry_confirmed.connect(_pause_retry)
 	pause_menu.quit_confirmed.connect(_pause_quit)
+	_fit_editor_panel()
+
+## AD-091: smallest world view the arena should show; texel 3 is used when it still fits.
+const MIN_VIEW_WORLD := Vector2(900,600)
+
+## Physical pixels per art texel (2, or 3 when the arena area still shows MIN_VIEW_WORLD world units at that scale).
+static func arena_texel(area_px: Vector2) -> int:
+	var view_at_3 := area_px/1.5
+	return 3 if view_at_3.x >= MIN_VIEW_WORLD.x and view_at_3.y >= MIN_VIEW_WORLD.y else 2
+
+## Physical pixels per logical unit under the window stretch.
+func _physical_scale() -> float:
+	var s: float = get_viewport().get_final_transform().get_scale().x
+	return s if s > 0.0 else 1.0
+
+## Integer pixel scale for the arena: one art texel (2 world units) = `texel` whole physical pixels.
+func _fit_arena() -> void:
+	if arena_canvas == null or arena_area == null:
+		return
+	var s := _physical_scale()
+	var area_px := arena_area.size*s
+	var zoom := float(arena_texel(area_px))/(2.0*s)
+	var whole := area_px.floor()
+	arena_canvas.scale = Vector2(zoom,zoom)
+	arena_canvas.size = whole/s/zoom
+	arena_canvas.position = ((area_px-whole)*0.5).floor()/s
+	if arena_canvas.slot_hud != null:
+		arena_canvas.slot_hud.fit_to_canvas()
+	arena_canvas.queue_redraw()
+
+## Workshop test range keeps its logical size (movement bounds depend on it) and is scaled down to fit.
+func _fit_test_canvas() -> void:
+	if test_canvas == null or arena_area == null:
+		return
+	var area := arena_area.size
+	var factor := minf(1.0,minf(area.x/TEST_RANGE_SIZE.x,area.y/TEST_RANGE_SIZE.y))
+	var whole := floorf(TEST_RANGE_SIZE.x*factor)/TEST_RANGE_SIZE.x
+	if whole > 0.0:
+		factor = minf(factor,whole)
+	test_canvas.scale = Vector2(factor,factor)
+	test_canvas.position = ((area-TEST_RANGE_SIZE*factor)*0.5).floor()
+
+func _fit_editor_panel() -> void:
+	if editor_panel == null:
+		return
+	editor_panel.custom_minimum_size = Vector2(minf(EDITOR_SIZE.x,size.x-2.0*SCREEN_MARGIN),
+		minf(EDITOR_SIZE.y,size.y-2.0*SCREEN_MARGIN))
 
 func is_paused() -> bool:
 	return pause_menu != null and pause_menu.visible

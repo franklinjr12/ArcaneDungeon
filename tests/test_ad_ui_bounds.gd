@@ -1,8 +1,8 @@
 extends RefCounted
 ## AD-090: every visible Control stays inside the logical viewport and interactive Controls do not overlap,
-## at each matrix window size and UI state. Report-only until AD U2 (flip REPORT_ONLY to false).
+## at each matrix window size and UI state. Enforced since AD-091 (REPORT_ONLY := false).
 ## Live resize 1280x720 -> 1920x1080 is covered by those two sizes; fullscreen on a 1920x1080 screen equals 1920x1080.
-const REPORT_ONLY := true
+const REPORT_ONLY := false
 const SIZES := [Vector2i(1280,720), Vector2i(1366,768), Vector2i(1600,900), Vector2i(1920,1080), Vector2i(2560,1440),
 	Vector2i(3840,2160), Vector2i(1280,800), Vector2i(1920,1200), Vector2i(2560,1080), Vector2i(3440,1440), Vector2i(1024,768)]
 const MENU_STATES := ["title","settings"]
@@ -32,6 +32,8 @@ func logical_size(window: Vector2i) -> Vector2i:
 
 func run(t) -> void:
 	var root := (Engine.get_main_loop() as SceneTree).root
+	_display_settings(t)
+	_arena_scale(t)
 	for window in SIZES:
 		var logical := logical_size(window)
 		for state in MENU_STATES + RUN_STATES:
@@ -39,6 +41,50 @@ func run(t) -> void:
 	print("AD-090 UI-BOUNDS REPORT total issues: %d (report_only=%s)" % [issues, REPORT_ONLY])
 	if REPORT_ONLY:
 		t.check(true, "AD-090 bounds report-only (%d issues)" % issues)
+
+func _display_settings(t) -> void:
+	const Settings = preload("res://game/core/settings.gd")
+	var s := Settings.new()
+	t.equal(s.window_mode, "windowed", "AD-091 default window_mode")
+	t.equal(s.ui_scale, 1.0, "AD-091 default ui_scale")
+	s.window_mode = "borderless"
+	s.ui_scale = 1.3
+	var cfg := ConfigFile.new()
+	s.to_config(cfg)
+	var back := Settings.new()
+	back.from_config(cfg)
+	t.equal(back.window_mode, "borderless", "AD-091 window_mode round trip")
+	t.check(is_equal_approx(back.ui_scale, 1.3), "AD-091 ui_scale round trip")
+	var bad := ConfigFile.new()
+	bad.set_value("display", "window_mode", "bogus")
+	bad.set_value("display", "ui_scale", 9.0)
+	back.from_config(bad)
+	t.equal(back.window_mode, "windowed", "AD-091 bogus mode falls back")
+	t.check(is_equal_approx(back.ui_scale, 1.5), "AD-091 ui_scale clamps high")
+	bad.set_value("display", "ui_scale", 0.1)
+	back.from_config(bad)
+	t.check(is_equal_approx(back.ui_scale, 0.9), "AD-091 ui_scale clamps low")
+	bad.set_value("display", "ui_scale", "x")
+	back.from_config(bad)
+	t.equal(back.ui_scale, 1.0, "AD-091 non-number ui_scale falls back")
+
+func _arena_scale(t) -> void:
+	const Run = preload("res://ui/run_controller.gd")
+	const Canvas = preload("res://ui/combat_canvas.gd")
+	t.equal(Run.arena_texel(Vector2(950,690)), 2, "AD-091 texel 2 at 1280x720 arena area")
+	t.equal(Run.arena_texel(Vector2(3500,2100)), 3, "AD-091 texel 3 at 3840x2160 arena area")
+	for s: float in [1.0, 1.0672, 1.5, 2.0, 3.0]:
+		var texel := Run.arena_texel(Vector2(900,600)*s*1.7)
+		var zoom := float(texel)/(2.0*s)
+		var phys := 2.0*s*zoom
+		t.check(absf(phys-roundf(phys)) < 0.0001, "AD-091 art texel is whole physical pixels at scale %s" % s)
+	var canvas := Canvas.new()
+	canvas.scale = Vector2(1.5,1.5)
+	canvas.size = Vector2(600,400)
+	var p := Vector2(123.5,77.25)
+	t.check(canvas.world_from_local(canvas.local_from_world(p)).is_equal_approx(p), "AD-091 world/local round trip on a scaled canvas")
+	t.equal(canvas.view_size(), canvas.size, "AD-091 view_size is the world-space node size")
+	canvas.free()
 
 func _case(t, root: Node, window: Vector2i, logical: Vector2i, state: String) -> void:
 	var viewport := SubViewport.new()
