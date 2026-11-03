@@ -127,12 +127,35 @@ func _case(t, root: Node, window: Vector2i, logical: Vector2i, state: String) ->
 	var ok: bool = scene.apply_debug_shot_state(state)
 	t.check(ok, "AD-090 shot state %s applies at %dx%d" % [state, window.x, window.y])
 	if ok:
+		if state == "workshop_editor":
+			_layout(viewport)
+			scene._fit_test_canvas()
 		_layout(viewport)
 		_layout(viewport)
+		if state == "workshop_editor":
+			_check_editor_dummies(t, scene, "%dx%d" % [window.x, window.y], logical)
 		_check_controls(t, viewport, "%dx%d" % [window.x, window.y], state, Rect2(Vector2.ZERO, Vector2(logical)))
 		if state in RUN_STATES:
 			_check_release_run(t, viewport, scene, window, state)
 	viewport.queue_free()
+
+## AD-093: the docked editor must not cover any live test-range dummy (labels included).
+func _check_editor_dummies(t, scene: Node, size_label: String, logical: Vector2i) -> void:
+	var range_sim = scene.flow.range_sim
+	var panel: Rect2 = scene.editor_panel.get_global_rect()
+	var view := Rect2(Vector2.ZERO, Vector2(logical))
+	var checked := 0
+	for target in range_sim.targets.all():
+		if target.id == range_sim.actor.id:
+			continue
+		var r: float = target.radius + 8.0
+		var rect: Rect2 = scene.test_canvas.get_global_transform() * Rect2(target.position - Vector2(r, r), Vector2(2.0*r, 2.0*r))
+		if rect.size.y < 24.0:
+			rect.size.y = 24.0
+		checked += 1
+		t.check(not rect.intersects(panel), "AD-093 editor covers dummy %s at %s: %s vs %s" % [target.id, size_label, rect, panel])
+		t.check(view.encloses(rect), "AD-093 dummy %s outside viewport at %s: %s" % [target.id, size_label, rect])
+	t.check(checked > 0, "AD-093 workshop has dummies to check at %s" % size_label)
 
 func _layout(node: Node) -> void:
 	if node is Container:

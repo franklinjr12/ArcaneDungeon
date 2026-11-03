@@ -252,6 +252,8 @@ func _run() -> void:
 		"AD-084 workshop shows empty-slot hint")
 	control._open_editor(1)
 	expect(control.editor_open and control.editor_panel.visible,"structured editor panel opens")
+	expect(not (control.editor_panel.get_parent() is CenterContainer),"AD-093 editor is docked, not centred")
+	expect(not control.workshop_holder.visible,"AD-093 workshop side panel hidden while editor open")
 	expect(control.editor_controls.find_children("*","OptionButton",true,false).size()>=2,
 		"editor has root Essence and Manifestation selectors")
 	var old: Dictionary = run.run.formulas[0].duplicate(true)
@@ -260,6 +262,7 @@ func _run() -> void:
 	expect(control.editor_preview.text.contains("VALID"),"editor live validation shows valid draft")
 	control._close_editor(false)
 	expect(not control.editor_open and run.run.formulas[0]==old,"editor cancel restores original")
+	expect(control.workshop_holder.visible,"AD-093 workshop side panel visible again after cancel")
 	control._open_editor(1)
 	run.editor.set_root("essence.water","form.projectile")
 	control._editor_rebuild()

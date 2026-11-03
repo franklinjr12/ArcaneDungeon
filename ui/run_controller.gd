@@ -50,6 +50,7 @@ var info: Label
 var notices: Label
 var context: VBoxContainer
 var editor_panel: PanelContainer
+var editor_dock: MarginContainer
 var editor_controls: VBoxContainer
 var editor_preview: Label
 var transition_veil: ColorRect
@@ -170,13 +171,14 @@ func _build() -> void:
 	_build_workshop_panel(layout)
 	_build_top_bar()
 	_build_overlays()
-	var editor_holder := CenterContainer.new()
-	editor_holder.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	editor_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(editor_holder)
+	editor_dock = MarginContainer.new()
+	editor_dock.add_theme_constant_override("margin_top",TOP_BAR_HEIGHT)
+	editor_dock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	editor_dock.visible = false
+	layout.add_child(editor_dock)
 	editor_panel = PanelContainer.new()
 	editor_panel.visible = false
-	editor_holder.add_child(editor_panel)
+	editor_dock.add_child(editor_panel)
 	resized.connect(_fit_editor_panel)
 	var editor_scroll := ScrollContainer.new()
 	editor_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -382,8 +384,7 @@ func _fit_test_canvas() -> void:
 func _fit_editor_panel() -> void:
 	if editor_panel == null:
 		return
-	editor_panel.custom_minimum_size = Vector2(minf(EDITOR_SIZE.x,size.x-2.0*SCREEN_MARGIN),
-		minf(EDITOR_SIZE.y,size.y-2.0*SCREEN_MARGIN))
+	editor_panel.custom_minimum_size = Vector2(minf(EDITOR_SIZE.x,size.x*0.45),0)
 
 func is_paused() -> bool:
 	return pause_menu != null and pause_menu.visible
@@ -622,7 +623,7 @@ func _redraw_panel() -> void:
 	var in_summary: bool = flow.state in ["dead","won"]
 	var reward_choice: bool = flow.state == "cleared" and flow.room.values["type"] != "boss" and not flow.reward_collected
 	var in_workshop: bool = flow.state == "workshop"
-	workshop_holder.visible = in_workshop
+	workshop_holder.visible = in_workshop and not editor_open
 	reward_overlay.visible = reward_choice
 	summary_overlay.visible = in_summary
 	_place_context(summary_panel if in_summary else (reward_panel if reward_choice else workshop_column))
@@ -685,6 +686,12 @@ func _redraw_panel() -> void:
 func _sync_shop() -> void:
 	if shop_overlay != null:
 		shop_overlay.visible = shop_open and flow != null and flow.state == "workshop" and not editor_open
+	if workshop_holder != null and flow != null:
+		workshop_holder.visible = flow.state == "workshop" and not editor_open
+	if editor_dock != null:
+		editor_dock.visible = editor_open
+		_fit_editor_panel()
+		_fit_test_canvas.call_deferred()
 
 func _set_shop_open(on: bool) -> void:
 	shop_open = on
