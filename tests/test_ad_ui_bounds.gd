@@ -1,11 +1,14 @@
 extends RefCounted
 ## AD-090: every visible Control stays inside the logical viewport and interactive Controls do not overlap,
 ## at each matrix window size and UI state. Enforced since AD-091 (REPORT_ONLY := false).
+## AD-092: run states are checked release-like (show_dev_tools=false): no dev text, >=14 px text at 1280x720,
+## no scroll container around the combat/reward/pause UI, and HUD slot numbering matches the loadout.
 ## Live resize 1280x720 -> 1920x1080 is covered by those two sizes; fullscreen on a 1920x1080 screen equals 1920x1080.
 const REPORT_ONLY := false
 const SIZES := [Vector2i(1280,720), Vector2i(1366,768), Vector2i(1600,900), Vector2i(1920,1080), Vector2i(2560,1440),
 	Vector2i(3840,2160), Vector2i(1280,800), Vector2i(1920,1200), Vector2i(2560,1080), Vector2i(3440,1440), Vector2i(1024,768)]
 const MENU_STATES := ["title","settings"]
+const DEV_TEXTS := ["ARCANE DUNGEON / M4","Edit policy","Render FPS","Waves scheduled","telemetry","Toggle debug","Toggle edit policy"]
 const RUN_STATES := ["combat","reward","workshop_editor","merchant","pause","summary"]
 
 var issues := 0
@@ -92,6 +95,8 @@ func _case(t, root: Node, window: Vector2i, logical: Vector2i, state: String) ->
 	viewport.disable_3d = true
 	root.add_child(viewport)
 	var scene: Node = load("res://scenes/main.tscn" if state in MENU_STATES else "res://scenes/run.tscn").instantiate()
+	if state in RUN_STATES:
+		scene.show_dev_tools = false # release-like run: no dev overlay
 	viewport.add_child(scene)
 	var ok: bool = scene.apply_debug_shot_state(state)
 	t.check(ok, "AD-090 shot state %s applies at %dx%d" % [state, window.x, window.y])
@@ -99,6 +104,8 @@ func _case(t, root: Node, window: Vector2i, logical: Vector2i, state: String) ->
 		_layout(viewport)
 		_layout(viewport)
 		_check_controls(t, viewport, "%dx%d" % [window.x, window.y], state, Rect2(Vector2.ZERO, Vector2(logical)))
+		if state in RUN_STATES:
+			_check_release_run(t, viewport, scene, window, state)
 	viewport.queue_free()
 
 func _layout(node: Node) -> void:
@@ -161,3 +168,58 @@ func _check_controls(t, root: Node, size_label: String, state: String, bounds: R
 				continue
 			if (interactive[i][1] as Rect2).intersection(interactive[j][1]).has_area():
 				_report(t, size_label, state, "overlap", a, interactive[i][1])
+
+func _text_of(c: Control) -> String:
+	if c is Label or c is Button:
+		return c.text
+	if c is RichTextLabel:
+		return c.get_parsed_text()
+	return ""
+
+func _has_scroll_ancestor(c: Node) -> bool:
+	var p := c.get_parent()
+	while p != null:
+		if p is ScrollContainer and p.is_visible_in_tree():
+			return true
+		p = p.get_parent()
+	return false
+
+## AD-092: release-like run UI checks (enforced).
+func _check_release_run(t, viewport: Node, scene: Node, window: Vector2i, state: String) -> void:
+	var tag := "%dx%d %s" % [window.x, window.y, state]
+	var controls: Array = []
+	_controls(viewport, controls)
+	var dev_hits := 0
+	var small_hits := 0
+	for c in controls:
+		var text := _text_of(c)
+		if text == "":
+			continue
+		for needle in DEV_TEXTS:
+			if text.findn(needle) >= 0:
+				dev_hits += 1
+				t.check(false, "AD-092 dev text '%s' visible at %s: %s" % [needle, tag, c.get_path()])
+		if window == Vector2i(1280,720) and (c is Label or c is Button) and c.get_theme_font_size("font_size") < 14:
+			small_hits += 1
+			t.check(false, "AD-092 font size %d < 14 at %s: %s" % [c.get_theme_font_size("font_size"), tag, c.get_path()])
+	t.check(dev_hits == 0, "AD-092 no dev text at %s" % tag)
+	if window == Vector2i(1280,720):
+		t.check(small_hits == 0, "AD-092 all visible text >= 14 px at %s" % tag)
+	if state in ["combat","reward","pause"]:
+		var guarded: Array = [scene.arena_canvas.slot_hud, scene.objective, scene.coins_label, scene.pause_button]
+		if state == "reward":
+			guarded.append(scene.context)
+		for c in guarded:
+			t.check(not _has_scroll_ancestor(c), "AD-092 %s not inside a ScrollContainer at %s" % [c.name, tag])
+	if state == "combat":
+		var hud = scene.arena_canvas.slot_hud
+		var keys := ["LMB","RMB","Q","E"]
+		for i in keys.size():
+			var v: Dictionary = hud.slot_view(i)
+			t.equal(v.get("key_label"), keys[i], "AD-092 HUD slot %d key at %s" % [i + 1, tag])
+		var first: Dictionary = hud.slot_view(0)
+		t.check(first.get("locked", false) and not first.get("empty", true), "AD-092 HUD slot 1 is locked Basic Bolt at %s" % tag)
+		var buttons: Array = scene.loadout_slot_buttons
+		for i in buttons.size():
+			var want := "Slot 1: Basic Bolt" if i == 0 else "Slot %d" % (i + 1)
+			t.check(buttons[i].text.begins_with(want), "AD-092 loadout button %d reads '%s' at %s" % [i + 1, buttons[i].text, tag])
