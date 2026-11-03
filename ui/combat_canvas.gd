@@ -22,6 +22,9 @@ var environment_id := 0
 var last_player_at := Vector2.ZERO
 var last_enemy_at: Dictionary = {}
 var slot_hud
+## AD-091: world units -> canvas units. The run screen sets texel/(2*physical scale) so one art texel is a whole number of physical pixels.
+var pixel_zoom := 1.0
+const FRAME_COLOR := Color("#0b1320")
 
 func _ready() -> void:
 	slot_hud = SlotHUD.new()
@@ -32,21 +35,27 @@ func _ready() -> void:
 	clip_contents = true
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
+## World-space size of the visible view (canvas size divided by pixel_zoom).
+func view_size() -> Vector2:
+	return size/pixel_zoom
+
 func camera_offset() -> Vector2:
 	if session == null:
 		return Vector2.ZERO
 	var arena: Rect2 = session.world.bounds
 	var camera: Vector2 = session.sim.actor.position
-	return Vector2(
-		clampf(camera.x-size.x/2.0,arena.position.x,maxf(arena.position.x,arena.end.x-size.x)),
-		clampf(camera.y-size.y/2.0,arena.position.y,maxf(arena.position.y,arena.end.y-size.y))
-	)+ReduceMotion.shake_offset(settings,session.player.hit_flash,session.sim.clock.tick)
+	var view := view_size()
+	var base := Vector2(
+		arena.get_center().x-view.x/2.0 if view.x >= arena.size.x else clampf(camera.x-view.x/2.0,arena.position.x,arena.end.x-view.x),
+		arena.get_center().y-view.y/2.0 if view.y >= arena.size.y else clampf(camera.y-view.y/2.0,arena.position.y,arena.end.y-view.y)
+	)
+	return base+ReduceMotion.shake_offset(settings,session.player.hit_flash,session.sim.clock.tick)
 
 func world_from_local(point: Vector2) -> Vector2:
-	return point+camera_offset()
+	return point/pixel_zoom+camera_offset()
 
 func local_from_world(point: Vector2) -> Vector2:
-	return point-camera_offset()
+	return (point-camera_offset())*pixel_zoom
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
@@ -69,6 +78,7 @@ static func aim_tick_segment(at: Vector2, hover: Vector2) -> Array:
 	return [at+d*14.0,at+d*(14.0+AIM_TICK_LEN)]
 
 func _draw() -> void:
+	draw_set_transform(Vector2.ZERO,0.0,Vector2(pixel_zoom,pixel_zoom))
 	if slot_hud != null:
 		slot_hud.queue_redraw()
 	var arena := Rect2(Vector2.ZERO,Vector2(1320,900))
@@ -78,9 +88,10 @@ func _draw() -> void:
 		arena = session.world.bounds
 		offset = camera_offset()
 		tick = session.sim.clock.tick
-	Art.tile_floor(self,Rect2(Vector2.ZERO,size),offset,environment_id)
+	Art.tile_floor(self,Rect2(Vector2.ZERO,view_size()),offset,environment_id)
 	if session == null:
 		return
+	_draw_frame(Rect2(arena.position-offset,arena.size))
 	Art.walls(self,session.world.walls,offset)
 	Art.decorations(self,offset,environment_id)
 	draw_rect(Rect2(arena.position-offset,arena.size),Color("#b48b52",0.55),false,2)
@@ -148,6 +159,23 @@ func _draw() -> void:
 	_draw_damage_numbers(offset,tick)
 	if show_debug:
 		_label(Vector2(18,20),"DEBUG: wall/attack geometry and live target state",Color("#d6edf7"))
+
+## Dark frame around the arena when the view is larger than the arena bounds (extreme aspects).
+func _draw_frame(arena_view: Rect2) -> void:
+	var view := view_size()
+	var pad := 4.0
+	var left := arena_view.position.x
+	var right := arena_view.end.x
+	var top := arena_view.position.y
+	var bottom := arena_view.end.y
+	if left > 0.0:
+		draw_rect(Rect2(-pad,-pad,left+pad,view.y+2.0*pad),FRAME_COLOR)
+	if right < view.x:
+		draw_rect(Rect2(right,-pad,view.x-right+pad,view.y+2.0*pad),FRAME_COLOR)
+	if top > 0.0:
+		draw_rect(Rect2(-pad,-pad,view.x+2.0*pad,top+pad),FRAME_COLOR)
+	if bottom < view.y:
+		draw_rect(Rect2(-pad,bottom,view.x+2.0*pad,view.y-bottom+pad),FRAME_COLOR)
 
 ## AD-065 mage animation, read-only on the sim; one-shot starts live in _anim_memo.
 func _mage_anim(mage, tick: int, velocity: Vector2, hurt: bool) -> Dictionary:

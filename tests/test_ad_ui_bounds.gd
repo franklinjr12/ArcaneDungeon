@@ -33,6 +33,7 @@ func logical_size(window: Vector2i) -> Vector2i:
 func run(t) -> void:
 	var root := (Engine.get_main_loop() as SceneTree).root
 	_display_settings(t)
+	_arena_scale(t)
 	for window in SIZES:
 		var logical := logical_size(window)
 		for state in MENU_STATES + RUN_STATES:
@@ -66,6 +67,24 @@ func _display_settings(t) -> void:
 	bad.set_value("display", "ui_scale", "x")
 	back.from_config(bad)
 	t.equal(back.ui_scale, 1.0, "AD-091 non-number ui_scale falls back")
+
+func _arena_scale(t) -> void:
+	const Run = preload("res://ui/run_controller.gd")
+	const Canvas = preload("res://ui/combat_canvas.gd")
+	t.equal(Run.arena_texel(Vector2(950,690)), 2, "AD-091 texel 2 at 1280x720 arena area")
+	t.equal(Run.arena_texel(Vector2(3500,2100)), 3, "AD-091 texel 3 at 3840x2160 arena area")
+	for s: float in [1.0, 1.0672, 1.5, 2.0, 3.0]:
+		var texel := Run.arena_texel(Vector2(900,600)*s*1.7)
+		var zoom := float(texel)/(2.0*s)
+		var phys := 2.0*s*zoom
+		t.check(absf(phys-roundf(phys)) < 0.0001, "AD-091 art texel is whole physical pixels at scale %s" % s)
+	var canvas := Canvas.new()
+	canvas.pixel_zoom = 1.5
+	canvas.size = Vector2(600,400)
+	var p := Vector2(123.5,77.25)
+	t.check(canvas.world_from_local(canvas.local_from_world(p)).is_equal_approx(p), "AD-091 world/local round trip at zoom 1.5")
+	t.equal(canvas.view_size(), canvas.size/1.5, "AD-091 view_size divides by zoom")
+	canvas.free()
 
 func _case(t, root: Node, window: Vector2i, logical: Vector2i, state: String) -> void:
 	var viewport := SubViewport.new()

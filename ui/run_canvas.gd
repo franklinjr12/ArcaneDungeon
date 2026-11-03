@@ -19,7 +19,7 @@ func _draw() -> void:
 		_clear_tick = now
 	_was_cleared = open
 	if now >= _clear_tick and not Art.fx_frame("room.clear",now-_clear_tick).get("done",true):
-		Art.draw_fx(self,"room.clear",size/2.0,now-_clear_tick)
+		Art.draw_fx(self,"room.clear",view_size()/2.0,now-_clear_tick)
 	draw_arc(entrance,30,0,TAU,40,Color("#9b855c",0.65),2)
 	Art.portal(self,departure,open,session.sim.clock.tick)
 	draw_string(ThemeDB.fallback_font,departure+Vector2(-28,-39),

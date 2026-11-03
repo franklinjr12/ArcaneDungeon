@@ -11,17 +11,31 @@ const SLOT_GAP := 10.0
 const PANEL_PAD := 14.0
 const DASH_GAP := 16.0
 const PANEL_HEIGHT := 112.0
+const SAFE_MARGIN := 16.0 # logical px between the combat panel and the bottom edge of the canvas
 var flow
 var session
 var canvas
 
 func _ready() -> void:
 	if canvas != null:
-		set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		var panel := Vector2(panel_width(slot_count()),PANEL_HEIGHT)
+		custom_minimum_size = panel
+		set_anchor(SIDE_LEFT,0.5)
+		set_anchor(SIDE_RIGHT,0.5)
+		set_anchor(SIDE_TOP,1.0)
+		set_anchor(SIDE_BOTTOM,1.0)
+		offset_left = -floorf(panel.x/2.0)
+		offset_right = offset_left+panel.x
+		offset_bottom = -SAFE_MARGIN
+		offset_top = offset_bottom-panel.y
 	else:
 		custom_minimum_size = Vector2(277,124)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+static func panel_width(slots: int) -> float:
+	var slots_width: float = slots*SLOT_SIZE+(slots-1)*SLOT_GAP
+	return maxf(PANEL_PAD*2+slots_width+DASH_GAP+SLOT_SIZE,128.0*hud_scale()+PANEL_PAD*2)
 
 func _session():
 	if canvas != null:
@@ -120,9 +134,8 @@ func _draw_combat_panel() -> void:
 	_nine()
 	var sc: float = hud_scale()
 	var bar_px: Vector2 = Vector2(128.0,28.0)*sc
-	var slots_width: float = slot_count()*SLOT_SIZE+(slot_count()-1)*SLOT_GAP
-	var width: float = maxf(PANEL_PAD*2+slots_width+DASH_GAP+SLOT_SIZE,bar_px.x+PANEL_PAD*2)
-	var origin := Vector2(floorf((size.x-width)/2.0),size.y-PANEL_HEIGHT-8.0)
+	var width: float = panel_width(slot_count())
+	var origin := Vector2.ZERO # the control itself is anchored bottom-centre with SAFE_MARGIN
 	draw_rect(Rect2(origin,Vector2(width,PANEL_HEIGHT)),Color("#0b131b",0.92))
 	draw_rect(Rect2(origin,Vector2(width,PANEL_HEIGHT)),Color("#b08042"),false,2)
 	draw_rect(Rect2(origin+Vector2(4,4),Vector2(width-8,PANEL_HEIGHT-8)),Color("#564226"),false,1)

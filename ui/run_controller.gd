@@ -164,7 +164,6 @@ func _build() -> void:
 	layout.add_child(arena_area)
 	arena_canvas = ArenaCanvas.new()
 	arena_canvas.settings = _settings
-	arena_canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	arena_canvas.session = flow.session
 	arena_canvas.run_flow = flow
 	arena_area.add_child(arena_canvas)
@@ -182,6 +181,8 @@ func _build() -> void:
 	transition_veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	arena_area.add_child(transition_veil)
 	arena_area.resized.connect(_fit_test_canvas)
+	arena_area.resized.connect(_fit_arena)
+	get_window().size_changed.connect(_fit_arena)
 	var editor_holder := CenterContainer.new()
 	editor_holder.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	editor_holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -205,6 +206,31 @@ func _build() -> void:
 	pause_menu.retry_confirmed.connect(_pause_retry)
 	pause_menu.quit_confirmed.connect(_pause_quit)
 	_fit_editor_panel()
+
+## AD-091: smallest world view the arena should show; texel 3 is used when it still fits.
+const MIN_VIEW_WORLD := Vector2(900,600)
+
+## Physical pixels per art texel (2, or 3 when the arena area still shows MIN_VIEW_WORLD world units at that scale).
+static func arena_texel(area_px: Vector2) -> int:
+	var view_at_3 := area_px/1.5
+	return 3 if view_at_3.x >= MIN_VIEW_WORLD.x and view_at_3.y >= MIN_VIEW_WORLD.y else 2
+
+## Physical pixels per logical unit under the window stretch.
+func _physical_scale() -> float:
+	var s: float = get_viewport().get_final_transform().get_scale().x
+	return s if s > 0.0 else 1.0
+
+## Integer pixel scale for the arena: one art texel (2 world units) = `texel` whole physical pixels.
+func _fit_arena() -> void:
+	if arena_canvas == null or arena_area == null:
+		return
+	var s := _physical_scale()
+	var area_px := arena_area.size*s
+	arena_canvas.pixel_zoom = float(arena_texel(area_px))/(2.0*s)
+	var whole := area_px.floor()
+	arena_canvas.size = whole/s
+	arena_canvas.position = ((area_px-whole)*0.5).floor()/s
+	arena_canvas.queue_redraw()
 
 ## Workshop test range keeps its logical size (movement bounds depend on it) and is scaled down to fit.
 func _fit_test_canvas() -> void:
