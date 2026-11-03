@@ -32,7 +32,7 @@ static func stack_layout(items: Array) -> Array[Rect2]:
 	for group in groups:
 		var members: Array = []
 		for i in items.size():
-			if items[i]["group"] == group:
+			if str(items[i]["group"]) == str(group):
 				members.append(i)
 		members.sort_custom(func(a, b): return int(items[a]["order"]) < int(items[b]["order"]) or (int(items[a]["order"]) == int(items[b]["order"]) and a < b))
 		for i in members:

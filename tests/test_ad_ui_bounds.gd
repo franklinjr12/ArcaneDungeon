@@ -231,10 +231,12 @@ func _check_release_run(t, viewport: Node, scene: Node, window: Vector2i, state:
 	t.check(dev_hits == 0, "AD-092 no dev text at %s" % tag)
 	if window == Vector2i(1280,720):
 		t.check(small_hits == 0, "AD-092 all visible text >= 14 px at %s" % tag)
-	if state in ["combat","reward","pause"]:
+	if state in ["combat","reward","merchant","pause"]:
 		var guarded: Array = [scene.arena_canvas.slot_hud, scene.objective, scene.coins_label, scene.pause_button]
 		if state == "reward":
 			guarded.append(scene.context)
+		elif state == "merchant":
+			guarded.append(scene.shop_panel)
 		for c in guarded:
 			t.check(not _has_scroll_ancestor(c), "AD-092 %s not inside a ScrollContainer at %s" % [c.name, tag])
 	if state == "combat":
