@@ -51,6 +51,7 @@ func _run() -> void:
 		quit(1)
 		return
 	var control = pack.instantiate()
+	control.show_dev_tools = false # release-like run: no F3 overlay, no F2/F3/F6
 	root.add_child(control)
 	current_scene = control
 	await process_frame
@@ -96,6 +97,20 @@ func _run() -> void:
 	expect(control.pause_menu.is_settings_open(),"AD-068 pause opens settings")
 	control.pause_menu.handle_cancel()
 	expect(not control.pause_menu.is_settings_open() and control.is_paused(),"AD-068 cancel closes settings only")
+	var controls_button: Button = control.pause_menu.find_child("ControlsButton",true,false)
+	expect(controls_button != null and controls_button.text == "Controls","AD-092 pause menu has a Controls button")
+	controls_button.emit_signal("pressed")
+	expect(control.pause_menu.is_controls_open() and control.pause_menu.controls_box.is_visible_in_tree()
+		and control.pause_menu.controls_box.find_children("*","Label",true,false).any(func(l): return l.text.contains("Basic Bolt")),
+		"AD-092 Controls opens the controls help")
+	control.pause_menu.handle_cancel()
+	expect(not control.pause_menu.is_controls_open() and control.is_paused() and control.pause_menu.panel.visible,
+		"AD-092 cancel closes controls only")
+	expect(control.pause_menu.find_child("QuitButton",true,false).text == "Back to Menu","AD-092 pause menu leaves via Back to Menu")
+	control.pause_menu.tips_toggled.emit()
+	expect(control.guide.dismissed and control.tip.text.is_empty(),"AD-092 pause menu hides tips")
+	control.pause_menu.tips_toggled.emit()
+	expect(not control.guide.dismissed,"AD-092 pause menu shows tips again")
 	control._input(_esc_event())
 	expect(not control.is_paused(),"AD-068 Esc closes pause menu")
 	for i in 5:
@@ -115,7 +130,37 @@ func _run() -> void:
 		and kinds_a == kinds_b and spawns_equal(run_spawns(control.flow),spawns_b),
 		"AD-068 retry gives same seed and room-1 spawns")
 	expect(control.arena_canvas != null and control.arena_canvas.visible,"combat canvas visible")
-	expect(control.sidebar != null and control.sidebar.get_child_count()>5,"run sidebar built")
+	var old_sidebar: Array = control.find_children("*","ScrollContainer",true,false).filter(func(n): return n.name.to_lower().contains("sidebar"))
+	expect(control.get("sidebar") == null and control.find_child("*idebar*",true,false) == null and old_sidebar.is_empty(),
+		"AD-092 no run sidebar")
+	var view: Vector2 = control.get_viewport_rect().size
+	expect(control.arena_area.size.x >= view.x*0.9,"AD-092 arena area spans at least 90% of the viewport width")
+	var pause_rect: Rect2 = control.pause_button.get_global_rect()
+	expect(control.pause_button.name == "PauseButton" and control.pause_button.is_visible_in_tree()
+		and pause_rect.position.x > view.x*0.5 and pause_rect.position.y < view.y*0.2 and pause_rect.end.x <= view.x,
+		"AD-092 PauseButton visible top-right")
+	expect(control.objective.text.contains(control.room_display_name("s1_r1")) and control.objective.text.contains("Defeat"),
+		"AD-092 objective line shows room name and goal")
+	expect(control.dev_panel == null and control.portrait_hud == control.arena_canvas.slot_hud,
+		"AD-092 no dev overlay when dev tools are off; portrait_hud is the bottom HUD")
+	var dev_key := InputEventKey.new()
+	dev_key.keycode = KEY_F3
+	dev_key.pressed = true
+	control._input(dev_key)
+	expect(not control.arena_canvas.show_debug,"AD-092 F3 does nothing without dev tools")
+	var banned := ["ARCANE DUNGEON / M4","Edit policy","Render FPS","Waves scheduled","telemetry","Toggle debug","Back to Menu"]
+	var leaked: Array = []
+	for node in control.find_children("*","Control",true,false):
+		if (node is Label or node is Button) and node.is_visible_in_tree():
+			for word in banned:
+				if str(node.text).contains(word):
+					leaked.append(str(node.text))
+	expect(leaked.is_empty(),"AD-092 no dev/telemetry/Back to Menu text in the visible run UI: "+str(leaked))
+	var small_fonts: Array = []
+	for node in control.find_children("*","Control",true,false):
+		if (node is Label or node is Button) and node.has_theme_font_size_override("font_size") and node.get_theme_font_size("font_size") < 14:
+			small_fonts.append(str(node.text))
+	expect(small_fonts.is_empty(),"AD-092 run UI text is at least 14 px: "+str(small_fonts))
 	control._open_editor(1)
 	expect(not control.editor_open,"editor cannot open during combat")
 	var run = control.flow
@@ -132,8 +177,8 @@ func _run() -> void:
 	var cards: Array = reward_buttons.filter(func(b): return b.text.substr(1,2)==") ")
 	expect(cards.size()==3 and cards.all(func(b): return b.get_theme_stylebox("normal") is StyleBoxTexture and b.icon != null),
 		"AD-040 3 reward cards have texture skin and icon")
-	expect(control.sidebar.get_global_rect().end.x <= control.arena_canvas.get_global_rect().position.x,
-		"sidebar does not slide under the arena")
+	expect(control.reward_overlay.visible and control.context.is_visible_in_tree() and control.reward_panel.is_ancestor_of(control.context),
+		"AD-092 reward cards sit in the centred overlay")
 	var key_one := InputEventKey.new()
 	key_one.keycode = KEY_1
 	key_one.pressed = true

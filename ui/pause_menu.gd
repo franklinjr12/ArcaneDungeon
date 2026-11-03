@@ -8,7 +8,12 @@ const TEXT := {
 	"resume": "Resume",
 	"settings": "Settings",
 	"retry": "Retry same seed",
-	"quit": "Quit to Title",
+	"quit": "Back to Menu",
+	"controls": "Controls",
+	"back": "Back",
+	"tips_hide": "Hide tips",
+	"tips_show": "Show tips",
+	"controls_text": "WASD / Arrows: move, mouse: aim\nLMB / RMB / Q / E: cast slots 1-4 (LMB = slot 1 Basic Bolt)\nSpace: dash\nEsc: pause\nF: use the exit when near it\nR: retry same seed\nWorkshop: T resets the test range",
 	"confirm": "Confirm",
 	"cancel": "Cancel",
 	"retry_prompt": "Restart this run with the same seed? Current progress is lost.",
@@ -17,6 +22,7 @@ const TEXT := {
 signal resume_requested
 signal retry_confirmed
 signal quit_confirmed
+signal tips_toggled
 
 var panel: VBoxContainer
 var confirm_box: VBoxContainer
@@ -25,6 +31,10 @@ var resume_button: Button
 var settings_button: Button
 var retry_button: Button
 var quit_button: Button
+var controls_button: Button
+var tips_button: Button
+var controls_box: VBoxContainer
+var controls_back_button: Button
 var confirm_button: Button
 var cancel_button: Button
 var settings_screen = null
@@ -44,6 +54,8 @@ func _ready() -> void:
 	_heading(panel, TEXT["title"])
 	resume_button = _button(panel, "ResumeButton", TEXT["resume"], director, func(): resume_requested.emit())
 	settings_button = _button(panel, "SettingsButton", TEXT["settings"], director, func(): open_settings())
+	controls_button = _button(panel, "ControlsButton", TEXT["controls"], director, func(): open_controls())
+	tips_button = _button(panel, "TipsButton", TEXT["tips_hide"], director, func(): tips_toggled.emit())
 	retry_button = _button(panel, "RetryButton", TEXT["retry"], director, func(): request_retry())
 	quit_button = _button(panel, "QuitButton", TEXT["quit"], director, func(): request_quit())
 	confirm_box = _column()
@@ -55,6 +67,15 @@ func _ready() -> void:
 	confirm_box.add_child(confirm_label)
 	confirm_button = _button(confirm_box, "ConfirmButton", TEXT["confirm"], director, func(): confirm_pending())
 	cancel_button = _button(confirm_box, "CancelButton", TEXT["cancel"], director, func(): cancel_confirm())
+	controls_box = _column()
+	controls_box.custom_minimum_size.x = 520
+	controls_box.visible = false
+	var controls_label := Label.new()
+	controls_label.name = "ControlsText"
+	controls_label.text = TEXT["controls_text"]
+	controls_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	controls_box.add_child(controls_label)
+	controls_back_button = _button(controls_box, "ControlsBackButton", TEXT["back"], director, func(): close_controls())
 	visibility_changed.connect(_on_visibility_changed)
 	_focus_resume()
 
@@ -138,8 +159,26 @@ func close_settings() -> void:
 	panel.visible = true
 	settings_button.grab_focus()
 
+func open_controls() -> void:
+	panel.visible = false
+	controls_box.visible = true
+	controls_back_button.grab_focus()
+
+func close_controls() -> void:
+	controls_box.visible = false
+	panel.visible = true
+	controls_button.grab_focus()
+
+func set_tips_visible(on: bool) -> void:
+	tips_button.text = TEXT["tips_hide"] if on else TEXT["tips_show"]
+
+func is_controls_open() -> bool:
+	return controls_box != null and controls_box.visible
+
 func handle_cancel() -> void:
-	if is_settings_open():
+	if is_controls_open():
+		close_controls()
+	elif is_settings_open():
 		close_settings()
 	elif is_confirm_open():
 		cancel_confirm()
