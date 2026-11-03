@@ -45,3 +45,11 @@ The PNGs and sheets in this folder were regenerated after AD-091 (`bash tools/ui
 - **Settings:** Window mode (windowed / fullscreen / borderless) and UI scale (90-150%), saved through SaveService. The HUD sits bottom-centre of the arena area with a 16 px safe margin.
 - **Bounds test:** `tests/test_ad_ui_bounds.gd` now enforces (`REPORT_ONLY := false`): 0 issues across 11 sizes x 8 states.
 - **Xvfb limits:** the fullscreen shots are still 1280x720 (no window manager, so fullscreen has no effect); the live resize to 1920x1080 does work.
+
+## AD-092 (side menu redesign)
+
+Regenerated 2026-11-03 (`bash tools/ui_matrix.sh`, 104 shots, 0 failed).
+
+- **What changed:** the permanent run sidebar is gone and the arena takes the full width. The bottom-centre HUD (portrait, HP, MP, 4 slots with keys, mana cost and the dash) is the only HP/MP display. Top-left shows the objective (room name + goal) and coins, top-right the Pause button, with toasts at the top centre. The run summary and the reward cards are centred overlays. The pause menu now has Controls and Back to Menu. The dev overlay (F3) exists only in debug builds.
+- **Release-like shots:** the screenshot hook sets `show_dev_tools = false`, so no dev overlay or dev text appears in any PNG in this folder. The workshop/merchant side panel remains the only scrolling panel besides the spell editor.
+- **Bounds test:** `tests/test_ad_ui_bounds.gd` runs the run states with dev tools off and enforces at every size: no dev text, no ScrollContainer around the HUD/objective/reward/pause UI, HUD slot keys LMB/RMB/Q/E with slot 1 a locked Basic Bolt, loadout buttons numbered Slot 1-4, and text of at least 14 px at 1280x720. Result: `AD-090 UI-BOUNDS REPORT total issues: 0 (report_only=false)`; `validate_godot.py` exit 0.
