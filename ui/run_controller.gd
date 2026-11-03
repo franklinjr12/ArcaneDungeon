@@ -282,6 +282,8 @@ func _build_top_bar() -> void:
 	toasts.custom_minimum_size.x = 460
 	toasts.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP,Control.PRESET_MODE_MINSIZE)
 	toasts.offset_top = SCREEN_MARGIN+4
+	toasts.offset_left = -230 # centred on the screen, clear of the right-hand panel
+	toasts.offset_right = 230
 	toasts.add_theme_constant_override("separation",4)
 	bar.add_child(toasts)
 	tip = Label.new()
@@ -723,6 +725,7 @@ func _build_shop_panel() -> void:
 		tex.atlas = ShopCard
 		tex.region = Rect2(48,0,48,48)
 		box.texture = tex
+		box.draw_center = false # the card art bakes in a RUNE label and price; keep only its frame
 		for side in ["left","right","top","bottom"]:
 			box.set("texture_margin_"+side,4)
 			box.set("content_margin_"+side,8)
@@ -831,6 +834,9 @@ func _update_labels() -> void:
 			guide.current = ""
 		tip.text = ("TIP: " + guide.text()) if guide.text() != "" else ""
 		tip_panel.visible = tip.text != ""
+	if editor_open: # the docked editor owns the top-right; toasts must not cover its heading
+		tip_panel.visible = false
+		notice_panel.visible = false
 
 ## Compact top-left objective: room display name + goal for the current state, then the coin count.
 func _update_objective() -> void:
@@ -922,6 +928,9 @@ func _build_summary_panel() -> void:
 	summary_retry_button = _button(buttons,"Retry same seed",func(): _retry_same_seed())
 	summary_new_seed_button = _button(buttons,"New seed",func(): _new_seed())
 	summary_title_button = _button(buttons,"Title",func(): _to_title(),"ui.cancel")
+	for b in [summary_retry_button,summary_new_seed_button,summary_title_button]:
+		b.autowrap_mode = TextServer.AUTOWRAP_OFF # a wrapping button in a row shrinks to one character per line
+		b.custom_minimum_size.x = 110
 
 func _retry_same_seed() -> void:
 	close_pause()
