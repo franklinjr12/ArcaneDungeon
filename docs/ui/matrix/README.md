@@ -35,3 +35,13 @@ All 8 sheets were inspected: real content (HUD, workshop, etc.), no black frames
 
 `tests/test_ad_ui_bounds.gd` checks at each matrix size that visible Controls are inside the viewport and interactive Controls do not overlap. It runs in `REPORT_ONLY` mode until U2 (failures are printed, not asserted). Look for lines starting `AD-090 UI-BOUNDS REPORT`; each lists one issue, and the final line gives the total. Run: `godot --headless --path . --script res://tests/run_tests.gd`.
 Current result: `AD-090 UI-BOUNDS REPORT total issues: 0 (report_only=true)`. Note the headless test measures layout in the viewport, so letterbox and fullscreen behaviour above is not covered by it.
+
+## AD-091 (post-fix matrix)
+
+The PNGs and sheets in this folder were regenerated after AD-091 (`bash tools/ui_matrix.sh`, 104 shots, exit 0). Everything above describes the AD-090 baseline; the letterbox notes no longer apply.
+
+- **Stretch:** `canvas_items` + aspect `expand`, base 1280x720. The logical viewport grows with the window aspect, so there are no letterbox bars. Every screen is built from anchors and containers.
+- **Arena texel rule:** one art texel (2 world units) is 2 physical pixels, or 3 when at least 900x600 world units still fit at that scale (`RunController.arena_texel`). The arena canvas is scaled through its node `scale` so the zoom is a whole number of physical pixels. The dark frame appears only where the arena is smaller than the free area (3440x1440, 3840x2160).
+- **Settings:** Window mode (windowed / fullscreen / borderless) and UI scale (90-150%), saved through SaveService. The HUD sits bottom-centre of the arena area with a 16 px safe margin.
+- **Bounds test:** `tests/test_ad_ui_bounds.gd` now enforces (`REPORT_ONLY := false`): 0 issues across 11 sizes x 8 states.
+- **Xvfb limits:** the fullscreen shots are still 1280x720 (no window manager, so fullscreen has no effect); the live resize to 1920x1080 does work.

@@ -132,7 +132,7 @@ func _run() -> void:
 	var cards: Array = reward_buttons.filter(func(b): return b.text.substr(1,2)==") ")
 	expect(cards.size()==3 and cards.all(func(b): return b.get_theme_stylebox("normal") is StyleBoxTexture and b.icon != null),
 		"AD-040 3 reward cards have texture skin and icon")
-	expect(control.sidebar.get_global_rect().end.x <= control.arena_canvas.position.x,
+	expect(control.sidebar.get_global_rect().end.x <= control.arena_canvas.get_global_rect().position.x,
 		"sidebar does not slide under the arena")
 	var key_one := InputEventKey.new()
 	key_one.keycode = KEY_1

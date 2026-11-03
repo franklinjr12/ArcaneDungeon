@@ -226,10 +226,13 @@ func _fit_arena() -> void:
 		return
 	var s := _physical_scale()
 	var area_px := arena_area.size*s
-	arena_canvas.pixel_zoom = float(arena_texel(area_px))/(2.0*s)
+	var zoom := float(arena_texel(area_px))/(2.0*s)
 	var whole := area_px.floor()
-	arena_canvas.size = whole/s
+	arena_canvas.scale = Vector2(zoom,zoom)
+	arena_canvas.size = whole/s/zoom
 	arena_canvas.position = ((area_px-whole)*0.5).floor()/s
+	if arena_canvas.slot_hud != null:
+		arena_canvas.slot_hud.fit_to_canvas()
 	arena_canvas.queue_redraw()
 
 ## Workshop test range keeps its logical size (movement bounds depend on it) and is scaled down to fit.

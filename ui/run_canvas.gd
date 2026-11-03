@@ -27,5 +27,5 @@ func _draw() -> void:
 	if open and not run_flow.reward_collected and run_flow.room.values["type"] == "combat":
 		draw_texture_rect(Hud.ui_icon_texture("upgrade"),Rect2(gift-Vector2(16,16),Vector2(32,32)),false)
 		draw_arc(gift,24,0,TAU,32,Color("#f6c46d"),2)
-		draw_string(ThemeDB.fallback_font,gift+Vector2(-43,-35),"RUNE CHOICE",
+		draw_string(ThemeDB.fallback_font,gift+Vector2(-43,-52),"RUNE CHOICE",
 			HORIZONTAL_ALIGNMENT_LEFT,-1,13,Color.WHITE)

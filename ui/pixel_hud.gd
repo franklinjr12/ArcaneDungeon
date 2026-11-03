@@ -18,20 +18,23 @@ var canvas
 
 func _ready() -> void:
 	if canvas != null:
-		var panel := Vector2(panel_width(slot_count()),PANEL_HEIGHT)
-		custom_minimum_size = panel
-		set_anchor(SIDE_LEFT,0.5)
-		set_anchor(SIDE_RIGHT,0.5)
-		set_anchor(SIDE_TOP,1.0)
-		set_anchor(SIDE_BOTTOM,1.0)
-		offset_left = -floorf(panel.x/2.0)
-		offset_right = offset_left+panel.x
-		offset_bottom = -SAFE_MARGIN
-		offset_top = offset_bottom-panel.y
+		custom_minimum_size = Vector2(panel_width(slot_count()),PANEL_HEIGHT)
+		canvas.resized.connect(fit_to_canvas)
+		fit_to_canvas()
 	else:
 		custom_minimum_size = Vector2(277,124)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+## Bottom-centre of the canvas with a safe margin. The canvas node is scaled by the arena zoom, so this counter-scales to stay logical-sized.
+func fit_to_canvas() -> void:
+	if canvas == null:
+		return
+	var k: float = 1.0/maxf(canvas.scale.x,0.01)
+	var panel := Vector2(panel_width(slot_count()),PANEL_HEIGHT)
+	scale = Vector2(k,k)
+	size = panel
+	position = Vector2(floorf((canvas.size.x-panel.x*k)/2.0),canvas.size.y-(panel.y+SAFE_MARGIN)*k)
 
 static func panel_width(slots: int) -> float:
 	var slots_width: float = slots*SLOT_SIZE+(slots-1)*SLOT_GAP

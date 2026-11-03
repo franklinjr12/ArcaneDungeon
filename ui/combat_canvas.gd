@@ -22,8 +22,8 @@ var environment_id := 0
 var last_player_at := Vector2.ZERO
 var last_enemy_at: Dictionary = {}
 var slot_hud
-## AD-091: world units -> canvas units. The run screen sets texel/(2*physical scale) so one art texel is a whole number of physical pixels.
-var pixel_zoom := 1.0
+## AD-091: the run screen sets this node's `scale` to texel/(2*physical scale) so one art texel is a whole number of
+## physical pixels, and `size` to the visible world size. Node scale (not draw_set_transform) because the renderer resets the draw transform.
 const FRAME_COLOR := Color("#0b1320")
 
 func _ready() -> void:
@@ -35,9 +35,9 @@ func _ready() -> void:
 	clip_contents = true
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
-## World-space size of the visible view (canvas size divided by pixel_zoom).
+## World-space size of the visible view (this node is scaled, so its size is already in world units).
 func view_size() -> Vector2:
-	return size/pixel_zoom
+	return size
 
 func camera_offset() -> Vector2:
 	if session == null:
@@ -52,10 +52,10 @@ func camera_offset() -> Vector2:
 	return base+ReduceMotion.shake_offset(settings,session.player.hit_flash,session.sim.clock.tick)
 
 func world_from_local(point: Vector2) -> Vector2:
-	return point/pixel_zoom+camera_offset()
+	return point+camera_offset()
 
 func local_from_world(point: Vector2) -> Vector2:
-	return (point-camera_offset())*pixel_zoom
+	return point-camera_offset()
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
@@ -78,7 +78,6 @@ static func aim_tick_segment(at: Vector2, hover: Vector2) -> Array:
 	return [at+d*14.0,at+d*(14.0+AIM_TICK_LEN)]
 
 func _draw() -> void:
-	draw_set_transform(Vector2.ZERO,0.0,Vector2(pixel_zoom,pixel_zoom))
 	if slot_hud != null:
 		slot_hud.queue_redraw()
 	var arena := Rect2(Vector2.ZERO,Vector2(1320,900))

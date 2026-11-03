@@ -1,8 +1,8 @@
 extends RefCounted
 ## AD-090: every visible Control stays inside the logical viewport and interactive Controls do not overlap,
-## at each matrix window size and UI state. Report-only until AD U2 (flip REPORT_ONLY to false).
+## at each matrix window size and UI state. Enforced since AD-091 (REPORT_ONLY := false).
 ## Live resize 1280x720 -> 1920x1080 is covered by those two sizes; fullscreen on a 1920x1080 screen equals 1920x1080.
-const REPORT_ONLY := true
+const REPORT_ONLY := false
 const SIZES := [Vector2i(1280,720), Vector2i(1366,768), Vector2i(1600,900), Vector2i(1920,1080), Vector2i(2560,1440),
 	Vector2i(3840,2160), Vector2i(1280,800), Vector2i(1920,1200), Vector2i(2560,1080), Vector2i(3440,1440), Vector2i(1024,768)]
 const MENU_STATES := ["title","settings"]
@@ -79,11 +79,11 @@ func _arena_scale(t) -> void:
 		var phys := 2.0*s*zoom
 		t.check(absf(phys-roundf(phys)) < 0.0001, "AD-091 art texel is whole physical pixels at scale %s" % s)
 	var canvas := Canvas.new()
-	canvas.pixel_zoom = 1.5
+	canvas.scale = Vector2(1.5,1.5)
 	canvas.size = Vector2(600,400)
 	var p := Vector2(123.5,77.25)
-	t.check(canvas.world_from_local(canvas.local_from_world(p)).is_equal_approx(p), "AD-091 world/local round trip at zoom 1.5")
-	t.equal(canvas.view_size(), canvas.size/1.5, "AD-091 view_size divides by zoom")
+	t.check(canvas.world_from_local(canvas.local_from_world(p)).is_equal_approx(p), "AD-091 world/local round trip on a scaled canvas")
+	t.equal(canvas.view_size(), canvas.size, "AD-091 view_size is the world-space node size")
 	canvas.free()
 
 func _case(t, root: Node, window: Vector2i, logical: Vector2i, state: String) -> void:
