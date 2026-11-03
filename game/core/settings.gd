@@ -1,11 +1,17 @@
 extends RefCounted
 ## AD-019: player settings model (audio volumes per bus, accessibility toggles, telemetry opt-in).
 const BUSES := ["Master", "SFX", "Ambience", "UI"]
+const WINDOW_MODES := ["windowed", "fullscreen", "borderless"]
+const UI_SCALE_MIN := 0.9
+const UI_SCALE_MAX := 1.5
+const UI_SCALE_STEP := 0.1
 const DEFAULTS := {
 	"volumes": {"Master": 1.0, "SFX": 1.0, "Ambience": 1.0, "UI": 1.0},
 	"reduce_flashes": false,
 	"screen_shake": true,
 	"telemetry_opt_in": false,
+	"window_mode": "windowed",
+	"ui_scale": 1.0,
 	"schema_version": 1,
 }
 
@@ -13,6 +19,8 @@ var volumes: Dictionary = {}
 var reduce_flashes: bool = false
 var screen_shake: bool = true
 var telemetry_opt_in: bool = false
+var window_mode: String = "windowed"
+var ui_scale: float = 1.0
 
 func _init() -> void:
 	reset()
@@ -26,6 +34,8 @@ func reset() -> void:
 	reduce_flashes = d["reduce_flashes"]
 	screen_shake = d["screen_shake"]
 	telemetry_opt_in = d["telemetry_opt_in"]
+	window_mode = d["window_mode"]
+	ui_scale = d["ui_scale"]
 
 func to_config(cfg: ConfigFile) -> void:
 	cfg.set_value("meta", "schema_version", DEFAULTS["schema_version"])
@@ -34,6 +44,8 @@ func to_config(cfg: ConfigFile) -> void:
 	cfg.set_value("accessibility", "reduce_flashes", reduce_flashes)
 	cfg.set_value("accessibility", "screen_shake", screen_shake)
 	cfg.set_value("privacy", "telemetry_opt_in", telemetry_opt_in)
+	cfg.set_value("display", "window_mode", window_mode)
+	cfg.set_value("display", "ui_scale", snap_ui_scale(ui_scale))
 
 func from_config(cfg: ConfigFile) -> void:
 	reset()
@@ -44,6 +56,17 @@ func from_config(cfg: ConfigFile) -> void:
 	reduce_flashes = _bool(cfg, "accessibility", "reduce_flashes", reduce_flashes)
 	screen_shake = _bool(cfg, "accessibility", "screen_shake", screen_shake)
 	telemetry_opt_in = _bool(cfg, "privacy", "telemetry_opt_in", telemetry_opt_in)
+	var mode = cfg.get_value("display", "window_mode", "")
+	if typeof(mode) == TYPE_STRING and mode in WINDOW_MODES:
+		window_mode = mode
+	var scale = cfg.get_value("display", "ui_scale", "")
+	if typeof(scale) == TYPE_FLOAT or typeof(scale) == TYPE_INT:
+		ui_scale = snap_ui_scale(float(scale))
+
+static func snap_ui_scale(v: float) -> float:
+	if is_nan(v) or is_inf(v):
+		return DEFAULTS["ui_scale"]
+	return snappedf(clampf(v, UI_SCALE_MIN, UI_SCALE_MAX), UI_SCALE_STEP)
 
 static func _bool(cfg: ConfigFile, section: String, key: String, fallback: bool) -> bool:
 	var v = cfg.get_value(section, key, "")
@@ -54,3 +77,21 @@ func apply_audio() -> void:
 		var idx := AudioServer.get_bus_index(str(bus))
 		if idx >= 0:
 			AudioServer.set_bus_volume_db(idx, linear_to_db(float(volumes[bus])))
+
+## Applies UI scale and window mode. Never resizes a windowed window (keeps `--resolution WxH` runs intact).
+func apply_display(window: Window) -> void:
+	if window != null:
+		window.content_scale_factor = snap_ui_scale(ui_scale)
+	if DisplayServer.get_name() == "headless":
+		return
+	var current := DisplayServer.window_get_mode()
+	var borderless := window_mode == "borderless"
+	var want := DisplayServer.WINDOW_MODE_FULLSCREEN if window_mode == "fullscreen" else DisplayServer.WINDOW_MODE_WINDOWED
+	if current != want:
+		DisplayServer.window_set_mode(want)
+	if DisplayServer.window_get_flag(DisplayServer.WINDOW_FLAG_BORDERLESS) != borderless:
+		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, borderless)
+	if borderless and want == DisplayServer.WINDOW_MODE_WINDOWED:
+		var screen := DisplayServer.window_get_current_screen()
+		DisplayServer.window_set_position(DisplayServer.screen_get_position(screen))
+		DisplayServer.window_set_size(DisplayServer.screen_get_size(screen))

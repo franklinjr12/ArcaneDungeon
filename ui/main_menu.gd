@@ -20,6 +20,9 @@ var panel: VBoxContainer
 
 func _ready() -> void:
 	VisualTheme.apply(self)
+	var save_service = get_node_or_null("/root/SaveService")
+	if save_service != null:
+		save_service.settings.apply_display(get_window())
 	if show_debug_entries == null:
 		show_debug_entries = OS.is_debug_build()
 	var backdrop := TextureRect.new()
@@ -28,12 +31,13 @@ func _ready() -> void:
 	backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(backdrop)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(center)
 	panel = VBoxContainer.new()
-	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	panel.custom_minimum_size = Vector2(370, 300)
-	panel.position = Vector2(-185, -150)
 	panel.add_theme_constant_override("separation", 18)
-	add_child(panel)
+	center.add_child(panel)
 	var heading := Label.new()
 	heading.text = TEXT["title"]
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -58,6 +62,7 @@ func _ready() -> void:
 		_button(panel, "SandboxButton", TEXT["sandbox"]).pressed.connect(_switch_scene.bind("res://scenes/sandbox.tscn"))
 		_button(panel, "ArenaButton", TEXT["arena"]).pressed.connect(_switch_scene.bind("res://scenes/arena.tscn"))
 	new_run.grab_focus()
+	_debug_shot_entry()
 
 func _button(parent: Control, node_name: String, text: String) -> Button:
 	var button := Button.new()
@@ -88,3 +93,40 @@ func _close_settings() -> void:
 	settings_screen.hide()
 	panel.show()
 	panel.get_node("SettingsButton").grab_focus()
+
+## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.
+const SHOT_RUN_STATES := ["combat","reward","workshop_editor","merchant","pause","summary"]
+
+func apply_debug_shot_state(state: String) -> bool:
+	if not OS.is_debug_build() or not state in ["title","settings"]:
+		return false
+	if state == "settings":
+		open_settings()
+	return true
+
+func _debug_shot_entry() -> void:
+	if not OS.is_debug_build():
+		return
+	var state := OS.get_environment("AD_UI_SHOT_STATE")
+	if state == "":
+		return
+	if state in SHOT_RUN_STATES:
+		get_tree().change_scene_to_file.call_deferred("res://scenes/run.tscn")
+	elif apply_debug_shot_state(state):
+		await _debug_shot_capture()
+	else:
+		push_warning("AD_UI_SHOT_STATE unknown: " + state)
+
+func _debug_shot_capture() -> void:
+	var path := OS.get_environment("AD_UI_SHOT_OUT")
+	if path == "":
+		return
+	if OS.get_environment("AD_UI_SHOT_FULLSCREEN") == "1":
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	var delay := OS.get_environment("AD_UI_SHOT_DELAY_MS")
+	await get_tree().create_timer((int(delay) if delay != "" else 800) / 1000.0).timeout
+	await RenderingServer.frame_post_draw
+	var image := get_viewport().get_texture().get_image()
+	var error := image.save_png(path)
+	print("AD_UI_SHOT saved %s %dx%d" % [path, image.get_width(), image.get_height()])
+	get_tree().quit(0 if error == OK else 1)
