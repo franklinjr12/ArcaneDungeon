@@ -21,6 +21,7 @@ Godot 4.7.1 stable (pinned) GL Compatibility M0–M3 playable prototypes are imp
 | [playtests/M4_decision_record.md](playtests/M4_decision_record.md) | Unresolved owner review/go-no-go and v2/POST gate; **pending** |
 | [playtests/FRANKLIN_TEST_AD_PLAYTEST.md](playtests/FRANKLIN_TEST_AD_PLAYTEST.md) | AD-041 playtest-readiness checklist (keys, P1 art checks, audio) and how to measure the GDD §14 proposed targets via local telemetry; **not a playtest result** |
 | [playtests/ad_r2_readiness/](playtests/ad_r2_readiness/README.md) | AD-041 readiness screenshot set (HUD, casts/statuses, Wet→Lightning arc, telegraphs, warden phase, rewards, editor rejection, run summary) with capture script notes and reviewer verdict tables |
+| [playtests/ad_run_length_report.md](playtests/ad_run_length_report.md) | AD-085 headless 20-seed run length / difficulty report (baseline bot) vs GDD proposed 20–35 min; **bot data, not a human playtest** |
 
 ## External design documents
 
