@@ -10,7 +10,11 @@ const SLOT_SIZE := 54.0
 const SLOT_GAP := 10.0
 const PANEL_PAD := 14.0
 const DASH_GAP := 16.0
-const PANEL_HEIGHT := 112.0
+const PANEL_HEIGHT := 136.0
+const MIN_FONT_SIZE := 14 # smallest legible text at 1280x720
+const PORTRAIT_W := 58.0
+const PORTRAIT_H := 66.0
+const PORTRAIT_GAP := 14.0
 const SAFE_MARGIN := 16.0 # logical px between the combat panel and the bottom edge of the canvas
 var flow
 var session
@@ -38,7 +42,7 @@ func fit_to_canvas() -> void:
 
 static func panel_width(slots: int) -> float:
 	var slots_width: float = slots*SLOT_SIZE+(slots-1)*SLOT_GAP
-	return maxf(PANEL_PAD*2+slots_width+DASH_GAP+SLOT_SIZE,128.0*hud_scale()+PANEL_PAD*2)
+	return PANEL_PAD*2+PORTRAIT_W+PORTRAIT_GAP+maxf(slots_width+DASH_GAP+SLOT_SIZE,128.0*hud_scale())
 
 func _session():
 	if canvas != null:
@@ -142,35 +146,41 @@ func _draw_combat_panel() -> void:
 	draw_rect(Rect2(origin,Vector2(width,PANEL_HEIGHT)),Color("#0b131b",0.92))
 	draw_rect(Rect2(origin,Vector2(width,PANEL_HEIGHT)),Color("#b08042"),false,2)
 	draw_rect(Rect2(origin+Vector2(4,4),Vector2(width-8,PANEL_HEIGHT-8)),Color("#564226"),false,1)
+	draw_texture_rect_region(MAGE,Rect2(PANEL_PAD,PANEL_PAD,PORTRAIT_W,PORTRAIT_H),Rect2(0,0,48,56))
 	var hp: float = live.sim.actor.health.current
 	var max_hp: float = live.sim.actor.health.maximum
 	var mana: float = live.sim.mana
 	var max_mana: float = float(live.sim.settings["combat"]["player_max_mana"])
-	var bar_width: float = (width-PANEL_PAD*2-10.0)/2.0
-	var bar_at := origin+Vector2(PANEL_PAD,8)
+	var content_x: float = PANEL_PAD+PORTRAIT_W+PORTRAIT_GAP
+	var bar_width: float = (bar_px.x-10.0)/2.0
+	var bar_at := origin+Vector2(content_x,8)
 	_draw_bar9("ad_ui_bar_hp",bar_at,bar_width,hp/maxf(1,max_hp))
-	_text(bar_at+Vector2(8,15),"HP %d/%d" % [ceili(hp),int(max_hp)],Color("#fff1d4"),11)
+	_text(bar_at+Vector2(8,15),"HP %d/%d" % [ceili(hp),int(max_hp)],Color("#fff1d4"),MIN_FONT_SIZE)
 	var mana_at := bar_at+Vector2(bar_width+10,0)
 	_draw_bar9("ad_ui_bar_mana",mana_at,bar_width,mana/maxf(1,max_mana))
-	_text(mana_at+Vector2(8,10),"MP %d/%d" % [int(mana),int(max_mana)],Color("#eff8ff"),10)
-	var bar_origin := Vector2(origin.x+floorf((width-bar_px.x)/2.0),origin.y+36.0)
+	_text(mana_at+Vector2(8,15),"MP %d/%d" % [int(mana),int(max_mana)],Color("#eff8ff"),MIN_FONT_SIZE)
+	var bar_origin := Vector2(origin.x+content_x,origin.y+36.0)
 	var bar_tex: Texture2D = Art._texs[HUD_BAR]
 	draw_texture_rect_region(bar_tex,Rect2(bar_origin,bar_px),_frame(HUD_BAR,0))
 	var slot_px: float = 28.0*sc
-	var text_y: float = bar_origin.y+bar_px.y+12.0
+	var key_y: float = bar_origin.y+bar_px.y+MIN_FONT_SIZE
+	var cost_y: float = key_y+MIN_FONT_SIZE+2.0
 	for i in slot_count():
 		var view := slot_view(i)
 		var at := bar_origin+Vector2(i*slot_px,0)
 		_draw_slot(at,view,sc)
 		draw_texture_rect_region(bar_tex,Rect2(bar_origin,bar_px),_frame(HUD_BAR,1+i))
+		_text(Vector2(at.x+2.0,key_y),"%d %s" % [i+1,view["key_label"]],Color("#e9d5a8"),MIN_FONT_SIZE)
 		if not view["empty"]:
 			var no_mana: bool = view["state"] == "no_mana"
-			_text(Vector2(at.x+slot_px/2.0-5.0,text_y),str(view["mana_cost"]),Color("#ff8f8f") if no_mana else Color("#83d8ff"),11)
+			_text(Vector2(at.x+2.0,cost_y),"%d MP" % int(view["mana_cost"]),Color("#ff8f8f") if no_mana else Color("#83d8ff"),MIN_FONT_SIZE)
 	var dash := dash_view()
 	draw_texture_rect_region(bar_tex,Rect2(bar_origin,bar_px),_frame(HUD_BAR,dash_frame(dash)))
 	var ready: bool = dash["ready"]
-	_text(bar_origin+Vector2(114.0*sc-6.0,bar_px.y+12.0),"DASH" if ready else "%.1f" % (float(dash["cooldown_left"])/TICKS_PER_SECOND),
-		Color("#8fe3c1") if ready else Color("#fff1d4"),11)
+	var dash_x: float = bar_origin.x+114.0*sc-6.0
+	_text(Vector2(dash_x,key_y),"DASH" if ready else "%.1f" % (float(dash["cooldown_left"])/TICKS_PER_SECOND),
+		Color("#8fe3c1") if ready else Color("#fff1d4"),MIN_FONT_SIZE)
+	_text(Vector2(dash_x,cost_y),DASH_KEY,Color("#e9d5a8"),MIN_FONT_SIZE)
 
 func _draw_slot(at: Vector2, view: Dictionary, sc: float) -> void:
 	var state: String = view["state"]
@@ -189,7 +199,7 @@ func _draw_slot(at: Vector2, view: Dictionary, sc: float) -> void:
 		frame = cooldown_frame(float(view["cooldown_fraction"]))
 	draw_texture_rect_region(slot_tex,Rect2(at,Vector2(28,28)*sc),_frame(HUD_SLOT,frame))
 	if state == "cooldown":
-		_text(at+Vector2(14.0*sc-14.0,14.0*sc+4.0),"%.1f" % (float(view["cooldown_left"])/TICKS_PER_SECOND),Color("#fff1d4"),12)
+		_text(at+Vector2(14.0*sc-14.0,14.0*sc+4.0),"%.1f" % (float(view["cooldown_left"])/TICKS_PER_SECOND),Color("#fff1d4"),MIN_FONT_SIZE)
 
 func _draw_bar9(stem: String,at: Vector2,width: float,fraction: float) -> void:
 	var sc: float = hud_scale()
