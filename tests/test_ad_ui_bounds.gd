@@ -37,6 +37,7 @@ func run(t) -> void:
 	var root := (Engine.get_main_loop() as SceneTree).root
 	_display_settings(t)
 	_arena_scale(t)
+	_floating_text_overlap(t)
 	for window in SIZES:
 		var logical := logical_size(window)
 		for state in MENU_STATES + RUN_STATES:
@@ -70,6 +71,31 @@ func _display_settings(t) -> void:
 	bad.set_value("display", "ui_scale", "x")
 	back.from_config(bad)
 	t.equal(back.ui_scale, 1.0, "AD-091 non-number ui_scale falls back")
+
+func _floating_text_overlap(t) -> void:
+	const Art = preload("res://ui/pixel_art_renderer.gd")
+	const Numbers = preload("res://ui/damage_numbers.gd")
+	const Target = preload("res://combat/magic_target.gd")
+	var target := Target.new(5,2,Vector2(400,300),100.0)
+	var tracker := Numbers.new()
+	tracker.update([target],0)
+	for channel in ["essence.fire","essence.water","essence.lightning","essence.fire","essence.water","essence.lightning"]:
+		target.receive_damage(3.0,channel,1,1.0)
+	tracker.update([target],5)
+	t.equal(tracker.popups.size(), 6, "AD-093 six simultaneous popups")
+	var items: Array = []
+	for popup in tracker.popups:
+		var w := Art.damage_glyph_width(popup["symbol"],popup["text"])
+		items.append({"anchor":Vector2(392,250)-Vector2(w/2.0,0),"size":Vector2(w,Numbers.LINE_HEIGHT),"group":popup["target_id"],"order":items.size()})
+	items.append({"anchor":Vector2(376,250),"size":Vector2(56,12),"group":5,"order":items.size()})
+	items.append({"anchor":Vector2(380,250),"size":Vector2(34,12),"group":"arc0","order":items.size()})
+	var rects := Numbers.stack_layout(items)
+	var clear := true
+	for i in rects.size():
+		for j in range(i+1,rects.size()):
+			if rects[i].intersection(rects[j]).has_area():
+				clear = false
+	t.check(clear, "AD-093 floating text rects do not overlap (6 damage + status + ARC!)")
 
 func _arena_scale(t) -> void:
 	const Run = preload("res://ui/run_controller.gd")
