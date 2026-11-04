@@ -15,6 +15,7 @@ var profile: Dictionary = default_profile()
 func _ready() -> void:
 	load_all()
 	settings.apply_audio()
+	settings.apply_bindings()
 
 static func default_profile() -> Dictionary:
 	return {"schema_version": SCHEMA_VERSION, "stats": DEFAULT_STATS.duplicate(true)}

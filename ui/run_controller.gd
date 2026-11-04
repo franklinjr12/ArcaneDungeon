@@ -11,6 +11,7 @@ const RewardCard = preload("res://art/export/ui/ad_ui_reward_card.png")
 const Prompts = preload("res://ui/onboarding_prompts.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
 const InputActions = preload("res://ui/input_actions.gd")
+var aim_source = InputActions.default_aim_source()
 const PauseMenu = preload("res://ui/pause_menu.gd")
 const MerchantScript = preload("res://world/merchant.gd")
 var flow
@@ -462,13 +463,18 @@ func _button(parent: Node, label: String, action: Callable, press_cue: String = 
 func _world_click(point: Vector2, button: int) -> void:
 	if is_paused() or editor_open or flow.state != "fighting":
 		return
+	var slot := InputActions.cast_slot_for_mouse_button(button)
+	if slot < 0:
+		return
 	cursor = point
-	cast_pending = InputActions.slot_for_mouse_button(button)
+	cast_pending = slot
 
 func _test_click(point: Vector2, button: int) -> void:
 	if is_paused() or editor_open or flow.state != "workshop":
 		return
-	_test_cast_slot(InputActions.slot_for_mouse_button(button),point)
+	var slot := InputActions.cast_slot_for_mouse_button(button)
+	if slot >= 0:
+		_test_cast_slot(slot,point)
 
 func _test_cast_slot(slot: int, point: Vector2) -> Dictionary:
 	var dir: Vector2 = (point-flow.range_sim.actor.position).normalized()
@@ -487,37 +493,42 @@ func _reset_test_range() -> void:
 
 func _input(event: InputEvent) -> void:
 	if is_paused():
-		if event is InputEventKey:
-			if event.pressed and not event.echo and event.is_action_pressed("pause"):
-				pause_menu.handle_cancel()
-			get_viewport().set_input_as_handled()
+		if event.is_action_pressed("pause") and not event.is_echo():
+			pause_menu.handle_cancel()
+		get_viewport().set_input_as_handled()
 		return
 	if editor_open or not event.is_pressed() or event.is_echo():
 		return
 	var fighting: bool = flow.state == "fighting"
 	var slot := InputActions.cast_slot_for_event(event)
-	if slot >= 2 and fighting:
-		cursor = arena_canvas.world_from_local(arena_canvas.get_local_mouse_position())
+	if slot >= 0 and not event is InputEventMouseButton and fighting:
+		cursor = aim_source.world_point(arena_canvas,flow.session.sim.actor.position)
 		cast_pending = slot
-	elif slot >= 2 and flow.state == "workshop" and flow.range_sim != null:
-		_test_cast_slot(slot,test_canvas.get_local_mouse_position())
-	elif event is InputEventKey and event.keycode >= KEY_1 and event.keycode <= KEY_9 			and flow.state == "cleared" and not flow.reward_collected 			and event.keycode-KEY_1 < flow.reward_options.size():
-		_choose_reward(event.keycode-KEY_1)
+	elif slot >= 0 and not event is InputEventMouseButton and flow.state == "workshop" and flow.range_sim != null:
+		_test_cast_slot(slot,aim_source.world_point(test_canvas,flow.range_sim.actor.position))
+	elif _reward_index(event) >= 0 and flow.state == "cleared" and not flow.reward_collected \
+			and _reward_index(event) < flow.reward_options.size():
+		_choose_reward(_reward_index(event))
 	elif event.is_action_pressed("interact"):
 		_exit()
 	elif event.is_action_pressed("pause"):
 		open_pause()
-	elif event is InputEventKey:
-		match event.keycode:
-			KEY_R: _retry_same_seed()
-			KEY_T:
-				if flow.state == "workshop": _reset_test_range()
-			KEY_F2:
-				if dev_tools_enabled(): _policy()
-			KEY_F3:
-				if dev_tools_enabled(): toggle_dev_overlay()
-			KEY_F6:
-				if dev_tools_enabled(): Art.toggle_art_export(); arena_canvas.queue_redraw()
+	elif event.is_action_pressed("run_retry"):
+		_retry_same_seed()
+	elif event.is_action_pressed("reset_test_range"):
+		if flow.state == "workshop": _reset_test_range()
+	elif event.is_action_pressed("dev_policy"):
+		if dev_tools_enabled(): _policy()
+	elif event.is_action_pressed("dev_overlay"):
+		if dev_tools_enabled(): toggle_dev_overlay()
+	elif event.is_action_pressed("dev_art_export"):
+		if dev_tools_enabled(): Art.toggle_art_export(); arena_canvas.queue_redraw()
+
+func _reward_index(event: InputEvent) -> int:
+	for i in 9:
+		if event.is_action_pressed("choose_reward_%d" % (i+1)):
+			return i
+	return -1
 
 func _process(delta: float) -> void:
 	if delta > 0 and delta < 2.0:
@@ -536,7 +547,7 @@ func _physics_process(_delta: float) -> void:
 	if not editor_open:
 		if flow.state == "fighting":
 			var dir := Input.get_vector("move_left","move_right","move_up","move_down")
-			var aim: Vector2 = (arena_canvas.world_from_local(arena_canvas.get_local_mouse_position())-flow.session.sim.actor.position).normalized()
+			var aim: Vector2 = (aim_source.world_point(arena_canvas,flow.session.sim.actor.position)-flow.session.sim.actor.position).normalized()
 			if aim.is_zero_approx():
 				aim = flow.session.player.facing
 			var command := {"move":dir,"aim":aim,"cast":cast_pending,"cursor":cursor,
