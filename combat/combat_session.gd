@@ -7,6 +7,7 @@ const Enemy = preload("res://combat/enemy_combat.gd")
 const Boss = preload("res://combat/boss_combat.gd")
 const DamageEvent = preload("res://combat/damage_event.gd")
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
+const Difficulty = preload("res://game/core/difficulty.gd")
 const TUNING_FILE := "res://combat/combat_tuning_v1.json"
 const SAMPLES_FILE := "res://magic/data/sandbox_samples_v1.json"
 var data: Dictionary = {}
@@ -70,7 +71,7 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	world = Geometry.new(data["arena"])
 	sim.bounds = world.bounds
 	sim.collision_walls = world.walls.duplicate()
-	sim.actor.health.maximum = float(data["player"]["max_hp"])
+	sim.actor.health.maximum = Difficulty.scale_f(float(data["player"]["max_hp"]),"player_hp")
 	sim.actor.health.reset()
 	sim.actor.radius = float(data["player"]["radius"])
 	sim.actor.position = Vector2(float(data["arena"]["player_spawn"][0]),float(data["arena"]["player_spawn"][1]))
@@ -104,7 +105,7 @@ func spawn_enemy(kind: String, at: Vector2):
 	if not data["enemies"].has(kind) or not world.valid_position(at,float(data["enemies"][kind]["radius"])):
 		return null
 	var p: Dictionary = data["enemies"][kind]
-	var target = sim.add_target(at,Vector2.ZERO,float(p["hp"]))
+	var target = sim.add_target(at,Vector2.ZERO,Difficulty.scale_f(float(p["hp"]),"enemy_hp"))
 	target.radius = float(p["radius"])
 	target.tags = ["enemy",kind]
 	var enemy = Enemy.new(target,kind,p)
@@ -114,7 +115,7 @@ func spawn_enemy(kind: String, at: Vector2):
 func spawn_boss(settings: Dictionary, at: Vector2):
 	if not world.valid_position(at,float(settings["radius"])):
 		return null
-	var target = sim.add_target(at,Vector2.ZERO,float(settings["hp"]))
+	var target = sim.add_target(at,Vector2.ZERO,Difficulty.scale_f(float(settings["hp"]),"enemy_hp"))
 	target.radius = float(settings["radius"])
 	target.tags = ["enemy","boss","undead_warden"]
 	var boss = Boss.new(target,settings)
