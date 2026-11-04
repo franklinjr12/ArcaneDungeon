@@ -1,5 +1,6 @@
 extends RefCounted
 ## Stable independent RNG per room: cannot be altered by combat tick counts.
+const Difficulty = preload("res://game/core/difficulty.gd")
 var config: Dictionary = {}
 var excluded: Array = []
 func _init(tuning: Dictionary, excluded_ids: Array = []) -> void:
@@ -17,14 +18,15 @@ func choices(run, room_id: String) -> Array:
 		hash_value = ((hash_value ^ int(c))*16777619) & 0x7fffffff
 	var random := RandomNumberGenerator.new()
 	random.seed = hash_value
+	var wanted := Difficulty.scale_i(int(config["reward_choices"]),"reward_rate")
 	var options: Array = []
-	while not possible.is_empty() and options.size() < int(config["reward_choices"]):
+	while not possible.is_empty() and options.size() < wanted:
 		var idx := random.randi_range(0,possible.size()-1)
 		var id: String = possible[idx]
 		var card: Dictionary = config.get("reward_cards", {}).get(id, {})
 		options.append({"kind":"rune","id":id,"name":str(card.get("name",id)),
 			"behaviour":str(card.get("behaviour",""))})
 		possible.remove_at(idx)
-	if options.size() < int(config["reward_choices"]):
-		options.append({"kind":"currency","amount":int(config["room_reward_currency"])})
+	if options.size() < wanted:
+		options.append({"kind":"currency","amount":Difficulty.scale_i(int(config["room_reward_currency"]),"coin_rate",0)})
 	return options

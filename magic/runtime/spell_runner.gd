@@ -1,5 +1,6 @@
 extends RefCounted
 ## M1 deterministic sandbox simulation (TASK-011–025). Only data-driven generic spells.
+const Difficulty = preload("res://game/core/difficulty.gd")
 const Clock = preload("res://game/core/simulation_clock.gd")
 const Registry = preload("res://magic/data/rune_registry.gd")
 const Limits = preload("res://magic/runtime/spell_limits.gd")
@@ -49,6 +50,8 @@ func _init(run_seed: int = 12345, record_trace: bool = true) -> void:
 		printerr("Invalid M1 balance configuration")
 		return
 	settings = parsed
+	if Difficulty.mult("player_mana") != 1.0:
+		settings["combat"]["player_max_mana"] = Difficulty.scale_f(float(settings["combat"]["player_max_mana"]),"player_mana")
 	registry = Registry.new()
 	if not registry.load_seed()["ok"]:
 		printerr("Could not load rune registry")

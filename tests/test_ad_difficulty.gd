@@ -2,6 +2,11 @@ extends RefCounted
 ## AD-126 difficulty block: 1.0 keeps traces identical; multipliers scale HP and telegraphs.
 const Session = preload("res://combat/combat_session.gd")
 const Difficulty = preload("res://game/core/difficulty.gd")
+const Flow = preload("res://world/run_flow.gd")
+const Determinism = preload("res://tests/test_ad_determinism.gd")
+const RunState = preload("res://world/run_state.gd")
+const Encounter = preload("res://world/encounter_director.gd")
+const Reward = preload("res://world/reward_generator.gd")
 const KEYS := ["enemy_hp","enemy_damage","enemy_speed","spawn_density","telegraph_length","reward_rate","coin_rate","player_hp","player_mana"]
 
 func _trace(overrides: Dictionary) -> String:
@@ -43,3 +48,27 @@ func run(t) -> void:
 	game = Session.new(5160,"single",0)
 	t.equal(int(game.enemies[0].tuning["telegraph_ticks"]),2*int(tuning["enemies"]["bone_thrall"]["telegraph_ticks"]),"AD-126 telegraph_length 2.0 doubles telegraph ticks")
 	Difficulty.clear_override()
+	_run_level(t,ones)
+
+func _run_level(t,ones: Dictionary) -> void:
+	Difficulty.set_override({"coin_rate":2.0})
+	var f = Flow.new(20261022)
+	var cfg: Dictionary = f.config.duplicate(true)
+	cfg["reward_pool"] = []
+	var fallback: Array = Reward.new(cfg).choices(f.run,"s1_r1")
+	t.equal(fallback,[{"kind":"currency","amount":2*int(cfg["room_reward_currency"])}],"AD-126 coin_rate 2.0 doubles currency fallback")
+	Difficulty.set_override({"spawn_density":0.5})
+	var enc = Encounter.new()
+	enc.initialize(f.room,f.session,int(f.config["max_active_enemies"]))
+	t.equal(enc.cap,int(f.config["max_active_enemies"])/2,"AD-126 spawn_density 0.5 halves the encounter cap")
+	Difficulty.set_override({"player_hp":2.0,"player_mana":2.0})
+	var scaled = Flow.new(20261022)
+	t.equal(scaled.run.max_hp,300.0,"AD-126 player_hp 2.0 doubles run max HP")
+	t.equal(scaled.run.mana,240.0,"AD-126 player_mana 2.0 doubles run mana")
+	Difficulty.clear_override()
+	var det = Determinism.new()
+	var base: Array = det._play(Flow.new(20261022))
+	Difficulty.set_override(ones)
+	var same: Array = det._play(Flow.new(20261022))
+	Difficulty.clear_override()
+	t.check(base == same,"AD-126 all-1.0 override keeps the scripted run identical")

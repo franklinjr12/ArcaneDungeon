@@ -1,5 +1,6 @@
 extends RefCounted
 ## TASK-038/039/041/043/047/048: linear run coordinator, no persistent M1 effects across rooms.
+const Difficulty = preload("res://game/core/difficulty.gd")
 const State = preload("res://world/run_state.gd")
 const Room = preload("res://world/room_template.gd")
 const Encounter = preload("res://world/encounter_director.gd")
@@ -217,7 +218,7 @@ func _finish_combat() -> void:
 		reward_options.clear()
 	elif room.values["type"] == "boss":
 		boss_defeated_events += 1
-		run.currency += int(config["boss_currency"])
+		run.currency += Difficulty.scale_i(int(config["boss_currency"]),"coin_rate",0)
 		_cue("sfx.pickup.currency",session.sim.actor.position)
 		reward_collected = true
 	else:
@@ -251,7 +252,7 @@ func choose_reward(index: int) -> Dictionary:
 	var option: Dictionary = reward_options[index]
 	var outcome: Dictionary
 	if option["kind"] == "rune":
-		outcome = run.unlock(str(option["id"]),int(config["duplicate_reward_currency"]))
+		outcome = run.unlock(str(option["id"]),Difficulty.scale_i(int(config["duplicate_reward_currency"]),"coin_rate",0))
 	else:
 		run.currency += int(option["amount"])
 		outcome = {"ok":true,"kind":"currency","currency":int(option["amount"])}
@@ -301,9 +302,9 @@ func enter_test_range() -> Dictionary:
 	var result: Dictionary = range_sim.equip_starter_loadout(run.formulas)
 	if not result["ok"]:
 		return result
-	range_sim.actor.health.maximum = float(config["workshop_restore_hp"])
+	range_sim.actor.health.maximum = Difficulty.scale_f(float(config["workshop_restore_hp"]),"player_hp")
 	range_sim.actor.health.reset()
-	range_sim.mana = float(config["workshop_restore_mana"])
+	range_sim.mana = Difficulty.scale_f(float(config["workshop_restore_mana"]),"player_mana")
 	range_sim.fill_targets()
 	return {"ok":true}
 
@@ -325,7 +326,7 @@ func prepare_wet_cluster() -> Dictionary:
 func refill_test_mana() -> Dictionary:
 	if range_sim == null or mode != "workshop":
 		return {"ok":false,"reason":"TEST_ONLY_WORKSHOP"}
-	range_sim.mana = float(config["workshop_restore_mana"])
+	range_sim.mana = Difficulty.scale_f(float(config["workshop_restore_mana"]),"player_mana")
 	return {"ok":true}
 
 func test_cast(slot: int, direction: Vector2) -> Dictionary:
