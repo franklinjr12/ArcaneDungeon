@@ -242,3 +242,19 @@ sandbox.cast,Cast %s
 sandbox.reset_seed,Reset reproducibly with seed %s
 sandbox.next_seed,Next reset seed %s
 sandbox.edit_slot,Selected edit slot: %d
+settings.controls.title,Controls
+settings.controls.press_key,Press a key...
+settings.controls.unbound,Unbound
+settings.controls.conflict,Conflicts with: %s
+settings.controls.reset,Reset to defaults
+settings.action.move_up,Move up
+settings.action.move_down,Move down
+settings.action.move_left,Move left
+settings.action.move_right,Move right
+settings.action.cast_slot_1,Cast slot 1
+settings.action.cast_slot_2,Cast slot 2
+settings.action.cast_slot_3,Cast slot 3
+settings.action.cast_slot_4,Cast slot 4
+settings.action.dash,Dash
+settings.action.interact,Interact
+settings.action.pause,Pause

@@ -1,5 +1,6 @@
 extends RefCounted
 ## AD-019: player settings model (audio volumes per bus, accessibility toggles, telemetry opt-in).
+const InputActions = preload("res://ui/input_actions.gd")
 const BUSES := ["Master", "SFX", "Ambience", "UI"]
 const WINDOW_MODES := ["windowed", "fullscreen", "borderless"]
 const UI_SCALE_MIN := 0.9
@@ -21,6 +22,8 @@ var screen_shake: bool = true
 var telemetry_opt_in: bool = false
 var window_mode: String = "windowed"
 var ui_scale: float = 1.0
+## action -> Array of event dicts (InputActions.event_to_dict); empty means project defaults.
+var bindings: Dictionary = {}
 
 func _init() -> void:
 	reset()
@@ -36,6 +39,7 @@ func reset() -> void:
 	telemetry_opt_in = d["telemetry_opt_in"]
 	window_mode = d["window_mode"]
 	ui_scale = d["ui_scale"]
+	bindings = {}
 
 func to_config(cfg: ConfigFile) -> void:
 	cfg.set_value("meta", "schema_version", DEFAULTS["schema_version"])
@@ -46,6 +50,8 @@ func to_config(cfg: ConfigFile) -> void:
 	cfg.set_value("privacy", "telemetry_opt_in", telemetry_opt_in)
 	cfg.set_value("display", "window_mode", window_mode)
 	cfg.set_value("display", "ui_scale", snap_ui_scale(ui_scale))
+	for action in bindings:
+		cfg.set_value("controls", str(action), bindings[action])
 
 func from_config(cfg: ConfigFile) -> void:
 	reset()
@@ -62,6 +68,16 @@ func from_config(cfg: ConfigFile) -> void:
 	var scale = cfg.get_value("display", "ui_scale", "")
 	if typeof(scale) == TYPE_FLOAT or typeof(scale) == TYPE_INT:
 		ui_scale = snap_ui_scale(float(scale))
+	for action in cfg.get_section_keys("controls") if cfg.has_section("controls") else PackedStringArray():
+		var v = cfg.get_value("controls", action, null)
+		if action in InputActions.REBINDABLE and typeof(v) == TYPE_ARRAY and not v.is_empty() and _all_decode(v):
+			bindings[action] = v
+
+static func _all_decode(entries: Array) -> bool:
+	for d in entries:
+		if typeof(d) != TYPE_DICTIONARY or InputActions.dict_to_event(d) == null:
+			return false
+	return true
 
 static func snap_ui_scale(v: float) -> float:
 	if is_nan(v) or is_inf(v):
@@ -77,6 +93,9 @@ func apply_audio() -> void:
 		var idx := AudioServer.get_bus_index(str(bus))
 		if idx >= 0:
 			AudioServer.set_bus_volume_db(idx, linear_to_db(float(volumes[bus])))
+
+func apply_bindings() -> void:
+	InputActions.apply_bindings(bindings)
 
 ## Applies UI scale and window mode. Never resizes a windowed window (keeps `--resolution WxH` runs intact).
 func apply_display(window: Window) -> void:
