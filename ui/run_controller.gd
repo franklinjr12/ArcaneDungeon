@@ -15,6 +15,7 @@ var aim_source = InputActions.default_aim_source()
 const PauseMenu = preload("res://ui/pause_menu.gd")
 const MerchantScript = preload("res://world/merchant.gd")
 var flow
+var config_path: String = Flow.CONFIG_V2
 var guide = Prompts.new()
 var tip: Label
 var tip_panel: PanelContainer
@@ -90,7 +91,7 @@ func _ready() -> void:
 	VisualTheme.apply(self)
 	if show_dev_tools == null:
 		show_dev_tools = OS.is_debug_build()
-	flow = Flow.new()
+	flow = Flow.new(-1, config_path)
 	_director = get_node_or_null("/root/AudioDirector")
 	if _director != null:
 		flow.audio_sink = _director.play
@@ -622,7 +623,7 @@ func _redraw_panel() -> void:
 		return
 	scene_key = str(flow.run.sequence_index)+":"+flow.state+":"+str(flow.reward_collected)
 	arena_canvas.session = flow.session
-	arena_canvas.environment_id = 2 if flow.run.sequence_index>=5 else (1 if flow.room.values["type"]=="boss" else 0)
+	arena_canvas.environment_id = 2 if int(flow.room.values.get("stage",0))>=1 else (1 if flow.room.values["type"]=="boss" else 0)
 	portrait_hud.queue_redraw()
 	arena_canvas.visible = flow.mode != "workshop"
 	test_canvas.visible = flow.mode == "workshop"
@@ -675,6 +676,9 @@ func _redraw_panel() -> void:
 		if flow.edit_policy == "cleared_room":
 			_hint(context,tr("run.hint.quick_edit"))
 		_hint(context,tr("run.hint.advance"))
+	elif flow.state == "cleared" and flow.next_is_optional():
+		_button(context,tr("run.btn.door_optional"),func(): _exit(true))
+		_button(context,tr("run.btn.door_skip"),func(): _exit(false))
 	elif in_workshop:
 		shop_reopen_button = _button(context,tr("run.btn.open_merchant"),func(): _set_shop_open(true))
 		_heading(context,tr("run.range.heading"))
@@ -970,10 +974,10 @@ func _to_title() -> void:
 	close_pause()
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
 
-func _exit() -> void:
+func _exit(take_optional: bool = true) -> void:
 	if editor_open:
 		return
-	var result: Dictionary = flow.try_exit(flow.session.sim.actor.position)
+	var result: Dictionary = flow.try_exit(flow.session.sim.actor.position, take_optional)
 	current_notice = tr("run.notice.door") % (str(result.get("reason","OPEN")) if result["ok"] == false else tr("run.notice.next_room"))
 	if result["ok"]:
 		_flash_transition()
@@ -1144,7 +1148,10 @@ func apply_debug_shot_state(state: String) -> bool:
 					enemy.target.receive_damage(100000,"fire",1,100)
 			flow.step()
 	elif state == "workshop_editor" or state == "merchant":
-		flow.run.sequence_index = flow.config["rooms"].size()-2
+		for i in flow.rooms.size():
+			if str(flow.rooms[i].get("type","")) == "workshop":
+				flow.run.sequence_index = i
+				break
 		flow._enter_current()
 	elif state == "summary":
 		flow.session.sim.actor.receive_damage(100000,"fire",2,100)

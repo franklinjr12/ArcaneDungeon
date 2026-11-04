@@ -69,6 +69,7 @@ func _retry_via_pause_menu(t, trace1: Array) -> void:
 	(Engine.get_main_loop() as SceneTree).root.add_child(viewport)
 	var scene: Node = load("res://scenes/run.tscn").instantiate()
 	scene.show_dev_tools = false
+	scene.config_path = "res://world/data/vertical_slice_v1.json"
 	viewport.add_child(scene)
 	if scene.flow.run.seed != SEED:
 		scene.flow.start_new(SEED)

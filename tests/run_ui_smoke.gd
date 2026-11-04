@@ -52,6 +52,7 @@ func _run() -> void:
 		return
 	var control = pack.instantiate()
 	control.show_dev_tools = false # release-like run: no F3 overlay, no F2/F3/F6
+	control.config_path = "res://world/data/vertical_slice_v1.json"
 	root.add_child(control)
 	current_scene = control
 	await process_frame

@@ -53,6 +53,8 @@ run.notice.wet_prepared,Wet cluster prepared: lightning arc can be tested
 run.btn.refill_mana,Refill test mana
 run.notice.mana_refilled,Test mana refilled
 run.btn.continue_stage2,Continue to stage 2 (F)
+run.btn.door_optional,Enter the side door
+run.btn.door_skip,Take the main path
 run.merchant.buy_once, — buy once per item
 run.shop.item_price,%s / %s coins
 run.shop.max_hp,Increase max HP by %d (run-persistent)
