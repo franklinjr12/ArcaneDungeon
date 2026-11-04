@@ -11,9 +11,12 @@ const Session = preload("res://combat/combat_session.gd")
 const Runner = preload("res://magic/runtime/spell_runner.gd")
 const ExperimentLog = preload("res://debug/experiment_log.gd")
 const CONFIG := "res://world/data/vertical_slice_v1.json"
+const CONFIG_V2 := "res://world/data/run_v2.json"
 const PRESET_SLOT_OFFSET := 1
 const SAMPLES := "res://magic/data/sandbox_samples_v1.json"
 var config: Dictionary = {}
+## Resolved room sequence for this run (v1: config["rooms"]; v2: seeded stage build).
+var rooms: Array = []
 var formulas: Dictionary = {}
 var run
 var session
@@ -49,8 +52,8 @@ var arcs := 0
 ## AD-020: output-only audio sink (Callable(cue_id, position)); the simulation never reads it.
 var audio_sink: Callable
 
-func _init(run_seed: int = -1) -> void:
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(CONFIG))
+func _init(run_seed: int = -1, config_path: String = CONFIG) -> void:
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(config_path))
 	var formula_data = JSON.parse_string(FileAccess.get_file_as_string(SAMPLES))
 	if typeof(parsed) != TYPE_DICTIONARY or typeof(formula_data) != TYPE_DICTIONARY or int(parsed.get("schema_version",0)) != 1:
 		push_error("M3 configuration missing/invalid")
@@ -61,6 +64,49 @@ func _init(run_seed: int = -1) -> void:
 	initialized = true
 	start_new(run_seed if run_seed >= 0 else int(config["seed"]))
 
+## Deterministic room order. v1 configs carry a fixed "rooms" list; v2 builds each stage from a seeded pool shuffle.
+static func build_sequence(cfg: Dictionary, run_seed: int) -> Array:
+	if cfg.has("rooms"):
+		return cfg["rooms"].duplicate(true)
+	var out: Array = []
+	var templates: Dictionary = cfg.get("room_templates", {})
+	var stage_index := 0
+	for stage in cfg.get("stages", []):
+		var rng := RandomNumberGenerator.new()
+		var hash_value := 2166136261
+		for c in ("%d:%s" % [run_seed, str(stage["id"])]).to_utf8_buffer():
+			hash_value = ((hash_value ^ int(c))*16777619) & 0x7fffffff
+		rng.seed = hash_value
+		var pool: Array = stage["pool"].duplicate()
+		var wanted: int = rng.randi_range(int(stage["combat_rooms"]["min"]),int(stage["combat_rooms"]["max"]))
+		if pool.size() < int(stage["combat_rooms"]["max"]):
+			push_error("Stage %s pool smaller than combat_rooms.max" % stage["id"])
+			return []
+		for i in range(pool.size()-1,0,-1):
+			var j := rng.randi_range(0,i)
+			var swap = pool[i]
+			pool[i] = pool[j]
+			pool[j] = swap
+		var ids: Array = pool.slice(0,wanted)
+		ids.append(stage["optional_room"])
+		ids.append(stage["boss_room"])
+		if bool(stage.get("workshop_after",false)):
+			ids.append("workshop")
+		var in_stage := 0
+		for id in ids:
+			if not templates.has(str(id)):
+				push_error("Room template missing: %s" % id)
+				return []
+			var entry: Dictionary = templates[str(id)].duplicate(true)
+			if str(id) == str(stage["optional_room"]):
+				entry["optional"] = true
+			entry["stage"] = stage_index
+			entry["room"] = in_stage
+			in_stage += 1
+			out.append(entry)
+		stage_index += 1
+	return out
+
 func _cue(id: String, at = null) -> void:
 	if audio_sink.is_valid():
 		audio_sink.call(id,at)
@@ -68,6 +114,7 @@ func _cue(id: String, at = null) -> void:
 func start_new(run_seed: int) -> void:
 	run = State.new()
 	run.initialize(run_seed,config,formulas)
+	rooms = build_sequence(config,run_seed)
 	boss_defeated_events = 0
 	transition_count = 0
 	outcome = ""
@@ -100,7 +147,7 @@ func _enter_current() -> Dictionary:
 	_bank_arcs()
 	var template = Room.new()
 	var geometry: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))
-	var verdict: Dictionary = template.initialize(config["rooms"][run.sequence_index],geometry["arena"],geometry["enemies"].keys())
+	var verdict: Dictionary = template.initialize(rooms[run.sequence_index],geometry["arena"],geometry["enemies"].keys())
 	if not verdict["ok"]:
 		state = "error"
 		return verdict
@@ -280,7 +327,7 @@ func try_exit(position: Vector2) -> Dictionary:
 	# Workshop is drawn as the test range only (no visible door), so leaving it is a menu action.
 	if mode != "workshop" and position.distance_to(room.marker("exit")) > 72.0:
 		return {"ok":false,"reason":"EXIT_TOO_FAR"}
-	if run.sequence_index >= config["rooms"].size()-1:
+	if run.sequence_index >= rooms.size()-1:
 		return {"ok":false,"reason":"SLICE_COMPLETE"}
 	if session != null and session.sim.actor.alive():
 		if mode != "workshop":
@@ -411,7 +458,9 @@ func snapshot() -> Dictionary:
 
 func recover(saved: Variant) -> Dictionary:
 	var validated = State.new()
-	var result: Dictionary = validated.restore(saved,session.sim.registry,config["rooms"].size())
+	if typeof(saved) == TYPE_DICTIONARY and typeof(saved.get("seed")) in [TYPE_INT,TYPE_FLOAT]:
+		rooms = build_sequence(config,int(saved["seed"]))
+	var result: Dictionary = validated.restore(saved,session.sim.registry,rooms.size())
 	if not result["ok"]:
 		return result
 	run = validated
