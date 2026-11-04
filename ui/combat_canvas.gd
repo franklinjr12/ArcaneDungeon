@@ -116,7 +116,7 @@ func _draw() -> void:
 	Art.entity(self,"mage",at,tick,mage_motion,actor_casting,mage_hurt,not mage.alive(),mage_tint,mage_anim)
 	_health_bar(at,25,mage.health.current/mage.health.maximum,Color("#da686e"))
 	if show_debug:
-		_label(at+Vector2(-17,-45),"MAGE",Color("#f8e7ba"))
+		_label(at+Vector2(-17,-45),tr("combat.mage_label"),Color("#f8e7ba"))
 		draw_arc(at,mage.radius,0.0,TAU,32,HITBOX_COLOR,1.0)
 	Art.icon(self,"health",at+Vector2(-40,23),Vector2(15,15))
 	for enemy in session.enemies:
@@ -152,7 +152,7 @@ func _draw() -> void:
 	_draw_floating_text(offset,tick)
 	_draw_death_banner()
 	if show_debug:
-		_label(Vector2(18,20),"DEBUG: wall/attack geometry and live target state",Color("#d6edf7"))
+		_label(Vector2(18,20),tr("combat.debug_geometry"),Color("#d6edf7"))
 
 ## Dark frame around the arena when the view is larger than the arena bounds (extreme aspects).
 func _draw_frame(arena_view: Rect2) -> void:
@@ -270,7 +270,7 @@ func _draw_floating_text(offset: Vector2, tick: int) -> void:
 	var arc_index := 0
 	for visual in session.sim.visuals:
 		if visual["kind"] == "arc":
-			var text := "ARC!"
+			var text := tr("combat.arc")
 			var size := font.get_string_size(text,HORIZONTAL_ALIGNMENT_LEFT,-1,12)
 			var at: Vector2 = (visual["from"]+visual["to"])/2.0-offset+Vector2(-12,-15)
 			items.append({"kind":"label","text":text,"color":Color("#ffeda4"),"anchor":at-Vector2(0,font.get_ascent(12)),"size":size,"group":"arc%d" % arc_index,"order":order})
@@ -311,7 +311,7 @@ func _draw_death_banner() -> void:
 	if session == null or session.sim.actor.alive():
 		return
 	var font := ThemeDB.fallback_font
-	var text := "DEFEATED"
+	var text := tr("combat.defeated")
 	var size := font.get_string_size(text,HORIZONTAL_ALIGNMENT_LEFT,-1,28)
 	var view := view_size()
 	var box := Rect2(Vector2((view.x-size.x)/2.0-16,view.y*0.22-size.y/2.0-8),size+Vector2(32,16))

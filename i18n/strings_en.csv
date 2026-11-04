@@ -111,3 +111,134 @@ run.btn.apply,Apply valid formula
 run.notice.formula_applied,Formula applied
 run.notice.formula_cancelled,Formula cancelled
 run.notice.duration, / %.1f s
+menu.title,ARCANE DUNGEON
+menu.subtitle,SPELLFORGE  •  THE FIRST DESCENT
+menu.new_run,New Run
+menu.settings,Settings
+menu.quit,Quit
+menu.debug,Debug
+menu.sandbox,Magic Sandbox
+menu.arena,Combat Arena
+pause.title,Paused
+pause.resume,Resume
+pause.settings,Settings
+pause.retry,Retry same seed
+pause.quit,Back to Menu
+pause.controls,Controls
+pause.back,Back
+pause.tips_hide,Hide tips
+pause.tips_show,Show tips
+pause.controls_text,"WASD / Arrows: move, mouse: aim
+LMB / RMB / Q / E: cast slots 1-4 (LMB = slot 1 Basic Bolt)
+Space: dash
+Esc: pause
+F: use the exit when near it
+R: retry same seed
+Workshop: T resets the test range"
+pause.confirm,Confirm
+pause.cancel,Cancel
+pause.retry_prompt,Restart this run with the same seed? Current progress is lost.
+pause.quit_prompt,"Quit to Title? This run ends, is recorded as abandoned and cannot be resumed."
+settings.title,Settings
+settings.flashes,Reduce flashes
+settings.shake,Reduce screen shake
+settings.telemetry,Local telemetry (opt-in)
+settings.window_mode,Window mode
+settings.ui_scale,UI scale
+settings.back,Back
+settings.bus.master,Master volume
+settings.bus.sfx,SFX volume
+settings.bus.ambience,Ambience volume
+settings.bus.ui,UI volume
+settings.mode.windowed,Windowed
+settings.mode.fullscreen,Fullscreen
+settings.mode.borderless,Borderless
+combat.back_to_menu,Back to Menu
+combat.header,ARCANE DUNGEON / M2 COMBAT
+combat.tips,"WASD/Arrows Move   Mouse Aim
+LMB / RMB / Q / E: Cast slot 1-4
+SPACE Dash   ESC Pause
+R: Retry  TAB: Starter loadout"
+combat.tips_debug,"
+F3: Debug  F4: Reduce hit flashes
+1 / 2 / 3: Arena scenario"
+combat.scenario.single,Single
+combat.scenario.mixed,Mixed
+combat.scenario.cluster,Cluster
+combat.btn.retry,Retry
+combat.btn.loadout,Loadout
+combat.btn.pause,Pause Esc
+combat.btn.debug,Debug F3
+combat.btn.flash,Flash F4
+combat.hud,"HP %d / %d
+MANA %d / %d
+
+SLOT 1: %s
+Mana %d | CD %d | Complexity %d
+
+SLOT 2: %s
+Mana %d | CD %d | Complexity %d
+
+Dash %s / %d ticks
+I-FRAMES %d / RECOVER %d
+
+Enemies: %d  Effects: %d"
+combat.dash.ready,READY
+combat.dash.cooldown,COOLDOWN
+combat.arc_reaction,ARC! Wet + Lightning
+combat.flashes_reduced,FLASHES REDUCED
+combat.mage_label,MAGE
+combat.debug_geometry,DEBUG: wall/attack geometry and live target state
+combat.arc,ARC!
+combat.defeated,DEFEATED
+placeholder.sandbox,MAGIC SANDBOX
+placeholder.arena,COMBAT ARENA
+placeholder.caption,M0 bootstrap: gameplay is implemented in later milestones
+hud.exit_open,EXIT OPEN
+hud.exit_locked,LOCKED
+hud.rune_choice,RUNE CHOICE
+hud.key.lmb,LMB
+hud.key.rmb,RMB
+hud.key.space,SPACE
+hud.hp,HP %d/%d
+hud.mp,MP %d/%d
+hud.mana_cost,%d MP
+hud.dash,DASH
+sandbox.header,MAGIC SANDBOX  /  M1
+sandbox.hint,LMB/RMB cast • WASD debug move
+sandbox.select_formula,Select formula for highlighted slot
+sandbox.btn.reset,Reset
+sandbox.btn.mana,Mana
+sandbox.btn.pause,Pause
+sandbox.btn.step,Step
+sandbox.btn.dummy,Dummy
+sandbox.btn.moving,Moving
+sandbox.btn.stress,Stress
+sandbox.btn.profile,Profile
+sandbox.btn.export,Export
+sandbox.btn.seed,Seed+
+sandbox.notice.mana_reset,Mana reset
+sandbox.notice.paused,Paused
+sandbox.notice.resumed,Resumed
+sandbox.notice.step,One simulation tick
+sandbox.notice.dummy,Stationary dummy spawned
+sandbox.notice.moving,Moving dummy spawned
+sandbox.notice.stress,"Stress: %d / 10000 effects, cap %d"
+sandbox.notice.profile,"M4 40 targets: %.2f mean / %.2f p95 ms, hit %d, drop %d"
+sandbox.notice.export_ok,Trace exported to user://magic_sandbox_trace.json
+sandbox.notice.export_fail,Trace export failed
+sandbox.btn.resume,Resume
+sandbox.details,"1: %s / %d mana / CD %d / C%d
+2: %s / %d mana / CD %d / C%d"
+sandbox.stats,"tick %d / mana %.1f / active %d
+Hits %d / DPS(3s) %.1f / seed %d
+M1 budgets: effects/cast %d; events %d
+active %d/%d; depth %d; arcs %d"
+sandbox.inspect_hint,MMB inspect • 
+sandbox.target_info,"#%d: HP %.0f, hits %d, states %s"
+sandbox.equip_slot,Equip to slot %d
+sandbox.equipped,Equipped %s
+sandbox.cast,Cast %s
+sandbox.reset_seed,Reset reproducibly with seed %s
+sandbox.next_seed,Next reset seed %s
+sandbox.edit_slot,Selected edit slot: %d

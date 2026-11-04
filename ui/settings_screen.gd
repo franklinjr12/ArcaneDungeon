@@ -4,15 +4,15 @@ extends Control
 const VisualTheme = preload("res://ui/pixel_theme.gd")
 const Settings = preload("res://game/core/settings.gd")
 const TEXT := {
-	"title": "Settings",
-	"buses": {"Master": "Master volume", "SFX": "SFX volume", "Ambience": "Ambience volume", "UI": "UI volume"},
-	"flashes": "Reduce flashes",
-	"shake": "Reduce screen shake",
-	"telemetry": "Local telemetry (opt-in)",
-	"window_mode": "Window mode",
-	"modes": ["Windowed", "Fullscreen", "Borderless"],
-	"ui_scale": "UI scale",
-	"back": "Back",
+	"title": "settings.title",
+	"buses": {"Master": "settings.bus.master", "SFX": "settings.bus.sfx", "Ambience": "settings.bus.ambience", "UI": "settings.bus.ui"},
+	"flashes": "settings.flashes",
+	"shake": "settings.shake",
+	"telemetry": "settings.telemetry",
+	"window_mode": "settings.window_mode",
+	"modes": ["settings.mode.windowed", "settings.mode.fullscreen", "settings.mode.borderless"],
+	"ui_scale": "settings.ui_scale",
+	"back": "settings.back",
 }
 signal back_requested
 
@@ -44,7 +44,7 @@ func _ready() -> void:
 	panel.add_theme_constant_override("separation", 12)
 	_scroll.add_child(panel)
 	var heading := Label.new()
-	heading.text = TEXT["title"]
+	heading.text = tr(TEXT["title"])
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	panel.add_child(heading)
 	var director = get_node_or_null("/root/AudioDirector")
@@ -52,7 +52,7 @@ func _ready() -> void:
 		var row := HBoxContainer.new()
 		panel.add_child(row)
 		var label := Label.new()
-		label.text = TEXT["buses"][bus]
+		label.text = tr(TEXT["buses"][bus])
 		label.custom_minimum_size.x = 150
 		row.add_child(label)
 		var slider := HSlider.new()
@@ -69,25 +69,25 @@ func _ready() -> void:
 			settings.apply_audio()
 			_save())
 		volume_sliders[bus] = slider
-	flash_toggle = _toggle(panel, TEXT["flashes"], settings.reduce_flashes, disabled, director, func(on: bool):
+	flash_toggle = _toggle(panel, tr(TEXT["flashes"]), settings.reduce_flashes, disabled, director, func(on: bool):
 		settings.reduce_flashes = on
 		_save())
-	shake_toggle = _toggle(panel, TEXT["shake"], not settings.screen_shake, disabled, director, func(on: bool):
+	shake_toggle = _toggle(panel, tr(TEXT["shake"]), not settings.screen_shake, disabled, director, func(on: bool):
 		settings.screen_shake = not on
 		_save())
-	telemetry_toggle = _toggle(panel, TEXT["telemetry"], settings.telemetry_opt_in, disabled, director, func(on: bool):
+	telemetry_toggle = _toggle(panel, tr(TEXT["telemetry"]), settings.telemetry_opt_in, disabled, director, func(on: bool):
 		settings.telemetry_opt_in = on
 		_save())
 	var director_ref = director
 	var mode_row := HBoxContainer.new()
 	panel.add_child(mode_row)
 	var mode_label := Label.new()
-	mode_label.text = TEXT["window_mode"]
+	mode_label.text = tr(TEXT["window_mode"])
 	mode_label.custom_minimum_size.x = 150
 	mode_row.add_child(mode_label)
 	window_mode_option = OptionButton.new()
 	for m in TEXT["modes"]:
-		window_mode_option.add_item(m)
+		window_mode_option.add_item(tr(m))
 	window_mode_option.selected = maxi(Settings.WINDOW_MODES.find(settings.window_mode), 0)
 	window_mode_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	window_mode_option.focus_mode = Control.FOCUS_ALL
@@ -100,7 +100,7 @@ func _ready() -> void:
 	var scale_row := HBoxContainer.new()
 	panel.add_child(scale_row)
 	var scale_name := Label.new()
-	scale_name.text = TEXT["ui_scale"]
+	scale_name.text = tr(TEXT["ui_scale"])
 	scale_name.custom_minimum_size.x = 150
 	scale_row.add_child(scale_name)
 	ui_scale_slider = HSlider.new()
@@ -124,7 +124,7 @@ func _ready() -> void:
 	if director_ref != null:
 		director_ref.bind_button(window_mode_option)
 	back_button = Button.new()
-	back_button.text = TEXT["back"]
+	back_button.text = tr(TEXT["back"])
 	back_button.custom_minimum_size.y = 48
 	back_button.focus_mode = Control.FOCUS_ALL
 	panel.add_child(back_button)
