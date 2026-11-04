@@ -570,14 +570,15 @@ func _move_test_mage(dir: Vector2) -> void:
 	actor.position = (actor.position+dir.limit_length(1.0)*speed).clamp(bounds.position,bounds.end)
 
 func room_display_name(room_id: String) -> String:
-	return str(flavour.get("room_names", {}).get(room_id, room_id))
+	var key = flavour.get("room_names", {}).get(room_id, "")
+	return tr(str(key)) if key != "" else room_id
 
 ## Rift line is returned once per run (reset on retry / new seed).
 func stage_banner() -> String:
 	if _rift_shown:
 		return ""
 	_rift_shown = true
-	return str(flavour.get("rift_line", ""))
+	return tr(str(flavour.get("rift_line", "")))
 
 func _guide(show: bool) -> void:
 	if show:
@@ -702,7 +703,7 @@ func _set_shop_open(on: bool) -> void:
 func _build_shop_panel() -> void:
 	_clear(shop_list)
 	var title := Label.new()
-	title.text = str(flavour.get("merchant", {}).get("title", "Merchant"))+" — buy once per item"
+	title.text = tr(str(flavour.get("merchant", {}).get("title", "Merchant")))+" — buy once per item"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color",Color("#efbc65"))
 	shop_list.add_child(title)
@@ -710,7 +711,7 @@ func _build_shop_panel() -> void:
 	greet.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	greet.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	greet.custom_minimum_size.x = 380
-	greet.text = flow.merchant.greeting(flow.run.seed)
+	greet.text = tr(flow.merchant.greeting(flow.run.seed))
 	shop_list.add_child(greet)
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -748,7 +749,10 @@ func _build_shop_panel() -> void:
 		var explanation := ""
 		if item["kind"] == "rune":
 			var rune = flow.session.sim.registry.get_rune(str(item["rune_id"]))
-			explanation = str(rune.snapshot()["description"]) if rune != null else str(item["rune_id"])
+			var desc_key := "rune.%s.desc" % item["rune_id"]
+			explanation = str(item["rune_id"])
+			if rune != null:
+				explanation = tr(desc_key) if tr(desc_key) != desc_key else str(rune.snapshot()["description"])
 		else:
 			explanation = "Increase max HP by %d (run-persistent)" % int(item["amount"])
 		detail.text = explanation+" | "+("Purchased" if flow.merchant.bought.has(item["id"]) else ("Affordable" if affordable else "Need "+str(int(item["price"])-flow.run.currency)+" coins"))
@@ -897,7 +901,7 @@ func _buy(i: int) -> void:
 	var result: Dictionary = flow.buy(i)
 	current_notice = "Merchant: "+str(result.get("kind",result.get("reason","")))
 	if result.get("ok",false):
-		current_notice = flow.merchant.purchase_line(flow.run.purchases.size())
+		current_notice = tr(flow.merchant.purchase_line(flow.run.purchases.size()))
 	_redraw_panel()
 
 func _build_summary_panel() -> void:

@@ -3,7 +3,6 @@ extends RefCounted
 const FLAVOUR_PATH := "res://world/data/flavour_v1.json"
 const TIP_IDS := ["room1", "first_reward", "first_workshop"]
 const MAX_CHARS := 90
-const STRINGS_PATH := "res://data/strings_en.json"
 # AD-084: workshop_empty_slot wording is proposed (the editor uses rune pickers, not drag-and-drop).
 const HINT_IDS := ["workshop_empty_slot", "test_on_dummy", "wet_try_lightning"]
 const HINT_INDEX := {"workshop_empty_slot": 0, "test_on_dummy": 1, "wet_try_lightning": 2}
@@ -22,12 +21,10 @@ func _init() -> void:
 	var data = JSON.parse_string(FileAccess.get_file_as_string(FLAVOUR_PATH))
 	if data is Dictionary and data.get("onboarding") is Dictionary:
 		tips = data["onboarding"]
-	if FileAccess.file_exists(STRINGS_PATH):
-		var strings = JSON.parse_string(FileAccess.get_file_as_string(STRINGS_PATH))
-		if strings is Dictionary:
-			for id in HINT_IDS:
-				if strings.has("onboarding." + id):
-					tips[id] = str(strings["onboarding." + id])
+	for id in tips.keys():
+		tips[id] = TranslationServer.translate(str(tips[id]))
+	for id in HINT_IDS:
+		tips[id] = TranslationServer.translate("onboarding." + id)
 
 func load_seen(ids: Array) -> void:
 	seen = []

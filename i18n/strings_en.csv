@@ -1,0 +1,31 @@
+keys,en
+flavour.rift_line,"Something in the Uncatalogued Ruins has opened a rift, and the Undead it wakes now guard it."
+onboarding.room1,"Move/aim with mouse. LMB bolt, RMB/Q presets, Space dash gives i-frames."
+onboarding.first_reward,3 cards: pick 1. Each card adds a new behaviour to your spells.
+onboarding.first_workshop,"Edit slot 4, test it in the range. Invalid spells show why."
+room.s1_r1,Uncatalogued Ruins I
+room.s1_r2,Uncatalogued Ruins II
+room.s1_r3,Uncatalogued Ruins III
+room.s1_boss,Warden's Rift
+room.workshop,Traders Guild Outpost
+room.s2_r1,Uncatalogued Ruins - Lower Stacks
+merchant.title,Traders Guild Outpost
+merchant.greeting.0,"Guild prices. No haggling, no credit."
+merchant.greeting.1,Runes and ward-salve. Coin first.
+merchant.greeting.2,Pick what you need. The Guild keeps the ledger.
+merchant.purchase.0,Logged. The Guild thanks you for the coin.
+merchant.purchase.1,Done. Mind the rift on the way out.
+onboarding.workshop_empty_slot,Put a rune into an empty slot: open it to edit.
+onboarding.test_on_dummy,Test on the dummy
+onboarding.wet_try_lightning,Water makes enemies Wet. Try Lightning.
+rune.essence.fire.desc,Deals fire damage and applies Burning to the target.
+rune.essence.water.desc,"Deals water damage, applies Wet and puts out Burning."
+rune.essence.lightning.desc,Deals lightning damage; on a Wet target it arcs once to the nearest other Wet target.
+rune.form.projectile.desc,Fires a single bolt in a straight line that ends on its first hit.
+rune.form.burst.desc,Hits every target within a 75-unit radius at once.
+rune.form.orb.desc,"Circles you at 72 units for 6 seconds, hitting what it touches."
+rune.mod.homing.desc,Projectile turns toward the nearest target within 280 units.
+rune.mod.split.desc,Projectile fires as 3 bolts spread across 17 degrees.
+rune.mod.pierce.desc,"Projectile passes through targets, hitting up to 3 different ones."
+rune.trigger.on_hit.desc,"When the projectile hits, it releases its attached Burst payload."
+rune.essence.neutral.desc,"Basic Bolt: a neutral projectile that deals plain damage, no element."
