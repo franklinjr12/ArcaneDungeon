@@ -26,7 +26,7 @@ func _draw() -> void:
 	var tick: int = runner.clock.tick
 	draw_line(runner.actor.position,hover,Color("#6fe1fa",0.18),1)
 	Art.entity(self,"mage",runner.actor.position,tick,Vector2.ZERO,runner.active.size()>0 and tick%14<5)
-	_label(runner.actor.position+Vector2(-19,-46),"MAGE",Color("#fbe1a9"),11)
+	_label(runner.actor.position+Vector2(-19,-46),tr("combat.mage_label"),Color("#fbe1a9"),11)
 	for t in runner.targets.all():
 		if t.id == runner.actor.id:
 			continue

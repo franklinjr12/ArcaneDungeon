@@ -31,11 +31,9 @@ func run(t) -> void:
 	_ad084(t)
 
 func _ad084(t) -> void:
-	var raw = JSON.parse_string(FileAccess.get_file_as_string(Prompts.STRINGS_PATH))
-	t.check(raw is Dictionary, "AD-084 strings file parses")
 	var p = Prompts.new()
 	for id in Prompts.HINT_IDS:
-		t.check(raw.has("onboarding." + id), "AD-084 strings key: " + id)
+		t.check(TranslationServer.translate("onboarding." + id) != "onboarding." + id, "AD-084 strings key: " + id)
 		var s := str(p.tips.get(id, ""))
 		t.check(not s.is_empty() and s.length() <= Prompts.MAX_CHARS, "AD-084 hint loads and fits: " + id)
 	p.note_workshop(2)

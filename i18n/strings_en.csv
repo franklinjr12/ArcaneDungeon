@@ -1,0 +1,244 @@
+keys,en
+flavour.rift_line,"Something in the Uncatalogued Ruins has opened a rift, and the Undead it wakes now guard it."
+onboarding.room1,"Move/aim with mouse. LMB bolt, RMB/Q presets, Space dash gives i-frames."
+onboarding.first_reward,3 cards: pick 1. Each card adds a new behaviour to your spells.
+onboarding.first_workshop,"Edit slot 4, test it in the range. Invalid spells show why."
+room.s1_r1,Uncatalogued Ruins I
+room.s1_r2,Uncatalogued Ruins II
+room.s1_r3,Uncatalogued Ruins III
+room.s1_boss,Warden's Rift
+room.workshop,Traders Guild Outpost
+room.s2_r1,Uncatalogued Ruins - Lower Stacks
+merchant.title,Traders Guild Outpost
+merchant.greeting.0,"Guild prices. No haggling, no credit."
+merchant.greeting.1,Runes and ward-salve. Coin first.
+merchant.greeting.2,Pick what you need. The Guild keeps the ledger.
+merchant.purchase.0,Logged. The Guild thanks you for the coin.
+merchant.purchase.1,Done. Mind the rift on the way out.
+onboarding.workshop_empty_slot,Put a rune into an empty slot: open it to edit.
+onboarding.test_on_dummy,Test on the dummy
+onboarding.wet_try_lightning,Water makes enemies Wet. Try Lightning.
+rune.essence.fire.desc,Deals fire damage and applies Burning to the target.
+rune.essence.water.desc,"Deals water damage, applies Wet and puts out Burning."
+rune.essence.lightning.desc,Deals lightning damage; on a Wet target it arcs once to the nearest other Wet target.
+rune.form.projectile.desc,Fires a single bolt in a straight line that ends on its first hit.
+rune.form.burst.desc,Hits every target within a 75-unit radius at once.
+rune.form.orb.desc,"Circles you at 72 units for 6 seconds, hitting what it touches."
+rune.mod.homing.desc,Projectile turns toward the nearest target within 280 units.
+rune.mod.split.desc,Projectile fires as 3 bolts spread across 17 degrees.
+rune.mod.pierce.desc,"Projectile passes through targets, hitting up to 3 different ones."
+rune.trigger.on_hit.desc,"When the projectile hits, it releases its attached Burst payload."
+rune.essence.neutral.desc,"Basic Bolt: a neutral projectile that deals plain damage, no element."
+run.loadout,Loadout
+run.btn.pause,Pause (Esc)
+run.btn.toggle_policy,Toggle edit policy (F2)
+run.btn.export_telemetry,Export telemetry JSON + CSV
+run.notice.test_cast,Test cast slot %d: %s
+run.notice.range_reset,Safe test range reset
+run.notice.room_cleared,"Room cleared! Pick a reward (keys 1-%d), then walk to EXIT and press F"
+run.notice.opt_in_first,Opt in first; data are kept locally and never uploaded.
+run.notice.export_ok,"Local files: user://arcane_m4_experiment.{json,csv}"
+run.notice.export_failed,Export failed
+run.error.run_data,RUN DATA ERROR
+run.reward.heading,ROOM CLEARED — choose ONE reward
+run.reward.currency,+%d currency
+run.reward.keys,Keys 1-3 or click a card
+run.hint.quick_edit,Quick edit allowed (no shop/test)
+run.hint.advance,Advance at exit (F) after choosing
+run.btn.open_merchant,Open merchant
+run.range.heading,Testing range: no progression/rewards
+run.btn.reset_targets,Reset test targets + mana (T)
+run.btn.prepare_wet,Prepare Wet cluster (2 targets)
+run.notice.wet_prepared,Wet cluster prepared: lightning arc can be tested
+run.btn.refill_mana,Refill test mana
+run.notice.mana_refilled,Test mana refilled
+run.btn.continue_stage2,Continue to stage 2 (F)
+run.merchant.buy_once, — buy once per item
+run.shop.item_price,%s / %s coins
+run.shop.max_hp,Increase max HP by %d (run-persistent)
+run.shop.purchased,Purchased
+run.shop.affordable,Affordable
+run.shop.need,Need %d coins
+run.btn.close_shop,Close shop
+run.loadout.slot1,Slot 1: Basic Bolt [LOCKED]
+run.loadout.empty,(empty)
+run.loadout.slot_edit,Slot %d: %s — Edit
+run.test.line1,TEST hits %d / active %d / mana %.0f
+run.test.line2,Statuses %s | Reactions %d
+run.test.line3,Triggers %d | Budget warnings %d
+run.tip,TIP: %s
+run.goal.workshop,Safe Workshop
+run.goal.warden,Defeat the Warden
+run.goal.undead,Defeat the Undead
+run.goal.exit,Exit unlocked - press F at the exit
+run.objective,%s - %s
+run.notice.reward,Reward: %s
+run.notice.merchant,Merchant: %s
+run.summary.title,RUN SUMMARY — %s
+run.summary.victory,VICTORY
+run.summary.defeated,DEFEATED
+run.summary.rooms,Rooms cleared: %d
+run.summary.kills,Kills: %d
+run.summary.time,Time: %d:%02d
+run.summary.spells,Spells used: %d
+run.summary.seed,Seed: %d
+run.summary.totals,Runs: %d  Wins: %d  Best: %s
+run.btn.retry,Retry same seed
+run.btn.new_seed,New seed
+run.btn.title,Title
+run.notice.retry,Retry same seed: currencies / runes reset
+run.notice.new_seed,New seed: currencies / runes reset
+run.notice.door,Door: %s
+run.notice.next_room,NEXT ROOM
+run.notice.edit_policy,"Edit policy: %s (test switch, not final rule)"
+run.notice.slot1_locked,Slot 1 is locked (Basic Bolt) — cannot edit
+run.notice.editor,Editor: %s
+run.editor.title,SPELL EDITOR / SLOT %d
+run.editor.chain,Essence → Manifestation → Modifier → On Hit
+run.editor.essence,Essence
+run.editor.manifestation,Manifestation
+run.editor.modifiers,Projectile modifiers
+run.suffix.locked, [LOCKED]
+run.suffix.locked_lower, (locked)
+run.editor.onhit,On Hit → Burst child
+run.editor.child_essence,Child Burst Essence
+run.editor.valid,VALID / Mana %d / Cooldown %d ticks / Complexity %d / %d cap
+run.editor.invalid,INVALID — cannot apply:
+run.btn.undo,Undo
+run.btn.reset_draft,Reset draft
+run.btn.cancel_edit,Cancel (restore original)
+run.btn.apply,Apply valid formula
+run.notice.formula_applied,Formula applied
+run.notice.formula_cancelled,Formula cancelled
+run.notice.duration, / %.1f s
+menu.title,ARCANE DUNGEON
+menu.subtitle,SPELLFORGE  •  THE FIRST DESCENT
+menu.new_run,New Run
+menu.settings,Settings
+menu.quit,Quit
+menu.debug,Debug
+menu.sandbox,Magic Sandbox
+menu.arena,Combat Arena
+pause.title,Paused
+pause.resume,Resume
+pause.settings,Settings
+pause.retry,Retry same seed
+pause.quit,Back to Menu
+pause.controls,Controls
+pause.back,Back
+pause.tips_hide,Hide tips
+pause.tips_show,Show tips
+pause.controls_text,"WASD / Arrows: move, mouse: aim
+LMB / RMB / Q / E: cast slots 1-4 (LMB = slot 1 Basic Bolt)
+Space: dash
+Esc: pause
+F: use the exit when near it
+R: retry same seed
+Workshop: T resets the test range"
+pause.confirm,Confirm
+pause.cancel,Cancel
+pause.retry_prompt,Restart this run with the same seed? Current progress is lost.
+pause.quit_prompt,"Quit to Title? This run ends, is recorded as abandoned and cannot be resumed."
+settings.title,Settings
+settings.flashes,Reduce flashes
+settings.shake,Reduce screen shake
+settings.telemetry,Local telemetry (opt-in)
+settings.window_mode,Window mode
+settings.ui_scale,UI scale
+settings.back,Back
+settings.bus.master,Master volume
+settings.bus.sfx,SFX volume
+settings.bus.ambience,Ambience volume
+settings.bus.ui,UI volume
+settings.mode.windowed,Windowed
+settings.mode.fullscreen,Fullscreen
+settings.mode.borderless,Borderless
+combat.back_to_menu,Back to Menu
+combat.header,ARCANE DUNGEON / M2 COMBAT
+combat.tips,"WASD/Arrows Move   Mouse Aim
+LMB / RMB / Q / E: Cast slot 1-4
+SPACE Dash   ESC Pause
+R: Retry  TAB: Starter loadout"
+combat.tips_debug,"
+F3: Debug  F4: Reduce hit flashes
+1 / 2 / 3: Arena scenario"
+combat.scenario.single,Single
+combat.scenario.mixed,Mixed
+combat.scenario.cluster,Cluster
+combat.btn.retry,Retry
+combat.btn.loadout,Loadout
+combat.btn.pause,Pause Esc
+combat.btn.debug,Debug F3
+combat.btn.flash,Flash F4
+combat.hud,"HP %d / %d
+MANA %d / %d
+
+SLOT 1: %s
+Mana %d | CD %d | Complexity %d
+
+SLOT 2: %s
+Mana %d | CD %d | Complexity %d
+
+Dash %s / %d ticks
+I-FRAMES %d / RECOVER %d
+
+Enemies: %d  Effects: %d"
+combat.dash.ready,READY
+combat.dash.cooldown,COOLDOWN
+combat.arc_reaction,ARC! Wet + Lightning
+combat.flashes_reduced,FLASHES REDUCED
+combat.mage_label,MAGE
+combat.debug_geometry,DEBUG: wall/attack geometry and live target state
+combat.arc,ARC!
+combat.defeated,DEFEATED
+placeholder.sandbox,MAGIC SANDBOX
+placeholder.arena,COMBAT ARENA
+placeholder.caption,M0 bootstrap: gameplay is implemented in later milestones
+hud.exit_open,EXIT OPEN
+hud.exit_locked,LOCKED
+hud.rune_choice,RUNE CHOICE
+hud.key.lmb,LMB
+hud.key.rmb,RMB
+hud.key.space,SPACE
+hud.hp,HP %d/%d
+hud.mp,MP %d/%d
+hud.mana_cost,%d MP
+hud.dash,DASH
+sandbox.header,MAGIC SANDBOX  /  M1
+sandbox.hint,LMB/RMB cast • WASD debug move
+sandbox.select_formula,Select formula for highlighted slot
+sandbox.btn.reset,Reset
+sandbox.btn.mana,Mana
+sandbox.btn.pause,Pause
+sandbox.btn.step,Step
+sandbox.btn.dummy,Dummy
+sandbox.btn.moving,Moving
+sandbox.btn.stress,Stress
+sandbox.btn.profile,Profile
+sandbox.btn.export,Export
+sandbox.btn.seed,Seed+
+sandbox.notice.mana_reset,Mana reset
+sandbox.notice.paused,Paused
+sandbox.notice.resumed,Resumed
+sandbox.notice.step,One simulation tick
+sandbox.notice.dummy,Stationary dummy spawned
+sandbox.notice.moving,Moving dummy spawned
+sandbox.notice.stress,"Stress: %d / 10000 effects, cap %d"
+sandbox.notice.profile,"M4 40 targets: %.2f mean / %.2f p95 ms, hit %d, drop %d"
+sandbox.notice.export_ok,Trace exported to user://magic_sandbox_trace.json
+sandbox.notice.export_fail,Trace export failed
+sandbox.btn.resume,Resume
+sandbox.details,"1: %s / %d mana / CD %d / C%d
+2: %s / %d mana / CD %d / C%d"
+sandbox.stats,"tick %d / mana %.1f / active %d
+Hits %d / DPS(3s) %.1f / seed %d
+M1 budgets: effects/cast %d; events %d
+active %d/%d; depth %d; arcs %d"
+sandbox.inspect_hint,MMB inspect • 
+sandbox.target_info,"#%d: HP %.0f, hits %d, states %s"
+sandbox.equip_slot,Equip to slot %d
+sandbox.equipped,Equipped %s
+sandbox.cast,Cast %s
+sandbox.reset_seed,Reset reproducibly with seed %s
+sandbox.next_seed,Next reset seed %s
+sandbox.edit_slot,Selected edit slot: %d
