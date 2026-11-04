@@ -29,3 +29,85 @@ rune.mod.split.desc,Projectile fires as 3 bolts spread across 17 degrees.
 rune.mod.pierce.desc,"Projectile passes through targets, hitting up to 3 different ones."
 rune.trigger.on_hit.desc,"When the projectile hits, it releases its attached Burst payload."
 rune.essence.neutral.desc,"Basic Bolt: a neutral projectile that deals plain damage, no element."
+run.loadout,Loadout
+run.btn.pause,Pause (Esc)
+run.btn.toggle_policy,Toggle edit policy (F2)
+run.btn.export_telemetry,Export telemetry JSON + CSV
+run.notice.test_cast,Test cast slot %d: %s
+run.notice.range_reset,Safe test range reset
+run.notice.room_cleared,"Room cleared! Pick a reward (keys 1-%d), then walk to EXIT and press F"
+run.notice.opt_in_first,Opt in first; data are kept locally and never uploaded.
+run.notice.export_ok,"Local files: user://arcane_m4_experiment.{json,csv}"
+run.notice.export_failed,Export failed
+run.error.run_data,RUN DATA ERROR
+run.reward.heading,ROOM CLEARED — choose ONE reward
+run.reward.currency,+%d currency
+run.reward.keys,Keys 1-3 or click a card
+run.hint.quick_edit,Quick edit allowed (no shop/test)
+run.hint.advance,Advance at exit (F) after choosing
+run.btn.open_merchant,Open merchant
+run.range.heading,Testing range: no progression/rewards
+run.btn.reset_targets,Reset test targets + mana (T)
+run.btn.prepare_wet,Prepare Wet cluster (2 targets)
+run.notice.wet_prepared,Wet cluster prepared: lightning arc can be tested
+run.btn.refill_mana,Refill test mana
+run.notice.mana_refilled,Test mana refilled
+run.btn.continue_stage2,Continue to stage 2 (F)
+run.merchant.buy_once, — buy once per item
+run.shop.item_price,%s / %s coins
+run.shop.max_hp,Increase max HP by %d (run-persistent)
+run.shop.purchased,Purchased
+run.shop.affordable,Affordable
+run.shop.need,Need %d coins
+run.btn.close_shop,Close shop
+run.loadout.slot1,Slot 1: Basic Bolt [LOCKED]
+run.loadout.empty,(empty)
+run.loadout.slot_edit,Slot %d: %s — Edit
+run.test.line1,TEST hits %d / active %d / mana %.0f
+run.test.line2,Statuses %s | Reactions %d
+run.test.line3,Triggers %d | Budget warnings %d
+run.tip,TIP: %s
+run.goal.workshop,Safe Workshop
+run.goal.warden,Defeat the Warden
+run.goal.undead,Defeat the Undead
+run.goal.exit,Exit unlocked - press F at the exit
+run.objective,%s - %s
+run.notice.reward,Reward: %s
+run.notice.merchant,Merchant: %s
+run.summary.title,RUN SUMMARY — %s
+run.summary.victory,VICTORY
+run.summary.defeated,DEFEATED
+run.summary.rooms,Rooms cleared: %d
+run.summary.kills,Kills: %d
+run.summary.time,Time: %d:%02d
+run.summary.spells,Spells used: %d
+run.summary.seed,Seed: %d
+run.summary.totals,Runs: %d  Wins: %d  Best: %s
+run.btn.retry,Retry same seed
+run.btn.new_seed,New seed
+run.btn.title,Title
+run.notice.retry,Retry same seed: currencies / runes reset
+run.notice.new_seed,New seed: currencies / runes reset
+run.notice.door,Door: %s
+run.notice.next_room,NEXT ROOM
+run.notice.edit_policy,"Edit policy: %s (test switch, not final rule)"
+run.notice.slot1_locked,Slot 1 is locked (Basic Bolt) — cannot edit
+run.notice.editor,Editor: %s
+run.editor.title,SPELL EDITOR / SLOT %d
+run.editor.chain,Essence → Manifestation → Modifier → On Hit
+run.editor.essence,Essence
+run.editor.manifestation,Manifestation
+run.editor.modifiers,Projectile modifiers
+run.suffix.locked, [LOCKED]
+run.suffix.locked_lower, (locked)
+run.editor.onhit,On Hit → Burst child
+run.editor.child_essence,Child Burst Essence
+run.editor.valid,VALID / Mana %d / Cooldown %d ticks / Complexity %d / %d cap
+run.editor.invalid,INVALID — cannot apply:
+run.btn.undo,Undo
+run.btn.reset_draft,Reset draft
+run.btn.cancel_edit,Cancel (restore original)
+run.btn.apply,Apply valid formula
+run.notice.formula_applied,Formula applied
+run.notice.formula_cancelled,Formula cancelled
+run.notice.duration, / %.1f s
