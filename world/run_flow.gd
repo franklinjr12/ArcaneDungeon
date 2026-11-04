@@ -181,8 +181,13 @@ func _enter_current() -> Dictionary:
 		merchant = Merchant.new(config)
 		merchant.build(run,session.sim.registry.get_ids())
 		enter_test_range()
+	elif room.values["type"] == "treasure":
+		# Optional reward room: no enemies, the reward cards are available immediately.
+		session.state = "cleared"
+		state = "cleared"
+		reward_options = rewards.choices(run,str(room.values["id"]))
 	elif room.values["type"] == "boss":
-		var p: Dictionary = config["boss"]
+		var p: Dictionary = config["bosses"][str(room.values["boss"])] if room.values.has("boss") and config.has("bosses") else config["boss"]
 		if session.spawn_boss(p,Vector2(float(p["position"][0]),float(p["position"][1]))) == null:
 			state = "error"
 			return {"ok":false,"reason":"BOSS_SPAWN_BLOCKED"}
@@ -255,8 +260,10 @@ func _finish_combat() -> void:
 	_cue("sfx.room.cleared",session.sim.actor.position)
 	run.hp = session.sim.actor.health.current
 	run.mana = session.sim.mana
-	if int(room.values["stage"]) >= 1:
-		# First stage-2 room cleared: slice complete, no reward choice.
+	if room.values["type"] == "boss":
+		boss_defeated_events += 1
+	if run.sequence_index >= rooms.size()-1:
+		# Final room cleared: run complete, no reward choice.
 		outcome = "won"
 		win_events += 1
 		experiment.record("slice_complete",{"room_index":run.sequence_index})
@@ -264,7 +271,6 @@ func _finish_combat() -> void:
 		reward_collected = true
 		reward_options.clear()
 	elif room.values["type"] == "boss":
-		boss_defeated_events += 1
 		run.currency += Difficulty.scale_i(int(config["boss_currency"]),"coin_rate",0)
 		_cue("sfx.pickup.currency",session.sim.actor.position)
 		reward_collected = true
@@ -289,7 +295,7 @@ func start_new_seed() -> void:
 	start_new(next_seed)
 
 func choose_reward(index: int) -> Dictionary:
-	if state != "cleared" or room.values["type"] != "combat" or reward_collected:
+	if state != "cleared" or room.values["type"] not in ["combat","challenge","treasure"] or reward_collected:
 		return {"ok":false,"reason":"REWARD_NOT_AVAILABLE"}
 	if index < 0 or index >= reward_options.size():
 		return {"ok":false,"reason":"REWARD_INDEX_INVALID"}
@@ -319,7 +325,12 @@ func move_after_clear(command: Dictionary) -> Dictionary:
 	var safe: Dictionary = {"move":command.get("move",Vector2.ZERO),"aim":command.get("aim",Vector2.RIGHT),"cast":-1,"dash":false}
 	return session.player.process_command(safe)
 
-func try_exit(position: Vector2) -> Dictionary:
+## True when the next room is an optional one the player may skip at the door.
+func next_is_optional() -> bool:
+	var next_index: int = run.sequence_index+1
+	return next_index < rooms.size() and bool(rooms[next_index].get("optional",false))
+
+func try_exit(position: Vector2, take_optional: bool = true) -> Dictionary:
 	if editor != null and editor.allowed:
 		return {"ok":false,"reason":"EDITOR_OPEN"}
 	if state not in ["cleared","workshop"]:
@@ -333,6 +344,9 @@ func try_exit(position: Vector2) -> Dictionary:
 		if mode != "workshop":
 			run.hp = session.sim.actor.health.current
 			run.mana = session.sim.mana
+	if not take_optional and next_is_optional():
+		logs.append({"kind":"optional_skipped","id":rooms[run.sequence_index+1]["id"]})
+		run.sequence_index += 1
 	run.sequence_index += 1
 	transition_count += 1
 	var outcome: Dictionary = _enter_current()
