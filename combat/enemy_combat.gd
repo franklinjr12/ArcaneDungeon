@@ -1,5 +1,6 @@
 extends RefCounted
 ## Shared AI state machine; archetypes differ by tunable navigation and attacks.
+const Difficulty = preload("res://game/core/difficulty.gd")
 const AttackIntent = preload("res://combat/attack_intent.gd")
 var target
 var kind := ""
@@ -16,6 +17,14 @@ func _init(enemy_target, archetype: String, config: Dictionary) -> void:
 	target = enemy_target
 	kind = archetype
 	tuning = config.duplicate(true)
+	for key in ["damage"]:
+		if tuning.has(key):
+			tuning[key] = Difficulty.scale_f(float(tuning[key]),"enemy_damage")
+	for key in ["move_speed","projectile_speed"]:
+		if tuning.has(key):
+			tuning[key] = Difficulty.scale_f(float(tuning[key]),"enemy_speed")
+	if tuning.has("telegraph_ticks"):
+		tuning["telegraph_ticks"] = Difficulty.scale_i(int(tuning["telegraph_ticks"]),"telegraph_length")
 
 func change_state(next: String, tick: int) -> void:
 	if state == next:

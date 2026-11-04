@@ -1,5 +1,6 @@
 extends RefCounted
 ## TASK-042 telegraphed phase boss using the same MagicTarget and hostile projectile pipeline.
+const Difficulty = preload("res://game/core/difficulty.gd")
 const AttackIntent = preload("res://combat/attack_intent.gd")
 var target
 var kind := "undead_warden"
@@ -15,9 +16,17 @@ var phase := 1
 func _init(target_entity, settings: Dictionary) -> void:
 	target = target_entity
 	tuning = settings.duplicate(true)
+	for key in ["radial_damage","shot_damage"]:
+		if tuning.has(key):
+			tuning[key] = Difficulty.scale_f(float(tuning[key]),"enemy_damage")
+	if tuning.has("shot_speed"):
+		tuning["shot_speed"] = Difficulty.scale_f(float(tuning["shot_speed"]),"enemy_speed")
+	for key in ["windup_ticks","second_phase_windup_ticks"]:
+		if tuning.has(key):
+			tuning[key] = Difficulty.scale_i(int(tuning[key]),"telegraph_length")
 	tuning["color"] = "#e8c38b"
 	tuning["attack_range"] = float(settings["telegraph_radius"])
-	tuning["telegraph_ticks"] = int(settings["windup_ticks"])
+	tuning["telegraph_ticks"] = int(tuning["windup_ticks"])
 
 func _state(to: String, tick: int) -> void:
 	if state == to:
