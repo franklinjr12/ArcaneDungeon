@@ -222,6 +222,8 @@
   "essence.fire": "ad_ico_fire",
   "essence.water": "ad_ico_water",
   "essence.lightning": "ad_ico_lightning",
+  "essence.cold": "ad_ico_water",
+  "essence.force": "ad_ico_projectile",
   "form.projectile": "ad_ico_projectile",
   "form.burst": "ad_ico_burst",
   "form.orb": "ad_ico_orb",

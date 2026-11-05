@@ -31,6 +31,11 @@ func has(state_id: String, current_tick: int = -1) -> bool:
 		return false
 	return current_tick < 0 or int(_states[state_id]["expires_tick"]) > current_tick
 
+func stacks(state_id: String, current_tick: int = -1) -> int:
+	if not has(state_id,current_tick):
+		return 0
+	return int(_states[state_id]["stacks"])
+
 func remove(state_id: String) -> bool:
 	if not _states.has(state_id):
 		return false

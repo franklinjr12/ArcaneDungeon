@@ -155,6 +155,48 @@
       "display_key": "essence.lightning"
     },
     {
+      "id": "essence.cold",
+      "category": "essence",
+      "schema_version": 2,
+      "param_blocks": [
+        "elemental_damage"
+      ],
+      "params": {
+        "base_damage": {
+          "default": 8.0
+        }
+      },
+      "compatibility_tags": [
+        "element.cold"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 5,
+      "cooldown_ticks": 1,
+      "description": "Deals cold damage and applies Chilled; 3 Chilled stacks freeze the target.",
+      "display_key": "essence.cold"
+    },
+    {
+      "id": "essence.force",
+      "category": "essence",
+      "schema_version": 2,
+      "param_blocks": [
+        "elemental_damage"
+      ],
+      "params": {
+        "base_damage": {
+          "default": 10.0
+        }
+      },
+      "compatibility_tags": [
+        "element.force"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 6,
+      "cooldown_ticks": 2,
+      "description": "Deals force damage and knocks the target back; shatters Frozen targets.",
+      "display_key": "essence.force"
+    },
+    {
       "id": "form.projectile",
       "category": "form",
       "schema_version": 2,

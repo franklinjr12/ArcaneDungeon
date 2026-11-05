@@ -23,9 +23,12 @@ func run(t) -> void:
 		if not bool(entry.get("builtin", false)):
 			legacy_ids.append(entry["id"])
 	legacy_ids.sort()
-	t.equal(registry.get_ids(), legacy_ids, "AD-129 same 10 collectible rune ids")
-	t.equal(registry.get_ids().size(), 10, "AD-129 ten collectible runes")
-	t.equal(registry.get_all_ids().size(), 11, "AD-129 eleven runes incl. builtin")
+	var expected_ids: Array = legacy_ids.duplicate()
+	expected_ids.append_array(["essence.cold", "essence.force"])
+	expected_ids.sort()
+	t.equal(registry.get_ids(), expected_ids, "AD-129 legacy 10 collectible rune ids plus AD-131 Cold/Force")
+	t.equal(registry.get_ids().size(), 12, "AD-129 twelve collectible runes")
+	t.equal(registry.get_all_ids().size(), 13, "AD-129 thirteen runes incl. builtin")
 	var migrated = Registry.new()
 	t.check(migrated.load_seed(LEGACY)["ok"], "AD-129 legacy v1 rune file loads via migration")
 	for entry in legacy["runes"]:
@@ -133,4 +136,4 @@ func _formula_migration(t, registry) -> void:
 		for rune in entry["runes"]:
 			t.check(rune["id"] != "essence.neutral", "AD-129 palette excludes builtin " + str(rune["id"]))
 	t.equal(palette_ids, CATEGORY_IDS, "AD-129 palette category order")
-	t.equal(palette_runes, 10, "AD-129 palette lists 10 runes")
+	t.equal(palette_runes, 12, "AD-129 palette lists 12 runes")

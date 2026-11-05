@@ -21,6 +21,8 @@ onboarding.wet_try_lightning,Water makes enemies Wet. Try Lightning.
 rune.essence.fire.desc,Deals fire damage and applies Burning to the target.
 rune.essence.water.desc,"Deals water damage, applies Wet and puts out Burning."
 rune.essence.lightning.desc,Deals lightning damage; on a Wet target it arcs once to the nearest other Wet target.
+rune.essence.cold.desc,Deals cold damage and applies Chilled; 3 Chilled stacks freeze the target.
+rune.essence.force.desc,Deals force damage and knocks the target back; shatters Frozen targets.
 rune.form.projectile.desc,Fires a single bolt in a straight line that ends on its first hit.
 rune.form.burst.desc,Hits every target within a 75-unit radius at once.
 rune.form.orb.desc,"Circles you at 72 units for 6 seconds, hitting what it touches."
