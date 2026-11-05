@@ -1,6 +1,7 @@
 extends RefCounted
 ## AD-139 step 1: Cistern slime (split_on_death) and Drowned acolyte (zone_cast).
 const Session = preload("res://combat/combat_session.gd")
+const WaterTiles = preload("res://world/water_tiles.gd")
 const Registry = preload("res://combat/enemy_behaviours/registry.gd")
 const SPLIT := {"id":"split_on_death","split_kind":"cistern_slimelet","count":2,"split_radius":30}
 const POOL := {"kind":"deep","rect":[200,770,600,100]}
@@ -18,6 +19,7 @@ func run(t) -> void:
 	_eel_no_water(t)
 	_eel_validate(t)
 	_eel_deterministic(t)
+	_rooms(t)
 
 func _kill(s, enemy) -> void:
 	enemy.target.receive_damage(100000.0,"physical",s.sim.actor.team,0.0)
@@ -217,3 +219,25 @@ func _eel_deterministic(t) -> void:
 	var a := _eel_trace()
 	var b := _eel_trace()
 	t.check(a == b and a.size() == 400,"AD-139 eel trace deterministic across runs")
+
+func _rooms(t) -> void:
+	var s = Session.new(139,"empty",0)
+	var rooms = JSON.parse_string(FileAccess.get_file_as_string("res://world/data/rooms_cistern_v1.json"))
+	var used := {}
+	for room in rooms["room_templates"].values():
+		var water := WaterTiles.new(room["layout"]["water"])
+		for wave in room["waves"]:
+			for entry in wave["enemies"]:
+				var kind: String = entry[0]
+				used[kind] = true
+				t.check(s.data["enemies"].has(kind),"AD-139 Cistern wave kind %s exists in tuning" % kind)
+				var pos := Vector2(float(entry[1]),float(entry[2]))
+				if kind == "deep_eel":
+					t.check(water.in_water(pos),"AD-139 %s eel spawn %s is in water" % [room["id"],str(pos)])
+				elif kind == "cistern_slime" or kind == "drowned_acolyte":
+					var in_deep := false
+					for r in water.deep_rects():
+						in_deep = in_deep or r.has_point(pos)
+					t.check(not in_deep,"AD-139 %s %s spawn %s is not in deep water" % [room["id"],kind,str(pos)])
+	for kind in ["cistern_slime","drowned_acolyte","deep_eel"]:
+		t.check(used.has(kind),"AD-139 %s appears in Cistern waves" % kind)

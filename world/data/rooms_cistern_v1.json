@@ -175,7 +175,7 @@
      "delay_ticks": 0,
      "enemies": [
       [
-       "bone_thrall",
+       "cistern_slime",
        400,
        200
       ],
@@ -261,7 +261,7 @@
      "delay_ticks": 0,
      "enemies": [
       [
-       "bone_thrall",
+       "cistern_slime",
        450,
        200
       ],
@@ -276,7 +276,7 @@
        200
       ],
       [
-       "fallen_adept",
+       "drowned_acolyte",
        1080,
        700
       ]
@@ -377,12 +377,12 @@
      "delay_ticks": 0,
      "enemies": [
       [
-       "bone_thrall",
+       "cistern_slime",
        420,
        500
       ],
       [
-       "fallen_adept",
+       "drowned_acolyte",
        1050,
        300
       ]
@@ -483,17 +483,17 @@
      "delay_ticks": 0,
      "enemies": [
       [
-       "bone_thrall",
+       "cistern_slime",
        500,
        760
       ],
       [
-       "grave_hound",
-       1080,
-       255
+       "deep_eel",
+       545,
+       750
       ],
       [
-       "fallen_adept",
+       "drowned_acolyte",
        900,
        150
       ]
@@ -567,12 +567,12 @@
      "delay_ticks": 0,
      "enemies": [
       [
-       "bone_thrall",
+       "cistern_slime",
        1050,
        300
       ],
       [
-       "fallen_adept",
+       "drowned_acolyte",
        1050,
        700
       ],
@@ -653,7 +653,7 @@
      "delay_ticks": 0,
      "enemies": [
       [
-       "bone_thrall",
+       "cistern_slime",
        450,
        200
       ],
@@ -663,9 +663,9 @@
        255
       ],
       [
-       "grave_hound",
-       1000,
-       650
+       "deep_eel",
+       1130,
+       660
       ]
      ]
     }
@@ -779,7 +779,7 @@
      "delay_ticks": 0,
      "enemies": [
       [
-       "bone_thrall",
+       "cistern_slime",
        420,
        250
       ],
@@ -789,7 +789,7 @@
        650
       ],
       [
-       "grave_hound",
+       "drowned_acolyte",
        1050,
        500
       ]
@@ -874,7 +874,7 @@
      "delay_ticks": 0,
      "enemies": [
       [
-       "bone_thrall",
+       "cistern_slime",
        900,
        150
       ],
@@ -884,9 +884,9 @@
        750
       ],
       [
-       "grave_hound",
-       1100,
-       500
+       "deep_eel",
+       705,
+       470
       ]
      ]
     }
@@ -987,7 +987,7 @@
      "delay_ticks": 0,
      "enemies": [
       [
-       "bone_thrall",
+       "cistern_slime",
        500,
        200
       ],
@@ -997,7 +997,7 @@
        720
       ],
       [
-       "fallen_adept",
+       "drowned_acolyte",
        820,
        250
       ],
@@ -1013,9 +1013,9 @@
      "delay_ticks": 40,
      "enemies": [
       [
-       "grave_hound",
-       1150,
-       200
+       "deep_eel",
+       900,
+       300
       ]
      ]
     }
@@ -1210,7 +1210,7 @@
      "delay_ticks": 0,
      "enemies": [
       [
-       "bone_thrall",
+       "cistern_slime",
        450,
        250
       ],
@@ -1220,7 +1220,7 @@
        650
       ],
       [
-       "fallen_adept",
+       "drowned_acolyte",
        1080,
        255
       ]
@@ -1231,9 +1231,9 @@
      "delay_ticks": 45,
      "enemies": [
       [
-       "grave_hound",
-       1120,
-       640
+       "deep_eel",
+       530,
+       720
       ],
       [
        "grave_hound",
@@ -1241,7 +1241,7 @@
        260
       ],
       [
-       "fallen_adept",
+       "drowned_acolyte",
        720,
        455
       ]
