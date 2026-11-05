@@ -15,7 +15,7 @@ func validate(formula: Variant, unlocked_rune_ids: Array) -> Dictionary:
 	var root: Dictionary = formula["root"]
 	var root_form: String = root["manifestation_id"]
 	_check_effect(root,"$.root",unlocked_rune_ids,issues)
-	if root_form not in ["form.projectile","form.burst","form.orb"]:
+	if root_form not in ["form.projectile","form.burst","form.orb","form.beam","form.field"]:
 		issues.append(_issue("ROOT_FORM_INVALID","$.root.manifestation_id","Unsupported root manifestation"))
 	var seen: Dictionary = {}
 	for i in root["modifier_ids"].size():

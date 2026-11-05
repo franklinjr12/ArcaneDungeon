@@ -26,6 +26,8 @@ rune.essence.force.desc,Deals force damage and knocks the target back; shatters 
 rune.form.projectile.desc,Fires a single bolt in a straight line that ends on its first hit.
 rune.form.burst.desc,Hits every target within a 75-unit radius at once.
 rune.form.orb.desc,"Circles you at 72 units for 6 seconds, hitting what it touches."
+rune.form.beam.desc,"Channels a line that hits all along it and drains mana each pulse; walls stop it."
+rune.form.field.desc,"Creates a zone at the target that applies its essence to enemies inside for 4 seconds."
 rune.mod.homing.desc,Projectile turns toward the nearest target within 280 units.
 rune.mod.split.desc,Projectile fires as 3 bolts spread across 17 degrees.
 rune.mod.pierce.desc,"Projectile passes through targets, hitting up to 3 different ones."

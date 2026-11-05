@@ -102,7 +102,7 @@ func _draw() -> void:
 	var tick_seg := aim_tick_segment(at,hover-offset)
 	if not tick_seg.is_empty():
 		draw_line(tick_seg[0],tick_seg[1],Color("#6adbea",0.20),1)
-	var actor_casting: bool = session.sim.active.size()>0 and tick%14<5
+	var actor_casting: bool = (session.sim.active.size()>0 or session.sim.is_channelling()) and tick%14<5
 	var player_velocity: Vector2 = mage.position-last_player_at
 	last_player_at = mage.position
 	var mage_motion: Vector2 = session.player.dash_heading*16.0 if session.player.dash_left>0 else player_velocity
@@ -146,6 +146,7 @@ func _draw() -> void:
 	if _fx_session != session:
 		_fx_session = session
 		_fx_memo = {}
+	Art.draw_form_visuals(self,session.sim.visuals,offset)
 	for fx in Art.collect_fx(session,tick,_fx_memo):
 		var fp := ReduceMotion.fx_draw_params(reduced,fx["event"],fx["age"])
 		Art.draw_fx(self,fx["event"],fx["at"]-offset,fp["age"],fx["rotation"],fx["length"],fp["modulate"],fx["slot"],fx.get("uniform",0.0),int(fx.get("window",0)))

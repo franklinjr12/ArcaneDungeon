@@ -169,6 +169,39 @@
           "params": {}
         }
       }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.fire_beam",
+      "display_name": "Fire Beam",
+      "root": {
+        "essence_id": "essence.fire",
+        "manifestation_id": "form.beam",
+        "modifier_ids": [],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.lightning_beam",
+      "display_name": "Lightning Beam",
+      "root": {
+        "essence_id": "essence.lightning",
+        "manifestation_id": "form.beam",
+        "modifier_ids": [],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.cold_field",
+      "display_name": "Cold Field",
+      "root": {
+        "essence_id": "essence.cold",
+        "manifestation_id": "form.field",
+        "modifier_ids": [],
+        "params": {}
+      }
     }
   ]
 }
