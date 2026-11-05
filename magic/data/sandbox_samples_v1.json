@@ -202,6 +202,59 @@
         "modifier_ids": [],
         "params": {}
       }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.chain_bolt",
+      "display_name": "Chain Bolt",
+      "root": {
+        "essence_id": "essence.lightning",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [
+          "mod.chain"
+        ],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.expand_burst",
+      "display_name": "Expand Burst",
+      "root": {
+        "essence_id": "essence.fire",
+        "manifestation_id": "form.burst",
+        "modifier_ids": [
+          "mod.expand"
+        ],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.rapid_beam",
+      "display_name": "Rapid Beam",
+      "root": {
+        "essence_id": "essence.water",
+        "manifestation_id": "form.beam",
+        "modifier_ids": [
+          "mod.rapid"
+        ],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.chain_field",
+      "display_name": "Chain Field",
+      "root": {
+        "essence_id": "essence.cold",
+        "manifestation_id": "form.field",
+        "modifier_ids": [
+          "mod.chain",
+          "mod.expand"
+        ],
+        "params": {}
+      }
     }
   ]
 }

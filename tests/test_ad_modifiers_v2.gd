@@ -1,6 +1,7 @@
 extends RefCounted
 ## AD-133: Chain, Expand and Rapid modifiers (compile-time scaling and validation).
 const Runner = preload("res://magic/runtime/spell_runner.gd")
+const Golden = preload("res://tests/ad_modifiers_golden_generator.gd")
 
 const FORMS := ["form.projectile","form.burst","form.orb","form.beam","form.field"]
 const NEW_MODS := ["mod.chain","mod.expand","mod.rapid"]
@@ -28,6 +29,7 @@ func run(t) -> void:
 	_order_runtime(t)
 	_determinism(t)
 	_stress(t)
+	_golden_tests(t)
 
 func _compile(t) -> void:
 	var r = Runner.new(133)
@@ -260,3 +262,10 @@ func _stress(t) -> void:
 	t.equal(r.queue.active_effect_count(),0,"AD-133 chain beam stress drains active effects")
 	t.equal(r.active.size(),0,"AD-133 chain beam stress leaves no runner effects")
 	t.equal(r._chain_seen.size(),0,"AD-133 chain beam stress empties the seen set")
+
+func _golden_tests(t) -> void:
+	var expected: Dictionary = t.fixture("ad_modifiers_traces_v1.json")
+	for scenario in Golden.SCENARIOS:
+		var played: Dictionary = Golden.play(scenario)
+		t.check(not played["accepted"].has(false),"AD-133 "+scenario+" scripted casts accepted")
+		t.equal(Golden.normalize(played["run"].trace.snapshot()),expected[scenario],"AD-133 "+scenario+" golden trace")
