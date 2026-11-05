@@ -1,0 +1,1264 @@
+{
+ "schema_version": 1,
+ "stage": "cistern",
+ "rules": {
+  "min_spawn_distance": 160,
+  "player_radius": 22,
+  "spawn_radius": 20,
+  "grid_step": 20,
+  "pool_size": 10
+ },
+ "pool": [
+  "cistern_p01",
+  "cistern_p02",
+  "cistern_p03",
+  "cistern_p04",
+  "cistern_p05",
+  "cistern_p06",
+  "cistern_p07",
+  "cistern_p08",
+  "cistern_p09",
+  "cistern_p10"
+ ],
+ "treasure_room": "cistern_treasure_v1",
+ "challenge_room": "cistern_challenge_v1",
+ "room_templates": {
+  "cistern_p01": {
+   "id": "cistern_p01",
+   "stage": 1,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [],
+    "props": [
+     [
+      "grate",
+      520,
+      240
+     ],
+     [
+      "pipe",
+      520,
+      660
+     ]
+    ],
+    "water": [
+     {
+      "kind": "shallow",
+      "rect": [
+       360,
+       140,
+       320,
+       200
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       360,
+       560,
+       320,
+       200
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       1000,
+       100,
+       200,
+       160
+      ]
+     }
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       460,
+       240
+      ],
+      [
+       "bone_thrall",
+       460,
+       660
+      ],
+      [
+       "fallen_adept",
+       1080,
+       255
+      ]
+     ]
+    }
+   ]
+  },
+  "cistern_p02": {
+   "id": "cistern_p02",
+   "stage": 1,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      420,
+      420,
+      40,
+      60
+     ]
+    ],
+    "props": [
+     [
+      "pillar",
+      440,
+      450
+     ],
+     [
+      "grate",
+      760,
+      450
+     ]
+    ],
+    "water": [
+     {
+      "kind": "shallow",
+      "rect": [
+       660,
+       380,
+       230,
+       140
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       300,
+       780,
+       500,
+       90
+      ]
+     }
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       400,
+       200
+      ],
+      [
+       "grave_hound",
+       1050,
+       650
+      ],
+      [
+       "fallen_adept",
+       760,
+       200
+      ]
+     ]
+    }
+   ]
+  },
+  "cistern_p03": {
+   "id": "cistern_p03",
+   "stage": 1,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [],
+    "props": [
+     [
+      "pipe",
+      500,
+      450
+     ],
+     [
+      "grate",
+      1000,
+      450
+     ]
+    ],
+    "water": [
+     {
+      "kind": "deep",
+      "rect": [
+       680,
+       0,
+       100,
+       330
+      ]
+     },
+     {
+      "kind": "deep",
+      "rect": [
+       680,
+       570,
+       100,
+       330
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       780,
+       300,
+       100,
+       300
+      ]
+     }
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       450,
+       200
+      ],
+      [
+       "bone_thrall",
+       450,
+       700
+      ],
+      [
+       "grave_hound",
+       1100,
+       200
+      ],
+      [
+       "fallen_adept",
+       1080,
+       700
+      ]
+     ]
+    }
+   ]
+  },
+  "cistern_p04": {
+   "id": "cistern_p04",
+   "stage": 1,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      900,
+      430,
+      40,
+      40
+     ]
+    ],
+    "props": [
+     [
+      "pillar",
+      920,
+      450
+     ],
+     [
+      "grate",
+      400,
+      450
+     ]
+    ],
+    "water": [
+     {
+      "kind": "shallow",
+      "rect": [
+       300,
+       150,
+       200,
+       120
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       300,
+       630,
+       200,
+       120
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       1000,
+       150,
+       200,
+       120
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       1000,
+       630,
+       200,
+       120
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       660,
+       400,
+       200,
+       100
+      ]
+     }
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       420,
+       500
+      ],
+      [
+       "fallen_adept",
+       1050,
+       300
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 30,
+     "enemies": [
+      [
+       "grave_hound",
+       1100,
+       640
+      ],
+      [
+       "bone_thrall",
+       700,
+       200
+      ]
+     ]
+    }
+   ]
+  },
+  "cistern_p05": {
+   "id": "cistern_p05",
+   "stage": 1,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [],
+    "props": [
+     [
+      "pipe",
+      500,
+      300
+     ],
+     [
+      "grate",
+      550,
+      780
+     ]
+    ],
+    "water": [
+     {
+      "kind": "deep",
+      "rect": [
+       300,
+       0,
+       100,
+       620
+      ]
+     },
+     {
+      "kind": "deep",
+      "rect": [
+       700,
+       280,
+       100,
+       620
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       420,
+       640,
+       260,
+       200
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       820,
+       60,
+       200,
+       200
+      ]
+     }
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       500,
+       760
+      ],
+      [
+       "grave_hound",
+       1080,
+       255
+      ],
+      [
+       "fallen_adept",
+       900,
+       150
+      ]
+     ]
+    }
+   ]
+  },
+  "cistern_p06": {
+   "id": "cistern_p06",
+   "stage": 1,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      420,
+      420,
+      60,
+      60
+     ]
+    ],
+    "props": [
+     [
+      "pillar",
+      450,
+      450
+     ],
+     [
+      "pipe",
+      900,
+      450
+     ]
+    ],
+    "water": [
+     {
+      "kind": "shallow",
+      "rect": [
+       1000,
+       0,
+       120,
+       900
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       350,
+       380,
+       200,
+       140
+      ]
+     }
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       1050,
+       300
+      ],
+      [
+       "fallen_adept",
+       1050,
+       700
+      ],
+      [
+       "grave_hound",
+       700,
+       450
+      ]
+     ]
+    }
+   ]
+  },
+  "cistern_p07": {
+   "id": "cistern_p07",
+   "stage": 1,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [],
+    "props": [
+     [
+      "grate",
+      820,
+      100
+     ],
+     [
+      "pipe",
+      820,
+      800
+     ]
+    ],
+    "water": [
+     {
+      "kind": "deep",
+      "rect": [
+       760,
+       200,
+       120,
+       500
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       1000,
+       560,
+       260,
+       200
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       420,
+       120,
+       240,
+       160
+      ]
+     }
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       450,
+       200
+      ],
+      [
+       "fallen_adept",
+       1050,
+       255
+      ],
+      [
+       "grave_hound",
+       1000,
+       650
+      ]
+     ]
+    }
+   ]
+  },
+  "cistern_p08": {
+   "id": "cistern_p08",
+   "stage": 1,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      900,
+      150,
+      50,
+      50
+     ],
+     [
+      900,
+      700,
+      50,
+      50
+     ]
+    ],
+    "props": [
+     [
+      "grate",
+      600,
+      300
+     ],
+     [
+      "pipe",
+      1100,
+      780
+     ]
+    ],
+    "water": [
+     {
+      "kind": "shallow",
+      "rect": [
+       360,
+       200,
+       120,
+       100
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       520,
+       420,
+       120,
+       100
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       780,
+       250,
+       120,
+       100
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       780,
+       560,
+       120,
+       100
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       1020,
+       380,
+       120,
+       100
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       360,
+       620,
+       120,
+       100
+      ]
+     }
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       420,
+       250
+      ],
+      [
+       "bone_thrall",
+       420,
+       650
+      ],
+      [
+       "grave_hound",
+       1050,
+       500
+      ]
+     ]
+    }
+   ]
+  },
+  "cistern_p09": {
+   "id": "cistern_p09",
+   "stage": 1,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [],
+    "props": [
+     [
+      "pipe",
+      520,
+      150
+     ],
+     [
+      "pillar",
+      520,
+      760
+     ]
+    ],
+    "water": [
+     {
+      "kind": "deep",
+      "rect": [
+       650,
+       0,
+       100,
+       380
+      ]
+     },
+     {
+      "kind": "deep",
+      "rect": [
+       700,
+       560,
+       100,
+       340
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       650,
+       380,
+       110,
+       180
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       900,
+       100,
+       260,
+       160
+      ]
+     }
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       900,
+       150
+      ],
+      [
+       "bone_thrall",
+       900,
+       750
+      ],
+      [
+       "grave_hound",
+       1100,
+       500
+      ]
+     ]
+    }
+   ]
+  },
+  "cistern_p10": {
+   "id": "cistern_p10",
+   "stage": 1,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [],
+    "props": [
+     [
+      "grate",
+      700,
+      450
+     ],
+     [
+      "pipe",
+      520,
+      780
+     ]
+    ],
+    "water": [
+     {
+      "kind": "deep",
+      "rect": [
+       300,
+       0,
+       80,
+       350
+      ]
+     },
+     {
+      "kind": "deep",
+      "rect": [
+       300,
+       550,
+       80,
+       350
+      ]
+     },
+     {
+      "kind": "deep",
+      "rect": [
+       1000,
+       0,
+       80,
+       300
+      ]
+     },
+     {
+      "kind": "deep",
+      "rect": [
+       1000,
+       600,
+       80,
+       300
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       440,
+       100,
+       100,
+       180
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       780,
+       200,
+       200,
+       160
+      ]
+     }
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       500,
+       200
+      ],
+      [
+       "bone_thrall",
+       500,
+       720
+      ],
+      [
+       "fallen_adept",
+       820,
+       250
+      ],
+      [
+       "grave_hound",
+       820,
+       680
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 40,
+     "enemies": [
+      [
+       "grave_hound",
+       1150,
+       200
+      ]
+     ]
+    }
+   ]
+  },
+  "cistern_treasure_v1": {
+   "id": "cistern_treasure_v1",
+   "stage": 1,
+   "room": 0,
+   "type": "treasure",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      540,
+      300,
+      40,
+      40
+     ],
+     [
+      540,
+      560,
+      40,
+      40
+     ]
+    ],
+    "props": [
+     [
+      "altar",
+      700,
+      450
+     ],
+     [
+      "grate",
+      900,
+      450
+     ]
+    ],
+    "water": [
+     {
+      "kind": "shallow",
+      "rect": [
+       620,
+       250,
+       160,
+       120
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       620,
+       540,
+       160,
+       120
+      ]
+     },
+     {
+      "kind": "deep",
+      "rect": [
+       1060,
+       0,
+       70,
+       380
+      ]
+     },
+     {
+      "kind": "deep",
+      "rect": [
+       1060,
+       520,
+       70,
+       380
+      ]
+     }
+    ]
+   },
+   "waves": [],
+   "pedestals": [
+    {
+     "id": "ped_a",
+     "kind": "artifact",
+     "position": [
+      700,
+      300
+     ]
+    },
+    {
+     "id": "ped_b",
+     "kind": "rune",
+     "position": [
+      700,
+      600
+     ]
+    }
+   ],
+   "choice_count": 1
+  },
+  "cistern_challenge_v1": {
+   "id": "cistern_challenge_v1",
+   "stage": 1,
+   "room": 0,
+   "type": "challenge",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      640,
+      380,
+      40,
+      140
+     ]
+    ],
+    "props": [
+     [
+      "pipe",
+      900,
+      300
+     ],
+     [
+      "pipe",
+      900,
+      600
+     ]
+    ],
+    "water": [
+     {
+      "kind": "shallow",
+      "rect": [
+       420,
+       100,
+       220,
+       160
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       420,
+       640,
+       220,
+       160
+      ]
+     },
+     {
+      "kind": "deep",
+      "rect": [
+       780,
+       0,
+       90,
+       260
+      ]
+     },
+     {
+      "kind": "deep",
+      "rect": [
+       780,
+       640,
+       90,
+       260
+      ]
+     }
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       450,
+       250
+      ],
+      [
+       "bone_thrall",
+       450,
+       650
+      ],
+      [
+       "fallen_adept",
+       1080,
+       255
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 45,
+     "enemies": [
+      [
+       "grave_hound",
+       1120,
+       640
+      ],
+      [
+       "grave_hound",
+       1120,
+       260
+      ],
+      [
+       "fallen_adept",
+       720,
+       455
+      ]
+     ]
+    }
+   ],
+   "elite": {
+    "hp_multiplier": 1.6,
+    "damage_multiplier": 1.25,
+    "affix": "none"
+   },
+   "challenge_reward": {
+    "currency_multiplier": 2.0,
+    "reward_choices_bonus": 1,
+    "extra_artifact_chance": 0.5
+   },
+   "mini_boss_slot": null
+  }
+ }
+}

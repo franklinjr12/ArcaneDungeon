@@ -68,12 +68,29 @@ func _init(run_seed: int = -1, config_path: String = CONFIG) -> void:
 	initialized = true
 	start_new(run_seed if run_seed >= 0 else int(config["seed"]))
 
+## AD-138: cfg.room_templates plus the templates of every cfg.room_template_files entry (pool rules copied onto each).
+static func merged_templates(cfg: Dictionary) -> Dictionary:
+	var merged: Dictionary = cfg.get("room_templates",{}).duplicate(true)
+	for path in cfg.get("room_template_files",[]):
+		var doc = JSON.parse_string(FileAccess.get_file_as_string(str(path)))
+		if typeof(doc) != TYPE_DICTIONARY:
+			push_error("Room template file invalid: %s" % path)
+			continue
+		var rules: Dictionary = doc.get("rules",{})
+		for id in doc.get("room_templates",{}):
+			var entry: Dictionary = doc["room_templates"][id].duplicate(true)
+			for key in ["min_spawn_distance","player_radius","grid_step"]:
+				if rules.has(key):
+					entry[key] = rules[key]
+			merged[str(id)] = entry
+	return merged
+
 ## Deterministic room order. v1 configs carry a fixed "rooms" list; v2 builds each stage from a seeded pool shuffle.
 static func build_sequence(cfg: Dictionary, run_seed: int) -> Array:
 	if cfg.has("rooms"):
 		return cfg["rooms"].duplicate(true)
 	var out: Array = []
-	var templates: Dictionary = cfg.get("room_templates", {})
+	var templates: Dictionary = merged_templates(cfg)
 	var stage_index := 0
 	for stage in cfg.get("stages", []):
 		var rng := RandomNumberGenerator.new()
@@ -162,6 +179,15 @@ func _build_room(entry: Dictionary) -> Dictionary:
 	mode = "workshop" if room.values["type"] == "workshop" else "combat"
 	session = Session.new(run.seed+run.sequence_index,"empty",0)
 	session.defer_clear = true
+	# AD-138: per-room layout walls and water join the shared arena (rooms without layout are untouched).
+	var layout = room.values.get("layout",{})
+	if typeof(layout) == TYPE_DICTIONARY:
+		for dims in layout.get("walls",[]):
+			var wall := Rect2(float(dims[0]),float(dims[1]),float(dims[2]),float(dims[3]))
+			session.world.walls.append(wall)
+			session.sim.collision_walls.append(wall)
+		if layout.has("water"):
+			session.set_water(layout["water"])
 	session.audio_sink = _cue
 	session.sim.actor.position = room.marker("entrance")
 	session.sim.actor.health.maximum = run.max_hp

@@ -1,6 +1,7 @@
 extends Resource
 ## TASK-036. Lightweight validated Resource wrapper around versioned room dictionaries.
 const Geometry = preload("res://world/arena_geometry.gd")
+const WaterTiles = preload("res://world/water_tiles.gd")
 var values: Dictionary = {}
 var issues: Array = []
 
@@ -25,6 +26,14 @@ func initialize(room: Dictionary, arena: Dictionary, known_enemy_types: Array) -
 				continue
 			merged["walls"].append(dims)
 	var world = Geometry.new(merged)
+	# AD-138: optional layout.water; deep rects block walking for markers, spawns, pedestals and reachability.
+	if typeof(layout) == TYPE_DICTIONARY and layout.has("water"):
+		var water_issues: Array = WaterTiles.validate(layout["water"])
+		for issue in water_issues:
+			issue["path"] = "layout."+str(issue["path"])
+			issues.append(issue)
+		if water_issues.is_empty():
+			world.add_ground_blockers(WaterTiles.new(layout["water"]).deep_rects())
 	var min_spawn := float(room.get("min_spawn_distance",45))
 	var points: Dictionary = {}
 	for key in ["entrance","exit","reward"]:
