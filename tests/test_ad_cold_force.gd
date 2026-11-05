@@ -5,6 +5,7 @@ const Target = preload("res://combat/magic_target.gd")
 const Resolver = preload("res://combat/interaction_resolver.gd")
 const Store = preload("res://combat/target_store.gd")
 const Session = preload("res://combat/combat_session.gd")
+const Golden = preload("res://tests/ad_cold_force_golden_generator.gd")
 
 func _payload(essence: String, damage: float = 10.0) -> Dictionary:
 	return {"team":1,"cast_id":3,"root_cast_id":3,"formula_id":"test","essence_id":essence,"damage":damage,"caster_id":1}
@@ -88,6 +89,7 @@ func run(t) -> void:
 	t.check(out["reactions"].is_empty(),"AD-131 arc hit adds no new reactions")
 	_sim_tests(t)
 	_enemy_tests(t)
+	_golden_tests(t)
 
 func _shot(essence: String) -> Dictionary:
 	return {"schema_version":1,"formula_id":"test."+essence,"display_name":essence,
@@ -223,3 +225,30 @@ func _enemy_tests(t) -> void:
 		if caster.state == "windup":
 			windup = true
 	t.check(windup,"AD-131 ranged enemy attacks again after blind expires")
+
+func _reason_count(run, reason: String) -> int:
+	var count := 0
+	for entry in run.trace.snapshot():
+		if entry["type"] == "reaction" and str(entry.get("reason","")) == reason:
+			count += 1
+	return count
+
+func _golden_tests(t) -> void:
+	var expected: Dictionary = t.fixture("ad_cold_force_traces_v1.json")
+	for scenario in Golden.SCENARIOS:
+		var played: Dictionary = Golden.play(scenario)
+		t.check(not played["accepted"].has(false),"AD-131 "+scenario+" every scripted cast accepted")
+		t.equal(Golden.normalize(played["run"].trace.snapshot()),expected[scenario],"AD-131 "+scenario+" golden trace")
+	var chill: Dictionary = Golden.play("chill_to_frozen")
+	t.equal(_reason_count(chill["run"],"chill_freeze"),1,"AD-131 chill_to_frozen records chill_freeze once")
+	t.check(chill["targets"][0].status.has("frozen",chill["run"].clock.tick) or chill["targets"][0].status.has("frozen"),"AD-131 chill_to_frozen ends Frozen")
+	var shatter: Dictionary = Golden.play("wet_cold_force_shatter")
+	t.equal(_reason_count(shatter["run"],"wet_cold_freeze"),1,"AD-131 wet_cold_force_shatter freezes Wet target")
+	t.equal(_reason_count(shatter["run"],"frozen_force_shatter"),1,"AD-131 wet_cold_force_shatter shatters")
+	var victim = shatter["targets"][0]
+	t.check(victim.status.has("brittle") and not victim.status.has("frozen"),"AD-131 wet_cold_force_shatter ends Brittle, not Frozen")
+	var steam: Dictionary = Golden.play("cold_fire_steam")
+	t.equal(_reason_count(steam["run"],"fire_thaw_steam"),1,"AD-131 cold_fire_steam thaws once")
+	for target in steam["targets"]:
+		t.check(target.status.has("blinded"),"AD-131 cold_fire_steam blinds target %d" % target.id)
+	t.check(not steam["targets"][0].status.has("chilled"),"AD-131 cold_fire_steam removes Chilled")
