@@ -30,7 +30,7 @@ func validate(formula: Variant, unlocked_rune_ids: Array) -> Dictionary:
 		var trigger_id: String = on_hit.get("trigger_id","")
 		_check_rune(trigger_id,"trigger","$.on_hit.trigger_id",unlocked_rune_ids,issues)
 		if trigger_id != "trigger.on_hit":
-			issues.append(_issue("TRIGGER_UNKNOWN","$.on_hit.trigger_id","Only On Hit is supported in v1"))
+			issues.append(_issue("TRIGGER_UNKNOWN","$.on_hit.trigger_id","Only On Hit is currently supported"))
 		if root_form != "form.projectile":
 			issues.append(_issue("TRIGGER_INCOMPATIBLE","$.on_hit","On Hit attaches to Projectile only"))
 		if on_hit.has("payload"):

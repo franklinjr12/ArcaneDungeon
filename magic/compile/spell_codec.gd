@@ -1,5 +1,7 @@
 extends RefCounted
 ## Strict whitelist codec; never deserialize executable Godot resources.
+const SCHEMA_VERSION := 2
+const SUPPORTED_VERSIONS := [1, 2]
 const MAX_JSON_LENGTH := 8192
 const ROOT_KEYS := ["schema_version", "formula_id", "display_name", "root", "on_hit"]
 const EFFECT_KEYS := ["essence_id", "manifestation_id", "modifier_ids", "params"]
@@ -15,7 +17,19 @@ static func decode(text: String) -> Dictionary:
 	var issues := check_shape(json.data)
 	if not issues.is_empty():
 		return {"ok":false,"formula":{},"issues":issues}
-	return {"ok":true,"formula":_canonical(json.data),"issues":[]}
+	var migrated := migrate(json.data)
+	if not migrated["ok"]:
+		return {"ok":false,"formula":{},"issues":migrated["issues"]}
+	return {"ok":true,"formula":_canonical(migrated["formula"]),"from_version":migrated["from_version"],"issues":[]}
+
+## v1 -> v2 only bumps schema_version (no structural change); v2 passes through.
+static func migrate(formula: Variant) -> Dictionary:
+	if typeof(formula) != TYPE_DICTIONARY or not _supported_version(formula.get("schema_version")):
+		return {"ok":false,"formula":{},"from_version":0,"issues":[_issue("SCHEMA_UNSUPPORTED","$.schema_version","Only schema_version 1 or 2 is supported")]}
+	var from_version := int(formula["schema_version"])
+	var result: Dictionary = formula.duplicate(true)
+	result["schema_version"] = SCHEMA_VERSION
+	return {"ok":true,"formula":result,"from_version":from_version,"issues":[]}
 
 static func encode(formula: Variant) -> Dictionary:
 	var issues := check_shape(formula)
@@ -33,8 +47,8 @@ static func check_shape(formula: Variant) -> Array:
 	for key in formula:
 		if key not in ROOT_KEYS:
 			issues.append(_issue("FORMULA_UNKNOWN_FIELD","$."+str(key),"Unknown formula field"))
-	if not formula.has("schema_version") or typeof(formula.get("schema_version")) not in [TYPE_INT,TYPE_FLOAT] or formula.get("schema_version") != 1:
-		issues.append(_issue("SCHEMA_UNSUPPORTED","$.schema_version","Only schema_version=1 is supported"))
+	if not formula.has("schema_version") or typeof(formula.get("schema_version")) not in [TYPE_INT,TYPE_FLOAT] or not _supported_version(formula["schema_version"]):
+		issues.append(_issue("SCHEMA_UNSUPPORTED","$.schema_version","Only schema_version 1 or 2 is supported"))
 	for key in ["formula_id","display_name"]:
 		if not formula.has(key) or typeof(formula.get(key)) != TYPE_STRING or len(formula[key]) < 1 or len(formula[key]) > 80:
 			issues.append(_issue("FORMULA_TEXT_INVALID","$."+key,"Expected nonempty string no longer than 80"))
@@ -93,8 +107,11 @@ static func _check_effect(effect: Variant, path: String, issues: Array) -> void:
 			if typeof(value) not in [TYPE_BOOL, TYPE_INT, TYPE_FLOAT, TYPE_STRING] or (typeof(value) == TYPE_STRING and (len(value) > 128 or "://" in value)):
 				issues.append(_issue("PARAM_VALUE_INVALID",path+".params."+str(param),"Only bounded primitive parameters; no resource/script paths"))
 
+static func _supported_version(value: Variant) -> bool:
+	return typeof(value) in [TYPE_INT,TYPE_FLOAT] and float(value) == floor(float(value)) and int(value) in SUPPORTED_VERSIONS
+
 static func _canonical(formula: Dictionary) -> Dictionary:
-	var result := {"schema_version":1,"formula_id":formula["formula_id"],"display_name":formula["display_name"],"root":_canon_effect(formula["root"])}
+	var result := {"schema_version":SCHEMA_VERSION,"formula_id":formula["formula_id"],"display_name":formula["display_name"],"root":_canon_effect(formula["root"])}
 	if formula.has("on_hit"):
 		result["on_hit"] = {"trigger_id":formula["on_hit"]["trigger_id"],"payload":_canon_effect(formula["on_hit"]["payload"])}
 	return result

@@ -105,7 +105,7 @@ func run(t) -> void:
 		"TASK-049 unrelated formula compilation cannot mutate existing golden plan")
 	# Simulate adding a completely unrelated rune to a new registry revision.
 	# Snapshot revision itself will change; cost/formula hash/plan contents must not.
-	var seed_data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://magic/data/runes_v1.json"))
+	var seed_data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://magic/data/runes_v2.json"))
 	var extended: Array = seed_data["runes"].duplicate(true)
 	var new_rune: Dictionary = extended[0].duplicate(true)
 	new_rune["id"] = "essence.future_candidate"

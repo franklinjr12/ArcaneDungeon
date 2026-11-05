@@ -31,7 +31,7 @@ func _starter_draft(index: int) -> Dictionary:
 		if not entry["locked"]:
 			essence = entry["id"]
 			break
-	return {"schema_version":1,"formula_id":"custom.slot_"+str(index+1),
+	return {"schema_version":2,"formula_id":"custom.slot_"+str(index+1),
 		"display_name":"Custom Spell "+str(index+1),
 		"root":{"essence_id":essence,"manifestation_id":"form.projectile","modifier_ids":[],"params":{}}}
 
@@ -142,4 +142,12 @@ func available(category: String) -> Array:
 	for rune in registry.list_by_category(category):
 		result.append({"id":rune["id"],"locked":rune["id"] not in run.unlocked,
 			"description":rune["description"]})
+	return result
+
+## One entry per registry category, in registry order, for the data-driven palette.
+func palette() -> Array:
+	var result: Array = []
+	for category in registry.list_categories():
+		result.append({"id":category["id"],"display_key":category["display_key"],
+			"label":category["label"],"runes":available(str(category["id"]))})
 	return result
