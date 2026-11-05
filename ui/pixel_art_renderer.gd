@@ -14,7 +14,7 @@ const ICONS = ["fire","water","lightning","projectile","burst","orb","homing","s
 	"health","mana","rune","coin","dodge","wet","burning","charged","damage","door","shop","book","staff","shield"]
 const EFFECT_ROWS = ["fire","water","lightning","orb","enemy","arc","impact","dodge"]
 ## AD-137 placeholder art: new Stage 1 kinds borrow an existing sprite until the art import row (tinted by tuning color).
-const PLACEHOLDER_KIND := {"ossuary_shieldbearer":"bone_thrall","wailing_spirit":"grave_hound","corpse_bloat":"bone_thrall"}
+const PLACEHOLDER_KIND := {"ossuary_shieldbearer":"bone_thrall","wailing_spirit":"grave_hound","corpse_bloat":"bone_thrall","cistern_slime":"bone_thrall","cistern_slimelet":"bone_thrall","drowned_acolyte":"fallen_adept","deep_eel":"grave_hound"}
 const F = {"mage":MAGE,"bone_thrall":PURSUER,"fallen_adept":RANGED,"grave_hound":FLANKER,"undead_warden":BOSS,"dummy":DUMMY}
 
 # AD-030: debug-only swap to art/export sprites (F6). Default stays assets/pixel.

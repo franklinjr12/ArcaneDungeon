@@ -107,6 +107,18 @@ Added to `enemies` in `combat/combat_tuning_v1.json` and to Ruins pool rooms p03
 
 Scripted counter scenarios live in `tests/test_ad_enemies_s1.gd`. `sfx.tele.<kind>` has no cue for these kinds yet; `AudioDirector` warns once and returns false for unknown cues (no crash).
 
+### Stage 2 enemies part 1 (AD-139, numbers PROPOSED)
+
+Components: `split_on_death` (`split_kind`, `count`, `split_radius`), `zone_cast` (`zone_radius`, `zone_duration_ticks`, `zone_interval_ticks`; drops a Wet zone), `water_lurk` (stays in water tiles, only acts from them) and `lunge` (`charge_speed`, `charge_ticks`, `contact_padding`). Enemies live in `combat/combat_tuning_v1.json`; tests in `tests/test_ad_enemies_s2.gd`.
+
+| enemy | behaviour | counter |
+| --- | --- | --- |
+| Cistern slime (`split_on_death` into 2 `cistern_slimelet`, which do not split) | melee chaser | kill it with room to handle the extra bodies |
+| Drowned acolyte (`zone_cast` Wet r80 for 240 ticks, telegraph 48) | keeps distance, casts where you stood | keep moving; use Wet for Lightning |
+| Deep eel (`water_lurk` + `lunge`, ripple telegraph 30 ticks = 0.5 s, >= 0.5 s) | lurks in water, lunges out, never attacks without water | leave the lunge line when the ripple shows, punish after |
+
+Cistern rooms (`world/data/rooms_cistern_v1.json`): slime from p02, acolyte from p03, eel from p05 (p05, p07, p09, p10, challenge; eel spawns are in shallow water the validator treats as walkable, since deep water is solid; slime/acolyte never in deep water). Placeholder sprites via `PLACEHOLDER_KIND`: slime/slimelet borrow bone_thrall, acolyte fallen_adept, eel grave_hound, tinted by `color`.
+
 ## Boundaries and owner decisions
 
 The arena is *not* M3 room progression, boss design, loot, a spell editor, a production sprite pipeline or gamepad integration. Player motion, dodge timings, enemy archetypes/HP and attack damage, Burst range/LOS, fixed arena obstacles, accessible flash treatment, two loadout slots, initial seed, and encounter recipes are **PROPOSED FOR PROTOTYPE**, not locked design. A later human playtest should verify warning legibility, pacing, actual 60-FPS rendering, camera comfort and combat feel before treating M2 as polished.
