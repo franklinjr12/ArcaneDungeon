@@ -51,7 +51,7 @@ func _run() -> void:
 		current_scene.find_child("NewRunButton",true,false).pressed.emit()
 		await process_frame
 		await process_frame
-	if current_scene != null and current_scene.name == "VerticalSlice" and current_scene.flow.room.values["id"] == "s1_r1":
+	if current_scene != null and current_scene.name == "VerticalSlice" and current_scene.flow.run.sequence_index == 0 and current_scene.flow.state == "fighting":
 		print("NAVIGATION PASS: New Run")
 	else:
 		printerr("navigation: New Run button failed")

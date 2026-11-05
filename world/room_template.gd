@@ -11,7 +11,7 @@ func initialize(room: Dictionary, arena: Dictionary, known_enemy_types: Array) -
 			issues.append({"code":"ROOM_MISSING_FIELD","path":key,"message":"Room requires "+key})
 	if not issues.is_empty():
 		return {"ok":false,"issues":issues.duplicate(true)}
-	if room["type"] not in ["combat","boss","workshop"]:
+	if room["type"] not in ["combat","boss","workshop","treasure","challenge"]:
 		issues.append({"code":"ROOM_TYPE_INVALID","path":"type","message":"Unsupported room type"})
 	if str(room["scene"]).is_empty() or not ResourceLoader.exists(str(room["scene"])):
 		issues.append({"code":"ROOM_SCENE_MISSING","path":"scene","message":"Arena scene unavailable"})
@@ -46,7 +46,7 @@ func initialize(room: Dictionary, arena: Dictionary, known_enemy_types: Array) -
 					issues.append({"code":"ROOM_SPAWN_AT_ENTRANCE","path":"waves.enemies","message":"Enemy spawn overlaps player entrance"})
 				if not world.valid_position(spawn,20):
 					issues.append({"code":"ROOM_SPAWN_BLOCKED","path":"waves.enemies","message":"Spawn overlaps solid geometry"})
-		if room["type"] == "combat" and count == 0:
+		if room["type"] in ["combat","challenge"] and count == 0:
 			issues.append({"code":"ROOM_EMPTY_ENCOUNTER","path":"waves","message":"Combat room needs at least one valid enemy"})
 	values = room.duplicate(true) if issues.is_empty() else {}
 	return {"ok":issues.is_empty(),"issues":issues.duplicate(true)}

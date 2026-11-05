@@ -1,0 +1,973 @@
+{
+  "schema_version": 1,
+  "seed": 20261022,
+  "initial_unlocked": [
+    "essence.fire",
+    "essence.water",
+    "essence.lightning",
+    "form.projectile",
+    "form.burst",
+    "mod.split"
+  ],
+  "initial_formulas": [
+    "sample.fire_shot",
+    "sample.split_water"
+  ],
+  "initial_currency": 0,
+  "duplicate_reward_currency": 12,
+  "room_reward_currency": 24,
+  "boss_currency": 95,
+  "workshop_restore_hp": 150,
+  "workshop_restore_mana": 120,
+  "edit_policy": "workshop_only",
+  "max_active_enemies": 8,
+  "reward_choices": 3,
+  "reward_pool": [
+    "mod.split",
+    "mod.homing",
+    "mod.pierce",
+    "form.orb",
+    "trigger.on_hit"
+  ],
+  "reward_cards": {
+    "mod.split": {
+      "name": "Split",
+      "behaviour": "projectiles fan out into 3"
+    },
+    "mod.homing": {
+      "name": "Homing",
+      "behaviour": "projectiles curve toward nearby enemies"
+    },
+    "mod.pierce": {
+      "name": "Pierce",
+      "behaviour": "projectiles pass through up to 3 enemies"
+    },
+    "form.orb": {
+      "name": "Orb",
+      "behaviour": "spells orbit you and hit what they touch"
+    },
+    "trigger.on_hit": {
+      "name": "On Hit",
+      "behaviour": "projectile hits release a Burst payload"
+    }
+  },
+  "boss": {
+    "kind": "undead_warden",
+    "display_name": "Undead warden",
+    "hp": 590,
+    "radius": 49,
+    "position": [
+      1030,
+      450
+    ],
+    "windup_ticks": 48,
+    "recovery_ticks": 44,
+    "phase_threshold": 0.5,
+    "second_phase_windup_ticks": 33,
+    "radial_shots": 8,
+    "radial_damage": 9,
+    "shot_damage": 16,
+    "shot_speed": 300,
+    "shot_spread": 0,
+    "telegraph_radius": 190
+  },
+  "merchant": {
+    "rune_price": 40,
+    "max_hp_upgrade_price": 35,
+    "max_hp_upgrade_amount": 25,
+    "stock_numeric_upgrade": "max_hp"
+  },
+  "bosses": {
+    "ruins_warden": {
+      "kind": "undead_warden",
+      "display_name": "Undead warden",
+      "hp": 590,
+      "radius": 49,
+      "position": [
+        1030,
+        450
+      ],
+      "windup_ticks": 48,
+      "recovery_ticks": 44,
+      "phase_threshold": 0.5,
+      "second_phase_windup_ticks": 33,
+      "radial_shots": 8,
+      "radial_damage": 9,
+      "shot_damage": 16,
+      "shot_speed": 300,
+      "shot_spread": 0,
+      "telegraph_radius": 190
+    },
+    "cistern_boss": {
+      "kind": "undead_warden",
+      "display_name": "Cistern guardian (placeholder)",
+      "hp": 590,
+      "radius": 49,
+      "position": [
+        1030,
+        450
+      ],
+      "windup_ticks": 48,
+      "recovery_ticks": 44,
+      "phase_threshold": 0.5,
+      "second_phase_windup_ticks": 33,
+      "radial_shots": 8,
+      "radial_damage": 9,
+      "shot_damage": 16,
+      "shot_speed": 300,
+      "shot_spread": 0,
+      "telegraph_radius": 190
+    }
+  },
+  "stages": [
+    {
+      "id": "ruins",
+      "combat_rooms": {
+        "min": 5,
+        "max": 6
+      },
+      "pool": [
+        "ruins_c01",
+        "ruins_c02",
+        "ruins_c03",
+        "ruins_c04",
+        "ruins_c05",
+        "ruins_c06",
+        "ruins_c07",
+        "ruins_c08"
+      ],
+      "optional_room": "ruins_treasure",
+      "boss_room": "ruins_boss",
+      "workshop_after": true
+    },
+    {
+      "id": "cistern",
+      "combat_rooms": {
+        "min": 5,
+        "max": 6
+      },
+      "pool": [
+        "cistern_c01",
+        "cistern_c02",
+        "cistern_c03",
+        "cistern_c04",
+        "cistern_c05",
+        "cistern_c06",
+        "cistern_c07",
+        "cistern_c08"
+      ],
+      "optional_room": "cistern_challenge",
+      "boss_room": "cistern_boss",
+      "workshop_after": false
+    }
+  ],
+  "room_templates": {
+    "ruins_c01": {
+      "id": "ruins_c01",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "bone_thrall",
+              375,
+              270
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_c02": {
+      "id": "ruins_c02",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "bone_thrall",
+              375,
+              270
+            ],
+            [
+              "bone_thrall",
+              410,
+              665
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_c03": {
+      "id": "ruins_c03",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "fallen_adept",
+              1080,
+              255
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_c04": {
+      "id": "ruins_c04",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "bone_thrall",
+              700,
+              455
+            ],
+            [
+              "fallen_adept",
+              1080,
+              255
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_c05": {
+      "id": "ruins_c05",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "grave_hound",
+              1120,
+              640
+            ],
+            [
+              "bone_thrall",
+              375,
+              270
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_c06": {
+      "id": "ruins_c06",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "bone_thrall",
+              375,
+              270
+            ],
+            [
+              "fallen_adept",
+              1080,
+              255
+            ]
+          ]
+        },
+        {
+          "trigger": "on_clear",
+          "delay_ticks": 30,
+          "enemies": [
+            [
+              "grave_hound",
+              1120,
+              640
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_c07": {
+      "id": "ruins_c07",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "fallen_adept",
+              1080,
+              255
+            ],
+            [
+              "fallen_adept",
+              410,
+              665
+            ]
+          ]
+        },
+        {
+          "trigger": "on_clear",
+          "delay_ticks": 30,
+          "enemies": [
+            [
+              "bone_thrall",
+              700,
+              455
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_c08": {
+      "id": "ruins_c08",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "bone_thrall",
+              375,
+              270
+            ],
+            [
+              "fallen_adept",
+              1080,
+              255
+            ],
+            [
+              "grave_hound",
+              1120,
+              640
+            ]
+          ]
+        }
+      ]
+    },
+    "cistern_c01": {
+      "id": "cistern_c01",
+      "stage": 1,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "grave_hound",
+              1080,
+              255
+            ],
+            [
+              "bone_thrall",
+              410,
+              665
+            ]
+          ]
+        }
+      ]
+    },
+    "cistern_c02": {
+      "id": "cistern_c02",
+      "stage": 1,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "fallen_adept",
+              375,
+              270
+            ],
+            [
+              "bone_thrall",
+              1120,
+              640
+            ]
+          ]
+        }
+      ]
+    },
+    "cistern_c03": {
+      "id": "cistern_c03",
+      "stage": 1,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "bone_thrall",
+              1050,
+              500
+            ],
+            [
+              "bone_thrall",
+              375,
+              270
+            ],
+            [
+              "fallen_adept",
+              1120,
+              640
+            ]
+          ]
+        }
+      ]
+    },
+    "cistern_c04": {
+      "id": "cistern_c04",
+      "stage": 1,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "grave_hound",
+              410,
+              665
+            ],
+            [
+              "fallen_adept",
+              1080,
+              255
+            ]
+          ]
+        },
+        {
+          "trigger": "on_clear",
+          "delay_ticks": 30,
+          "enemies": [
+            [
+              "bone_thrall",
+              700,
+              455
+            ]
+          ]
+        }
+      ]
+    },
+    "cistern_c05": {
+      "id": "cistern_c05",
+      "stage": 1,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "fallen_adept",
+              1050,
+              500
+            ],
+            [
+              "grave_hound",
+              375,
+              270
+            ]
+          ]
+        }
+      ]
+    },
+    "cistern_c06": {
+      "id": "cistern_c06",
+      "stage": 1,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "bone_thrall",
+              410,
+              665
+            ],
+            [
+              "bone_thrall",
+              1080,
+              255
+            ]
+          ]
+        },
+        {
+          "trigger": "on_clear",
+          "delay_ticks": 30,
+          "enemies": [
+            [
+              "fallen_adept",
+              1120,
+              640
+            ],
+            [
+              "grave_hound",
+              1050,
+              500
+            ]
+          ]
+        }
+      ]
+    },
+    "cistern_c07": {
+      "id": "cistern_c07",
+      "stage": 1,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "grave_hound",
+              700,
+              455
+            ],
+            [
+              "grave_hound",
+              1080,
+              255
+            ],
+            [
+              "fallen_adept",
+              410,
+              665
+            ]
+          ]
+        }
+      ]
+    },
+    "cistern_c08": {
+      "id": "cistern_c08",
+      "stage": 1,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "bone_thrall",
+              375,
+              270
+            ],
+            [
+              "fallen_adept",
+              1120,
+              640
+            ],
+            [
+              "grave_hound",
+              410,
+              665
+            ]
+          ]
+        },
+        {
+          "trigger": "on_clear",
+          "delay_ticks": 30,
+          "enemies": [
+            [
+              "bone_thrall",
+              1080,
+              255
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_treasure": {
+      "id": "ruins_treasure",
+      "stage": 0,
+      "room": 0,
+      "type": "treasure",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": []
+    },
+    "cistern_challenge": {
+      "id": "cistern_challenge",
+      "stage": 1,
+      "room": 0,
+      "type": "challenge",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "bone_thrall",
+              375,
+              270
+            ],
+            [
+              "fallen_adept",
+              1080,
+              255
+            ],
+            [
+              "grave_hound",
+              1120,
+              640
+            ]
+          ]
+        },
+        {
+          "trigger": "on_clear",
+          "delay_ticks": 30,
+          "enemies": [
+            [
+              "fallen_adept",
+              410,
+              665
+            ],
+            [
+              "grave_hound",
+              1050,
+              500
+            ],
+            [
+              "bone_thrall",
+              700,
+              455
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_boss": {
+      "id": "ruins_boss",
+      "stage": 0,
+      "room": 0,
+      "type": "boss",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [],
+      "boss": "ruins_warden"
+    },
+    "cistern_boss": {
+      "id": "cistern_boss",
+      "stage": 1,
+      "room": 0,
+      "type": "boss",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [],
+      "boss": "cistern_boss"
+    },
+    "workshop": {
+      "id": "workshop",
+      "stage": 0,
+      "room": 0,
+      "type": "workshop",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1100,
+        450
+      ],
+      "waves": []
+    }
+  }
+}
