@@ -1,6 +1,7 @@
 extends RefCounted
 ## AD-134: On Kill, On Expire and Timer triggers (data, validation and compile). Values are proposed.
 const Runner = preload("res://magic/runtime/spell_runner.gd")
+const Golden = preload("res://tests/ad_triggers_golden_generator.gd")
 
 const FORMS := ["form.projectile","form.burst","form.orb","form.beam","form.field"]
 const LASTING := ["form.projectile","form.orb","form.beam","form.field"]
@@ -19,6 +20,7 @@ func run(t) -> void:
 	_payload_rules(t)
 	_plan_snapshot(t)
 	_runtime(t)
+	_golden_tests(t)
 
 func _compile(t) -> void:
 	var r = Runner.new(134)
@@ -324,3 +326,10 @@ func _determinism(t) -> void:
 		traces.append(made[0].trace_json()+kill[0].trace_json())
 	t.equal(traces[0],traces[1],"AD-134 same seed gives identical Timer + On Kill traces")
 	t.check(traces[0].contains("trigger.timer") and traces[0].contains("trigger.on_kill"),"AD-134 determinism traces include both triggers")
+
+func _golden_tests(t) -> void:
+	var expected: Dictionary = t.fixture("ad_triggers_traces_v1.json")
+	for scenario in Golden.SCENARIOS:
+		var played: Dictionary = Golden.play(scenario)
+		t.check(not played["accepted"].has(false),"AD-134 "+scenario+" scripted casts accepted")
+		t.equal(Golden.normalize(played["run"].trace.snapshot()),expected[scenario],"AD-134 "+scenario+" golden trace")

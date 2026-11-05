@@ -77,6 +77,15 @@ Reactions are **state rules** keyed on the hit channel plus the target's current
 - **Compatibility:** all modifiers except Homing/Split/Pierce attach to any form (including Beam and Field).
 - **Samples:** `sample.chain_bolt`, `sample.expand_burst`, `sample.rapid_beam`, `sample.chain_field`. Goldens: `tests/ad_modifiers_golden_generator.gd` -> `tests/fixtures/ad_modifiers_traces_v1.json` (`chain_bolt_jumps`, `expand_burst_reach`, `rapid_beam_cooldown`, `chain_field_no_repeat`); review before accepting changes.
 
+## Triggers (AD-134, Demo M5) — all values and rules PROPOSED
+
+- **On Kill** fires at the killed target. It fires only on direct, non-chained hits of the root effect, not on DOT, arc or chain kills.
+- **On Expire** fires where a lasting effect ends, for any end reason. Beams use the beam end point.
+- **Timer** fires every `interval_ticks` (30) while the effect lives.
+- **Payload** is always a Burst without modifiers. Depth stays 1 (payload effects fire no triggers). Event, effect and depth budgets log `budget_exceeded`. Trigger trace records carry `reason` = trigger id.
+- **Compatibility:** On Hit stays Projectile-only. On Expire and Timer need a lasting form (not Burst).
+- **Samples:** `sample.kill_burst` (Fire projectile, On Kill → Lightning Burst), `sample.expire_bolt` (Water projectile, On Expire → Cold Burst), `sample.timer_field` (Fire field, Timer → Force Burst). Goldens: `godot --headless --path . --script res://tests/ad_triggers_golden_generator.gd` -> `tests/fixtures/ad_triggers_traces_v1.json` (`kill_burst_chain_kill`, `expire_bolt_open_space`, `timer_field_pulses`); review before accepting changes.
+
 ## Source of truth / architecture
 
 - `docs/architecture/magic_contract_v1.md`: technical shared contract, v1.2 M1-compatible.
