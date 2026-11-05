@@ -16,7 +16,7 @@ static func validate(params: Dictionary) -> Array:
 		if typeof(params.get(key)) in [TYPE_INT,TYPE_FLOAT] and float(params[key]) <= 0.0:
 			issues.append("death_puddle: param '%s' must be > 0" % key)
 	for key in ["puddle_duration_ticks","puddle_interval_ticks"]:
-		if typeof(params.get(key)) == TYPE_FLOAT:
+		if typeof(params.get(key)) == TYPE_FLOAT and not is_equal_approx(float(params[key]),roundf(float(params[key]))):
 			issues.append("death_puddle: param '%s' must be an integer" % key)
 	if params.has("puddle_status") and typeof(params["puddle_status"]) != TYPE_STRING:
 		issues.append("death_puddle: param 'puddle_status' must be a string")

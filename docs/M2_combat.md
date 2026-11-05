@@ -95,6 +95,18 @@ Summons are queued in `CombatSession.pending_spawns` and spawned right after the
 
 To add an enemy, copy an entry in `enemies`, edit its stats, and swap `behaviours`, e.g. a summoner: `[{"id":"chase"},{"id":"summon","summon_kind":"bone_thrall","summon_cooldown_ticks":240,"count":2,"max_alive":4,"summon_radius":60}]`. Then run `tests/test_ad_enemy_v2.gd`; golden traces for the three shipped enemies must stay unchanged (`tests/fixtures/ad_enemy_traces_v1.json`).
 
+### Stage 1 enemies (AD-137, numbers PROPOSED)
+
+Added to `enemies` in `combat/combat_tuning_v1.json` and to Ruins pool rooms p03-p10 (`world/data/rooms_ruins_v1.json`; spirit from p03, bloat from p06, shieldbearer from p07). Sprites are placeholders (`PLACEHOLDER_KIND` in `ui/pixel_art_renderer.gd` borrows bone_thrall/grave_hound art, tinted by the enemy `color`); telegraphs below are presentation only.
+
+| enemy | telegraph | counter |
+| --- | --- | --- |
+| Ossuary shieldbearer (`turn_rate_degrees_per_tick` 2.5, `shield_front` x0.2 in a 70 deg half-arc) | pale arc on its facing side, hidden once the shield is broken | flank it (dash/circle faster than it turns) or Force knockback (`break_impulse_speed` 150) |
+| Wailing spirit (`phase_walls` with `ignore_sight` false, so it passes walls but still needs line of sight; `intangible_cycle` 180/30/45; `channel_resistances` fire -0.5) | flickers during the 30-tick warning, semi-transparent while intangible (0 damage) | Fire deals 1.5x; hit it outside the intangible window |
+| Corpse bloat (62-tick melee telegraph, `explode_on_death` radius 90, `death_puddle` Wet r90 for 300 ticks) | green radius ring while winding up or at <=30% HP; blue disc for the puddle | kill it from beyond 90 px; use the Wet puddle for Lightning |
+
+Scripted counter scenarios live in `tests/test_ad_enemies_s1.gd`. `sfx.tele.<kind>` has no cue for these kinds yet; `AudioDirector` warns once and returns false for unknown cues (no crash).
+
 ## Boundaries and owner decisions
 
 The arena is *not* M3 room progression, boss design, loot, a spell editor, a production sprite pipeline or gamepad integration. Player motion, dodge timings, enemy archetypes/HP and attack damage, Burst range/LOS, fixed arena obstacles, accessible flash treatment, two loadout slots, initial seed, and encounter recipes are **PROPOSED FOR PROTOTYPE**, not locked design. A later human playtest should verify warning legibility, pacing, actual 60-FPS rendering, camera comfort and combat feel before treating M2 as polished.

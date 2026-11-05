@@ -18,7 +18,7 @@ func tick(enemy, _session, _ctx: Dictionary) -> void:
 static func validate(params: Dictionary) -> Array:
 	var issues := check("intangible_cycle",params,["period_ticks","warn_ticks","intangible_ticks"],["period_ticks","warn_ticks","intangible_ticks","intangible_damage_scale"])
 	for key in ["period_ticks","warn_ticks","intangible_ticks"]:
-		if typeof(params.get(key)) in [TYPE_INT,TYPE_FLOAT] and (typeof(params[key]) != TYPE_INT or int(params[key]) <= 0):
+		if typeof(params.get(key)) in [TYPE_INT,TYPE_FLOAT] and (not is_equal_approx(float(params[key]),roundf(float(params[key]))) or int(params[key]) <= 0):
 			issues.append("intangible_cycle: param '%s' must be an integer > 0" % key)
 	if issues.is_empty() and int(params["warn_ticks"])+int(params["intangible_ticks"]) >= int(params["period_ticks"]):
 		issues.append("intangible_cycle: warn_ticks + intangible_ticks must be < period_ticks")
