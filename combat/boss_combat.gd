@@ -16,15 +16,23 @@ var phase := 1
 func _init(target_entity, settings: Dictionary) -> void:
 	target = target_entity
 	tuning = settings.duplicate(true)
-	for key in ["radial_damage","shot_damage"]:
+	kind = str(settings.get("kind","undead_warden"))
+	var elite_damage := float(settings.get("elite_damage_multiplier",1.0))
+	for key in ["radial_damage","shot_damage","pulse_damage"]:
 		if tuning.has(key):
-			tuning[key] = Difficulty.scale_f(float(tuning[key]),"enemy_damage")
+			tuning[key] = Difficulty.scale_f(float(tuning[key])*elite_damage,"enemy_damage")
 	if tuning.has("shot_speed"):
 		tuning["shot_speed"] = Difficulty.scale_f(float(tuning["shot_speed"]),"enemy_speed")
 	for key in ["windup_ticks","second_phase_windup_ticks"]:
 		if tuning.has(key):
 			tuning[key] = Difficulty.scale_i(int(tuning[key]),"telegraph_length")
-	tuning["color"] = "#e8c38b"
+	var floor_ticks := int(tuning.get("min_telegraph_ticks",0))
+	for key in ["windup_ticks","second_phase_windup_ticks"]:
+		if tuning.has(key):
+			tuning[key] = maxi(int(tuning[key]),floor_ticks)
+	if not tuning.has("patterns"):
+		tuning["patterns"] = ["radial","targeted"]
+	tuning["color"] = str(settings.get("color","#e8c38b"))
 	tuning["attack_range"] = float(settings["telegraph_radius"])
 	tuning["telegraph_ticks"] = int(tuning["windup_ticks"])
 
@@ -60,11 +68,16 @@ func advance(session) -> void:
 			if state_tick >= int(tuning["recovery_ticks"]):
 				_start_windup(session)
 
+func _attack() -> String:
+	var patterns: Array = tuning["patterns"]
+	return str(patterns[cycle%patterns.size()])
+
 func _start_windup(session) -> void:
-	var attack := "radial" if cycle%2 == 0 else "targeted"
+	var attack := _attack()
+	var range_key := "pulse_radius" if attack == "pulse" else "telegraph_radius"
 	intent = AttackIntent.new({"kind":attack,"origin":target.position,
 		"telegraph_ticks":int(tuning["second_phase_windup_ticks"]) if phase == 2 else int(tuning["windup_ticks"]),
-		"range":float(tuning["telegraph_radius"])})
+		"range":float(tuning[range_key])})
 	tuning["telegraph_ticks"] = intent.snapshot()["telegraph_ticks"]
 	_state("windup",session.sim.clock.tick)
 	session._notify("! BOSS "+attack.to_upper(),target.position)
@@ -72,7 +85,18 @@ func _start_windup(session) -> void:
 func _fire(session) -> void:
 	if not target.alive() or not session.sim.actor.alive():
 		return
-	if cycle%2 == 0:
+	var attack := _attack()
+	if attack == "pulse":
+		if session.sim.actor.position.distance_to(target.position) <= float(tuning["pulse_radius"]):
+			session.damage_player(target.id,float(tuning["pulse_damage"]),"lightning")
+	elif attack == "fan":
+		var number := int(tuning.get("fan_shots",5))
+		var arc := deg_to_rad(float(tuning.get("fan_arc_degrees",50)))
+		var centre: Vector2 = (session.sim.actor.position-target.position).normalized()
+		for index in number:
+			var offset := 0.0 if number <= 1 else arc*(float(index)/float(number-1)-0.5)
+			session.spawn_enemy_projectile(target.id,target.position,centre.rotated(offset),float(tuning["shot_damage"]),float(tuning["shot_speed"]))
+	elif attack == "radial":
 		var number := int(tuning["radial_shots"])
 		for index in number:
 			var heading := Vector2.RIGHT.rotated(TAU*float(index)/float(number))

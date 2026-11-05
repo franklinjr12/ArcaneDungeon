@@ -212,12 +212,26 @@ func summons_owned_by(summoner_id: int) -> int:
 func spawn_boss(settings: Dictionary, at: Vector2):
 	if not world.valid_position(at,float(settings["radius"])):
 		return null
-	var target = sim.add_target(at,Vector2.ZERO,Difficulty.scale_f(float(settings["hp"]),"enemy_hp"))
+	var kind := str(settings.get("kind","undead_warden"))
+	var hp := float(settings["hp"])*float(settings.get("elite_hp_multiplier",1.0))
+	var target = sim.add_target(at,Vector2.ZERO,Difficulty.scale_f(hp,"enemy_hp"))
 	target.radius = float(settings["radius"])
-	target.tags = ["enemy","boss","undead_warden"]
+	target.tags = ["enemy","boss",kind]
+	if bool(settings.get("mini_boss",false)):
+		target.tags.append("mini_boss")
 	var boss = Boss.new(target,settings)
 	enemies.append(boss)
 	return boss
+
+func spawn_mini_boss(id: String, at: Vector2, elite: Dictionary = {}):
+	var table: Dictionary = data.get("mini_bosses",{})
+	if not table.has(id):
+		return null
+	var settings: Dictionary = table[id].duplicate(true)
+	settings["mini_boss"] = true
+	settings["elite_hp_multiplier"] = float(elite.get("hp_multiplier",1.0))
+	settings["elite_damage_multiplier"] = float(elite.get("damage_multiplier",1.0))
+	return spawn_boss(settings,at)
 
 func issue(command: Dictionary) -> Dictionary:
 	if state != "playing":
