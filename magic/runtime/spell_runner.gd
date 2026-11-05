@@ -37,6 +37,7 @@ var visuals: Array = []
 var recent_damage: Array = []
 var _deferred_burst_cleanup: Array = []
 var _contexts: Dictionary = {}
+var _chain_seen: Dictionary = {}
 var last_rejection := ""
 var total_hit_count := 0
 var run_seed_value := 12345
@@ -87,6 +88,7 @@ func reset(run_seed: int = -1) -> void:
 	recent_damage.clear()
 	_deferred_burst_cleanup.clear()
 	_contexts.clear()
+	_chain_seen.clear()
 	collision_walls.clear()
 	last_rejection = ""
 	total_hit_count = 0
@@ -265,14 +267,18 @@ func _trace_spawn(ctx: Dictionary, effect_id: int, at: Vector2) -> void:
 		"formula_id":ctx["formula_id"],"parent_effect_id":ctx["parent_effect_id"],
 		"effect_id":effect_id,"depth":ctx["depth"],"position":at,"tick":clock.tick})
 
-func _queue_hit(root: Dictionary, target_id: int, location: Vector2, ctx: Dictionary, effect_id: int, attached_trigger: Dictionary) -> void:
+func _queue_hit(root: Dictionary, target_id: int, location: Vector2, ctx: Dictionary, effect_id: int, attached_trigger: Dictionary, chained: bool = false) -> void:
 	var fields: Dictionary = {"type":"hit","cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
 		"formula_id":ctx["formula_id"],"parent_effect_id":effect_id,"source_id":ctx["caster_id"],
 		"target_id":target_id,"position":location,"depth":ctx["depth"]}
 	var pushed: Dictionary = queue.push(fields)
 	if pushed["accepted"]:
 		_contexts[int(pushed["event"]["event_id"])] = {"plan":root.duplicate(true),"context":ctx.duplicate(true),
-			"on_hit":attached_trigger.duplicate(true),"effect_id":effect_id,"location":location}
+			"on_hit":attached_trigger.duplicate(true),"effect_id":effect_id,"location":location,"chained":chained}
+		if not chained and "mod.chain" in _modifier_ids(root):
+			var seen: Dictionary = _chain_seen.get(int(ctx["root_cast_id"]),{})
+			seen[target_id] = true
+			_chain_seen[int(ctx["root_cast_id"])] = seen
 
 func step() -> void:
 	if clock.paused:
@@ -328,10 +334,21 @@ func advance_one_tick() -> void:
 				"formula_id":ctx["formula_id"],"effect_id":pending["effect_id"],"tick":clock.tick})
 			queue.release_effect()
 		_deferred_burst_cleanup.clear()
+	_prune_chain_seen()
 	_tick_statuses()
 	visuals = visuals.filter(func(v): return int(v["until"]) > clock.tick)
 	var min_tick: int = clock.tick-int(settings["sandbox"]["dps_window_ticks"])
 	recent_damage = recent_damage.filter(func(v): return int(v["tick"]) >= min_tick)
+
+func _prune_chain_seen() -> void:
+	for root_id in _chain_seen.keys():
+		var live := false
+		for entry in active:
+			live = live or int(entry["context"]["root_cast_id"]) == root_id
+		for pending in _deferred_burst_cleanup:
+			live = live or int(pending["context"]["root_cast_id"]) == root_id
+		if not live and queue.pending_count() == 0:
+			_chain_seen.erase(root_id)
 
 ## Beams pay mana_per_tick on each pulse (no mana ends the beam without hits); both forms report cap truncation once.
 func _charge_pulse(entry: Dictionary, pulse: Dictionary) -> Array:
@@ -433,6 +450,8 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 		var item = queue.push(react_ctx.merged({"type":"reaction"}))
 		if item["accepted"]:
 			_contexts[int(item["event"]["event_id"])] = {"arc":result["reaction"],"context":ctx.duplicate(true)}
+	if not bool(detail.get("chained",false)) and "mod.chain" in _modifier_ids(effect_plan):
+		_chain_from(target,effect_plan,ctx,detail)
 	if not detail["on_hit"].is_empty():
 		var child: Dictionary = ctx.duplicate()
 		child["parent_effect_id"] = detail["effect_id"]
@@ -446,6 +465,31 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 			_contexts[int(spawned["event"]["event_id"])] = {
 				"effect":detail["on_hit"]["effect"].duplicate(true),"location":detail["location"],"context":child}
 	
+## Chain: up to chain_count jumps to the nearest unseen eligible target (ties by id); a target is a chain target once per root cast.
+func _chain_from(origin_target, effect_plan: Dictionary, ctx: Dictionary, detail: Dictionary) -> void:
+	var params: Dictionary = effect_plan["params"]
+	var seen: Dictionary = _chain_seen.get(int(ctx["root_cast_id"]),{})
+	_chain_seen[int(ctx["root_cast_id"])] = seen
+	var from = origin_target
+	for jump in int(params["chain_count"]):
+		var pick = null
+		var best := INF
+		for candidate in targets.all():
+			if not candidate.eligible(int(ctx["team"])) or not candidate.alive() or seen.has(candidate.id):
+				continue
+			var distance: float = from.position.distance_to(candidate.position)
+			if distance <= float(params["chain_radius"]) and distance < best:
+				best = distance
+				pick = candidate
+		if pick == null or not queue.chain_targets_allowed(jump+1,ctx):
+			return
+		seen[pick.id] = true
+		trace.record("chain",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],"formula_id":ctx["formula_id"],
+			"effect_id":detail["effect_id"],"source_id":from.id,"target_id":pick.id,"tick":clock.tick})
+		visuals.append({"kind":"arc","from":from.position,"to":pick.position,"until":clock.tick+17})
+		_queue_hit(effect_plan,pick.id,pick.position,ctx,int(detail["effect_id"]),{},true)
+		from = pick
+
 func _react(event: Dictionary, detail: Dictionary) -> void:
 	if detail.is_empty():
 		return

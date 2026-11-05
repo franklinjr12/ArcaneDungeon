@@ -68,13 +68,22 @@ Reactions are **state rules** keyed on the hit channel plus the target's current
 - **Visuals:** the canvases draw beam lines and field circles from `sim.visuals` (no new art); visuals never affect sim timing.
 - **Not approved balance:** all values are prototype tuning. **Follow-ups:** hold-to-channel input wiring and the AD-121 mage channel animation tag.
 
+## Chain, Expand, Rapid (AD-133, Demo M4)
+
+- **Params (PROPOSED, in `runes_v2.json`):** `mod.chain` `chain_count` 2 (1-4), `chain_radius` 160 (1-400); `mod.expand` `expand_area_scale` 1.5 (1-2.5), `expand_speed_scale` 0.7 (0.25-1); `mod.rapid` `rapid_cooldown_scale` 0.6 (0.2-1), `rapid_damage_scale` 0.7 (0.1-1).
+- **Chain:** a hit jumps up to `chain_count` times to the nearest eligible target within `chain_radius` (ties broken by id). A target is a chain target at most once per root cast (no repeat), chained hits do not chain again or fire On Hit triggers, and jumps are capped by `max_chain_targets`. Each jump emits a `chain` trace record and a short arc visual.
+- **Expand / Rapid:** compile-time param scaling per form, applied in fixed order Expand then Rapid. Expand enlarges area/length (burst radius, field radius, beam length, projectile/orb reach) and slows speed/pulse rate; Rapid shortens the slot cooldown and lowers damage. Results are clamped to the rune param ranges.
+- **Order:** modifier order still has no runtime effect; the editor label reads "Modifiers (order has no effect)".
+- **Compatibility:** all modifiers except Homing/Split/Pierce attach to any form (including Beam and Field).
+- **Samples:** `sample.chain_bolt`, `sample.expand_burst`, `sample.rapid_beam`, `sample.chain_field`. Goldens: `tests/ad_modifiers_golden_generator.gd` -> `tests/fixtures/ad_modifiers_traces_v1.json` (`chain_bolt_jumps`, `expand_burst_reach`, `rapid_beam_cooldown`, `chain_field_no_repeat`); review before accepting changes.
+
 ## Source of truth / architecture
 
 - `docs/architecture/magic_contract_v1.md`: technical shared contract, v1.2 M1-compatible.
 - `magic/data/runes_v2.json`: stable IDs and typed, bounded default parameters.
 - `magic/data/magic_balance_v1.json`: prototype damage channels, state interactions, durations, DOT, mana, arc, spawn/debug tuning. These are **not approved balancing decisions**.
 - `magic/data/spell_limits_v1.json`: finite resource and event budgets, including a dedicated max-active-Orbs limit (prototype 6).
-- `magic/data/sandbox_samples_v1.json`: example formulas (eight M1 + three AD-131 Cold/Force + three AD-132 Beam/Field) using **formula JSON schema v1**.
+- `magic/data/sandbox_samples_v1.json`: example formulas (eight M1 + three AD-131 Cold/Force + three AD-132 Beam/Field + four AD-133 modifier samples) using **formula JSON schema v1**.
 - `combat/{health_component,status_component,magic_target,target_store,hit_payload,interaction_resolver}.gd`: shared team, HP, time-bound status, typed hit metadata, targeting and elemental effects, separate from visuals.
 - `magic/runtime/{spell_runner,spell_loadout,projectile_effect,burst_effect,orb_effect}.gd`: fixed-tick runner, compiled loadouts, and three generic manifestations.
 - `magic/runtime/magic_event_queue.gd`: existing M0 bounded event queue used by the M1 executor; event payloads use private event-ID contexts, never anonymous recursive calls.
