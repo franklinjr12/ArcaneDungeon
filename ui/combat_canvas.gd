@@ -119,18 +119,21 @@ func _draw() -> void:
 		_label(at+Vector2(-17,-45),tr("combat.mage_label"),Color("#f8e7ba"))
 		draw_arc(at,mage.radius,0.0,TAU,32,HITBOX_COLOR,1.0)
 	Art.icon(self,"health",at+Vector2(-40,23),Vector2(15,15))
+	Art.draw_hazards(self,session,offset)
 	for enemy in session.enemies:
 		var target = enemy.target
 		var enemy_at: Vector2 = target.position-offset
+		var enemy_mod: Color = Art.placeholder_modulate(enemy.kind,Color(str(enemy.tuning.get("color","#ffffff"))),enemy.get("intangible") == true,enemy.get("intangible_warning") == true and tick%6<3)
 		var movement: Vector2 = target.position-last_enemy_at.get(target.id,target.position)
 		last_enemy_at[target.id] = target.position
 		var dissolved: int = int(_fx_memo.get("dead",{}).get(target.id,tick+1))
 		var enemy_anim := _enemy_anim(enemy,mage,tick,movement)
 		if Art.actor_has_tag(enemy.kind,"death_side"):
 			if not enemy_anim.is_empty():
-				Art.entity(self,enemy.kind,enemy_at,tick,movement,false,false,not target.alive(),Color.WHITE,enemy_anim)
+				Art.entity(self,enemy.kind,enemy_at,tick,movement,false,false,not target.alive(),enemy_mod,enemy_anim)
 		elif tick-dissolved < 20 or target.alive():
-			Art.entity(self,enemy.kind,enemy_at,tick,movement,enemy.state=="windup",false,not target.alive())
+			Art.entity(self,enemy.kind,enemy_at,tick,movement,enemy.state=="windup",false,not target.alive(),enemy_mod)
+		Art.draw_enemy_markers(self,enemy,enemy_at,tick,offset)
 		if target.alive():
 			_health_bar(enemy_at,target.radius+12,target.health.current/target.health.maximum,Color("#dc7060"))
 			if enemy.kind == "undead_warden" or show_debug:

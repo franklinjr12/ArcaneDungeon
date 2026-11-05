@@ -203,7 +203,7 @@
        200
       ],
       [
-       "fallen_adept",
+       "wailing_spirit",
        1100,
        720
       ]
@@ -276,6 +276,11 @@
        "bone_thrall",
        700,
        455
+      ],
+      [
+       "wailing_spirit",
+       1000,
+       450
       ]
      ]
     }
@@ -421,7 +426,7 @@
      "delay_ticks": 30,
      "enemies": [
       [
-       "bone_thrall",
+       "corpse_bloat",
        700,
        455
       ],
@@ -485,7 +490,7 @@
        640
       ],
       [
-       "bone_thrall",
+       "ossuary_shieldbearer",
        700,
        200
       ]
@@ -561,7 +566,7 @@
        200
       ],
       [
-       "bone_thrall",
+       "ossuary_shieldbearer",
        420,
        700
       ],
@@ -659,7 +664,7 @@
        455
       ],
       [
-       "bone_thrall",
+       "corpse_bloat",
        420,
        700
       ]
@@ -725,7 +730,7 @@
      "delay_ticks": 0,
      "enemies": [
       [
-       "bone_thrall",
+       "ossuary_shieldbearer",
        420,
        300
       ],
@@ -754,6 +759,11 @@
        "fallen_adept",
        700,
        455
+      ],
+      [
+       "corpse_bloat",
+       700,
+       300
       ]
      ]
     }
