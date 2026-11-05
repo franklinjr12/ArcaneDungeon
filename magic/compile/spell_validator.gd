@@ -23,8 +23,10 @@ func validate(formula: Variant, unlocked_rune_ids: Array) -> Dictionary:
 		if seen.has(rune_id):
 			issues.append(_issue("MODIFIER_DUPLICATE","$.root.modifier_ids[%d]"%i,"Duplicate modifier"))
 		seen[rune_id] = true
-		if root_form != "form.projectile":
-			issues.append(_issue("MODIFIER_INCOMPATIBLE","$.root.modifier_ids[%d]"%i,"Prototype modifiers attach only to Projectile"))
+		var mod_rune = registry.get_rune(rune_id)
+		var mod_tags: Array = mod_rune.snapshot()["compatibility_tags"] if mod_rune != null else []
+		if "projectile_only" in mod_tags and root_form != "form.projectile":
+			issues.append(_issue("MODIFIER_INCOMPATIBLE","$.root.modifier_ids[%d]"%i,"This modifier attaches only to Projectile"))
 	if formula.has("on_hit"):
 		var on_hit: Dictionary = formula["on_hit"]
 		var trigger_id: String = on_hit.get("trigger_id","")

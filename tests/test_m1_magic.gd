@@ -25,7 +25,7 @@ func run(t) -> void:
 	_samples(t)
 	var r = _init_runner()
 	t.check(r.initialized,"TASK-011 M1 runtime initializes")
-	t.equal(r.registry.get_ids().size(),14,"TASK-012 same registry for all essence payloads")
+	t.equal(r.registry.get_ids().size(),17,"TASK-012 same registry for all essence payloads")
 	var ally = Target.new(991,1,Vector2(330,340))
 	t.check(r.targets.add(ally),"TASK-011 new same-team target supported")
 	var enemy = r.add_target(Vector2(350,340))

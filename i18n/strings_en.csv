@@ -31,6 +31,9 @@ rune.form.field.desc,"Creates a zone at the target that applies its essence to e
 rune.mod.homing.desc,Projectile turns toward the nearest target within 280 units.
 rune.mod.split.desc,Projectile fires as 3 bolts spread across 17 degrees.
 rune.mod.pierce.desc,"Projectile passes through targets, hitting up to 3 different ones."
+rune.mod.chain.desc,"Each hit jumps to 2 more nearby enemies within 160 units, never the same one twice."
+rune.mod.expand.desc,"Bigger area or longer beam (x1.5), but the spell travels or pulses slower."
+rune.mod.rapid.desc,Shorter cooldown (x0.6) but deals 30% less damage.
 rune.trigger.on_hit.desc,"When the projectile hits, it releases its attached Burst payload."
 rune.essence.neutral.desc,"Basic Bolt: a neutral projectile that deals plain damage, no element."
 run.loadout,Loadout
@@ -103,7 +106,7 @@ run.editor.title,SPELL EDITOR / SLOT %d
 run.editor.chain,Essence → Manifestation → Modifier → On Hit
 run.editor.essence,Essence
 run.editor.manifestation,Manifestation
-run.editor.modifiers,Projectile modifiers
+run.editor.modifiers,Modifiers (order has no effect)
 run.suffix.locked, [LOCKED]
 run.suffix.locked_lower, (locked)
 run.editor.onhit,On Hit → Burst child
