@@ -23,11 +23,29 @@ func build_attack(_enemy, _ctx: Dictionary) -> Dictionary:
 func execute_attack(_enemy, _session) -> void:
 	pass
 
+## Attack components with a multi-tick active phase (e.g. charge) return its length; EnemyCombat then
+## enters state "attack" between windup and recover and calls active_tick() once per tick. 0 = instant attack.
+func active_ticks(_enemy) -> int:
+	return 0
+
+func active_tick(_enemy, _session, _ctx: Dictionary) -> void:
+	pass
+
+## Modifier components (role "modifier") set flags on the enemy once at construction.
+func modify(_enemy) -> void:
+	pass
+
 func on_death(_enemy, _session) -> void:
 	pass
 
 func tick(_enemy, _session, _ctx: Dictionary) -> void:
 	pass
+
+## Direction toward the destination: straight when the enemy phases through walls, else around obstacles.
+func nav_direction(enemy, session, ctx: Dictionary) -> Vector2:
+	if enemy.phase_walls:
+		return ctx["toward"].normalized()
+	return session.world.navigate_direction(enemy.target.position,ctx["player"].position,enemy.target.radius)
 
 ## Shared intent payload for attack components (fields read by UI telegraphs).
 static func standard_intent(enemy, ctx: Dictionary) -> Dictionary:

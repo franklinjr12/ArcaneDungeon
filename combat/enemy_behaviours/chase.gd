@@ -4,7 +4,7 @@ const ROLE := "movement"
 
 func movement(enemy, session, ctx: Dictionary) -> Vector2:
 	if float(ctx["distance"]) > float(param(enemy,"preferred_range")):
-		return session.world.navigate_direction(enemy.target.position,ctx["player"].position,enemy.target.radius)
+		return nav_direction(enemy,session,ctx)
 	return Vector2.ZERO
 
 static func validate(params: Dictionary) -> Array:

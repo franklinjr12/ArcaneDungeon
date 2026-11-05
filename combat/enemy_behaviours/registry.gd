@@ -5,6 +5,9 @@ const SCRIPTS := {
 	"keep_distance": preload("res://combat/enemy_behaviours/keep_distance.gd"),
 	"melee_attack": preload("res://combat/enemy_behaviours/melee_attack.gd"),
 	"ranged_attack": preload("res://combat/enemy_behaviours/ranged_attack.gd"),
+	"charge": preload("res://combat/enemy_behaviours/charge.gd"),
+	"turret": preload("res://combat/enemy_behaviours/turret.gd"),
+	"phase_walls": preload("res://combat/enemy_behaviours/phase_walls.gd"),
 }
 
 static func role(id: String) -> String:

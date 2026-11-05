@@ -16,7 +16,7 @@ func movement(enemy, session, ctx: Dictionary) -> Vector2:
 	var retreat: bool = not approach and distance < preferred-float(params["retreat_margin"])
 	if strafe_factor == 0.0:
 		if approach:
-			var nav: Vector2 = session.world.navigate_direction(enemy.target.position,ctx["player"].position,enemy.target.radius)
+			var nav: Vector2 = nav_direction(enemy,session,ctx)
 			return nav if approach_weight == 1.0 else nav*approach_weight
 		if retreat:
 			return -toward.normalized() if retreat_weight == 1.0 else -(toward.normalized()*retreat_weight)
@@ -24,7 +24,7 @@ func movement(enemy, session, ctx: Dictionary) -> Vector2:
 	var sign_side := 1.0 if enemy.target.id % 2 == 0 else -1.0
 	var movement := toward.normalized().rotated(sign_side*PI/2.0)*strafe_factor
 	if approach:
-		movement += session.world.navigate_direction(enemy.target.position,ctx["player"].position,enemy.target.radius)*approach_weight
+		movement += nav_direction(enemy,session,ctx)*approach_weight
 	elif retreat:
 		movement -= toward.normalized()*retreat_weight
 	return movement
