@@ -1,5 +1,6 @@
 extends RefCounted
 const Codec = preload("res://magic/compile/spell_codec.gd")
+const TRIGGER_IDS := ["trigger.on_hit","trigger.on_kill","trigger.on_expire","trigger.timer"]
 var registry
 var max_complexity := 12
 var allow_builtin := false
@@ -31,15 +32,19 @@ func validate(formula: Variant, unlocked_rune_ids: Array) -> Dictionary:
 		var on_hit: Dictionary = formula["on_hit"]
 		var trigger_id: String = on_hit.get("trigger_id","")
 		_check_rune(trigger_id,"trigger","$.on_hit.trigger_id",unlocked_rune_ids,issues)
-		if trigger_id != "trigger.on_hit":
-			issues.append(_issue("TRIGGER_UNKNOWN","$.on_hit.trigger_id","Only On Hit is currently supported"))
-		if root_form != "form.projectile":
+		var trigger_rune = registry.get_rune(trigger_id)
+		var trigger_tags: Array = trigger_rune.snapshot()["compatibility_tags"] if trigger_rune != null else []
+		if not trigger_id in TRIGGER_IDS:
+			issues.append(_issue("TRIGGER_UNKNOWN","$.on_hit.trigger_id","Unknown trigger"))
+		elif "projectile_only" in trigger_tags and root_form != "form.projectile":
 			issues.append(_issue("TRIGGER_INCOMPATIBLE","$.on_hit","On Hit attaches to Projectile only"))
+		elif "lasting_only" in trigger_tags and root_form == "form.burst":
+			issues.append(_issue("TRIGGER_INCOMPATIBLE","$.on_hit","This trigger needs a lasting form (Projectile, Orb, Beam or Field)"))
 		if on_hit.has("payload"):
 			var payload: Dictionary = on_hit["payload"]
 			_check_effect(payload,"$.on_hit.payload",unlocked_rune_ids,issues)
 			if payload["manifestation_id"] != "form.burst":
-				issues.append(_issue("PAYLOAD_FORM_INVALID","$.on_hit.payload.manifestation_id","On Hit payload must be Burst"))
+				issues.append(_issue("PAYLOAD_FORM_INVALID","$.on_hit.payload.manifestation_id","Trigger payload must be Burst"))
 			if not payload["modifier_ids"].is_empty():
 				issues.append(_issue("PAYLOAD_MODIFIER_FORBIDDEN","$.on_hit.payload.modifier_ids","Payload modifiers are not supported"))
 	var complexity := _complexity(formula)

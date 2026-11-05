@@ -236,6 +236,9 @@
   "mod.expand": "ad_ico_burst",
   "mod.rapid": "ad_ico_homing",
   "trigger.on_hit": "ad_ico_on_hit",
+  "trigger.on_kill": "ad_ico_on_hit",
+  "trigger.on_expire": "ad_ico_on_hit",
+  "trigger.timer": "ad_ico_on_hit",
   "essence.neutral": "ad_ico_projectile"
  },
  "ui_icons": {

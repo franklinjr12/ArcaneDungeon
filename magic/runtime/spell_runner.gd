@@ -201,16 +201,16 @@ func _spawn_root(plan: Dictionary, origin: Vector2, aim: Vector2, context: Dicti
 			spec["on_hit"] = plan["on_hit"]
 			spec["max_targets"] = int(root["params"].get("max_targets",1)) if "mod.pierce" in ids else 1
 			var projectile = Projectile.new(spec)
-			active.append({"kind":"projectile","effect":projectile,"context":context.duplicate(true)})
+			active.append(_entry("projectile",projectile,context,plan["on_hit"]))
 			_trace_spawn(context,int(spec["effect_id"]),origin)
 	elif kind == "form.burst":
-		_spawn_burst(root,origin,context,true)
+		_spawn_burst(root,origin,context,true,plan["on_hit"])
 	elif kind == "form.orb":
 		var spec: Dictionary = context.duplicate()
 		spec["effect_id"] = clock.next_id("effect")
 		spec["root"] = root
 		var orb = Orb.new(spec)
-		active.append({"kind":"orb","effect":orb,"context":context.duplicate(true)})
+		active.append(_entry("orb",orb,context,plan["on_hit"]))
 		_trace_spawn(context,orb.id,origin)
 	elif kind == "form.beam":
 		var spec: Dictionary = context.duplicate()
@@ -219,7 +219,7 @@ func _spawn_root(plan: Dictionary, origin: Vector2, aim: Vector2, context: Dicti
 		spec["position"] = origin
 		spec["direction"] = aim
 		var beam = Beam.new(spec)
-		active.append({"kind":"beam","effect":beam,"context":context.duplicate(true)})
+		active.append(_entry("beam",beam,context,plan["on_hit"]))
 		_trace_spawn(context,beam.id,origin)
 	elif kind == "form.field":
 		var spec: Dictionary = context.duplicate()
@@ -227,10 +227,20 @@ func _spawn_root(plan: Dictionary, origin: Vector2, aim: Vector2, context: Dicti
 		spec["root"] = root
 		spec["position"] = _field_center(root["params"],origin,aim,target_point)
 		var field = Field.new(spec)
-		active.append({"kind":"field","effect":field,"context":context.duplicate(true)})
+		active.append(_entry("field",field,context,plan["on_hit"]))
 		_trace_spawn(context,field.id,field.position)
 	else:
 		queue.release_effect()
+
+## Root effect record; the trigger plan rides along so On Kill / On Expire / Timer need no lookup later.
+func _entry(kind: String, effect, context: Dictionary, trigger: Dictionary) -> Dictionary:
+	var entry := {"kind":kind,"effect":effect,"context":context.duplicate(true),"trigger":trigger}
+	if _trigger_id(trigger) == "trigger.timer":
+		entry["timer_next"] = clock.tick+int(trigger["trigger_params"]["interval_ticks"])
+	return entry
+
+static func _trigger_id(trigger: Dictionary) -> String:
+	return str(trigger["trigger"]["id"]) if not trigger.is_empty() else ""
 
 ## Field centre: target point (or aim * range) limited to cast_range, then stopped at the first wall and kept inside bounds.
 func _field_center(params: Dictionary, origin: Vector2, aim: Vector2, target_point) -> Vector2:
@@ -247,7 +257,7 @@ func _field_center(params: Dictionary, origin: Vector2, aim: Vector2, target_poi
 	center = origin.lerp(center,along)
 	return Vector2(clampf(center.x,bounds.position.x,bounds.end.x),clampf(center.y,bounds.position.y,bounds.end.y))
 
-func _spawn_burst(effect_plan: Dictionary, origin: Vector2, context: Dictionary, already_reserved: bool = false) -> bool:
+func _spawn_burst(effect_plan: Dictionary, origin: Vector2, context: Dictionary, already_reserved: bool = false, attached_trigger: Dictionary = {}) -> bool:
 	if not already_reserved and not queue.reserve_effect(int(context["root_cast_id"]),1,
 			int(context["cast_id"]),str(context["formula_id"])):
 		return false
@@ -256,7 +266,7 @@ func _spawn_burst(effect_plan: Dictionary, origin: Vector2, context: Dictionary,
 	var radius: float = float(effect_plan["params"]["burst_radius"])
 	visuals.append({"kind":"burst","position":origin,"radius":radius,"essence":str(effect_plan["essence"]["id"]),"until":clock.tick+int(settings["sandbox"]["visual_ticks"])})
 	for hit in Burst.contacts(origin,radius,int(context["team"]),targets):
-		_queue_hit(effect_plan,int(hit["target_id"]),hit["position"],context,effect_id,{})
+		_queue_hit(effect_plan,int(hit["target_id"]),hit["position"],context,effect_id,attached_trigger if _trigger_id(attached_trigger) == "trigger.on_kill" else {})
 	# Hold the effect reservation until queued contacts finish resolving.
 	# Releasing here would let same-tick trigger bursts bypass global active limits.
 	_deferred_burst_cleanup.append({"effect_id":effect_id,"context":context.duplicate(true)})
@@ -313,12 +323,22 @@ func advance_one_tick() -> void:
 			if not effect.expired:
 				visuals.append({"kind":"field","position":effect.position,"radius":effect.radius,
 					"essence":str(effect.root["essence"]["id"]),"until":clock.tick+1})
+		var trigger_id := _trigger_id(entry["trigger"])
+		var hit_trigger: Dictionary = {}
+		if trigger_id == "trigger.on_kill":
+			hit_trigger = entry["trigger"]
+		elif trigger_id == "trigger.on_hit" and entry["kind"] == "projectile":
+			hit_trigger = effect.on_hit
 		for hit in hits:
-			_queue_hit(effect.root,int(hit["target_id"]),hit["position"],entry["context"],effect.id,
-				effect.on_hit if entry["kind"] == "projectile" else {})
+			_queue_hit(effect.root,int(hit["target_id"]),hit["position"],entry["context"],effect.id,hit_trigger)
+		if not effect.expired and trigger_id == "trigger.timer" and clock.tick >= int(entry["timer_next"]):
+			_fire_trigger(entry["trigger"],entry["context"],effect.id,0,_trigger_location(entry))
+			entry["timer_next"] = int(entry["timer_next"])+int(entry["trigger"]["trigger_params"]["interval_ticks"])
 		if effect.expired:
 			active.erase(entry)
 			queue.release_effect()
+			if trigger_id == "trigger.on_expire":
+				_fire_trigger(entry["trigger"],entry["context"],effect.id,0,_trigger_location(entry))
 			var cleaned := {"cast_id":entry["context"]["cast_id"],"root_cast_id":entry["context"]["root_cast_id"],
 				"formula_id":entry["context"]["formula_id"],"effect_id":effect.id,"tick":clock.tick}
 			if entry["kind"] == "beam":
@@ -339,6 +359,10 @@ func advance_one_tick() -> void:
 	visuals = visuals.filter(func(v): return int(v["until"]) > clock.tick)
 	var min_tick: int = clock.tick-int(settings["sandbox"]["dps_window_ticks"])
 	recent_damage = recent_damage.filter(func(v): return int(v["tick"]) >= min_tick)
+
+## Where an On Expire / Timer payload lands: beams end at their end point, everything else at its position.
+func _trigger_location(entry: Dictionary) -> Vector2:
+	return entry["effect"].end_point if entry["kind"] == "beam" else entry["effect"].position
 
 func _prune_chain_seen() -> void:
 	for root_id in _chain_seen.keys():
@@ -416,6 +440,7 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 		"formula_id":str(ctx["formula_id"]),
 		"knockback":{"force":0.0,"direction":push}}
 	var hit = HitPayload.new(payload,settings["channels"])
+	var was_alive: bool = target.alive()
 	var result: Dictionary = resolver.resolve(hit,target,targets,clock.tick)
 	if not result["accepted"]:
 		return
@@ -452,19 +477,39 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 			_contexts[int(item["event"]["event_id"])] = {"arc":result["reaction"],"context":ctx.duplicate(true)}
 	if not bool(detail.get("chained",false)) and "mod.chain" in _modifier_ids(effect_plan):
 		_chain_from(target,effect_plan,ctx,detail)
-	if not detail["on_hit"].is_empty():
-		var child: Dictionary = ctx.duplicate()
-		child["parent_effect_id"] = detail["effect_id"]
-		child["depth"] = int(ctx["depth"])+1
-		var spawned = queue.push({"type":"trigger","cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
-			"formula_id":ctx["formula_id"],"source_id":ctx["caster_id"],"target_id":target.id,
-			"parent_effect_id":detail["effect_id"],"depth":child["depth"],"position":detail["location"]})
-		if spawned["accepted"]:
-			trace.record("trigger",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
-				"formula_id":ctx["formula_id"],"parent_effect_id":detail["effect_id"],"depth":child["depth"],"tick":clock.tick})
-			_contexts[int(spawned["event"]["event_id"])] = {
-				"effect":detail["on_hit"]["effect"].duplicate(true),"location":detail["location"],"context":child}
-	
+	# Only depth-0 (root) contexts fire triggers, so payload Bursts can never recurse.
+	var trigger: Dictionary = detail["on_hit"]
+	if trigger.is_empty() or int(ctx["depth"]) != 0:
+		return
+	var trigger_id := _trigger_id(trigger)
+	if trigger_id == "trigger.on_hit":
+		_fire_trigger(trigger,ctx,int(detail["effect_id"]),target.id,detail["location"])
+	# PROPOSED limits: kills from Burning DOT, lightning arcs and chain jumps do not fire On Kill.
+	elif trigger_id == "trigger.on_kill" and was_alive and not target.alive() and not bool(detail.get("chained",false)):
+		_fire_trigger(trigger,ctx,int(detail["effect_id"]),target.id,target.position)
+
+## Enqueues one trigger payload through the bounded queue (depth and per-root event budgets live there).
+func _fire_trigger(trigger_plan: Dictionary, ctx: Dictionary, parent_effect_id: int, target_id: int, location: Vector2) -> bool:
+	var child: Dictionary = ctx.duplicate()
+	child["parent_effect_id"] = parent_effect_id
+	child["depth"] = int(ctx["depth"])+1
+	var spawned = queue.push({"type":"trigger","cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
+		"formula_id":ctx["formula_id"],"source_id":ctx["caster_id"],"target_id":target_id,
+		"parent_effect_id":parent_effect_id,"depth":child["depth"],"position":location})
+	if not spawned["accepted"]:
+		return false
+	var record := {"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
+		"formula_id":ctx["formula_id"],"parent_effect_id":parent_effect_id,"depth":child["depth"],"tick":clock.tick}
+	var trigger_id := _trigger_id(trigger_plan)
+	if trigger_id != "trigger.on_hit":
+		record["reason"] = trigger_id
+		if trigger_id == "trigger.on_kill":
+			record["target_id"] = target_id
+	trace.record("trigger",record)
+	_contexts[int(spawned["event"]["event_id"])] = {
+		"effect":trigger_plan["effect"].duplicate(true),"location":location,"context":child}
+	return true
+
 ## Chain: up to chain_count jumps to the nearest unseen eligible target (ties by id); a target is a chain target once per root cast.
 func _chain_from(origin_target, effect_plan: Dictionary, ctx: Dictionary, detail: Dictionary) -> void:
 	var params: Dictionary = effect_plan["params"]

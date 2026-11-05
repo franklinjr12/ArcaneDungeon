@@ -18,7 +18,7 @@ func run(t) -> void:
 	t.equal(lines.size(), 5, "AD-022 merchant has 5 lines")
 	var strings: Array = lines + f["room_names"].values().map(func(k): return TranslationServer.translate(str(k))) + [rift, TranslationServer.translate(str(f["merchant"]["title"]))]
 	var runes: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(RUNES))
-	t.equal(runes["runes"].size(), 18, "AD-022 18 runes")
+	t.equal(runes["runes"].size(), 21, "AD-022 21 runes")
 	for r in runes["runes"]:
 		var d := str(r["description"])
 		t.check(d.length() <= 90 and d.ends_with("."), "AD-022 rune description limit: " + str(r["id"]))
