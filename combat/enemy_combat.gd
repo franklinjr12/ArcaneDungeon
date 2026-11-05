@@ -15,6 +15,12 @@ var death_announced := false
 var transitions: Array = []
 var heading := Vector2.LEFT
 var behaviours: Array = []
+## Set when spawned by a summon component; -1 otherwise.
+var summoner_id := -1
+## Transient per-tick multipliers (AD-136). EnemyCombat.begin_tick resets buffs; shield_scale is owned by shield_front.
+var shield_scale := 1.0
+var buff_damage_scale := 1.0
+var speed_scale := 1.0
 var ai: Dictionary = {}
 ## Set by modifier components (phase_walls): ignore walls when moving / ignore line of sight for attacks.
 var phase_walls := false
@@ -44,7 +50,7 @@ func _init(enemy_target, archetype: String, config: Dictionary) -> void:
 
 ## Difficulty scaling for tuning keys, applied to the enemy config and to each behaviour entry's params.
 func _scale(values: Dictionary) -> void:
-	for key in ["damage"]:
+	for key in ["damage","explode_damage"]:
 		if values.has(key):
 			values[key] = Difficulty.scale_f(float(values[key]),"enemy_damage")
 	for key in ["move_speed","projectile_speed","charge_speed"]:
@@ -52,6 +58,15 @@ func _scale(values: Dictionary) -> void:
 			values[key] = Difficulty.scale_f(float(values[key]),"enemy_speed")
 	if values.has("telegraph_ticks"):
 		values["telegraph_ticks"] = Difficulty.scale_i(int(values["telegraph_ticks"]),"telegraph_length")
+
+## Session calls this for every EnemyCombat before the AI loop: support buffs are rewritten each tick from 1.0.
+func begin_tick() -> void:
+	buff_damage_scale = 1.0
+	speed_scale = 1.0
+
+## Damage-taken precedence: shield_front's frontal scale and support_buff's scale multiply (see support_buff.gd).
+func apply_scales() -> void:
+	target.damage_scale = shield_scale*buff_damage_scale
 
 func change_state(next: String, tick: int) -> void:
 	if state == next:
@@ -73,6 +88,8 @@ func _move(session, desired: Vector2) -> void:
 	if desired.is_zero_approx():
 		return
 	var speed := float(tuning["move_speed"])
+	if speed_scale != 1.0:
+		speed *= speed_scale
 	if target.status.has("chilled",session.sim.clock.tick):
 		speed *= float(session.sim.settings["statuses"]["chilled"].get("move_scale",1.0))
 	var displacement := desired.normalized()*speed/float(session.sim.clock.tick_rate)
@@ -116,6 +133,8 @@ func advance(session) -> void:
 	var toward: Vector2 = player.position-target.position
 	var distance: float = toward.length()
 	var sight: bool = ignore_sight or session.world.clear_sight(target.position,player.position,8.0)
+	if state != "attack" and not toward.is_zero_approx():
+		heading = toward.normalized()
 	var ctx := {"toward":toward,"distance":distance,"sight":sight,"player":player,"tick_rate":session.sim.clock.tick_rate}
 	for behaviour in behaviours:
 		behaviour.tick(self,session,ctx)

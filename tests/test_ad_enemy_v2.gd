@@ -12,6 +12,11 @@ func run(t) -> void:
 	_charge(t)
 	_turret(t)
 	_phase_walls(t)
+	_summon(t)
+	_shield_front(t)
+	_explode_on_death(t)
+	_support_buff(t)
+	_composed_determinism(t)
 	_registry(t)
 	_registry_v2(t)
 
@@ -189,6 +194,143 @@ func _phase_walls(t) -> void:
 		shooters.append(shooter[0].enemy_shots.size())
 	t.equal(shooters,[0,1,0],"AD-136 phase_walls ignore_sight lets attacks cross walls only when set")
 
+## Enemy lines for tick-by-tick comparison (id, kind, state, position, hp, summoner).
+func _lines(s) -> Array:
+	var lines: Array = []
+	for enemy in s.enemies:
+		lines.append("%d|%d|%s|%s|%.5f|%.5f|%.3f|%d" % [s.sim.clock.tick,enemy.target.id,enemy.kind,enemy.state,
+			enemy.target.position.x,enemy.target.position.y,enemy.target.health.current,enemy.summoner_id])
+	return lines
+
+func _summon_cfg(extra: Dictionary = {}) -> Dictionary:
+	var cfg := {"id":"summon","summon_kind":"bone_thrall","summon_cooldown_ticks":40,"count":2,"max_alive":3,"summon_radius":60}
+	cfg.merge(extra,true)
+	return cfg
+
+func _summon(t) -> void:
+	var run := func(extra: Dictionary) -> Array:
+		var pair := _spawn("bone_thrall",Vector2(250,0),{"behaviours":[{"id":"turret"},_summon_cfg(extra)]})
+		var s = pair[0]
+		var sizes: Array = []
+		var positions: Array = []
+		for i in 200:
+			s.step()
+			sizes.append(s.enemies.size())
+			if i == 60:
+				for e in s.enemies:
+					positions.append(e.target.position)
+		return [s,pair[1],sizes,positions]
+	var a: Array = run.call({})
+	var s = a[0]
+	var summoner = a[1]
+	t.check(a[2][38] == 1 and a[2].has(3),"AD-136 summon spawns nothing before the cooldown, then spawns (%s)" % str(a[2].slice(36,50)))
+	var first_at: int = a[2].find(3)
+	var owned := 0
+	for e in s.enemies:
+		if e.summoner_id == summoner.target.id:
+			owned += 1
+	t.check(first_at >= 38 and first_at <= 45 and owned > 0 and a[2][first_at-1] == 1,"AD-136 summon spawns count=2 summons, owned by the summoner (first batch at idx %d)" % first_at)
+	t.check(a[2].max() == 4 and s.summons_owned_by(summoner.target.id) == 3,"AD-136 summon respects max_alive (max enemies %d, owned %d)" % [a[2].max(),s.summons_owned_by(summoner.target.id)])
+	t.check(s.pending_spawns.is_empty(),"AD-136 summon pending queue is flushed each tick")
+	var b: Array = run.call({})
+	t.check(a[3] == b[3] and _lines(a[0]) == _lines(b[0]),"AD-136 summon positions deterministic across identical runs")
+	# Existing scenarios never queue spawns.
+	var mixed := Session.new(136,"mixed",0)
+	var queued := false
+	for i in 120:
+		mixed.step()
+		queued = queued or not mixed.pending_spawns.is_empty()
+	t.check(not queued,"AD-136 existing scenarios produce no pending spawns")
+
+func _shield_front(t) -> void:
+	var pair := _spawn("bone_thrall",Vector2(250,0),{"behaviours":[{"id":"turret"},{"id":"shield_front","front_damage_scale":0.5,"front_arc_degrees":60}]})
+	var s = pair[0]
+	var enemy = pair[1]
+	var armor: float = float(s.sim.settings["combat"]["armor_scale"])
+	s.step()
+	t.check(enemy.heading.is_equal_approx(Vector2.LEFT) and is_equal_approx(enemy.target.damage_scale,0.5),"AD-136 shield_front: heading tracks the player and scale is set (%s, %f)" % [str(enemy.heading),enemy.target.damage_scale])
+	var base := _spawn("bone_thrall",Vector2(250,0),{"behaviours":[{"id":"turret"}]})
+	base[0].step()
+	var plain: float = base[1].target.receive_damage(20.0,"physical",s.sim.actor.team,armor)
+	var front: float = enemy.target.receive_damage(20.0,"physical",s.sim.actor.team,armor)
+	t.check(plain > 0.0 and is_equal_approx(front,plain*0.5),"AD-136 shield_front halves frontal damage (%f vs %f)" % [front,plain])
+	# Rear: enemy faces away from the player. Call the component directly (EnemyCombat re-aims every tick).
+	enemy.heading = Vector2.RIGHT
+	var ctx := {"toward":s.sim.actor.position-enemy.target.position}
+	enemy.behaviours[1].tick(enemy,s,ctx)
+	var rear: float = enemy.target.receive_damage(20.0,"physical",s.sim.actor.team,armor)
+	t.check(enemy.target.damage_scale == 1.0 and is_equal_approx(rear,plain),"AD-136 shield_front does not reduce rear damage (%f vs %f)" % [rear,plain])
+	# Frozen enemies keep their last scale.
+	enemy.heading = Vector2.LEFT
+	enemy.behaviours[1].tick(enemy,s,ctx)
+	enemy.target.status.apply("frozen",s.sim.clock.tick,s.sim.settings["statuses"]["frozen"])
+	s.sim.actor.position = enemy.target.position+Vector2(0,300)
+	s.step()
+	t.check(is_equal_approx(enemy.target.damage_scale,0.5),"AD-136 shield_front: frozen enemy keeps its last scale")
+
+func _explode_on_death(t) -> void:
+	var results: Array = []
+	for offset in [Vector2(60,0),Vector2(400,0)]:
+		var pair := _spawn("bone_thrall",offset,{"behaviours":[{"id":"turret"},{"id":"explode_on_death","explode_radius":90,"explode_damage":17,"explode_channel":"physical"}]})
+		var s = pair[0]
+		var hp_before: float = s.sim.actor.health.current
+		s.step()
+		pair[1].target.health.damage(1000.0,"physical",1.0)
+		_steps(s,5)
+		results.append([s.damage_events.size(),hp_before-s.sim.actor.health.current,s.feedback.filter(func(v): return v["label"] == "*").size()])
+	t.check(results[0][0] == 1 and results[0][1] > 0.0,"AD-136 explode_on_death damages a nearby player once (%s)" % str(results[0]))
+	t.check(results[1][0] == 0 and is_zero_approx(results[1][1]),"AD-136 explode_on_death spares a far player (%s)" % str(results[1]))
+	t.check(results[0][2] == 1 and results[1][2] == 1,"AD-136 explode_on_death emits one feedback event either way")
+
+func _support_buff(t) -> void:
+	var s = Session.new(136,"empty",0)
+	var thrall: Dictionary = s.data["enemies"]["bone_thrall"].duplicate(true)
+	var support: Dictionary = thrall.duplicate(true)
+	support["behaviours"] = [{"id":"turret"},{"id":"support_buff","buff_radius":150,"buff_damage_scale":0.5,"buff_speed_scale":1.5}]
+	thrall["behaviours"] = [{"id":"turret"},{"id":"shield_front","front_damage_scale":0.5,"front_arc_degrees":60}]
+	s.data["enemies"]["supporter"] = support
+	s.data["enemies"]["ally"] = thrall
+	var origin: Vector2 = s.sim.actor.position
+	var ally = s.spawn_enemy("ally",origin+Vector2(300,0))
+	var far = s.spawn_enemy("ally",origin+Vector2(300,300))
+	var healer = s.spawn_enemy("supporter",origin+Vector2(400,0))
+	s.step()
+	t.check(is_equal_approx(ally.target.damage_scale,0.25) and is_equal_approx(ally.speed_scale,1.5),"AD-136 support_buff scales an ally in range, multiplied with shield_front (%f, %f)" % [ally.target.damage_scale,ally.speed_scale])
+	t.check(is_equal_approx(far.target.damage_scale,0.5) and far.speed_scale == 1.0,"AD-136 support_buff leaves an out-of-range ally unbuffed (%f)" % far.target.damage_scale)
+	t.check(healer.target.damage_scale == 1.0,"AD-136 support_buff does not buff its supporter")
+	ally.target.position = origin+Vector2(300,400)
+	s.step()
+	t.check(is_equal_approx(ally.target.damage_scale,0.5) and ally.speed_scale == 1.0,"AD-136 support_buff clears when the ally leaves range")
+	ally.target.position = origin+Vector2(300,0)
+	s.step()
+	healer.target.health.damage(1000.0,"physical",1.0)
+	s.step()
+	t.check(is_equal_approx(ally.target.damage_scale,0.5) and ally.speed_scale == 1.0,"AD-136 support_buff clears after the supporter dies (%f)" % ally.target.damage_scale)
+
+func _composed_determinism(t) -> void:
+	var runs: Array = []
+	for n in 2:
+		var s = Session.new(136,"empty",0)
+		var base: Dictionary = s.data["enemies"]["bone_thrall"].duplicate(true)
+		var boss_like: Dictionary = base.duplicate(true)
+		boss_like["behaviours"] = [{"id":"chase"},{"id":"melee_attack"},_summon_cfg({"summon_cooldown_ticks":30,"max_alive":4}),
+			{"id":"shield_front","front_damage_scale":0.5,"front_arc_degrees":90},{"id":"explode_on_death","explode_radius":80,"explode_damage":10}]
+		var healer: Dictionary = base.duplicate(true)
+		healer["behaviours"] = [{"id":"keep_distance","approach_margin":45,"retreat_margin":60},{"id":"support_buff","buff_radius":200,"buff_damage_scale":0.7,"buff_speed_scale":1.2}]
+		s.data["enemies"]["mix_a"] = boss_like
+		s.data["enemies"]["mix_b"] = healer
+		var origin: Vector2 = s.sim.actor.position
+		s.spawn_enemy("mix_a",origin+Vector2(400,0))
+		s.spawn_enemy("mix_b",origin+Vector2(450,80))
+		var lines: Array = []
+		for i in 300:
+			if i == 150:
+				s.enemies[0].target.health.damage(1000.0,"physical",1.0)
+			s.step()
+			lines.append_array(_lines(s))
+		runs.append(lines)
+	t.check(runs[0] == runs[1] and runs[0].size() > 600,"AD-136 composed summon/shield/explode/support mix is deterministic over 300 ticks (%d lines)" % runs[0].size())
+
 func _registry_v2(t) -> void:
 	var base: Dictionary = Session.new(136,"empty",0).data["enemies"]["bone_thrall"]
 	var cases := {
@@ -199,6 +341,11 @@ func _registry_v2(t) -> void:
 		"zero shots": [[{"id":"turret"},{"id":"ranged_attack","shots":0}],"'shots' must be an integer >= 1"],
 		"non-numeric step": [[{"id":"turret"},{"id":"ranged_attack","spread_step_degrees":"wide"}],"must be numeric"],
 		"turret plus chase": [[{"id":"turret"},{"id":"chase"}],"exactly one movement"],
+		"summon missing kind": [[{"id":"chase"},{"id":"summon","summon_cooldown_ticks":10,"count":1,"max_alive":1,"summon_radius":50}],"missing param 'summon_kind'"],
+		"summon zero count": [[{"id":"chase"},_summon_cfg({"count":0})],"'count' must be an integer >= 1"],
+		"shield arc": [[{"id":"chase"},{"id":"shield_front","front_damage_scale":0.5,"front_arc_degrees":200}],"within 0..180"],
+		"explode radius": [[{"id":"chase"},{"id":"explode_on_death","explode_radius":0,"explode_damage":5}],"'explode_radius' must be > 0"],
+		"buff radius": [[{"id":"chase"},{"id":"support_buff","buff_radius":"near"}],"must be numeric"],
 		"non-bool ignore_sight": [[{"id":"chase"},{"id":"phase_walls","ignore_sight":1}],"must be bool"],
 	}
 	for label in cases:

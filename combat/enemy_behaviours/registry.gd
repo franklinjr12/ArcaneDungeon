@@ -8,6 +8,10 @@ const SCRIPTS := {
 	"charge": preload("res://combat/enemy_behaviours/charge.gd"),
 	"turret": preload("res://combat/enemy_behaviours/turret.gd"),
 	"phase_walls": preload("res://combat/enemy_behaviours/phase_walls.gd"),
+	"summon": preload("res://combat/enemy_behaviours/summon.gd"),
+	"shield_front": preload("res://combat/enemy_behaviours/shield_front.gd"),
+	"explode_on_death": preload("res://combat/enemy_behaviours/explode_on_death.gd"),
+	"support_buff": preload("res://combat/enemy_behaviours/support_buff.gd"),
 }
 
 static func role(id: String) -> String:
