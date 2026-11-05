@@ -261,6 +261,24 @@
       "color": "#2f6f8f",
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
       "behaviours": [{"id": "water_lurk"}, {"id": "lunge", "charge_speed": 520, "charge_ticks": 14, "contact_padding": 4}]
+    },
+    "storm_crystal": {
+      "_note": "AD-140 PROPOSED numbers. Static turret: telegraphed Charged pulse around itself; Lightning that hits it arcs to the nearest other target. Counter: stay out of the pulse ring and hit it with Lightning when enemies are close to it.",
+      "display_name": "Storm crystal",
+      "hp": 90,
+      "radius": 24,
+      "move_speed": 0,
+      "perception_radius": 1250,
+      "preferred_range": 0,
+      "attack_range": 150,
+      "telegraph_ticks": 45,
+      "recovery_ticks": 30,
+      "cooldown_ticks": 120,
+      "damage": 10,
+      "attack_kind": "melee",
+      "color": "#9fd8ff",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "turret"}, {"id": "charged_pulse", "pulse_radius": 150}, {"id": "conductor"}]
     }
   },
   "scenarios": {

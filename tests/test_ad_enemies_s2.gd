@@ -20,6 +20,12 @@ func run(t) -> void:
 	_eel_validate(t)
 	_eel_deterministic(t)
 	_rooms(t)
+	_crystal_config(t)
+	_crystal_static(t)
+	_crystal_pulse(t)
+	_crystal_conductor(t)
+	_crystal_validate(t)
+	_crystal_deterministic(t)
 
 func _kill(s, enemy) -> void:
 	enemy.target.receive_damage(100000.0,"physical",s.sim.actor.team,0.0)
@@ -241,3 +247,66 @@ func _rooms(t) -> void:
 					t.check(not in_deep,"AD-139 %s %s spawn %s is not in deep water" % [room["id"],kind,str(pos)])
 	for kind in ["cistern_slime","drowned_acolyte","deep_eel"]:
 		t.check(used.has(kind),"AD-139 %s appears in Cistern waves" % kind)
+
+func _crystal_config(t) -> void:
+	var s = Session.new(140,"empty",0)
+	var cfg: Dictionary = s.data["enemies"]["storm_crystal"]
+	t.check(Registry.validate_enemy(cfg).is_empty(),"AD-140 storm_crystal config validates")
+	for entry in cfg["behaviours"]:
+		if Registry.role(entry["id"]) == "movement":
+			t.check(entry["id"] == "turret","AD-140 storm_crystal only moves via turret")
+
+func _crystal_static(t) -> void:
+	var s = Session.new(140,"empty",0)
+	var c = s.spawn_enemy("storm_crystal",s.sim.actor.position+Vector2(400,0))
+	var at: Vector2 = c.target.position
+	var moved := false
+	for i in 300:
+		s.step()
+		moved = moved or c.target.position != at
+	t.check(not moved,"AD-140 crystal never moves")
+
+func _pulse_run(dist: float) -> Array:
+	var s = Session.new(140,"empty",0)
+	var c = s.spawn_enemy("storm_crystal",s.sim.actor.position+Vector2(dist,0))
+	var hp0: float = s.sim.actor.health.current
+	var charged := false
+	for i in 200:
+		s.step()
+		charged = charged or s.sim.actor.status.has("charged",s.sim.clock.tick)
+	return [hp0-s.sim.actor.health.current,charged,s,c]
+
+func _crystal_pulse(t) -> void:
+	var inside := _pulse_run(100.0)
+	t.check(inside[0] > 0.0 and inside[1],"AD-140 pulse inside the radius damages and applies charged (%f)" % inside[0])
+	var outside := _pulse_run(400.0)
+	t.check(is_zero_approx(outside[0]) and not outside[1],"AD-140 pulse outside the radius does nothing")
+
+func _lightning(s, target) -> Dictionary:
+	var payload := {"team":s.sim.actor.team,"essence_id":"essence.lightning","damage":10.0,"cast_id":1,"root_cast_id":1}
+	return s.sim.resolver.resolve(payload,target,s.sim.targets,s.sim.clock.tick)
+
+func _crystal_conductor(t) -> void:
+	var s = Session.new(140,"empty",0)
+	s.sim.actor.position = Vector2(100,100)
+	var c = s.spawn_enemy("storm_crystal",Vector2(700,400))
+	var other = s.spawn_enemy("bone_thrall",Vector2(780,400))
+	var out := _lightning(s,c.target)
+	t.check(not out["reaction"].is_empty() and int(out["reaction"]["target_id"]) == other.target.id,"AD-140 Lightning on the crystal arcs to the nearby enemy")
+	var s2 = Session.new(140,"empty",0)
+	s2.sim.actor.position = Vector2(100,100)
+	var plain = s2.spawn_enemy("bone_thrall",Vector2(700,400))
+	s2.spawn_enemy("bone_thrall",Vector2(780,400))
+	t.check(_lightning(s2,plain.target)["reaction"].is_empty(),"AD-140 plain enemy gets no arc")
+
+func _crystal_validate(t) -> void:
+	for bad in [{"id":"charged_pulse"},{"id":"charged_pulse","pulse_radius":0},{"id":"charged_pulse","pulse_radius":-5},{"id":"charged_pulse","pulse_radius":50,"pulse_status":3}]:
+		t.check(not Registry.SCRIPTS["charged_pulse"].validate(bad).is_empty(),"AD-140 charged_pulse rejects %s" % str(bad))
+	t.check(Registry.SCRIPTS["charged_pulse"].validate({"id":"charged_pulse","pulse_radius":150}).is_empty(),"AD-140 charged_pulse accepts a valid config")
+
+func _crystal_trace() -> Array:
+	var r := _pulse_run(100.0)
+	return [r[0],r[1],r[3].target.health.current,r[3].state]
+
+func _crystal_deterministic(t) -> void:
+	t.check(_crystal_trace() == _crystal_trace(),"AD-140 crystal run deterministic")
