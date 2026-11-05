@@ -8,11 +8,15 @@ var radius := 18.0
 var tags: Array = []
 var removed := false
 var motion := Vector2.ZERO
+## Sim state (AD-131): knockback velocity in px/s, decayed per tick by SpellRunner; part of the deterministic simulation.
+var impulse := Vector2.ZERO
+## Sim state (AD-136): incoming-damage multiplier set each tick by enemy components (shield_front, support_buff); 1.0 = untouched.
+var damage_scale := 1.0
 var health
 var status
 var hit_count := 0
 var total_received := 0.0
-## Presentation only (AD-015): recent damage hits for damage numbers; never serialized.
+## Presentation only (AD-015): recent damage hits for damage numbers; never serialized. (Unlike `impulse`, not sim state.)
 var damage_log: Array = []
 
 func _init(stable_id: int, target_team: int, point: Vector2, hp: float = 100.0, hit_radius: float = 18.0, defense: float = 0.0, channel_resistances: Dictionary = {}) -> void:
@@ -32,6 +36,8 @@ func alive() -> bool:
 func receive_damage(amount: float, channel: String, attacker_team: int, armor_scale: float) -> float:
 	if not eligible(attacker_team):
 		return 0.0
+	if damage_scale != 1.0:
+		amount *= damage_scale
 	var dealt: float = health.damage(amount,channel,armor_scale)
 	if dealt > 0:
 		hit_count += 1

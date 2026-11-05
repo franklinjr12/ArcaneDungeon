@@ -1,0 +1,532 @@
+{
+  "schema_version": 2,
+  "categories": [
+    {
+      "id": "essence",
+      "display_key": "rune_category.essence",
+      "label": "Essence",
+      "order": 0
+    },
+    {
+      "id": "form",
+      "display_key": "rune_category.form",
+      "label": "Manifestation",
+      "order": 1
+    },
+    {
+      "id": "modifier",
+      "display_key": "rune_category.modifier",
+      "label": "Modifier",
+      "order": 2
+    },
+    {
+      "id": "trigger",
+      "display_key": "rune_category.trigger",
+      "label": "Trigger",
+      "order": 3
+    }
+  ],
+  "param_blocks": {
+    "elemental_damage": {
+      "base_damage": {
+        "type": "float",
+        "default": 10.0,
+        "min": 0.0,
+        "max": 200.0
+      }
+    },
+    "projectile_motion": {
+      "speed": {
+        "type": "float",
+        "default": 430.0,
+        "min": 1.0,
+        "max": 1200.0
+      },
+      "radius": {
+        "type": "float",
+        "default": 10.0,
+        "min": 1.0,
+        "max": 40.0
+      },
+      "lifetime_ticks": {
+        "type": "int",
+        "default": 145,
+        "min": 1,
+        "max": 600
+      }
+    },
+    "area_burst": {
+      "burst_radius": {
+        "type": "float",
+        "default": 75.0,
+        "min": 1.0,
+        "max": 300.0
+      }
+    },
+    "orbit_motion": {
+      "orbit_radius": {
+        "type": "float",
+        "default": 72.0,
+        "min": 1.0,
+        "max": 200.0
+      },
+      "angular_speed": {
+        "type": "float",
+        "default": 2.8,
+        "min": 0.0,
+        "max": 20.0
+      },
+      "orb_radius": {
+        "type": "float",
+        "default": 15.0,
+        "min": 1.0,
+        "max": 45.0
+      },
+      "lifetime_ticks": {
+        "type": "int",
+        "default": 360,
+        "min": 1,
+        "max": 600
+      }
+    },
+    "beam_channel": {
+      "beam_length": {"type": "float", "default": 320.0, "min": 16.0, "max": 640.0},
+      "beam_width": {"type": "float", "default": 12.0, "min": 1.0, "max": 40.0},
+      "tick_interval_ticks": {"type": "int", "default": 10, "min": 1, "max": 60},
+      "mana_per_tick": {"type": "float", "default": 2.0, "min": 0.0, "max": 20.0},
+      "lifetime_ticks": {"type": "int", "default": 180, "min": 1, "max": 600}
+    },
+    "ground_field": {
+      "field_radius": {"type": "float", "default": 70.0, "min": 8.0, "max": 200.0},
+      "field_duration_ticks": {"type": "int", "default": 240, "min": 1, "max": 600},
+      "tick_interval_ticks": {"type": "int", "default": 20, "min": 1, "max": 120},
+      "cast_range": {"type": "float", "default": 260.0, "min": 0.0, "max": 600.0}
+    }
+  },
+  "runes": [
+    {
+      "id": "essence.fire",
+      "category": "essence",
+      "schema_version": 2,
+      "param_blocks": [
+        "elemental_damage"
+      ],
+      "params": {
+        "base_damage": {
+          "default": 12.0
+        }
+      },
+      "compatibility_tags": [
+        "element.fire"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 5,
+      "cooldown_ticks": 1,
+      "description": "Deals fire damage and applies Burning to the target.",
+      "display_key": "essence.fire"
+    },
+    {
+      "id": "essence.water",
+      "category": "essence",
+      "schema_version": 2,
+      "param_blocks": [
+        "elemental_damage"
+      ],
+      "params": {
+        "base_damage": {
+          "default": 9.0
+        }
+      },
+      "compatibility_tags": [
+        "element.water"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 4,
+      "cooldown_ticks": 1,
+      "description": "Deals water damage, applies Wet and puts out Burning.",
+      "display_key": "essence.water"
+    },
+    {
+      "id": "essence.lightning",
+      "category": "essence",
+      "schema_version": 2,
+      "param_blocks": [
+        "elemental_damage"
+      ],
+      "params": {
+        "base_damage": {
+          "default": 11.0
+        }
+      },
+      "compatibility_tags": [
+        "element.lightning"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 6,
+      "cooldown_ticks": 2,
+      "description": "Deals lightning damage; on a Wet target it arcs once to the nearest other Wet target.",
+      "display_key": "essence.lightning"
+    },
+    {
+      "id": "essence.cold",
+      "category": "essence",
+      "schema_version": 2,
+      "param_blocks": [
+        "elemental_damage"
+      ],
+      "params": {
+        "base_damage": {
+          "default": 8.0
+        }
+      },
+      "compatibility_tags": [
+        "element.cold"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 5,
+      "cooldown_ticks": 1,
+      "description": "Deals cold damage and applies Chilled; 3 Chilled stacks freeze the target.",
+      "display_key": "essence.cold"
+    },
+    {
+      "id": "essence.force",
+      "category": "essence",
+      "schema_version": 2,
+      "param_blocks": [
+        "elemental_damage"
+      ],
+      "params": {
+        "base_damage": {
+          "default": 10.0
+        }
+      },
+      "compatibility_tags": [
+        "element.force"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 6,
+      "cooldown_ticks": 2,
+      "description": "Deals force damage and knocks the target back; shatters Frozen targets.",
+      "display_key": "essence.force"
+    },
+    {
+      "id": "form.projectile",
+      "category": "form",
+      "schema_version": 2,
+      "param_blocks": [
+        "projectile_motion"
+      ],
+      "params": {},
+      "compatibility_tags": [
+        "root",
+        "projectile"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 2,
+      "cooldown_ticks": 2,
+      "description": "Fires a single bolt in a straight line that ends on its first hit.",
+      "display_key": "form.projectile"
+    },
+    {
+      "id": "form.burst",
+      "category": "form",
+      "schema_version": 2,
+      "param_blocks": [
+        "area_burst"
+      ],
+      "params": {},
+      "compatibility_tags": [
+        "root",
+        "area"
+      ],
+      "complexity_weight": 2,
+      "mana_cost": 8,
+      "cooldown_ticks": 8,
+      "description": "Hits every target within a 75-unit radius at once.",
+      "display_key": "form.burst"
+    },
+    {
+      "id": "form.orb",
+      "category": "form",
+      "schema_version": 2,
+      "param_blocks": [
+        "orbit_motion"
+      ],
+      "params": {},
+      "compatibility_tags": [
+        "root",
+        "orbit"
+      ],
+      "complexity_weight": 2,
+      "mana_cost": 9,
+      "cooldown_ticks": 9,
+      "description": "Circles you at 72 units for 6 seconds, hitting what it touches.",
+      "display_key": "form.orb"
+    },
+    {
+      "id": "form.beam",
+      "category": "form",
+      "schema_version": 2,
+      "param_blocks": ["beam_channel"],
+      "params": {},
+      "compatibility_tags": ["root", "beam", "channel"],
+      "complexity_weight": 2,
+      "mana_cost": 6,
+      "cooldown_ticks": 6,
+      "description": "Channels a line that hits all along it and drains mana each pulse; walls stop it.",
+      "display_key": "form.beam"
+    },
+    {
+      "id": "form.field",
+      "category": "form",
+      "schema_version": 2,
+      "param_blocks": ["ground_field"],
+      "params": {},
+      "compatibility_tags": ["root", "area", "field"],
+      "complexity_weight": 2,
+      "mana_cost": 9,
+      "cooldown_ticks": 12,
+      "description": "Creates a zone at the target that applies its essence to enemies inside for 4 seconds.",
+      "display_key": "form.field"
+    },
+    {
+      "id": "mod.homing",
+      "category": "modifier",
+      "schema_version": 2,
+      "params": {
+        "acquire_radius": {
+          "type": "float",
+          "default": 280.0,
+          "min": 1.0,
+          "max": 1000.0
+        },
+        "turn_rate": {
+          "type": "float",
+          "default": 4.0,
+          "min": 0.0,
+          "max": 20.0
+        }
+      },
+      "compatibility_tags": [
+        "projectile_only"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 3,
+      "cooldown_ticks": 2,
+      "description": "Projectile turns toward the nearest target within 280 units.",
+      "display_key": "mod.homing"
+    },
+    {
+      "id": "mod.split",
+      "category": "modifier",
+      "schema_version": 2,
+      "params": {
+        "projectile_count": {
+          "type": "int",
+          "default": 3,
+          "min": 1,
+          "max": 8
+        },
+        "spread_degrees": {
+          "type": "float",
+          "default": 17.0,
+          "min": 0.0,
+          "max": 90.0
+        }
+      },
+      "compatibility_tags": [
+        "projectile_only"
+      ],
+      "complexity_weight": 2,
+      "mana_cost": 4,
+      "cooldown_ticks": 3,
+      "description": "Projectile fires as 3 bolts spread across 17 degrees.",
+      "display_key": "mod.split"
+    },
+    {
+      "id": "mod.pierce",
+      "category": "modifier",
+      "schema_version": 2,
+      "params": {
+        "max_targets": {
+          "type": "int",
+          "default": 3,
+          "min": 1,
+          "max": 10
+        }
+      },
+      "compatibility_tags": [
+        "projectile_only"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 2,
+      "cooldown_ticks": 1,
+      "description": "Projectile passes through targets, hitting up to 3 different ones.",
+      "display_key": "mod.pierce"
+    },
+    {
+      "id": "mod.chain",
+      "category": "modifier",
+      "schema_version": 2,
+      "params": {
+        "chain_count": {
+          "type": "int",
+          "default": 2,
+          "min": 1,
+          "max": 4
+        },
+        "chain_radius": {
+          "type": "float",
+          "default": 160.0,
+          "min": 1.0,
+          "max": 400.0
+        }
+      },
+      "compatibility_tags": [
+        "any_form"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 2,
+      "cooldown_ticks": 2,
+      "description": "Each hit jumps to 2 more nearby enemies within 160 units, never the same one twice.",
+      "display_key": "mod.chain"
+    },
+    {
+      "id": "mod.expand",
+      "category": "modifier",
+      "schema_version": 2,
+      "params": {
+        "expand_area_scale": {
+          "type": "float",
+          "default": 1.5,
+          "min": 1.0,
+          "max": 2.5
+        },
+        "expand_speed_scale": {
+          "type": "float",
+          "default": 0.7,
+          "min": 0.25,
+          "max": 1.0
+        }
+      },
+      "compatibility_tags": [
+        "any_form"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 2,
+      "cooldown_ticks": 1,
+      "description": "Bigger area or longer beam (x1.5), but the spell travels or pulses slower.",
+      "display_key": "mod.expand"
+    },
+    {
+      "id": "mod.rapid",
+      "category": "modifier",
+      "schema_version": 2,
+      "params": {
+        "rapid_cooldown_scale": {
+          "type": "float",
+          "default": 0.6,
+          "min": 0.2,
+          "max": 1.0
+        },
+        "rapid_damage_scale": {
+          "type": "float",
+          "default": 0.7,
+          "min": 0.1,
+          "max": 1.0
+        }
+      },
+      "compatibility_tags": [
+        "any_form"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 2,
+      "cooldown_ticks": 1,
+      "description": "Shorter cooldown (x0.6) but deals 30% less damage.",
+      "display_key": "mod.rapid"
+    },
+    {
+      "id": "trigger.on_hit",
+      "category": "trigger",
+      "schema_version": 2,
+      "params": {},
+      "compatibility_tags": [
+        "projectile_only"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 5,
+      "cooldown_ticks": 3,
+      "description": "When the projectile hits, it releases its attached Burst payload.",
+      "display_key": "trigger.on_hit"
+    },
+    {
+      "id": "trigger.on_kill",
+      "category": "trigger",
+      "schema_version": 2,
+      "params": {},
+      "compatibility_tags": [],
+      "complexity_weight": 1,
+      "mana_cost": 6,
+      "cooldown_ticks": 3,
+      "description": "When the spell kills an enemy, it releases its Burst payload at that enemy.",
+      "display_key": "trigger.on_kill"
+    },
+    {
+      "id": "trigger.on_expire",
+      "category": "trigger",
+      "schema_version": 2,
+      "params": {},
+      "compatibility_tags": [
+        "lasting_only"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 5,
+      "cooldown_ticks": 3,
+      "description": "When the effect ends, it releases its Burst payload where it ended.",
+      "display_key": "trigger.on_expire"
+    },
+    {
+      "id": "trigger.timer",
+      "category": "trigger",
+      "schema_version": 2,
+      "params": {
+        "interval_ticks": {
+          "type": "int",
+          "default": 30,
+          "min": 10,
+          "max": 120
+        }
+      },
+      "compatibility_tags": [
+        "lasting_only"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 7,
+      "cooldown_ticks": 3,
+      "description": "While the effect lives, it releases its Burst payload every 0.5 seconds.",
+      "display_key": "trigger.timer"
+    },
+    {
+      "id": "essence.neutral",
+      "category": "essence",
+      "schema_version": 2,
+      "param_blocks": [
+        "elemental_damage"
+      ],
+      "params": {
+        "base_damage": {
+          "default": 8.0
+        }
+      },
+      "compatibility_tags": [
+        "element.neutral"
+      ],
+      "complexity_weight": 1,
+      "mana_cost": 0,
+      "cooldown_ticks": 0,
+      "description": "Basic Bolt: a neutral projectile that deals plain damage, no element.",
+      "display_key": "essence.neutral",
+      "builtin": true
+    }
+  ]
+}

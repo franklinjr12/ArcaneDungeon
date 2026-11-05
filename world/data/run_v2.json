@@ -1,0 +1,682 @@
+{
+  "schema_version": 1,
+  "seed": 20261022,
+  "initial_unlocked": [
+    "essence.fire",
+    "essence.water",
+    "essence.lightning",
+    "form.projectile",
+    "form.burst",
+    "mod.split"
+  ],
+  "initial_formulas": [
+    "sample.fire_shot",
+    "sample.split_water"
+  ],
+  "sigil_desk": {
+    "enabled": true,
+    "room_template": "workshop",
+    "runes": [
+      "essence.lightning",
+      "form.projectile",
+      "mod.split"
+    ],
+    "formula_index": 2,
+    "required": false,
+    "require_test_cast": true,
+    "target_seconds": 60
+  },
+  "initial_currency": 0,
+  "duplicate_reward_currency": 12,
+  "room_reward_currency": 24,
+  "boss_currency": 95,
+  "workshop_restore_hp": 150,
+  "workshop_restore_mana": 120,
+  "edit_policy": "workshop_only",
+  "max_active_enemies": 8,
+  "reward_choices": 3,
+  "reward_pool": [
+    "essence.fire",
+    "essence.water",
+    "essence.lightning",
+    "essence.cold",
+    "essence.force",
+    "form.projectile",
+    "form.burst",
+    "form.orb",
+    "form.beam",
+    "form.field",
+    "mod.homing",
+    "mod.split",
+    "mod.pierce",
+    "mod.chain",
+    "mod.expand",
+    "mod.rapid",
+    "trigger.on_hit",
+    "trigger.on_kill",
+    "trigger.on_expire",
+    "trigger.timer"
+  ],
+  "rarity_weights": {
+    "common": 6,
+    "uncommon": 3,
+    "rare": 1
+  },
+  "rune_rarity": {
+    "essence.fire": "common",
+    "essence.water": "common",
+    "essence.lightning": "common",
+    "essence.cold": "uncommon",
+    "essence.force": "uncommon",
+    "form.projectile": "common",
+    "form.burst": "common",
+    "form.orb": "uncommon",
+    "form.beam": "uncommon",
+    "form.field": "uncommon",
+    "mod.homing": "common",
+    "mod.split": "common",
+    "mod.pierce": "common",
+    "mod.chain": "uncommon",
+    "mod.expand": "uncommon",
+    "mod.rapid": "uncommon",
+    "trigger.on_hit": "uncommon",
+    "trigger.on_kill": "rare",
+    "trigger.on_expire": "rare",
+    "trigger.timer": "rare"
+  },
+  "reward_cards": {
+    "essence.fire": {
+      "name_key": "rune.essence.fire.name",
+      "behaviour_key": "rune.essence.fire.desc"
+    },
+    "essence.water": {
+      "name_key": "rune.essence.water.name",
+      "behaviour_key": "rune.essence.water.desc"
+    },
+    "essence.lightning": {
+      "name_key": "rune.essence.lightning.name",
+      "behaviour_key": "rune.essence.lightning.desc"
+    },
+    "essence.cold": {
+      "name_key": "rune.essence.cold.name",
+      "behaviour_key": "rune.essence.cold.desc"
+    },
+    "essence.force": {
+      "name_key": "rune.essence.force.name",
+      "behaviour_key": "rune.essence.force.desc"
+    },
+    "form.projectile": {
+      "name_key": "rune.form.projectile.name",
+      "behaviour_key": "rune.form.projectile.desc"
+    },
+    "form.burst": {
+      "name_key": "rune.form.burst.name",
+      "behaviour_key": "rune.form.burst.desc"
+    },
+    "form.orb": {
+      "name_key": "rune.form.orb.name",
+      "behaviour_key": "rune.form.orb.desc"
+    },
+    "form.beam": {
+      "name_key": "rune.form.beam.name",
+      "behaviour_key": "rune.form.beam.desc"
+    },
+    "form.field": {
+      "name_key": "rune.form.field.name",
+      "behaviour_key": "rune.form.field.desc"
+    },
+    "mod.homing": {
+      "name_key": "rune.mod.homing.name",
+      "behaviour_key": "rune.mod.homing.desc"
+    },
+    "mod.split": {
+      "name_key": "rune.mod.split.name",
+      "behaviour_key": "rune.mod.split.desc"
+    },
+    "mod.pierce": {
+      "name_key": "rune.mod.pierce.name",
+      "behaviour_key": "rune.mod.pierce.desc"
+    },
+    "mod.chain": {
+      "name_key": "rune.mod.chain.name",
+      "behaviour_key": "rune.mod.chain.desc"
+    },
+    "mod.expand": {
+      "name_key": "rune.mod.expand.name",
+      "behaviour_key": "rune.mod.expand.desc"
+    },
+    "mod.rapid": {
+      "name_key": "rune.mod.rapid.name",
+      "behaviour_key": "rune.mod.rapid.desc"
+    },
+    "trigger.on_hit": {
+      "name_key": "rune.trigger.on_hit.name",
+      "behaviour_key": "rune.trigger.on_hit.desc"
+    },
+    "trigger.on_kill": {
+      "name_key": "rune.trigger.on_kill.name",
+      "behaviour_key": "rune.trigger.on_kill.desc"
+    },
+    "trigger.on_expire": {
+      "name_key": "rune.trigger.on_expire.name",
+      "behaviour_key": "rune.trigger.on_expire.desc"
+    },
+    "trigger.timer": {
+      "name_key": "rune.trigger.timer.name",
+      "behaviour_key": "rune.trigger.timer.desc"
+    }
+  },
+  "boss": {
+    "kind": "undead_warden",
+    "display_name": "Undead warden",
+    "hp": 590,
+    "radius": 49,
+    "position": [
+      1030,
+      450
+    ],
+    "windup_ticks": 48,
+    "recovery_ticks": 44,
+    "phase_threshold": 0.5,
+    "second_phase_windup_ticks": 33,
+    "radial_shots": 8,
+    "radial_damage": 9,
+    "shot_damage": 16,
+    "shot_speed": 300,
+    "shot_spread": 0,
+    "telegraph_radius": 190
+  },
+  "merchant": {
+    "rune_price": 40,
+    "max_hp_upgrade_price": 35,
+    "max_hp_upgrade_amount": 25,
+    "stock_numeric_upgrade": "max_hp",
+    "seed_salt": 47017
+  },
+  "bosses": {
+    "ruins_warden": {
+      "kind": "undead_warden",
+      "display_name": "Undead warden",
+      "hp": 590,
+      "radius": 49,
+      "position": [
+        1030,
+        450
+      ],
+      "windup_ticks": 48,
+      "recovery_ticks": 44,
+      "phase_threshold": 0.5,
+      "second_phase_windup_ticks": 33,
+      "radial_shots": 8,
+      "radial_damage": 9,
+      "shot_damage": 16,
+      "shot_speed": 300,
+      "shot_spread": 0,
+      "telegraph_radius": 190
+    },
+    "cistern_boss": {
+      "kind": "undead_warden",
+      "display_name": "Cistern guardian (placeholder)",
+      "hp": 590,
+      "radius": 49,
+      "position": [
+        1030,
+        450
+      ],
+      "windup_ticks": 48,
+      "recovery_ticks": 44,
+      "phase_threshold": 0.5,
+      "second_phase_windup_ticks": 33,
+      "radial_shots": 8,
+      "radial_damage": 9,
+      "shot_damage": 16,
+      "shot_speed": 300,
+      "shot_spread": 0,
+      "telegraph_radius": 190
+    }
+  },
+  "stages": [
+    {
+      "id": "ruins",
+      "combat_rooms": {
+        "min": 5,
+        "max": 6
+      },
+      "pool": [
+        "ruins_c01",
+        "ruins_c02",
+        "ruins_c03",
+        "ruins_c04",
+        "ruins_c05",
+        "ruins_c06",
+        "ruins_c07",
+        "ruins_c08"
+      ],
+      "optional_room": "ruins_treasure",
+      "boss_room": "ruins_boss",
+      "workshop_after": true
+    },
+    {
+      "id": "cistern",
+      "combat_rooms": {
+        "min": 5,
+        "max": 6
+      },
+      "pool": [
+        "cistern_p01",
+        "cistern_p02",
+        "cistern_p03",
+        "cistern_p04",
+        "cistern_p05",
+        "cistern_p06",
+        "cistern_p07",
+        "cistern_p08",
+        "cistern_p09",
+        "cistern_p10"
+      ],
+      "optional_room": "cistern_challenge_v1",
+      "boss_room": "cistern_boss",
+      "workshop_after": false
+    }
+  ],
+  "room_template_files": [
+    "res://world/data/rooms_cistern_v1.json"
+  ],
+  "room_templates": {
+    "ruins_c01": {
+      "id": "ruins_c01",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "bone_thrall",
+              375,
+              270
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_c02": {
+      "id": "ruins_c02",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "bone_thrall",
+              375,
+              270
+            ],
+            [
+              "bone_thrall",
+              410,
+              665
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_c03": {
+      "id": "ruins_c03",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "fallen_adept",
+              1080,
+              255
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_c04": {
+      "id": "ruins_c04",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "bone_thrall",
+              700,
+              455
+            ],
+            [
+              "fallen_adept",
+              1080,
+              255
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_c05": {
+      "id": "ruins_c05",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "grave_hound",
+              1120,
+              640
+            ],
+            [
+              "bone_thrall",
+              375,
+              270
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_c06": {
+      "id": "ruins_c06",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "bone_thrall",
+              375,
+              270
+            ],
+            [
+              "fallen_adept",
+              1080,
+              255
+            ]
+          ]
+        },
+        {
+          "trigger": "on_clear",
+          "delay_ticks": 30,
+          "enemies": [
+            [
+              "grave_hound",
+              1120,
+              640
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_c07": {
+      "id": "ruins_c07",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "fallen_adept",
+              1080,
+              255
+            ],
+            [
+              "fallen_adept",
+              410,
+              665
+            ]
+          ]
+        },
+        {
+          "trigger": "on_clear",
+          "delay_ticks": 30,
+          "enemies": [
+            [
+              "bone_thrall",
+              700,
+              455
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_c08": {
+      "id": "ruins_c08",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "bone_thrall",
+              375,
+              270
+            ],
+            [
+              "fallen_adept",
+              1080,
+              255
+            ],
+            [
+              "grave_hound",
+              1120,
+              640
+            ]
+          ]
+        }
+      ]
+    },
+    "ruins_treasure": {
+      "id": "ruins_treasure",
+      "stage": 0,
+      "room": 0,
+      "type": "treasure",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": []
+    },
+    "ruins_boss": {
+      "id": "ruins_boss",
+      "stage": 0,
+      "room": 0,
+      "type": "boss",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [],
+      "boss": "ruins_warden"
+    },
+    "cistern_boss": {
+      "id": "cistern_boss",
+      "stage": 1,
+      "room": 0,
+      "type": "boss",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [],
+      "boss": "cistern_boss"
+    },
+    "workshop": {
+      "id": "workshop",
+      "stage": 0,
+      "room": 0,
+      "type": "workshop",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1100,
+        450
+      ],
+      "waves": []
+    }
+  }
+}

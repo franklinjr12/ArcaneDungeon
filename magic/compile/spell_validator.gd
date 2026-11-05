@@ -1,5 +1,6 @@
 extends RefCounted
 const Codec = preload("res://magic/compile/spell_codec.gd")
+const TRIGGER_IDS := ["trigger.on_hit","trigger.on_kill","trigger.on_expire","trigger.timer"]
 var registry
 var max_complexity := 12
 var allow_builtin := false
@@ -15,7 +16,7 @@ func validate(formula: Variant, unlocked_rune_ids: Array) -> Dictionary:
 	var root: Dictionary = formula["root"]
 	var root_form: String = root["manifestation_id"]
 	_check_effect(root,"$.root",unlocked_rune_ids,issues)
-	if root_form not in ["form.projectile","form.burst","form.orb"]:
+	if root_form not in ["form.projectile","form.burst","form.orb","form.beam","form.field"]:
 		issues.append(_issue("ROOT_FORM_INVALID","$.root.manifestation_id","Unsupported root manifestation"))
 	var seen: Dictionary = {}
 	for i in root["modifier_ids"].size():
@@ -23,21 +24,27 @@ func validate(formula: Variant, unlocked_rune_ids: Array) -> Dictionary:
 		if seen.has(rune_id):
 			issues.append(_issue("MODIFIER_DUPLICATE","$.root.modifier_ids[%d]"%i,"Duplicate modifier"))
 		seen[rune_id] = true
-		if root_form != "form.projectile":
-			issues.append(_issue("MODIFIER_INCOMPATIBLE","$.root.modifier_ids[%d]"%i,"Prototype modifiers attach only to Projectile"))
+		var mod_rune = registry.get_rune(rune_id)
+		var mod_tags: Array = mod_rune.snapshot()["compatibility_tags"] if mod_rune != null else []
+		if "projectile_only" in mod_tags and root_form != "form.projectile":
+			issues.append(_issue("MODIFIER_INCOMPATIBLE","$.root.modifier_ids[%d]"%i,"This modifier attaches only to Projectile"))
 	if formula.has("on_hit"):
 		var on_hit: Dictionary = formula["on_hit"]
 		var trigger_id: String = on_hit.get("trigger_id","")
 		_check_rune(trigger_id,"trigger","$.on_hit.trigger_id",unlocked_rune_ids,issues)
-		if trigger_id != "trigger.on_hit":
-			issues.append(_issue("TRIGGER_UNKNOWN","$.on_hit.trigger_id","Only On Hit is supported in v1"))
-		if root_form != "form.projectile":
+		var trigger_rune = registry.get_rune(trigger_id)
+		var trigger_tags: Array = trigger_rune.snapshot()["compatibility_tags"] if trigger_rune != null else []
+		if not trigger_id in TRIGGER_IDS:
+			issues.append(_issue("TRIGGER_UNKNOWN","$.on_hit.trigger_id","Unknown trigger"))
+		elif "projectile_only" in trigger_tags and root_form != "form.projectile":
 			issues.append(_issue("TRIGGER_INCOMPATIBLE","$.on_hit","On Hit attaches to Projectile only"))
+		elif "lasting_only" in trigger_tags and root_form == "form.burst":
+			issues.append(_issue("TRIGGER_INCOMPATIBLE","$.on_hit","This trigger needs a lasting form (Projectile, Orb, Beam or Field)"))
 		if on_hit.has("payload"):
 			var payload: Dictionary = on_hit["payload"]
 			_check_effect(payload,"$.on_hit.payload",unlocked_rune_ids,issues)
 			if payload["manifestation_id"] != "form.burst":
-				issues.append(_issue("PAYLOAD_FORM_INVALID","$.on_hit.payload.manifestation_id","On Hit payload must be Burst"))
+				issues.append(_issue("PAYLOAD_FORM_INVALID","$.on_hit.payload.manifestation_id","Trigger payload must be Burst"))
 			if not payload["modifier_ids"].is_empty():
 				issues.append(_issue("PAYLOAD_MODIFIER_FORBIDDEN","$.on_hit.payload.modifier_ids","Payload modifiers are not supported"))
 	var complexity := _complexity(formula)

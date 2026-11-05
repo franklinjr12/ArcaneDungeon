@@ -73,13 +73,19 @@ func _build(formula: Dictionary, formula_hash: String, mana_override: int, coold
 	var runes: Array = [root["essence_id"],root["manifestation_id"]]
 	runes.append_array(root["modifier_ids"])
 	var root_plan := _compile_effect(root)
+	_apply_modifier_scaling(root_plan)
 	var payload: Dictionary = {}
 	if formula.has("on_hit"):
 		var on_hit = formula["on_hit"]
 		runes.append(on_hit["trigger_id"])
 		runes.append(on_hit["payload"]["essence_id"])
 		runes.append(on_hit["payload"]["manifestation_id"])
-		payload = {"trigger":registry.get_rune(on_hit["trigger_id"]).snapshot(),"effect":_compile_effect(on_hit["payload"])}
+		var trigger_snapshot: Dictionary = registry.get_rune(on_hit["trigger_id"]).snapshot()
+		var trigger_params: Dictionary = {}
+		for key in trigger_snapshot["params"]:
+			if trigger_snapshot["params"][key].has("default"):
+				trigger_params[key] = trigger_snapshot["params"][key]["default"]
+		payload = {"trigger":trigger_snapshot,"trigger_params":trigger_params,"effect":_compile_effect(on_hit["payload"])}
 	var mana := 0
 	var complexity := 0
 	var cooldown := 0
@@ -88,6 +94,10 @@ func _build(formula: Dictionary, formula_hash: String, mana_override: int, coold
 		mana += data["mana_cost"]
 		complexity += data["complexity_weight"]
 		cooldown = maxi(cooldown,data["cooldown_ticks"])
+	if cooldown_override < 0 and root["modifier_ids"].has("mod.expand") and root_plan["manifestation"]["id"] == "form.burst":
+		cooldown = ceili(float(cooldown) / float(root_plan["params"]["expand_speed_scale"]))
+	if cooldown_override < 0 and root["modifier_ids"].has("mod.rapid"):
+		cooldown = maxi(1,roundi(float(cooldown) * float(root_plan["params"]["rapid_cooldown_scale"])))
 	var plan := {
 		"schema_version":1,"formula_id":formula["formula_id"],
 		"formula_hash":formula_hash,
@@ -121,3 +131,48 @@ func _compile_effect(effect: Dictionary) -> Dictionary:
 		resolved[key] = effect["params"][key]
 	return {"essence":essence,"manifestation":form,
 		"modifiers":modifiers,"params":resolved}
+
+## Compile-time Expand then Rapid, in fixed order whatever the modifier_ids order (AD-133).
+func _apply_modifier_scaling(root_plan: Dictionary) -> void:
+	var ids: Array = []
+	for modifier in root_plan["modifiers"]:
+		ids.append(modifier["id"])
+	var params: Dictionary = root_plan["params"]
+	if "mod.expand" in ids:
+		var a := float(params["expand_area_scale"])
+		var sp := float(params["expand_speed_scale"])
+		match root_plan["manifestation"]["id"]:
+			"form.projectile":
+				_scale_param(root_plan,"radius",a)
+				_scale_param(root_plan,"speed",sp)
+			"form.burst":
+				_scale_param(root_plan,"burst_radius",a)
+			"form.orb":
+				_scale_param(root_plan,"orb_radius",a)
+				_scale_param(root_plan,"angular_speed",sp)
+			"form.beam":
+				_scale_param(root_plan,"beam_length",a)
+				_scale_param(root_plan,"tick_interval_ticks",1.0 / sp,true)
+			"form.field":
+				_scale_param(root_plan,"field_radius",a)
+				_scale_param(root_plan,"tick_interval_ticks",1.0 / sp,true)
+	if "mod.rapid" in ids:
+		_scale_param(root_plan,"base_damage",float(params["rapid_damage_scale"]))
+
+## Multiplies one resolved param, clamped to its spec range; int params stay int (ceil when requested).
+func _scale_param(root_plan: Dictionary, key: String, factor: float, round_up := false) -> void:
+	var params: Dictionary = root_plan["params"]
+	if not params.has(key):
+		return
+	var spec: Dictionary = {}
+	for rune in [root_plan["manifestation"],root_plan["essence"]]:
+		if rune["params"].has(key):
+			spec = rune["params"][key]
+	var scaled := float(params[key]) * factor
+	if spec.get("type","") == "int":
+		scaled = ceilf(scaled - 0.0001) if round_up else roundf(scaled)
+	if spec.has("min"):
+		scaled = maxf(scaled,float(spec["min"]))
+	if spec.has("max"):
+		scaled = minf(scaled,float(spec["max"]))
+	params[key] = int(scaled) if spec.get("type","") == "int" else scaled

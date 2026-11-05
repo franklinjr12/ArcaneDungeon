@@ -1,5 +1,8 @@
 {
   "schema_version": 1,
+  "water": {
+    "wet_interval_ticks": 15
+  },
   "arena": {
     "width": 1320,
     "height": 900,
@@ -86,7 +89,9 @@
       "cooldown_ticks": 10,
       "damage": 14,
       "attack_kind": "melee",
-      "color": "#e49a73"
+      "color": "#e49a73",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}]
     },
     "fallen_adept": {
       "display_name": "Fallen adept",
@@ -103,7 +108,9 @@
       "projectile_speed": 310,
       "spread_degrees": 0,
       "attack_kind": "ranged",
-      "color": "#8cbaea"
+      "color": "#8cbaea",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "keep_distance", "approach_margin": 45, "retreat_margin": 60, "approach_without_sight": true}, {"id": "ranged_attack"}]
     },
     "grave_hound": {
       "display_name": "Grave hound",
@@ -121,7 +128,67 @@
       "spread_degrees": 0,
       "attack_kind": "ranged",
       "strafe_factor": 0.8,
-      "color": "#bf9dde"
+      "color": "#bf9dde",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "keep_distance", "approach_margin": 35, "retreat_margin": 50, "approach_weight": 0.75, "retreat_weight": 0.75}, {"id": "ranged_attack"}]
+    },
+    "ossuary_shieldbearer": {
+      "_note": "AD-137 PROPOSED numbers (not approved design). Counters: flank (turn rate 2.5 deg/tick) or Force knockback (break_impulse_speed).",
+      "display_name": "Ossuary shieldbearer",
+      "hp": 150,
+      "radius": 26,
+      "move_speed": 78,
+      "perception_radius": 1250,
+      "preferred_range": 46,
+      "attack_range": 80,
+      "telegraph_ticks": 40,
+      "recovery_ticks": 34,
+      "cooldown_ticks": 14,
+      "damage": 16,
+      "attack_kind": "melee",
+      "color": "#9fb0b8",
+      "turn_rate_degrees_per_tick": 2.5,
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}, {"id": "shield_front", "front_damage_scale": 0.2, "front_arc_degrees": 70, "break_impulse_speed": 150}]
+    },
+    "wailing_spirit": {
+      "_note": "AD-137 PROPOSED numbers. phase_walls ignore_sight=false: it drifts through walls but still needs line of sight to wail, so cover still protects. Counters: Fire (weak, x1.5), hit it outside the intangible window (warned by a flicker).",
+      "display_name": "Wailing spirit",
+      "hp": 55,
+      "radius": 20,
+      "move_speed": 92,
+      "perception_radius": 1250,
+      "preferred_range": 260,
+      "attack_range": 420,
+      "telegraph_ticks": 45,
+      "recovery_ticks": 30,
+      "cooldown_ticks": 40,
+      "damage": 9,
+      "projectile_speed": 260,
+      "spread_degrees": 0,
+      "attack_kind": "ranged",
+      "color": "#8fe3d6",
+      "channel_resistances": {"fire": -0.5},
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "keep_distance", "approach_margin": 50, "retreat_margin": 70, "approach_without_sight": true}, {"id": "ranged_attack"}, {"id": "phase_walls", "ignore_sight": false}, {"id": "intangible_cycle", "period_ticks": 180, "warn_ticks": 30, "intangible_ticks": 45, "intangible_damage_scale": 0.0}]
+    },
+    "corpse_bloat": {
+      "_note": "AD-137 PROPOSED numbers. Counter: kill it at range (> explode_radius); the Wet puddle it leaves is a Lightning setup.",
+      "display_name": "Corpse bloat",
+      "hp": 170,
+      "radius": 30,
+      "move_speed": 62,
+      "perception_radius": 1250,
+      "preferred_range": 50,
+      "attack_range": 84,
+      "telegraph_ticks": 62,
+      "recovery_ticks": 36,
+      "cooldown_ticks": 20,
+      "damage": 18,
+      "attack_kind": "melee",
+      "color": "#a3c466",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}, {"id": "explode_on_death", "explode_radius": 90, "explode_damage": 22}, {"id": "death_puddle", "puddle_radius": 90, "puddle_duration_ticks": 300, "puddle_interval_ticks": 30}]
     }
   },
   "scenarios": {

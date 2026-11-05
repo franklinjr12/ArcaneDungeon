@@ -8,5 +8,8 @@
   "max_lifetime_ticks": 600,
   "max_chain_targets": 4,
   "min_rehit_delay_ticks": 5,
-  "max_active_orbs": 6
+  "max_active_orbs": 6,
+  "max_active_beams": 1,
+  "max_active_fields": 3,
+  "max_targets_per_pulse": 6
 }

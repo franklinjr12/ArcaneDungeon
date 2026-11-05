@@ -20,14 +20,14 @@ func _ready() -> void:
 	column.add_theme_constant_override("separation", 12)
 	add_child(column)
 	var title := Label.new()
-	title.text = "MAGIC SANDBOX" if name == "MagicSandbox" else "COMBAT ARENA"
+	title.text = tr("placeholder.sandbox") if name == "MagicSandbox" else tr("placeholder.arena")
 	title.add_theme_font_size_override("font_size", 26)
 	column.add_child(title)
 	var caption := Label.new()
-	caption.text = "M0 bootstrap: gameplay is implemented in later milestones"
+	caption.text = tr("placeholder.caption")
 	column.add_child(caption)
 	var home := Button.new()
-	home.text = "Back to Menu"
+	home.text = tr("combat.back_to_menu")
 	home.custom_minimum_size = Vector2(160, 36)
 	column.add_child(home)
 	home.pressed.connect(_home)

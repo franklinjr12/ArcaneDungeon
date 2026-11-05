@@ -39,23 +39,23 @@ func _build() -> void:
 	column.add_theme_constant_override("separation",9)
 	side.add_child(column)
 	var back := Button.new()
-	back.text = "Back to Menu"
+	back.text = tr("combat.back_to_menu")
 	column.add_child(back)
 	back.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/main.tscn"))
 	var header := Label.new()
-	header.text = "ARCANE DUNGEON / M2 COMBAT"
+	header.text = tr("combat.header")
 	header.add_theme_font_size_override("font_size",18)
 	column.add_child(header)
 	tips = Label.new()
-	tips.text = "WASD/Arrows Move   Mouse Aim\nLMB / RMB / Q / E: Cast slot 1-4\nSPACE Dash   ESC Pause\nR: Retry  TAB: Starter loadout"
+	tips.text = tr("combat.tips")
 	if InputActions.debug_keys_enabled():
-		tips.text += "\nF3: Debug  F4: Reduce hit flashes\n1 / 2 / 3: Arena scenario"
+		tips.text += tr("combat.tips_debug")
 	tips.add_theme_font_size_override("font_size",12)
 	column.add_child(tips)
 	var scenarios := GridContainer.new()
 	scenarios.columns = 3
 	column.add_child(scenarios)
-	for item in [["Single","single"],["Mixed","mixed"],["Cluster","cluster"]]:
+	for item in [[tr("combat.scenario.single"),"single"],[tr("combat.scenario.mixed"),"mixed"],[tr("combat.scenario.cluster"),"cluster"]]:
 		var b := Button.new()
 		b.text = item[0]
 		b.custom_minimum_size.x = 91
@@ -64,7 +64,7 @@ func _build() -> void:
 	var actions := GridContainer.new()
 	actions.columns = 2
 	column.add_child(actions)
-	for item in [["Retry","retry"],["Loadout","loadout"],["Pause Esc","pause"],["Debug F3","debug"],["Flash F4","flash"]]:
+	for item in [[tr("combat.btn.retry"),"retry"],[tr("combat.btn.loadout"),"loadout"],[tr("combat.btn.pause"),"pause"],[tr("combat.btn.debug"),"debug"],[tr("combat.btn.flash"),"flash"]]:
 		var b := Button.new()
 		b.text = item[0]
 		b.custom_minimum_size = Vector2(131,34)
@@ -175,12 +175,12 @@ func _refresh() -> void:
 	var a: Dictionary = session.sim.loadout.preview(0)
 	var b: Dictionary = session.sim.loadout.preview(1)
 	var cds: Array = session.sim.loadout.slots
-	hud.text = "HP %d / %d\nMANA %d / %d\n\nSLOT 1: %s\nMana %d | CD %d | Complexity %d\n\nSLOT 2: %s\nMana %d | CD %d | Complexity %d\n\nDash %s / %d ticks\nI-FRAMES %d / RECOVER %d\n\nEnemies: %d  Effects: %d" % [
+	hud.text = tr("combat.hud") % [
 		roundi(snap["player_hp"]),roundi(session.sim.actor.health.maximum),roundi(snap["player_mana"]),
 		roundi(float(session.sim.settings["combat"]["player_max_mana"])),
 		a.get("formula_id",""),a.get("mana",0),cds[0]["cooldown"],a.get("complexity",0),
 		b.get("formula_id",""),b.get("mana",0),cds[1]["cooldown"],b.get("complexity",0),
-		"READY" if session.player.dash_cooldown == 0 else "COOLDOWN",
+		tr("combat.dash.ready") if session.player.dash_cooldown == 0 else tr("combat.dash.cooldown"),
 		session.player.dash_cooldown,session.player.invulnerable_left,session.player.recovery_left,
 		snap["enemy_count"],snap["effects"]]
 	var last_cast: String = str(session.player.last_message)
@@ -188,9 +188,9 @@ func _refresh() -> void:
 	var latest := ""
 	for entry in recent:
 		if entry["type"] == "reaction":
-			latest = "ARC! Wet + Lightning"
+			latest = tr("combat.arc_reaction")
 		elif entry["type"] == "status":
 			latest = str(entry.get("reason",""))
 	status_line.text = "State: %s\nCast: %s\nElement: %s\nDamage taken: %.1f\nDashes %d | Casts %d\nFPS %d | Logic %.2fms\n%s" % [
 		session.state.to_upper(),last_cast,latest,snap["damage_taken"],snap["dashes"],snap["casts"],
-		Engine.get_frames_per_second(),snap["frame_ms"],"FLASHES REDUCED" if session.reduce_flashes else ""]
+		Engine.get_frames_per_second(),snap["frame_ms"],tr("combat.flashes_reduced") if session.reduce_flashes else ""]

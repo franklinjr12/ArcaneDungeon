@@ -1,5 +1,6 @@
 extends RefCounted
 ## TASK-037: pending waves guard against early clear; state has exactly one clear transition.
+const Difficulty = preload("res://game/core/difficulty.gd")
 var room
 var session
 var schedule: Array = []
@@ -14,7 +15,7 @@ var cap := 8
 func initialize(template, battle, maximum: int) -> void:
 	room = template
 	session = battle
-	cap = maximum
+	cap = Difficulty.scale_i(maximum,"spawn_density")
 	session.defer_clear = true
 	schedule = room.values["waves"].duplicate(true)
 	launched.clear()

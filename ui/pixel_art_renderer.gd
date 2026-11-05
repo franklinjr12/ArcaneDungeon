@@ -13,6 +13,8 @@ const DUMMY = preload("res://assets/pixel/dummy_sheet.png")
 const ICONS = ["fire","water","lightning","projectile","burst","orb","homing","split","pierce","on_hit",
 	"health","mana","rune","coin","dodge","wet","burning","charged","damage","door","shop","book","staff","shield"]
 const EFFECT_ROWS = ["fire","water","lightning","orb","enemy","arc","impact","dodge"]
+## AD-137 placeholder art: new Stage 1 kinds borrow an existing sprite until the art import row (tinted by tuning color).
+const PLACEHOLDER_KIND := {"ossuary_shieldbearer":"bone_thrall","wailing_spirit":"grave_hound","corpse_bloat":"bone_thrall"}
 const F = {"mage":MAGE,"bone_thrall":PURSUER,"fallen_adept":RANGED,"grave_hound":FLANKER,"undead_warden":BOSS,"dummy":DUMMY}
 
 # AD-030: debug-only swap to art/export sprites (F6). Default stays assets/pixel.
@@ -75,6 +77,7 @@ static func build_sprite_frames(stem: String) -> SpriteFrames:
 
 ## Pure lookup: which export frame shows for entity kind/state at a fixed 60 Hz tick.
 static func export_frame_for(kind: String, state: String, tick: int) -> Dictionary:
+	kind = resolve_kind(kind)
 	_export_data()
 	var stem: String = _map.get("entities", {}).get(kind, "")
 	if stem == "":
@@ -150,7 +153,11 @@ static func actor_manifest() -> Dictionary:
 			_actor_scale = float(m.get("scale", 2))
 	return _actors
 
+static func resolve_kind(kind: String) -> String:
+	return PLACEHOLDER_KIND.get(kind,kind)
+
 static func actor_tag(kind: String, tag: String) -> Dictionary:
+	kind = resolve_kind(kind)
 	return actor_manifest().get(kind, {}).get("tags", {}).get(tag, {})
 
 static func actor_has_tag(kind: String, tag: String) -> bool:
@@ -178,6 +185,7 @@ static func _actor_frame(kind: String, tag: String, index: int, left: bool) -> D
 	var tg := actor_tag(kind, tag)
 	if tg.is_empty():
 		return {}
+	kind = resolve_kind(kind)
 	var sh: Dictionary = actor_manifest()[kind]["sheets"][tg["sheet"]]
 	var use_left: bool = left and sh.get("left_json") != null
 	var data := _actor_sheet(sh["left_json"], sh["left_png"]) if use_left else _actor_sheet(sh["json"], sh["png"])
@@ -244,7 +252,7 @@ static func draw_actor(canvas: CanvasItem, kind: String, at: Vector2, anim: Dict
 	var hb: Rect2 = fr["hurtbox"]
 	var region: Rect2 = fr["region"]
 	var rect := Rect2((fr["offset"] - (hb.position + hb.size / 2.0)) * _actor_scale, region.size * _actor_scale)
-	if left and not fr["left"] and bool(actor_manifest()[kind].get("mirror", false)):
+	if left and not fr["left"] and bool(actor_manifest()[resolve_kind(kind)].get("mirror", false)):
 		canvas.draw_set_transform(at, 0.0, Vector2(-1, 1))
 		canvas.draw_texture_rect_region(fr["tex"], rect, region, modulate)
 		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
@@ -325,6 +333,7 @@ static func _tile_floor_export(canvas: CanvasItem, view: Rect2, offset: Vector2,
 static func entity(canvas: CanvasItem, kind: String, at: Vector2, tick: int, motion: Vector2 = Vector2.ZERO,
 		casting: bool = false, hurt: bool = false, dead: bool = false, modulate: Color = Color.WHITE,
 		anim: Dictionary = {}) -> void:
+	kind = resolve_kind(kind)
 	if not anim.is_empty() and actor_has_tag(kind, str(anim.get("tag", ""))):
 		draw_actor(canvas, kind, at, anim, modulate)
 		return
@@ -515,6 +524,27 @@ static func _element(essence_id: String) -> String:
 	var el := essence_id.trim_prefix("essence.")
 	return el if el in FX_ELEMENTS else "neutral"
 
+## AD-132: beam/field colour by essence (visual only).
+static func essence_color(essence_id: String) -> Color:
+	match _element(essence_id):
+		"fire": return Color("#f08a3c")
+		"water": return Color("#4aa8e8")
+		"lightning": return Color("#f5e65a")
+		"cold": return Color("#9fe6f4")
+		"force": return Color("#c9a6f0")
+	return Color("#e8e0cc")
+
+## AD-132: draws beam lines and field circles from sim.visuals; `offset` is the camera offset.
+static func draw_form_visuals(canvas: CanvasItem, visuals: Array, offset: Vector2 = Vector2.ZERO) -> void:
+	for v in visuals:
+		var color := essence_color(str(v.get("essence", "")))
+		if v["kind"] == "beam":
+			canvas.draw_line(v["from"] - offset, v["to"] - offset, Color(color, 0.35), 9.0)
+			canvas.draw_line(v["from"] - offset, v["to"] - offset, color, 3.0)
+		elif v["kind"] == "field":
+			canvas.draw_circle(v["position"] - offset, float(v["radius"]), Color(color, 0.22))
+			canvas.draw_arc(v["position"] - offset, float(v["radius"]), 0.0, TAU, 48, Color(color, 0.8), 2.0)
+
 static func _pos(p: Variant) -> Vector2:
 	return Vector2(float(p["x"]), float(p["y"])) if p is Dictionary else Vector2(p)
 
@@ -532,6 +562,8 @@ static func collect_fx(session, tick: int, memo: Dictionary) -> Array:
 	var live: Dictionary = {}
 	var pierce_ids: Dictionary = {}
 	for entry in sim.active:
+		if entry["kind"] in ["beam", "field"]:
+			continue  # AD-132: drawn from sim.visuals as line / circle, not as a projectile sprite
 		var effect = entry["effect"]
 		var mods: Array = []
 		for m in effect.root.get("modifiers", []):
@@ -707,7 +739,7 @@ static func _collect_feedback(session, tick: int, memo: Dictionary, out: Array) 
 			else:
 				item["event"] = "telegraph.dash_lane"
 				item["length"] = to_mage.length()
-		elif enemy.kind == "bone_thrall":
+		elif enemy.tuning.get("attack_kind","") == "melee":
 			item["event"] = "telegraph.circle"
 			item["uniform"] = 2.0 * float(intent["range"])
 		else:
@@ -782,3 +814,40 @@ static func draw_damage_number(canvas: CanvasItem, symbol: String, text: String,
 		canvas.draw_texture_rect_region(tex, Rect2(at + Vector2(float(item["x"]) * sc, 0.0), r.size * sc), r, Color.WHITE)
 		right = maxf(right, (float(item["x"]) + r.size.x) * sc)
 	return right
+
+## AD-137 placeholder tint for a borrowed sprite: the enemy 'color' lerped over white; alpha < 1 while intangible.
+static func placeholder_modulate(kind: String, color: Color, intangible: bool, warning_flicker: bool) -> Color:
+	if not PLACEHOLDER_KIND.has(kind):
+		return Color.WHITE
+	var out := Color.WHITE.lerp(color,0.6)
+	out.a = 0.4 if intangible else (0.7 if warning_flicker else 1.0)
+	return out
+
+## AD-137 telegraph markers (presentation only; read flags/session state, never write them).
+static func draw_enemy_markers(canvas: CanvasItem, enemy, at: Vector2, tick: int, offset: Vector2) -> void:
+	var target = enemy.target
+	if target.alive():
+		for behaviour in enemy.tuning.get("behaviours",[]):
+			if behaviour["id"] == "shield_front" and not enemy.shield_broken:
+				var half := deg_to_rad(float(behaviour["front_arc_degrees"]))
+				canvas.draw_arc(at,target.radius+6.0,enemy.heading.angle()-half,enemy.heading.angle()+half,16,Color("#cfe3ee"),4.0)
+			elif behaviour["id"] == "explode_on_death":
+				var low: bool = target.health.current <= target.health.maximum*0.3
+				if enemy.state == "windup" or low:
+					canvas.draw_arc(at,float(behaviour["explode_radius"]),0.0,TAU,40,Color(0.8,0.9,0.3,0.45+0.25*float((tick/6)%2)),2.0)
+
+## AD-138 placeholder water: translucent shallow, darker opaque deep. Visual only.
+static func draw_water(canvas: CanvasItem, session, offset: Vector2) -> void:
+	if session.water == null:
+		return
+	for tile in session.water.view():
+		var rect: Rect2 = tile["rect"]
+		rect.position -= offset
+		var deep: bool = str(tile["kind"]) == "deep"
+		canvas.draw_rect(rect,Color(0.08,0.2,0.45,1.0) if deep else Color(0.55,0.78,0.95,0.4))
+
+static func draw_hazards(canvas: CanvasItem, session, offset: Vector2) -> void:
+	for hazard in session.hazards:
+		var at: Vector2 = hazard["position"]-offset
+		canvas.draw_circle(at,float(hazard["radius"]),Color(0.25,0.5,0.9,0.28))
+		canvas.draw_arc(at,float(hazard["radius"]),0.0,TAU,40,Color(0.45,0.7,1.0,0.6),1.5)

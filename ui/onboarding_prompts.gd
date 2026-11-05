@@ -3,7 +3,6 @@ extends RefCounted
 const FLAVOUR_PATH := "res://world/data/flavour_v1.json"
 const TIP_IDS := ["room1", "first_reward", "first_workshop"]
 const MAX_CHARS := 90
-const STRINGS_PATH := "res://data/strings_en.json"
 # AD-084: workshop_empty_slot wording is proposed (the editor uses rune pickers, not drag-and-drop).
 const HINT_IDS := ["workshop_empty_slot", "test_on_dummy", "wet_try_lightning"]
 const HINT_INDEX := {"workshop_empty_slot": 0, "test_on_dummy": 1, "wet_try_lightning": 2}
@@ -15,6 +14,8 @@ var pending: Array = []
 var arc_seen := false
 var shown_count := 0
 var shown_log: Array = []
+## AD-130: the Sigil Desk prelude teaches the workshop steps itself, so generic hints stay quiet.
+var prelude_active := false
 
 func _init() -> void:
 	if not FileAccess.file_exists(FLAVOUR_PATH):
@@ -22,12 +23,10 @@ func _init() -> void:
 	var data = JSON.parse_string(FileAccess.get_file_as_string(FLAVOUR_PATH))
 	if data is Dictionary and data.get("onboarding") is Dictionary:
 		tips = data["onboarding"]
-	if FileAccess.file_exists(STRINGS_PATH):
-		var strings = JSON.parse_string(FileAccess.get_file_as_string(STRINGS_PATH))
-		if strings is Dictionary:
-			for id in HINT_IDS:
-				if strings.has("onboarding." + id):
-					tips[id] = str(strings["onboarding." + id])
+	for id in tips.keys():
+		tips[id] = TranslationServer.translate(str(tips[id]))
+	for id in HINT_IDS:
+		tips[id] = TranslationServer.translate("onboarding." + id)
 
 func load_seen(ids: Array) -> void:
 	seen = []
@@ -37,6 +36,8 @@ func load_seen(ids: Array) -> void:
 	arc_seen = seen.has("wet_try_lightning")
 
 func trigger(id: String) -> String:
+	if prelude_active and id == "first_workshop":
+		return ""
 	if not (TIP_IDS.has(id) or HINT_IDS.has(id)) or not tips.has(id) or seen.has(id) or dismissed:
 		return ""
 	seen.append(id)
@@ -67,13 +68,27 @@ func _drop(id: String) -> void:
 		current = ""
 
 func note_workshop(empty_slots: int) -> void:
+	if prelude_active:
+		return
 	if empty_slots > 0:
 		_queue("workshop_empty_slot")
 	else:
 		pending.erase("workshop_empty_slot")
 
 func note_valid_edit() -> void:
+	if prelude_active:
+		return
 	_queue("test_on_dummy")
+
+## The desk taught the empty-slot and dummy steps; returns the ids newly marked seen for persistence.
+func note_prelude_done() -> Array:
+	var added: Array = []
+	for id in ["workshop_empty_slot","test_on_dummy"]:
+		_drop(id)
+		if not seen.has(id):
+			seen.append(id)
+			added.append(id)
+	return added
 
 func note_test_cast() -> void:
 	_drop("test_on_dummy")

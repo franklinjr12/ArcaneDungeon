@@ -2,11 +2,13 @@ extends RefCounted
 ## M2 combat orchestration: reuses M1 SpellRunner and common MagicTarget/Health.
 const Runner = preload("res://magic/runtime/spell_runner.gd")
 const Geometry = preload("res://world/arena_geometry.gd")
+const WaterTiles = preload("res://world/water_tiles.gd")
 const Player = preload("res://combat/player_combat.gd")
 const Enemy = preload("res://combat/enemy_combat.gd")
 const Boss = preload("res://combat/boss_combat.gd")
 const DamageEvent = preload("res://combat/damage_event.gd")
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
+const Difficulty = preload("res://game/core/difficulty.gd")
 const TUNING_FILE := "res://combat/combat_tuning_v1.json"
 const SAMPLES_FILE := "res://magic/data/sandbox_samples_v1.json"
 var data: Dictionary = {}
@@ -16,6 +18,14 @@ var world
 var player
 var enemies: Array = []
 var enemy_shots: Array = []
+## AD-136: spawn requests {kind, position, summoner_id} queued by components during the AI loop; flushed in order after it.
+var pending_spawns: Array = []
+## AD-137: session ground hazards (puddles) {id, kind, status, position, radius, duration_ticks, interval_ticks, age, source_id}.
+## Read-only for rendering; advanced by _step_hazards in fixed id order.
+var hazards: Array = []
+var _next_hazard_id := 1
+## AD-138 [PROPOSED FOR PROTOTYPE]: WaterTiles or null. Water Wets anyone standing in it every data.water.wet_interval_ticks; deep water blocks walking.
+var water = null
 var feedback: Array = []
 var damage_events: Array = []
 var ai_transitions: Array = []
@@ -70,13 +80,17 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	world = Geometry.new(data["arena"])
 	sim.bounds = world.bounds
 	sim.collision_walls = world.walls.duplicate()
-	sim.actor.health.maximum = float(data["player"]["max_hp"])
+	water = null
+	sim.actor.health.maximum = Difficulty.scale_f(float(data["player"]["max_hp"]),"player_hp")
 	sim.actor.health.reset()
 	sim.actor.radius = float(data["player"]["radius"])
 	sim.actor.position = Vector2(float(data["arena"]["player_spawn"][0]),float(data["arena"]["player_spawn"][1]))
 	player = Player.new(sim,world,data["player"])
 	enemies.clear()
 	enemy_shots.clear()
+	pending_spawns.clear()
+	hazards.clear()
+	_next_hazard_id = 1
 	feedback.clear()
 	damage_events.clear()
 	ai_transitions.clear()
@@ -104,17 +118,101 @@ func spawn_enemy(kind: String, at: Vector2):
 	if not data["enemies"].has(kind) or not world.valid_position(at,float(data["enemies"][kind]["radius"])):
 		return null
 	var p: Dictionary = data["enemies"][kind]
-	var target = sim.add_target(at,Vector2.ZERO,float(p["hp"]))
+	var target = sim.add_target(at,Vector2.ZERO,Difficulty.scale_f(float(p["hp"]),"enemy_hp"))
 	target.radius = float(p["radius"])
 	target.tags = ["enemy",kind]
+	if typeof(p.get("channel_resistances")) == TYPE_DICTIONARY:
+		target.health.resistances = p["channel_resistances"].duplicate(true)
 	var enemy = Enemy.new(target,kind,p)
 	enemies.append(enemy)
 	return enemy
 
+func _flush_pending_spawns() -> void:
+	if pending_spawns.is_empty():
+		return
+	var queue: Array = pending_spawns
+	pending_spawns = []
+	for spec in queue:
+		var spawned = spawn_enemy(str(spec["kind"]),spec["position"])
+		if spawned != null:
+			spawned.summoner_id = int(spec["summoner_id"])
+
+func add_hazard(spec: Dictionary) -> int:
+	var hazard: Dictionary = spec.duplicate(true)
+	hazard["id"] = _next_hazard_id
+	hazard["age"] = 0
+	_next_hazard_id += 1
+	hazards.append(hazard)
+	return int(hazard["id"])
+
+## Ages every hazard by one tick (hazards are stored in id order); applies its status on age 1 and every interval after.
+func _step_hazards() -> void:
+	if hazards.is_empty():
+		return
+	var tick: int = sim.clock.tick
+	var statuses: Dictionary = sim.settings["statuses"]
+	var kept: Array = []
+	for hazard in hazards:
+		hazard["age"] = int(hazard["age"])+1
+		var age: int = hazard["age"]
+		if age <= int(hazard["duration_ticks"]):
+			if (age-1) % int(hazard["interval_ticks"]) == 0 and statuses.has(str(hazard["status"])):
+				var victims: Array = []
+				for enemy in enemies:
+					victims.append(enemy.target)
+				victims.append(sim.actor)
+				for victim in victims:
+					if victim.alive() and hazard["position"].distance_to(victim.position) <= float(hazard["radius"])+victim.radius:
+						victim.status.apply(str(hazard["status"]),tick,statuses[str(hazard["status"])],{"source_id":hazard["source_id"]})
+		if age < int(hazard["duration_ticks"]):
+			kept.append(hazard)
+	hazards = kept
+
+## AD-138: installs water tiles; deep rects block walking only (spells and sight still cross them).
+func set_water(entries: Array) -> void:
+	water = WaterTiles.new(entries)
+	world.add_ground_blockers(water.deep_rects())
+	sim.resolver.water = water
+
+## Every wet_interval_ticks session ticks: the player, then each alive enemy in list order, becomes Wet while standing in water.
+func _step_water() -> void:
+	if water == null:
+		return
+	var tick: int = sim.clock.tick
+	var interval: int = maxi(1,int(data["water"]["wet_interval_ticks"]))
+	if tick % interval != 0 or not sim.settings["statuses"].has("wet"):
+		return
+	var wet: Dictionary = sim.settings["statuses"]["wet"]
+	var victims: Array = [sim.actor]
+	for enemy in enemies:
+		victims.append(enemy.target)
+	for victim in victims:
+		if victim.alive() and water.in_water(victim.position,victim.radius):
+			victim.status.apply("wet",tick,wet,{"source_id":0})
+
+## Read-only hazard view for rendering: position, radius, remaining ticks.
+func hazard_view() -> Array:
+	var view: Array = []
+	for hazard in hazards:
+		view.append({"kind":hazard["kind"],"position":hazard["position"],"radius":hazard["radius"],
+			"remaining_ticks":int(hazard["duration_ticks"])-int(hazard["age"])})
+	return view
+
+## Live summons owned by `summoner_id`, including ones still queued.
+func summons_owned_by(summoner_id: int) -> int:
+	var count := 0
+	for enemy in enemies:
+		if enemy is Enemy and enemy.summoner_id == summoner_id and enemy.target.alive():
+			count += 1
+	for spec in pending_spawns:
+		if int(spec["summoner_id"]) == summoner_id:
+			count += 1
+	return count
+
 func spawn_boss(settings: Dictionary, at: Vector2):
 	if not world.valid_position(at,float(settings["radius"])):
 		return null
-	var target = sim.add_target(at,Vector2.ZERO,float(settings["hp"]))
+	var target = sim.add_target(at,Vector2.ZERO,Difficulty.scale_f(float(settings["hp"]),"enemy_hp"))
 	target.radius = float(settings["radius"])
 	target.tags = ["enemy","boss","undead_warden"]
 	var boss = Boss.new(target,settings)
@@ -159,7 +257,16 @@ func step() -> void:
 		for enemy in enemies:
 			audio_before.append([enemy.state,int(enemy.get("phase")) if enemy.get("phase") != null else 1])
 	for enemy in enemies:
+		if enemy is Enemy:
+			enemy.begin_tick()
+	for enemy in enemies:
 		enemy.advance(self)
+	_flush_pending_spawns()
+	_step_hazards()
+	_step_water()
+	for enemy in enemies:
+		if enemy is Enemy:
+			enemy.apply_scales()
 	if audio_sink.is_valid():
 		_audio_step(audio_before)
 	advance_enemy_projectiles()
@@ -218,11 +325,12 @@ func alive_enemies() -> int:
 			count += 1
 	return count
 
-func damage_player(source_id: int, amount: float, channel: String, attack_id: int = -1) -> Dictionary:
+## `allow_dead_source` lets on-death damage (explode_on_death) come from the enemy that just died.
+func damage_player(source_id: int, amount: float, channel: String, attack_id: int = -1, allow_dead_source: bool = false) -> Dictionary:
 	if state != "playing" or not sim.actor.alive():
 		return {"accepted":false,"reason":"DEAD"}
 	var source = sim.targets.get_target(source_id)
-	if source == null or not source.alive() or source.team == sim.actor.team:
+	if source == null or (not source.alive() and not allow_dead_source) or source.team == sim.actor.team:
 		return {"accepted":false,"reason":"SOURCE_INVALID"}
 	if attack_id < 0:
 		attack_id = sim.clock.next_id("attack")
@@ -292,6 +400,10 @@ func advance_enemy_projectiles() -> void:
 		else:
 			projectile["position"] = destination
 
+## Explosion marker; deliberately non-text (like other feedback labels it is output-only).
+func notify_blast(at: Vector2) -> void:
+	_notify("*",at)
+
 func _notify(message: String, at: Vector2) -> void:
 	feedback.append({"label":message,"position":at,"tick":sim.clock.tick})
 
@@ -304,4 +416,4 @@ func snapshot() -> Dictionary:
 		"player_position":sim.actor.position,"player_mana":sim.mana,"enemy_count":alive_enemies(),
 		"dashes":player.dashes,"casts":player.casts,"damage_taken":damage_received,"hits_received":attacks_received,
 		"reactions":reactions,"enemy_shots":enemy_shots.size(),"effects":sim.queue.active_effect_count(),
-		"frame_ms":elapsed_frame_ms,"foes":foe_data}
+		"frame_ms":elapsed_frame_ms,"foes":foe_data,"hazards":hazard_view()}

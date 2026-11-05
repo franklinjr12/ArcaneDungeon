@@ -4,14 +4,14 @@ const MenuImage = preload("res://assets/pixel/menu_background.png")
 const SettingsScreen = preload("res://ui/settings_screen.gd")
 ## AD-067: GDD §8 Title screen. Sandbox/Arena are shown only in debug builds.
 const TEXT := {
-	"title": "ARCANE DUNGEON",
-	"subtitle": "SPELLFORGE  •  THE FIRST DESCENT",
-	"new_run": "New Run",
-	"settings": "Settings",
-	"quit": "Quit",
-	"debug": "Debug",
-	"sandbox": "Magic Sandbox",
-	"arena": "Combat Arena",
+	"title": "menu.title",
+	"subtitle": "menu.subtitle",
+	"new_run": "menu.new_run",
+	"settings": "menu.settings",
+	"quit": "menu.quit",
+	"debug": "menu.debug",
+	"sandbox": "menu.sandbox",
+	"arena": "menu.arena",
 }
 ## null = resolve from OS.is_debug_build(); tests set false before add_child for a release-like run.
 var show_debug_entries = null
@@ -39,7 +39,7 @@ func _ready() -> void:
 	panel.add_theme_constant_override("separation", 18)
 	center.add_child(panel)
 	var heading := Label.new()
-	heading.text = TEXT["title"]
+	heading.text = tr(TEXT["title"])
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	heading.add_theme_font_size_override("font_size", 34)
 	heading.add_theme_color_override("font_color",Color("#ffd18c"))
@@ -47,20 +47,20 @@ func _ready() -> void:
 	heading.add_theme_constant_override("shadow_offset_x",3)
 	panel.add_child(heading)
 	var subheading := Label.new()
-	subheading.text = TEXT["subtitle"]
+	subheading.text = tr(TEXT["subtitle"])
 	subheading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	panel.add_child(subheading)
-	var new_run := _button(panel, "NewRunButton", TEXT["new_run"])
+	var new_run := _button(panel, "NewRunButton", tr(TEXT["new_run"]))
 	new_run.pressed.connect(_switch_scene.bind("res://scenes/run.tscn"))
-	_button(panel, "SettingsButton", TEXT["settings"]).pressed.connect(open_settings)
-	_button(panel, "QuitButton", TEXT["quit"]).pressed.connect(func(): get_tree().quit())
+	_button(panel, "SettingsButton", tr(TEXT["settings"])).pressed.connect(open_settings)
+	_button(panel, "QuitButton", tr(TEXT["quit"])).pressed.connect(func(): get_tree().quit())
 	if show_debug_entries:
 		var debug_label := Label.new()
-		debug_label.text = TEXT["debug"]
+		debug_label.text = tr(TEXT["debug"])
 		debug_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		panel.add_child(debug_label)
-		_button(panel, "SandboxButton", TEXT["sandbox"]).pressed.connect(_switch_scene.bind("res://scenes/sandbox.tscn"))
-		_button(panel, "ArenaButton", TEXT["arena"]).pressed.connect(_switch_scene.bind("res://scenes/arena.tscn"))
+		_button(panel, "SandboxButton", tr(TEXT["sandbox"])).pressed.connect(_switch_scene.bind("res://scenes/sandbox.tscn"))
+		_button(panel, "ArenaButton", tr(TEXT["arena"])).pressed.connect(_switch_scene.bind("res://scenes/arena.tscn"))
 	new_run.grab_focus()
 	_debug_shot_entry()
 

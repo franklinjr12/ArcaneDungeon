@@ -1,6 +1,7 @@
 extends RefCounted
 ## TASK-039: serialized run progression, never runtime entities, queues or enemies.
 const VERSION := 1
+const Difficulty = preload("res://game/core/difficulty.gd")
 var seed := 0
 var sequence_index := 0
 var hp := 150.0
@@ -18,8 +19,8 @@ var quick_edit_count := 0
 func initialize(run_seed: int, config: Dictionary, formulas_by_id: Dictionary) -> void:
 	seed = run_seed
 	sequence_index = 0
-	hp = 150.0
-	mana = 120.0
+	hp = Difficulty.scale_f(150.0,"player_hp")
+	mana = Difficulty.scale_f(120.0,"player_mana")
 	max_hp = hp
 	currency = int(config["initial_currency"])
 	unlocked = config["initial_unlocked"].duplicate(true)
@@ -59,7 +60,7 @@ func restore(data: Variant, registry, max_rooms: int) -> Dictionary:
 	for key in ["currency","edit_count","quick_edit_count"]:
 		if not _whole_number(data[key]):
 			return {"ok":false,"reason":"RUN_INTEGER_INVALID_"+key}
-	if float(data["max_hp"]) < 1.0 or float(data["hp"]) > float(data["max_hp"]) or float(data["mana"]) > 120.0:
+	if float(data["max_hp"]) < 1.0 or float(data["hp"]) > float(data["max_hp"]) or float(data["mana"]) > Difficulty.scale_f(120.0,"player_mana"):
 		return {"ok":false,"reason":"RUN_RESOURCES_INVALID"}
 	var ids: Array = registry.get_ids()
 	for rune in data["unlocked"]:

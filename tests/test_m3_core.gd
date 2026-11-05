@@ -51,7 +51,7 @@ func run(t) -> void:
 	for card in reward_a:
 		t.equal(card["kind"],"rune","AD-017 card is a rune while unowned runes remain")
 		t.check(card["id"] not in f.run.unlocked and card["id"] not in ids,"AD-017 card unowned and distinct")
-		t.check(str(card["behaviour"]) != "" and str(card["name"]) != "","AD-017 card states name and behaviour")
+		t.check(str(card["behaviour_key"]) != "" and str(card["name_key"]) != "","AD-017 card states name and behaviour")
 		ids.append(card["id"])
 	t.equal(reward_a.size(),3,"AD-017 three distinct rune cards, no currency")
 	var builtin_ids: Array = f.session.sim.registry.get_builtin_ids()

@@ -1,5 +1,6 @@
 extends RefCounted
 ## M1 deterministic sandbox simulation (TASK-011–025). Only data-driven generic spells.
+const Difficulty = preload("res://game/core/difficulty.gd")
 const Clock = preload("res://game/core/simulation_clock.gd")
 const Registry = preload("res://magic/data/rune_registry.gd")
 const Limits = preload("res://magic/runtime/spell_limits.gd")
@@ -12,6 +13,8 @@ const HitPayload = preload("res://combat/hit_payload.gd")
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 const Burst = preload("res://magic/runtime/burst_effect.gd")
 const Orb = preload("res://magic/runtime/orb_effect.gd")
+const Beam = preload("res://magic/runtime/beam_effect.gd")
+const Field = preload("res://magic/runtime/field_effect.gd")
 const Compiler = preload("res://magic/compile/spell_compiler.gd")
 const Loadout = preload("res://magic/runtime/spell_loadout.gd")
 const CONFIG := "res://magic/data/magic_balance_v1.json"
@@ -34,6 +37,7 @@ var visuals: Array = []
 var recent_damage: Array = []
 var _deferred_burst_cleanup: Array = []
 var _contexts: Dictionary = {}
+var _chain_seen: Dictionary = {}
 var last_rejection := ""
 var total_hit_count := 0
 var run_seed_value := 12345
@@ -49,6 +53,8 @@ func _init(run_seed: int = 12345, record_trace: bool = true) -> void:
 		printerr("Invalid M1 balance configuration")
 		return
 	settings = parsed
+	if Difficulty.mult("player_mana") != 1.0:
+		settings["combat"]["player_max_mana"] = Difficulty.scale_f(float(settings["combat"]["player_max_mana"]),"player_mana")
 	registry = Registry.new()
 	if not registry.load_seed()["ok"]:
 		printerr("Could not load rune registry")
@@ -82,6 +88,7 @@ func reset(run_seed: int = -1) -> void:
 	recent_damage.clear()
 	_deferred_burst_cleanup.clear()
 	_contexts.clear()
+	_chain_seen.clear()
 	collision_walls.clear()
 	last_rejection = ""
 	total_hit_count = 0
@@ -120,7 +127,7 @@ func equip_starter_loadout(presets: Array) -> Dictionary:
 			return cleared
 	return {"ok":true}
 
-func try_cast(slot: int, origin: Vector2, direction: Vector2) -> Dictionary:
+func try_cast(slot: int, origin: Vector2, direction: Vector2, target_point = null) -> Dictionary:
 	var cast_id: int = clock.next_id("cast")
 	var formula_id := ""
 	if slot >= 0 and slot < loadout.slots.size():
@@ -143,9 +150,15 @@ func try_cast(slot: int, origin: Vector2, direction: Vector2) -> Dictionary:
 	var kind := str(plan["root"]["manifestation"]["id"])
 	if kind == "form.orb" and _active_orb_count() >= limits.get_limit("max_active_orbs"):
 		return _reject(ctx,"ORB_BUDGET_EXCEEDED")
+	if kind == "form.beam" and _active_count("beam") >= limits.get_limit("max_active_beams"):
+		return _reject(ctx,"BEAM_BUDGET_EXCEEDED")
+	if kind == "form.field" and _active_count("field") >= limits.get_limit("max_active_fields"):
+		return _reject(ctx,"FIELD_BUDGET_EXCEEDED")
 	var duration := 1
-	if kind == "form.projectile" or kind == "form.orb":
+	if kind == "form.projectile" or kind == "form.orb" or kind == "form.beam":
 		duration = int(plan["root"]["params"]["lifetime_ticks"])
+	elif kind == "form.field":
+		duration = int(plan["root"]["params"]["field_duration_ticks"])
 	if not queue.reserve_effect(cast_id,duration,cast_id,formula_id):
 		return _reject(ctx,"EFFECT_BUDGET_EXCEEDED")
 	mana = maxf(0.0,mana-float(plan["mana_cost"]))
@@ -153,7 +166,7 @@ func try_cast(slot: int, origin: Vector2, direction: Vector2) -> Dictionary:
 	trace.record("cost_paid",{"cast_id":cast_id,"root_cast_id":cast_id,"formula_id":formula_id,"amount":int(plan["mana_cost"]),"tick":clock.tick})
 	var base := {"cast_id":cast_id,"root_cast_id":cast_id,"caster_id":actor.id,"team":actor.team,
 		"formula_id":formula_id,"parent_effect_id":0,"depth":0}
-	_spawn_root(plan,origin,direction.normalized(),base)
+	_spawn_root(plan,origin,direction.normalized(),base,target_point)
 	return {"accepted":true,"reason":"CAST","cast_id":cast_id}
 
 func _reject(ctx: Dictionary, reason: String) -> Dictionary:
@@ -168,7 +181,7 @@ func _reject(ctx: Dictionary, reason: String) -> Dictionary:
 		trace.record("cast_rejected",rejected)
 	return {"accepted":false,"reason":reason,"cast_id":int(ctx["cast_id"])}
 
-func _spawn_root(plan: Dictionary, origin: Vector2, aim: Vector2, context: Dictionary) -> void:
+func _spawn_root(plan: Dictionary, origin: Vector2, aim: Vector2, context: Dictionary, target_point = null) -> void:
 	var root: Dictionary = plan["root"]
 	var ids: Array = _modifier_ids(root)
 	var kind := str(root["manifestation"]["id"])
@@ -188,21 +201,63 @@ func _spawn_root(plan: Dictionary, origin: Vector2, aim: Vector2, context: Dicti
 			spec["on_hit"] = plan["on_hit"]
 			spec["max_targets"] = int(root["params"].get("max_targets",1)) if "mod.pierce" in ids else 1
 			var projectile = Projectile.new(spec)
-			active.append({"kind":"projectile","effect":projectile,"context":context.duplicate(true)})
+			active.append(_entry("projectile",projectile,context,plan["on_hit"]))
 			_trace_spawn(context,int(spec["effect_id"]),origin)
 	elif kind == "form.burst":
-		_spawn_burst(root,origin,context,true)
+		_spawn_burst(root,origin,context,true,plan["on_hit"])
 	elif kind == "form.orb":
 		var spec: Dictionary = context.duplicate()
 		spec["effect_id"] = clock.next_id("effect")
 		spec["root"] = root
 		var orb = Orb.new(spec)
-		active.append({"kind":"orb","effect":orb,"context":context.duplicate(true)})
+		active.append(_entry("orb",orb,context,plan["on_hit"]))
 		_trace_spawn(context,orb.id,origin)
+	elif kind == "form.beam":
+		var spec: Dictionary = context.duplicate()
+		spec["effect_id"] = clock.next_id("effect")
+		spec["root"] = root
+		spec["position"] = origin
+		spec["direction"] = aim
+		var beam = Beam.new(spec)
+		active.append(_entry("beam",beam,context,plan["on_hit"]))
+		_trace_spawn(context,beam.id,origin)
+	elif kind == "form.field":
+		var spec: Dictionary = context.duplicate()
+		spec["effect_id"] = clock.next_id("effect")
+		spec["root"] = root
+		spec["position"] = _field_center(root["params"],origin,aim,target_point)
+		var field = Field.new(spec)
+		active.append(_entry("field",field,context,plan["on_hit"]))
+		_trace_spawn(context,field.id,field.position)
 	else:
 		queue.release_effect()
 
-func _spawn_burst(effect_plan: Dictionary, origin: Vector2, context: Dictionary, already_reserved: bool = false) -> bool:
+## Root effect record; the trigger plan rides along so On Kill / On Expire / Timer need no lookup later.
+func _entry(kind: String, effect, context: Dictionary, trigger: Dictionary) -> Dictionary:
+	var entry := {"kind":kind,"effect":effect,"context":context.duplicate(true),"trigger":trigger}
+	if _trigger_id(trigger) == "trigger.timer":
+		entry["timer_next"] = clock.tick+int(trigger["trigger_params"]["interval_ticks"])
+	return entry
+
+static func _trigger_id(trigger: Dictionary) -> String:
+	return str(trigger["trigger"]["id"]) if not trigger.is_empty() else ""
+
+## Field centre: target point (or aim * range) limited to cast_range, then stopped at the first wall and kept inside bounds.
+func _field_center(params: Dictionary, origin: Vector2, aim: Vector2, target_point) -> Vector2:
+	var reach := float(params["cast_range"])
+	var offset: Vector2 = aim*reach
+	if typeof(target_point) == TYPE_VECTOR2:
+		offset = target_point-origin
+		if offset.length() > reach:
+			offset = offset.normalized()*reach
+	var center := origin+offset
+	var along := 1.0
+	for wall in collision_walls:
+		along = minf(along,Projectile.segment_wall_time(origin,center,wall,0.0))
+	center = origin.lerp(center,along)
+	return Vector2(clampf(center.x,bounds.position.x,bounds.end.x),clampf(center.y,bounds.position.y,bounds.end.y))
+
+func _spawn_burst(effect_plan: Dictionary, origin: Vector2, context: Dictionary, already_reserved: bool = false, attached_trigger: Dictionary = {}) -> bool:
 	if not already_reserved and not queue.reserve_effect(int(context["root_cast_id"]),1,
 			int(context["cast_id"]),str(context["formula_id"])):
 		return false
@@ -211,7 +266,7 @@ func _spawn_burst(effect_plan: Dictionary, origin: Vector2, context: Dictionary,
 	var radius: float = float(effect_plan["params"]["burst_radius"])
 	visuals.append({"kind":"burst","position":origin,"radius":radius,"essence":str(effect_plan["essence"]["id"]),"until":clock.tick+int(settings["sandbox"]["visual_ticks"])})
 	for hit in Burst.contacts(origin,radius,int(context["team"]),targets):
-		_queue_hit(effect_plan,int(hit["target_id"]),hit["position"],context,effect_id,{})
+		_queue_hit(effect_plan,int(hit["target_id"]),hit["position"],context,effect_id,attached_trigger if _trigger_id(attached_trigger) == "trigger.on_kill" else {})
 	# Hold the effect reservation until queued contacts finish resolving.
 	# Releasing here would let same-tick trigger bursts bypass global active limits.
 	_deferred_burst_cleanup.append({"effect_id":effect_id,"context":context.duplicate(true)})
@@ -222,14 +277,18 @@ func _trace_spawn(ctx: Dictionary, effect_id: int, at: Vector2) -> void:
 		"formula_id":ctx["formula_id"],"parent_effect_id":ctx["parent_effect_id"],
 		"effect_id":effect_id,"depth":ctx["depth"],"position":at,"tick":clock.tick})
 
-func _queue_hit(root: Dictionary, target_id: int, location: Vector2, ctx: Dictionary, effect_id: int, attached_trigger: Dictionary) -> void:
+func _queue_hit(root: Dictionary, target_id: int, location: Vector2, ctx: Dictionary, effect_id: int, attached_trigger: Dictionary, chained: bool = false) -> void:
 	var fields: Dictionary = {"type":"hit","cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
 		"formula_id":ctx["formula_id"],"parent_effect_id":effect_id,"source_id":ctx["caster_id"],
 		"target_id":target_id,"position":location,"depth":ctx["depth"]}
 	var pushed: Dictionary = queue.push(fields)
 	if pushed["accepted"]:
 		_contexts[int(pushed["event"]["event_id"])] = {"plan":root.duplicate(true),"context":ctx.duplicate(true),
-			"on_hit":attached_trigger.duplicate(true),"effect_id":effect_id,"location":location}
+			"on_hit":attached_trigger.duplicate(true),"effect_id":effect_id,"location":location,"chained":chained}
+		if not chained and "mod.chain" in _modifier_ids(root):
+			var seen: Dictionary = _chain_seen.get(int(ctx["root_cast_id"]),{})
+			seen[target_id] = true
+			_chain_seen[int(ctx["root_cast_id"])] = seen
 
 func step() -> void:
 	if clock.paused:
@@ -241,6 +300,7 @@ func advance_one_tick() -> void:
 	loadout.cooldown_tick()
 	mana = minf(float(settings["combat"]["player_max_mana"]),mana+float(settings["combat"]["regen_mana_per_tick"]))
 	targets.advance_movers(1.0/float(clock.tick_rate),bounds)
+	_advance_knockback()
 	# Every source effect is moved once; callback work stays queued until the movement pass is complete.
 	for entry in active.duplicate():
 		var effect = entry["effect"]
@@ -252,14 +312,38 @@ func advance_one_tick() -> void:
 		elif entry["kind"] == "orb":
 			hits = effect.advance(1.0/float(clock.tick_rate),clock.tick,actor,targets,
 				limits.get_limit("min_rehit_delay_ticks"))
+		elif entry["kind"] == "beam":
+			var pulse: Dictionary = effect.advance(clock.tick,actor,targets,bounds,collision_walls,
+				limits.get_limit("max_targets_per_pulse"))
+			hits = _charge_pulse(entry,pulse)
+			visuals.append({"kind":"beam","from":actor.position,"to":effect.end_point,
+				"essence":str(effect.root["essence"]["id"]),"until":clock.tick+1})
+		elif entry["kind"] == "field":
+			hits = _charge_pulse(entry,effect.advance(clock.tick,targets,limits.get_limit("max_targets_per_pulse")))
+			if not effect.expired:
+				visuals.append({"kind":"field","position":effect.position,"radius":effect.radius,
+					"essence":str(effect.root["essence"]["id"]),"until":clock.tick+1})
+		var trigger_id := _trigger_id(entry["trigger"])
+		var hit_trigger: Dictionary = {}
+		if trigger_id == "trigger.on_kill":
+			hit_trigger = entry["trigger"]
+		elif trigger_id == "trigger.on_hit" and entry["kind"] == "projectile":
+			hit_trigger = effect.on_hit
 		for hit in hits:
-			_queue_hit(effect.root,int(hit["target_id"]),hit["position"],entry["context"],effect.id,
-				effect.on_hit if entry["kind"] == "projectile" else {})
+			_queue_hit(effect.root,int(hit["target_id"]),hit["position"],entry["context"],effect.id,hit_trigger)
+		if not effect.expired and trigger_id == "trigger.timer" and clock.tick >= int(entry["timer_next"]):
+			_fire_trigger(entry["trigger"],entry["context"],effect.id,0,_trigger_location(entry))
+			entry["timer_next"] = int(entry["timer_next"])+int(entry["trigger"]["trigger_params"]["interval_ticks"])
 		if effect.expired:
 			active.erase(entry)
 			queue.release_effect()
-			trace.record("cleanup",{"cast_id":entry["context"]["cast_id"],"root_cast_id":entry["context"]["root_cast_id"],
-				"formula_id":entry["context"]["formula_id"],"effect_id":effect.id,"tick":clock.tick})
+			if trigger_id == "trigger.on_expire":
+				_fire_trigger(entry["trigger"],entry["context"],effect.id,0,_trigger_location(entry))
+			var cleaned := {"cast_id":entry["context"]["cast_id"],"root_cast_id":entry["context"]["root_cast_id"],
+				"formula_id":entry["context"]["formula_id"],"effect_id":effect.id,"tick":clock.tick}
+			if entry["kind"] == "beam":
+				cleaned["reason"] = effect.end_reason
+			trace.record("cleanup",cleaned)
 	# Damage/status from earlier hit events resolve ahead of periodic damage at the same tick.
 	queue.drain(_process_event,1024)
 	# Cleanup traces follow damage/trigger/reaction resolution, not precede it.
@@ -270,10 +354,56 @@ func advance_one_tick() -> void:
 				"formula_id":ctx["formula_id"],"effect_id":pending["effect_id"],"tick":clock.tick})
 			queue.release_effect()
 		_deferred_burst_cleanup.clear()
+	_prune_chain_seen()
 	_tick_statuses()
 	visuals = visuals.filter(func(v): return int(v["until"]) > clock.tick)
 	var min_tick: int = clock.tick-int(settings["sandbox"]["dps_window_ticks"])
 	recent_damage = recent_damage.filter(func(v): return int(v["tick"]) >= min_tick)
+
+## Where an On Expire / Timer payload lands: beams end at their end point, everything else at its position.
+func _trigger_location(entry: Dictionary) -> Vector2:
+	return entry["effect"].end_point if entry["kind"] == "beam" else entry["effect"].position
+
+func _prune_chain_seen() -> void:
+	for root_id in _chain_seen.keys():
+		var live := false
+		for entry in active:
+			live = live or int(entry["context"]["root_cast_id"]) == root_id
+		for pending in _deferred_burst_cleanup:
+			live = live or int(pending["context"]["root_cast_id"]) == root_id
+		if not live and queue.pending_count() == 0:
+			_chain_seen.erase(root_id)
+
+## Beams pay mana_per_tick on each pulse (no mana ends the beam without hits); both forms report cap truncation once.
+func _charge_pulse(entry: Dictionary, pulse: Dictionary) -> Array:
+	if not pulse["pulse"]:
+		return []
+	var effect = entry["effect"]
+	if entry["kind"] == "beam":
+		var cost := float(effect.root["params"]["mana_per_tick"])
+		if mana + 0.00001 < cost:
+			effect.expire("no_mana")
+			return []
+		mana = maxf(0.0,mana-cost)
+		trace.record("cost_paid",{"cast_id":entry["context"]["cast_id"],"root_cast_id":entry["context"]["root_cast_id"],
+			"formula_id":entry["context"]["formula_id"],"amount":roundi(cost),"tick":clock.tick})
+	if pulse["truncated"]:
+		queue.note_budget_exceeded(entry["context"],"targets_per_pulse","max_targets_per_pulse")
+	return pulse["hits"]
+
+## Hold-to-channel hooks (mage "channel" animation tag, AD-121, keys off is_channelling()).
+func stop_channel() -> void:
+	for entry in active:
+		if entry["kind"] == "beam":
+			entry["effect"].expire("released")
+
+func set_channel_aim(direction: Vector2) -> void:
+	for entry in active:
+		if entry["kind"] == "beam":
+			entry["effect"].set_aim(direction)
+
+func is_channelling() -> bool:
+	return _active_count("beam") > 0
 
 func _process_event(event: Dictionary) -> void:
 	var id: int = int(event["event_id"])
@@ -296,19 +426,28 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 		return
 	var effect_plan: Dictionary = detail["plan"]
 	var ctx: Dictionary = detail["context"]
+	var push: Vector2 = target.position-Vector2(detail["location"])
+	if push.is_zero_approx():
+		push = target.position-actor.position
+	if push.is_zero_approx():
+		push = Vector2.RIGHT
+	push = push.normalized()
 	var payload: Dictionary = {
 		"essence_id":str(effect_plan["essence"]["id"]),
 		"damage":float(effect_plan["params"]["base_damage"]),
 		"team":int(ctx["team"]),"caster_id":int(ctx["caster_id"]),
 		"cast_id":int(ctx["cast_id"]),"root_cast_id":int(ctx["root_cast_id"]),
 		"formula_id":str(ctx["formula_id"]),
-		"knockback":{"force":0.0,"direction":Vector2.ZERO}}
+		"knockback":{"force":0.0,"direction":push}}
 	var hit = HitPayload.new(payload,settings["channels"])
+	var was_alive: bool = target.alive()
 	var result: Dictionary = resolver.resolve(hit,target,targets,clock.tick)
 	if not result["accepted"]:
 		return
 	total_hit_count += 1
 	_track_damage(float(result["damage"]))
+	if result.has("knockback"):
+		target.impulse += push*float(result["knockback"]["force"])
 	trace.record("hit",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
 		"formula_id":ctx["formula_id"],"effect_id":detail["effect_id"],
 		"target_id":target.id,"amount":roundi(float(result["damage"])),"tick":clock.tick})
@@ -316,6 +455,19 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 	for state_change in result["status_events"]:
 		trace.record("status",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],"formula_id":ctx["formula_id"],
 			"target_id":target.id,"reason":state_change["state"]+":"+state_change["action"],"tick":clock.tick})
+	for entry in result["reactions"]:
+		var bonus := float(entry["bonus_damage"])
+		if bonus > 0.0:
+			_track_damage(bonus)
+			total_hit_count += 1
+		trace.record("reaction",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
+			"formula_id":ctx["formula_id"],"source_id":target.id,"target_id":target.id,
+			"reason":str(entry["id"]),"amount":roundi(bonus),"tick":clock.tick})
+		for affected_id in entry["affected_ids"]:
+			if int(affected_id) != target.id:
+				trace.record("status",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],"formula_id":ctx["formula_id"],
+					"target_id":int(affected_id),"reason":"blinded:applied","tick":clock.tick})
+		visuals.append({"kind":"reaction","reaction":str(entry["id"]),"position":target.position,"until":clock.tick+17})
 	if not result["reaction"].is_empty() and queue.chain_targets_allowed(1,ctx):
 		var react_ctx := {"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
 			"formula_id":ctx["formula_id"],"parent_effect_id":detail["effect_id"],
@@ -323,19 +475,66 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 		var item = queue.push(react_ctx.merged({"type":"reaction"}))
 		if item["accepted"]:
 			_contexts[int(item["event"]["event_id"])] = {"arc":result["reaction"],"context":ctx.duplicate(true)}
-	if not detail["on_hit"].is_empty():
-		var child: Dictionary = ctx.duplicate()
-		child["parent_effect_id"] = detail["effect_id"]
-		child["depth"] = int(ctx["depth"])+1
-		var spawned = queue.push({"type":"trigger","cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
-			"formula_id":ctx["formula_id"],"source_id":ctx["caster_id"],"target_id":target.id,
-			"parent_effect_id":detail["effect_id"],"depth":child["depth"],"position":detail["location"]})
-		if spawned["accepted"]:
-			trace.record("trigger",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
-				"formula_id":ctx["formula_id"],"parent_effect_id":detail["effect_id"],"depth":child["depth"],"tick":clock.tick})
-			_contexts[int(spawned["event"]["event_id"])] = {
-				"effect":detail["on_hit"]["effect"].duplicate(true),"location":detail["location"],"context":child}
-	
+	if not bool(detail.get("chained",false)) and "mod.chain" in _modifier_ids(effect_plan):
+		_chain_from(target,effect_plan,ctx,detail)
+	# Only depth-0 (root) contexts fire triggers, so payload Bursts can never recurse.
+	var trigger: Dictionary = detail["on_hit"]
+	if trigger.is_empty() or int(ctx["depth"]) != 0:
+		return
+	var trigger_id := _trigger_id(trigger)
+	if trigger_id == "trigger.on_hit":
+		_fire_trigger(trigger,ctx,int(detail["effect_id"]),target.id,detail["location"])
+	# PROPOSED limits: kills from Burning DOT, lightning arcs and chain jumps do not fire On Kill.
+	elif trigger_id == "trigger.on_kill" and was_alive and not target.alive() and not bool(detail.get("chained",false)):
+		_fire_trigger(trigger,ctx,int(detail["effect_id"]),target.id,target.position)
+
+## Enqueues one trigger payload through the bounded queue (depth and per-root event budgets live there).
+func _fire_trigger(trigger_plan: Dictionary, ctx: Dictionary, parent_effect_id: int, target_id: int, location: Vector2) -> bool:
+	var child: Dictionary = ctx.duplicate()
+	child["parent_effect_id"] = parent_effect_id
+	child["depth"] = int(ctx["depth"])+1
+	var spawned = queue.push({"type":"trigger","cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
+		"formula_id":ctx["formula_id"],"source_id":ctx["caster_id"],"target_id":target_id,
+		"parent_effect_id":parent_effect_id,"depth":child["depth"],"position":location})
+	if not spawned["accepted"]:
+		return false
+	var record := {"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
+		"formula_id":ctx["formula_id"],"parent_effect_id":parent_effect_id,"depth":child["depth"],"tick":clock.tick}
+	var trigger_id := _trigger_id(trigger_plan)
+	if trigger_id != "trigger.on_hit":
+		record["reason"] = trigger_id
+		if trigger_id == "trigger.on_kill":
+			record["target_id"] = target_id
+	trace.record("trigger",record)
+	_contexts[int(spawned["event"]["event_id"])] = {
+		"effect":trigger_plan["effect"].duplicate(true),"location":location,"context":child}
+	return true
+
+## Chain: up to chain_count jumps to the nearest unseen eligible target (ties by id); a target is a chain target once per root cast.
+func _chain_from(origin_target, effect_plan: Dictionary, ctx: Dictionary, detail: Dictionary) -> void:
+	var params: Dictionary = effect_plan["params"]
+	var seen: Dictionary = _chain_seen.get(int(ctx["root_cast_id"]),{})
+	_chain_seen[int(ctx["root_cast_id"])] = seen
+	var from = origin_target
+	for jump in int(params["chain_count"]):
+		var pick = null
+		var best := INF
+		for candidate in targets.all():
+			if not candidate.eligible(int(ctx["team"])) or not candidate.alive() or seen.has(candidate.id):
+				continue
+			var distance: float = from.position.distance_to(candidate.position)
+			if distance <= float(params["chain_radius"]) and distance < best:
+				best = distance
+				pick = candidate
+		if pick == null or not queue.chain_targets_allowed(jump+1,ctx):
+			return
+		seen[pick.id] = true
+		trace.record("chain",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],"formula_id":ctx["formula_id"],
+			"effect_id":detail["effect_id"],"source_id":from.id,"target_id":pick.id,"tick":clock.tick})
+		visuals.append({"kind":"arc","from":from.position,"to":pick.position,"until":clock.tick+17})
+		_queue_hit(effect_plan,pick.id,pick.position,ctx,int(detail["effect_id"]),{},true)
+		from = pick
+
 func _react(event: Dictionary, detail: Dictionary) -> void:
 	if detail.is_empty():
 		return
@@ -354,9 +553,39 @@ func _react(event: Dictionary, detail: Dictionary) -> void:
 		"reason":"wet_lightning_arc","amount":roundi(dealt),"tick":clock.tick})
 	visuals.append({"kind":"arc","from":source.position,"to":selected.position,"until":clock.tick+17})
 
+## Deterministic knockback: id-ordered, wall/bounds-safe, fixed-tick decay (all rates from data).
+func _advance_knockback() -> void:
+	var dt := 1.0/float(clock.tick_rate)
+	var decay := float(settings["combat"]["knockback_decay_per_tick"])
+	var min_speed := float(settings["combat"]["knockback_min_speed"])
+	for t in targets.all():
+		if t.impulse.is_zero_approx():
+			continue
+		if not t.alive():
+			t.impulse = Vector2.ZERO
+			continue
+		var next: Vector2 = t.position+t.impulse*dt
+		next.x = clampf(next.x,bounds.position.x+t.radius,bounds.end.x-t.radius)
+		next.y = clampf(next.y,bounds.position.y+t.radius,bounds.end.y-t.radius)
+		var blocked := false
+		for wall in collision_walls:
+			if _circle_hits_rect(next,t.radius,wall):
+				blocked = true
+				break
+		if not blocked:
+			t.position = next
+		t.impulse *= decay
+		if t.impulse.length() < min_speed:
+			t.impulse = Vector2.ZERO
+
+static func _circle_hits_rect(center: Vector2, radius: float, rect: Rect2) -> bool:
+	var closest := Vector2(clampf(center.x,rect.position.x,rect.end.x),clampf(center.y,rect.position.y,rect.end.y))
+	return closest.distance_squared_to(center) < radius*radius
+
 func _tick_statuses() -> void:
 	for t in targets.all():
 		if not t.alive():
+			t.impulse = Vector2.ZERO
 			t.status.clear()
 			continue
 		for due in t.status.tick(clock.tick,settings["statuses"]):
@@ -387,9 +616,12 @@ func _modifier_ids(plan: Dictionary) -> Array:
 	return result
 
 func _active_orb_count() -> int:
+	return _active_count("orb")
+
+func _active_count(kind: String) -> int:
 	var count := 0
-	for effect in active:
-		if effect["kind"] == "orb":
+	for entry in active:
+		if entry["kind"] == kind and not entry["effect"].expired:
 			count += 1
 	return count
 

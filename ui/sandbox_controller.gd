@@ -53,16 +53,16 @@ func _build() -> void:
 	side.add_child(col)
 	# Navigation smoke test expects the first Button to be Back.
 	var home := Button.new()
-	home.text = "Back to Menu"
+	home.text = tr("combat.back_to_menu")
 	home.custom_minimum_size.y = 28
 	col.add_child(home)
 	home.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/main.tscn"))
 	var title := Label.new()
-	title.text = "MAGIC SANDBOX  /  M1"
+	title.text = tr("sandbox.header")
 	title.add_theme_font_size_override("font_size",20)
 	col.add_child(title)
 	var hint := Label.new()
-	hint.text = "LMB/RMB cast • WASD debug move"
+	hint.text = tr("sandbox.hint")
 	hint.add_theme_font_size_override("font_size",11)
 	col.add_child(hint)
 	slot_label = Label.new()
@@ -71,12 +71,12 @@ func _build() -> void:
 	col.add_child(buttons)
 	for i in 2:
 		var btn := Button.new()
-		btn.text = "Equip to slot "+str(i+1)
+		btn.text = tr("sandbox.equip_slot") % (i+1)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.pressed.connect(_select_slot.bind(i))
 		buttons.add_child(btn)
 	var caption := Label.new()
-	caption.text = "Select formula for highlighted slot"
+	caption.text = tr("sandbox.select_formula")
 	col.add_child(caption)
 	for index in samples.size():
 		var btn := Button.new()
@@ -88,7 +88,7 @@ func _build() -> void:
 	var grid := GridContainer.new()
 	grid.columns = 3
 	col.add_child(grid)
-	for entry in [["Reset","reset"],["Mana","mana"],["Pause","pause"],["Step","step"],["Dummy","dummy"],["Moving","moving"],["Stress","stress"],["Profile","profile"],["Export","export"],["Seed+","seed"]]:
+	for entry in [[tr("sandbox.btn.reset"),"reset"],[tr("sandbox.btn.mana"),"mana"],[tr("sandbox.btn.pause"),"pause"],[tr("sandbox.btn.step"),"step"],[tr("sandbox.btn.dummy"),"dummy"],[tr("sandbox.btn.moving"),"moving"],[tr("sandbox.btn.stress"),"stress"],[tr("sandbox.btn.profile"),"profile"],[tr("sandbox.btn.export"),"export"],[tr("sandbox.btn.seed"),"seed"]]:
 		var b := Button.new()
 		b.text = entry[0]
 		b.custom_minimum_size = Vector2(87,28)
@@ -121,7 +121,7 @@ func _select_slot(index: int) -> void:
 
 func _equip_sample(index: int) -> void:
 	var result: Dictionary = sim.equip(slot,samples[index])
-	last_notice = "Equipped "+str(samples[index]["display_name"]) if result["ok"] else str(result["reason"])
+	last_notice = tr("sandbox.equipped") % str(samples[index]["display_name"]) if result["ok"] else str(result["reason"])
 	_refresh()
 
 func _cast_or_inspect(point: Vector2, button: int) -> void:
@@ -142,7 +142,7 @@ func _cast_or_inspect(point: Vector2, button: int) -> void:
 	if direction.is_zero_approx():
 		direction = Vector2.RIGHT
 	var result: Dictionary = sim.try_cast(source_slot,origin,direction)
-	last_notice = "Cast "+str(result["cast_id"]) if result["accepted"] else str(result["reason"])
+	last_notice = tr("sandbox.cast") % str(result["cast_id"]) if result["accepted"] else str(result["reason"])
 	_refresh()
 
 func _command(command: String) -> void:
@@ -154,38 +154,38 @@ func _command(command: String) -> void:
 			sim.equip(1,samples[1])
 			inspected_id = -1
 			surface.selected_id = -1
-			last_notice = "Reset reproducibly with seed "+str(run_seed_value)
+			last_notice = tr("sandbox.reset_seed") % str(run_seed_value)
 		"mana":
 			sim.mana = float(sim.settings["combat"]["player_max_mana"])
-			last_notice = "Mana reset"
+			last_notice = tr("sandbox.notice.mana_reset")
 		"pause":
 			sim.clock.set_paused(not sim.clock.paused)
-			last_notice = "Paused" if sim.clock.paused else "Resumed"
+			last_notice = tr("sandbox.notice.paused") if sim.clock.paused else tr("sandbox.notice.resumed")
 		"step":
 			sim.advance_one_tick()
-			last_notice = "One simulation tick"
+			last_notice = tr("sandbox.notice.step")
 		"dummy":
 			sim.add_target(surface.hover)
-			last_notice = "Stationary dummy spawned"
+			last_notice = tr("sandbox.notice.dummy")
 		"moving":
 			sim.add_target(surface.hover,Vector2(80,35))
-			last_notice = "Moving dummy spawned"
+			last_notice = tr("sandbox.notice.moving")
 		"stress":
 			var data: Dictionary = sim.stress()
-			last_notice = "Stress: %d / 10000 effects, cap %d" % [data["accepted"],data["cap"]]
+			last_notice = tr("sandbox.notice.stress") % [data["accepted"],data["cap"]]
 		"profile":
 			var report: Dictionary = Profiler.benchmark(run_seed_value,180,40)
-			last_notice = "M4 40 targets: %.2f mean / %.2f p95 ms, hit %d, drop %d" % [
+			last_notice = tr("sandbox.notice.profile") % [
 				report["mean_tick_ms"],report["p95_tick_ms"],report["hit_records"],report["budget_drop_records"]]
 			print("M4_PROFILE:",JSON.stringify(report))
 		"export":
 			var result: Error = sim.trace.export_json("user://magic_sandbox_trace.json")
-			last_notice = "Trace exported to user://magic_sandbox_trace.json" if result == OK else "Trace export failed"
+			last_notice = tr("sandbox.notice.export_ok") if result == OK else tr("sandbox.notice.export_fail")
 		"seed":
 			run_seed_value += 1
-			last_notice = "Next reset seed "+str(run_seed_value)
+			last_notice = tr("sandbox.next_seed") % str(run_seed_value)
 	if pause_button != null:
-		pause_button.text = "Resume" if sim.clock.paused else "Pause"
+		pause_button.text = tr("sandbox.btn.resume") if sim.clock.paused else tr("sandbox.btn.pause")
 	_refresh()
 
 func _physics_process(_delta: float) -> void:
@@ -208,21 +208,21 @@ func _refresh() -> void:
 	if sim == null or stats == null:
 		return
 	var snapshot: Dictionary = sim.inspect()
-	slot_label.text = "Selected edit slot: "+str(slot+1)
+	slot_label.text = tr("sandbox.edit_slot") % (slot+1)
 	var one: Dictionary = sim.loadout.preview(0)
 	var two: Dictionary = sim.loadout.preview(1)
-	details.text = "1: %s / %d mana / CD %d / C%d\n2: %s / %d mana / CD %d / C%d" % [
+	details.text = tr("sandbox.details") % [
 		one.get("formula_id","empty"),one.get("mana",0),one.get("cooldown",0),one.get("complexity",0),
 		two.get("formula_id","empty"),two.get("mana",0),two.get("cooldown",0),two.get("complexity",0)]
-	stats.text = "tick %d / mana %.1f / active %d\nHits %d / DPS(3s) %.1f / seed %d\nM1 budgets: effects/cast %d; events %d\nactive %d/%d; depth %d; arcs %d" % [
+	stats.text = tr("sandbox.stats") % [
 		snapshot["tick"],snapshot["mana"],snapshot["active_effects"],snapshot["total_hits"],snapshot["dps"],snapshot["seed"],
 		sim.limits.get_limit("max_effects_per_cast"),sim.limits.get_limit("max_events_per_root_cast"),
 		snapshot["active_effects"],sim.limits.get_limit("max_active_effects"),
 		sim.limits.get_limit("max_event_depth"),sim.limits.get_limit("max_chain_targets")]
 	var observed = sim.targets.get_target(inspected_id)
-	inspection.text = "MMB inspect • "+last_notice
+	inspection.text = tr("sandbox.inspect_hint")+last_notice
 	if observed != null:
-		inspection.text = "#%d: HP %.0f, hits %d, states %s" % [
+		inspection.text = tr("sandbox.target_info") % [
 			observed.id,observed.health.current,observed.hit_count,
 			str(observed.status.snapshot(sim.clock.tick).keys())]
 	var records: Array = sim.trace.snapshot()

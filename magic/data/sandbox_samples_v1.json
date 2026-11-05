@@ -125,6 +125,196 @@
         ],
         "params": {}
       }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.cold_shot",
+      "display_name": "Cold Shot",
+      "root": {
+        "essence_id": "essence.cold",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.force_shot",
+      "display_name": "Force Shot",
+      "root": {
+        "essence_id": "essence.force",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.water_pierce_cold_trigger",
+      "display_name": "Piercing Water → Cold",
+      "root": {
+        "essence_id": "essence.water",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [
+          "mod.pierce"
+        ],
+        "params": {}
+      },
+      "on_hit": {
+        "trigger_id": "trigger.on_hit",
+        "payload": {
+          "essence_id": "essence.cold",
+          "manifestation_id": "form.burst",
+          "modifier_ids": [],
+          "params": {}
+        }
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.fire_beam",
+      "display_name": "Fire Beam",
+      "root": {
+        "essence_id": "essence.fire",
+        "manifestation_id": "form.beam",
+        "modifier_ids": [],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.lightning_beam",
+      "display_name": "Lightning Beam",
+      "root": {
+        "essence_id": "essence.lightning",
+        "manifestation_id": "form.beam",
+        "modifier_ids": [],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.cold_field",
+      "display_name": "Cold Field",
+      "root": {
+        "essence_id": "essence.cold",
+        "manifestation_id": "form.field",
+        "modifier_ids": [],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.chain_bolt",
+      "display_name": "Chain Bolt",
+      "root": {
+        "essence_id": "essence.lightning",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [
+          "mod.chain"
+        ],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.expand_burst",
+      "display_name": "Expand Burst",
+      "root": {
+        "essence_id": "essence.fire",
+        "manifestation_id": "form.burst",
+        "modifier_ids": [
+          "mod.expand"
+        ],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.rapid_beam",
+      "display_name": "Rapid Beam",
+      "root": {
+        "essence_id": "essence.water",
+        "manifestation_id": "form.beam",
+        "modifier_ids": [
+          "mod.rapid"
+        ],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.chain_field",
+      "display_name": "Chain Field",
+      "root": {
+        "essence_id": "essence.cold",
+        "manifestation_id": "form.field",
+        "modifier_ids": [
+          "mod.chain",
+          "mod.expand"
+        ],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.kill_burst",
+      "display_name": "Fire Kill → Lightning",
+      "root": {
+        "essence_id": "essence.fire",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [],
+        "params": {}
+      },
+      "on_hit": {
+        "trigger_id": "trigger.on_kill",
+        "payload": {
+          "essence_id": "essence.lightning",
+          "manifestation_id": "form.burst",
+          "modifier_ids": [],
+          "params": {}
+        }
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.expire_bolt",
+      "display_name": "Water Expire → Cold",
+      "root": {
+        "essence_id": "essence.water",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [],
+        "params": {}
+      },
+      "on_hit": {
+        "trigger_id": "trigger.on_expire",
+        "payload": {
+          "essence_id": "essence.cold",
+          "manifestation_id": "form.burst",
+          "modifier_ids": [],
+          "params": {}
+        }
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.timer_field",
+      "display_name": "Fire Field Timer → Force",
+      "root": {
+        "essence_id": "essence.fire",
+        "manifestation_id": "form.field",
+        "modifier_ids": [],
+        "params": {}
+      },
+      "on_hit": {
+        "trigger_id": "trigger.timer",
+        "payload": {
+          "essence_id": "essence.force",
+          "manifestation_id": "form.burst",
+          "modifier_ids": [],
+          "params": {}
+        }
+      }
     }
   ]
 }

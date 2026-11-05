@@ -11,9 +11,11 @@ const RewardCard = preload("res://art/export/ui/ad_ui_reward_card.png")
 const Prompts = preload("res://ui/onboarding_prompts.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
 const InputActions = preload("res://ui/input_actions.gd")
+var aim_source = InputActions.default_aim_source()
 const PauseMenu = preload("res://ui/pause_menu.gd")
 const MerchantScript = preload("res://world/merchant.gd")
 var flow
+var config_path: String = Flow.CONFIG_V2
 var guide = Prompts.new()
 var tip: Label
 var tip_panel: PanelContainer
@@ -32,6 +34,7 @@ var shop_list: VBoxContainer
 var shop_open := false
 var _shop_offered := false
 var shop_reopen_button: Button
+var desk_skip_button: Button
 var shop_close_button: Button
 var summary_panel: PanelContainer
 var dev_panel: PanelContainer
@@ -53,6 +56,7 @@ var editor_panel: PanelContainer
 var editor_dock: MarginContainer
 var editor_controls: VBoxContainer
 var editor_preview: Label
+var palette_tab := 0
 var transition_veil: ColorRect
 var current_notice := ""
 var summary_retry_button: Button
@@ -82,6 +86,7 @@ const WORKSHOP_PANEL_WIDTH := 360.0
 const TOP_BAR_HEIGHT := 44
 const NOTICE_MS := 5000
 const TEST_RANGE_SIZE := Vector2(916,650)
+const DESK_DOOR_RADIUS := 34.0
 const EDITOR_SIZE := Vector2(500,665)
 var _prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
 
@@ -89,7 +94,8 @@ func _ready() -> void:
 	VisualTheme.apply(self)
 	if show_dev_tools == null:
 		show_dev_tools = OS.is_debug_build()
-	flow = Flow.new()
+	flow = Flow.new(-1, config_path)
+	_begin_desk()
 	_director = get_node_or_null("/root/AudioDirector")
 	if _director != null:
 		flow.audio_sink = _director.play
@@ -219,7 +225,7 @@ func _build_workshop_panel(layout: HBoxContainer) -> void:
 	context = VBoxContainer.new()
 	context.add_theme_constant_override("separation",6)
 	workshop_column.add_child(context)
-	_heading(workshop_column,"Loadout")
+	_heading(workshop_column,tr("run.loadout"))
 	loadout_list = VBoxContainer.new()
 	loadout_list.add_theme_constant_override("separation",4)
 	workshop_column.add_child(loadout_list)
@@ -268,7 +274,7 @@ func _build_top_bar() -> void:
 	coins_label = Label.new()
 	coins_label.name = "Coins"
 	coin_row.add_child(coins_label)
-	pause_button = _button(bar,"Pause (Esc)",func(): open_pause())
+	pause_button = _button(bar,tr("run.btn.pause"),func(): open_pause())
 	pause_button.name = "PauseButton"
 	pause_button.focus_mode = Control.FOCUS_NONE # Space is the dash key; a focused button would also fire on it
 	pause_button.custom_minimum_size = Vector2(120,34)
@@ -330,8 +336,11 @@ func _build_dev_overlay() -> void:
 	dev_panel.add_child(box)
 	dev_label = Label.new()
 	box.add_child(dev_label)
-	_button(box,"Toggle edit policy (F2)",func(): _policy())
-	_button(box,"Export telemetry JSON + CSV",func(): _export_metrics())
+	_button(box,tr("run.btn.toggle_policy"),func(): _policy())
+	_button(box,tr("run.btn.export_telemetry"),func(): _export_metrics())
+	_button(box,tr("run.btn.dev_kill_all"),func(): _dev_kill_all())
+	_button(box,tr("run.btn.dev_skip_room"),func(): _dev_skip_room())
+	_button(box,tr("run.btn.dev_next_stage"),func(): _dev_next_stage())
 
 func dev_tools_enabled() -> bool:
 	return show_dev_tools == true and InputActions.debug_keys_enabled()
@@ -462,62 +471,72 @@ func _button(parent: Node, label: String, action: Callable, press_cue: String = 
 func _world_click(point: Vector2, button: int) -> void:
 	if is_paused() or editor_open or flow.state != "fighting":
 		return
+	var slot := InputActions.cast_slot_for_mouse_button(button)
+	if slot < 0:
+		return
 	cursor = point
-	cast_pending = InputActions.slot_for_mouse_button(button)
+	cast_pending = slot
 
 func _test_click(point: Vector2, button: int) -> void:
 	if is_paused() or editor_open or flow.state != "workshop":
 		return
-	_test_cast_slot(InputActions.slot_for_mouse_button(button),point)
+	var slot := InputActions.cast_slot_for_mouse_button(button)
+	if slot >= 0:
+		_test_cast_slot(slot,point)
 
 func _test_cast_slot(slot: int, point: Vector2) -> Dictionary:
 	var dir: Vector2 = (point-flow.range_sim.actor.position).normalized()
 	var result: Dictionary = flow.test_cast(slot,dir)
 	if bool(result.get("accepted",false)):
 		guide.note_test_cast()
-	current_notice = "Test cast slot %d: %s" % [slot+1,str(result.get("reason",""))]
+	current_notice = tr("run.notice.test_cast") % [slot+1,str(result.get("reason",""))]
 	_update_labels()
 	return result
 
 func _reset_test_range() -> void:
 	flow.enter_test_range()
 	test_canvas.runner = flow.range_sim
-	current_notice = "Safe test range reset"
+	current_notice = tr("run.notice.range_reset")
 	_update_labels()
 
 func _input(event: InputEvent) -> void:
 	if is_paused():
-		if event is InputEventKey:
-			if event.pressed and not event.echo and event.is_action_pressed("pause"):
-				pause_menu.handle_cancel()
-			get_viewport().set_input_as_handled()
+		if event.is_action_pressed("pause") and not event.is_echo():
+			pause_menu.handle_cancel()
+		get_viewport().set_input_as_handled()
 		return
 	if editor_open or not event.is_pressed() or event.is_echo():
 		return
 	var fighting: bool = flow.state == "fighting"
 	var slot := InputActions.cast_slot_for_event(event)
-	if slot >= 2 and fighting:
-		cursor = arena_canvas.world_from_local(arena_canvas.get_local_mouse_position())
+	if slot >= 0 and not event is InputEventMouseButton and fighting:
+		cursor = aim_source.world_point(arena_canvas,flow.session.sim.actor.position)
 		cast_pending = slot
-	elif slot >= 2 and flow.state == "workshop" and flow.range_sim != null:
-		_test_cast_slot(slot,test_canvas.get_local_mouse_position())
-	elif event is InputEventKey and event.keycode >= KEY_1 and event.keycode <= KEY_9 			and flow.state == "cleared" and not flow.reward_collected 			and event.keycode-KEY_1 < flow.reward_options.size():
-		_choose_reward(event.keycode-KEY_1)
+	elif slot >= 0 and not event is InputEventMouseButton and flow.state == "workshop" and flow.range_sim != null:
+		_test_cast_slot(slot,aim_source.world_point(test_canvas,flow.range_sim.actor.position))
+	elif _reward_index(event) >= 0 and flow.state == "cleared" and not flow.reward_collected \
+			and _reward_index(event) < flow.reward_options.size():
+		_choose_reward(_reward_index(event))
 	elif event.is_action_pressed("interact"):
 		_exit()
 	elif event.is_action_pressed("pause"):
 		open_pause()
-	elif event is InputEventKey:
-		match event.keycode:
-			KEY_R: _retry_same_seed()
-			KEY_T:
-				if flow.state == "workshop": _reset_test_range()
-			KEY_F2:
-				if dev_tools_enabled(): _policy()
-			KEY_F3:
-				if dev_tools_enabled(): toggle_dev_overlay()
-			KEY_F6:
-				if dev_tools_enabled(): Art.toggle_art_export(); arena_canvas.queue_redraw()
+	elif event.is_action_pressed("run_retry"):
+		_retry_same_seed()
+	elif event.is_action_pressed("reset_test_range"):
+		if flow.state == "workshop": _reset_test_range()
+	elif event.is_action_pressed("dev_policy"):
+		if dev_tools_enabled(): _policy()
+	elif event.is_action_pressed("dev_overlay"):
+		if dev_tools_enabled(): toggle_dev_overlay()
+	elif event.is_action_pressed("dev_art_export"):
+		if dev_tools_enabled(): Art.toggle_art_export(); arena_canvas.queue_redraw()
+
+func _reward_index(event: InputEvent) -> int:
+	for i in 9:
+		if event.is_action_pressed("choose_reward_%d" % (i+1)):
+			return i
+	return -1
 
 func _process(delta: float) -> void:
 	if delta > 0 and delta < 2.0:
@@ -536,7 +555,7 @@ func _physics_process(_delta: float) -> void:
 	if not editor_open:
 		if flow.state == "fighting":
 			var dir := Input.get_vector("move_left","move_right","move_up","move_down")
-			var aim: Vector2 = (arena_canvas.world_from_local(arena_canvas.get_local_mouse_position())-flow.session.sim.actor.position).normalized()
+			var aim: Vector2 = (aim_source.world_point(arena_canvas,flow.session.sim.actor.position)-flow.session.sim.actor.position).normalized()
 			if aim.is_zero_approx():
 				aim = flow.session.player.facing
 			var command := {"move":dir,"aim":aim,"cast":cast_pending,"cursor":cursor,
@@ -548,6 +567,7 @@ func _physics_process(_delta: float) -> void:
 		if flow.state == "workshop" and flow.range_sim != null:
 			_move_test_mage(Input.get_vector("move_left","move_right","move_up","move_down"))
 			flow.range_sim.step()
+			_desk_door_walk()
 	cast_pending = -1
 	arena_canvas.queue_redraw()
 	portrait_hud.queue_redraw()
@@ -557,10 +577,20 @@ func _physics_process(_delta: float) -> void:
 		var key: String = str(flow.run.sequence_index)+":"+flow.state+":"+str(flow.reward_collected)
 		if key != scene_key:
 			if flow.state == "cleared" and not flow.reward_collected and not flow.reward_options.is_empty():
-				current_notice = "Room cleared! Pick a reward (keys 1-%d), then walk to EXIT and press F" % flow.reward_options.size()
+				current_notice = tr("run.notice.room_cleared") % flow.reward_options.size()
 			_redraw_panel()
 		else:
 			_update_labels()
+
+## Sigil Desk door sits on the right edge of the test range; walking into it leaves (same as F).
+func desk_door_position() -> Vector2:
+	return Vector2(test_canvas.size.x-44.0,test_canvas.size.y*0.5)
+
+func _desk_door_walk() -> void:
+	if not flow.prelude or editor_open or (flow.prelude_required() and not flow.prelude_ready()):
+		return
+	if flow.range_sim.actor.position.distance_to(desk_door_position()) <= DESK_DOOR_RADIUS:
+		_exit()
 
 func _move_test_mage(dir: Vector2) -> void:
 	# The visible workshop mage lives in the test range; walk it inside the range canvas.
@@ -570,14 +600,15 @@ func _move_test_mage(dir: Vector2) -> void:
 	actor.position = (actor.position+dir.limit_length(1.0)*speed).clamp(bounds.position,bounds.end)
 
 func room_display_name(room_id: String) -> String:
-	return str(flavour.get("room_names", {}).get(room_id, room_id))
+	var key = flavour.get("room_names", {}).get(room_id, "")
+	return tr(str(key)) if key != "" else room_id
 
 ## Rift line is returned once per run (reset on retry / new seed).
 func stage_banner() -> String:
 	if _rift_shown:
 		return ""
 	_rift_shown = true
-	return str(flavour.get("rift_line", ""))
+	return tr(str(flavour.get("rift_line", "")))
 
 func _guide(show: bool) -> void:
 	if show:
@@ -593,11 +624,11 @@ func _toggle_tips() -> void:
 
 func _export_metrics() -> void:
 	if not flow.experiment.enabled:
-		current_notice = "Opt in first; data are kept locally and never uploaded."
+		current_notice = tr("run.notice.opt_in_first")
 	else:
 		var a: Error = flow.experiment.export_json()
 		var b: Error = flow.experiment.export_csv()
-		current_notice = "Local files: user://arcane_m4_experiment.{json,csv}" if a == OK and b == OK else "Export failed"
+		current_notice = tr("run.notice.export_ok") if a == OK and b == OK else tr("run.notice.export_failed")
 	_update_labels()
 
 func _clear(container: Node) -> void:
@@ -610,16 +641,19 @@ func _redraw_panel() -> void:
 		return
 	scene_key = str(flow.run.sequence_index)+":"+flow.state+":"+str(flow.reward_collected)
 	arena_canvas.session = flow.session
-	arena_canvas.environment_id = 2 if flow.run.sequence_index>=5 else (1 if flow.room.values["type"]=="boss" else 0)
+	arena_canvas.environment_id = 2 if int(flow.room.values.get("stage",0))>=1 else (1 if flow.room.values["type"]=="boss" else 0)
 	portrait_hud.queue_redraw()
 	arena_canvas.visible = flow.mode != "workshop"
 	test_canvas.visible = flow.mode == "workshop"
 	test_canvas.runner = flow.range_sim
+	test_canvas.door_at = desk_door_position() if flow.prelude else Vector2.INF
+	test_canvas.door_open = flow.prelude and (not flow.prelude_required() or flow.prelude_ready())
 	_rebuild_loadout()
 	_clear(context)
 	if scroll != null:
 		scroll.scroll_vertical = 0
 	summary_retry_button = null
+	desk_skip_button = null
 	summary_new_seed_button = null
 	summary_title_button = null
 	var in_summary: bool = flow.state in ["dead","won"]
@@ -632,10 +666,10 @@ func _redraw_panel() -> void:
 	if in_summary:
 		_build_summary_panel()
 	elif flow.state == "error":
-		_heading(context,"RUN DATA ERROR")
+		_heading(context,tr("run.error.run_data"))
 	elif reward_choice:
 		var heading := Label.new()
-		heading.text = "ROOM CLEARED — choose ONE reward"
+		heading.text = tr("run.reward.heading")
 		heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		heading.add_theme_color_override("font_color",Color("#efbc65"))
 		context.add_child(heading)
@@ -647,9 +681,9 @@ func _redraw_panel() -> void:
 			var item: Dictionary = flow.reward_options[i]
 			var caption := ""
 			if item["kind"] == "rune":
-				caption = str(item["name"])+"\n"+str(item["behaviour"])
+				caption = tr(str(item["name_key"]))+"\n"+tr(str(item["behaviour_key"]))
 			else:
-				caption = "+"+str(item["amount"])+" currency"
+				caption = tr("run.reward.currency") % int(item["amount"])
 			var card := _button(row,"%d) %s" % [i+1,caption],_choose_reward.bind(i))
 			card.custom_minimum_size = Vector2(180,240)
 			card.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -657,24 +691,29 @@ func _redraw_panel() -> void:
 			card.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
 			_skin_reward_button(card,item)
 		var keys := Label.new()
-		keys.text = "Keys 1-3 or click a card"
+		keys.text = tr("run.reward.keys")
 		keys.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		context.add_child(keys)
 		if flow.edit_policy == "cleared_room":
-			_hint(context,"Quick edit allowed (no shop/test)")
-		_hint(context,"Advance at exit (F) after choosing")
+			_hint(context,tr("run.hint.quick_edit"))
+		_hint(context,tr("run.hint.advance"))
+	elif flow.state == "cleared" and flow.next_is_optional():
+		_button(context,tr("run.btn.door_optional"),func(): _exit(true))
+		_button(context,tr("run.btn.door_skip"),func(): _exit(false))
+	elif in_workshop and flow.prelude:
+		_build_desk_panel()
 	elif in_workshop:
-		shop_reopen_button = _button(context,"Open merchant",func(): _set_shop_open(true))
-		_heading(context,"Testing range: no progression/rewards")
-		_button(context,"Reset test targets + mana (T)",func(): _reset_test_range())
-		_button(context,"Prepare Wet cluster (2 targets)",func():
+		shop_reopen_button = _button(context,tr("run.btn.open_merchant"),func(): _set_shop_open(true))
+		_heading(context,tr("run.range.heading"))
+		_button(context,tr("run.btn.reset_targets"),func(): _reset_test_range())
+		_button(context,tr("run.btn.prepare_wet"),func():
 			flow.prepare_wet_cluster()
-			current_notice = "Wet cluster prepared: lightning arc can be tested")
-		_button(context,"Refill test mana",func():
+			current_notice = tr("run.notice.wet_prepared"))
+		_button(context,tr("run.btn.refill_mana"),func():
 			flow.refill_test_mana()
-			current_notice = "Test mana refilled")
-		_button(context,"Continue to stage 2 (F)",func(): _exit())
-	if in_workshop:
+			current_notice = tr("run.notice.mana_refilled"))
+		_button(context,tr("run.btn.continue_stage2"),func(): _exit())
+	if in_workshop and not flow.prelude:
 		if not _shop_offered:
 			_shop_offered = true
 			shop_open = true
@@ -684,6 +723,32 @@ func _redraw_panel() -> void:
 		shop_open = false
 	_sync_shop()
 	_update_labels()
+
+func _build_desk_panel() -> void:
+	var slot_ui: int = int(flow.config["sigil_desk"]["formula_index"])+2
+	_heading(context,tr("run.desk.heading"))
+	var required: bool = flow.prelude_required()
+	var step := 0 if not flow.prelude_built else (1 if not flow.prelude_ready() else 2)
+	var recipe := PackedStringArray()
+	for id in flow.config["sigil_desk"]["runes"]:
+		recipe.append(_rune_label(str(id)))
+	var lines := [tr("run.desk.step_build") % [slot_ui," + ".join(recipe)],tr("run.desk.step_test") % slot_ui]
+	if not required:
+		_hint(context,tr("run.desk.optional"))
+	for i in lines.size():
+		_hint(context,("> " if i == step else "  ")+str(lines[i]).strip_edges())
+	_hint(context,("> " if step == 2 or not required else "  ")+tr("run.desk.step_door"))
+	_button(context,tr("run.btn.desk_slot") % slot_ui,func(): _open_editor(slot_ui-1))
+	_button(context,tr("run.btn.reset_targets"),func(): _reset_test_range())
+	var door := _button(context,tr("run.btn.desk_door"),func(): _exit())
+	door.disabled = required and not flow.prelude_ready()
+	if required and _desk_skippable():
+		desk_skip_button = _button(context,tr("run.btn.desk_skip"),func(): _skip_desk(),"ui.cancel")
+
+func _rune_label(id: String) -> String:
+	var key := "rune."+id+".name"
+	var text := tr(key)
+	return id if text == key else text
 
 func _sync_shop() -> void:
 	if shop_overlay != null:
@@ -702,7 +767,7 @@ func _set_shop_open(on: bool) -> void:
 func _build_shop_panel() -> void:
 	_clear(shop_list)
 	var title := Label.new()
-	title.text = str(flavour.get("merchant", {}).get("title", "Merchant"))+" — buy once per item"
+	title.text = tr(str(flavour.get("merchant", {}).get("title", "Merchant")))+tr("run.merchant.buy_once")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color",Color("#efbc65"))
 	shop_list.add_child(title)
@@ -710,7 +775,7 @@ func _build_shop_panel() -> void:
 	greet.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	greet.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	greet.custom_minimum_size.x = 380
-	greet.text = flow.merchant.greeting(flow.run.seed)
+	greet.text = tr(flow.merchant.greeting(flow.run.seed))
 	shop_list.add_child(greet)
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -736,7 +801,7 @@ func _build_shop_panel() -> void:
 		col.custom_minimum_size.x = 150
 		col.add_theme_constant_override("separation",4)
 		card.add_child(col)
-		var b := _button(col,str(item["label"])+" / "+str(item["price"])+" coins",_buy.bind(i))
+		var b := _button(col,tr("run.shop.item_price") % [MerchantScript.item_label(item),str(item["price"])],_buy.bind(i))
 		b.disabled = flow.merchant.bought.has(item["id"]) or not affordable
 		b.icon = PortraitHUD.rune_icon_texture(str(item["rune_id"])) if item["kind"] == "rune" else PortraitHUD.ui_icon_texture("hp")
 		b.expand_icon = false
@@ -748,12 +813,15 @@ func _build_shop_panel() -> void:
 		var explanation := ""
 		if item["kind"] == "rune":
 			var rune = flow.session.sim.registry.get_rune(str(item["rune_id"]))
-			explanation = str(rune.snapshot()["description"]) if rune != null else str(item["rune_id"])
+			var desc_key := "rune.%s.desc" % item["rune_id"]
+			explanation = str(item["rune_id"])
+			if rune != null:
+				explanation = tr(desc_key) if tr(desc_key) != desc_key else str(rune.snapshot()["description"])
 		else:
-			explanation = "Increase max HP by %d (run-persistent)" % int(item["amount"])
-		detail.text = explanation+" | "+("Purchased" if flow.merchant.bought.has(item["id"]) else ("Affordable" if affordable else "Need "+str(int(item["price"])-flow.run.currency)+" coins"))
+			explanation = tr("run.shop.max_hp") % int(item["amount"])
+		detail.text = explanation+" | "+(tr("run.shop.purchased") if flow.merchant.bought.has(item["id"]) else (tr("run.shop.affordable") if affordable else tr("run.shop.need") % (int(item["price"])-flow.run.currency)))
 		col.add_child(detail)
-	shop_close_button = _button(shop_list,"Close shop",func(): _set_shop_open(false),"ui.cancel")
+	shop_close_button = _button(shop_list,tr("run.btn.close_shop"),func(): _set_shop_open(false),"ui.cancel")
 
 func _hint(parent: Node, text: String) -> void:
 	var label := Label.new()
@@ -775,13 +843,13 @@ func _place_context(target: Node) -> void:
 func _rebuild_loadout() -> void:
 	_clear(loadout_list)
 	loadout_slot_buttons = []
-	var b := _button(loadout_list,"Slot 1: Basic Bolt [LOCKED]",func(): _open_editor(0))
+	var b := _button(loadout_list,tr("run.loadout.slot1"),func(): _open_editor(0))
 	b.disabled = true
 	loadout_slot_buttons.append(b)
 	for n in range(2,5):
 		var fi := n-2
-		var label := str(flow.run.formulas[fi]["display_name"]) if fi < flow.run.formulas.size() else "(empty)"
-		var sb := _button(loadout_list,"Slot %d: %s — Edit" % [n,label],_open_editor.bind(n-1))
+		var label := str(flow.run.formulas[fi]["display_name"]) if fi < flow.run.formulas.size() else tr("run.loadout.empty")
+		var sb := _button(loadout_list,tr("run.loadout.slot_edit") % [n,label],_open_editor.bind(n-1))
 		sb.disabled = fi > flow.run.formulas.size()
 		loadout_slot_buttons.append(sb)
 
@@ -800,7 +868,7 @@ func _update_labels() -> void:
 			for state_id in item["states"]:
 				if state_id not in statuses:
 					statuses.append(state_id)
-		test_text = "TEST hits %d / active %d / mana %.0f\nStatuses %s | Reactions %d\nTriggers %d | Budget warnings %d" % [
+		test_text = (tr("run.test.line1")+"\n"+tr("run.test.line2")+"\n"+tr("run.test.line3")) % [
 			flow.range_sim.total_hit_count,flow.range_sim.queue.active_effect_count(),flow.range_sim.mana,
 			",".join(statuses),reactions,triggers,caps]
 	info.text = test_text
@@ -814,7 +882,7 @@ func _update_labels() -> void:
 	if tip != null:
 		_watch_hint_signals()
 		var active := ""
-		if flow.mode == "workshop":
+		if flow.mode == "workshop" and not flow.prelude:
 			active = "first_workshop"
 		elif flow.state == "fighting" and str(flow.room.values["id"]) == "s1_r1":
 			active = "room1"
@@ -832,7 +900,7 @@ func _update_labels() -> void:
 			flow.experiment.record("prompt_shown",{"prompt_index":index})
 		if guide.current != active:
 			guide.current = ""
-		tip.text = ("TIP: " + guide.text()) if guide.text() != "" else ""
+		tip.text = (tr("run.tip") % guide.text()) if guide.text() != "" else ""
 		tip_panel.visible = tip.text != ""
 	if editor_open: # the docked editor owns the top-right; toasts must not cover its heading
 		tip_panel.visible = false
@@ -841,14 +909,16 @@ func _update_labels() -> void:
 ## Compact top-left objective: room display name + goal for the current state, then the coin count.
 func _update_objective() -> void:
 	var goal := ""
-	if flow.mode == "workshop":
-		goal = "Safe Workshop"
+	if flow.prelude:
+		goal = tr("run.goal.desk")
+	elif flow.mode == "workshop":
+		goal = tr("run.goal.workshop")
 	elif flow.state == "fighting":
-		goal = "Defeat the Warden" if flow.room.values["type"] == "boss" else "Defeat the Undead"
+		goal = tr("run.goal.warden") if flow.room.values["type"] == "boss" else tr("run.goal.undead")
 	elif flow.state == "cleared":
-		goal = "Exit unlocked - press F at the exit"
+		goal = tr("run.goal.exit")
 	var title := room_display_name(str(flow.room.values["id"]))
-	objective.text = title if goal == "" else title+" - "+goal
+	objective.text = title if goal == "" else tr("run.objective") % [title,goal]
 	coins_label.text = "%d" % flow.run.currency
 
 func _update_dev_label() -> void:
@@ -866,7 +936,7 @@ func _update_dev_label() -> void:
 
 ## AD-084: read-only watch on run-flow counters; never pauses the sim or opens dialogs.
 func _watch_hint_signals() -> void:
-	if flow.mode == "workshop":
+	if flow.mode == "workshop" and not flow.prelude:
 		guide.note_workshop(3 - flow.run.formulas.size())
 		if flow.run.formulas.size() >= 3 and guide.current == "workshop_empty_slot":
 			guide.current = ""
@@ -890,14 +960,14 @@ func _persist_tip(id: String) -> void:
 
 func _choose_reward(i: int) -> void:
 	var result: Dictionary = flow.choose_reward(i)
-	current_notice = "Reward: "+str(result.get("kind",result.get("reason","")))
+	current_notice = tr("run.notice.reward") % str(result.get("kind",result.get("reason","")))
 	_redraw_panel()
 
 func _buy(i: int) -> void:
 	var result: Dictionary = flow.buy(i)
-	current_notice = "Merchant: "+str(result.get("kind",result.get("reason","")))
+	current_notice = tr("run.notice.merchant") % str(result.get("kind",result.get("reason","")))
 	if result.get("ok",false):
-		current_notice = flow.merchant.purchase_line(flow.run.purchases.size())
+		current_notice = tr(flow.merchant.purchase_line(flow.run.purchases.size()))
 	_redraw_panel()
 
 func _build_summary_panel() -> void:
@@ -906,11 +976,11 @@ func _build_summary_panel() -> void:
 	if save != null and not _stats_recorded:
 		_stats_recorded = true
 		save.record_run(stats)
-	_heading(context,"RUN SUMMARY — "+("VICTORY" if flow.state == "won" else "DEFEATED"),18)
+	_heading(context,tr("run.summary.title") % (tr("run.summary.victory") if flow.state == "won" else tr("run.summary.defeated")),18)
 	var seconds := int(stats["seconds"])
-	for line in ["Rooms cleared: %d" % int(stats["rooms_cleared"]),"Kills: %d" % int(stats["kills"]),
-			"Time: %d:%02d" % [seconds/60,seconds%60],"Spells used: %d" % int(stats["spells_used"]),
-			"Seed: %d" % int(stats["seed"])]:
+	for line in [tr("run.summary.rooms") % int(stats["rooms_cleared"]),tr("run.summary.kills") % int(stats["kills"]),
+			tr("run.summary.time") % [seconds/60,seconds%60],tr("run.summary.spells") % int(stats["spells_used"]),
+			tr("run.summary.seed") % int(stats["seed"])]:
 		var label := Label.new()
 		label.text = line
 		context.add_child(label)
@@ -918,16 +988,16 @@ func _build_summary_panel() -> void:
 		var totals: Dictionary = save.stats()
 		var label := Label.new()
 		var best: float = totals["best_time_seconds"]
-		label.text = "Runs: %d  Wins: %d  Best: %s" % [totals["runs"],totals["wins"],
+		label.text = tr("run.summary.totals") % [totals["runs"],totals["wins"],
 			("%d:%02d" % [int(best)/60,int(best)%60]) if best >= 0.0 else "--"]
 		context.add_child(label)
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	buttons.add_theme_constant_override("separation",8)
 	context.add_child(buttons)
-	summary_retry_button = _button(buttons,"Retry same seed",func(): _retry_same_seed())
-	summary_new_seed_button = _button(buttons,"New seed",func(): _new_seed())
-	summary_title_button = _button(buttons,"Title",func(): _to_title(),"ui.cancel")
+	summary_retry_button = _button(buttons,tr("run.btn.retry"),func(): _retry_same_seed())
+	summary_new_seed_button = _button(buttons,tr("run.btn.new_seed"),func(): _new_seed())
+	summary_title_button = _button(buttons,tr("run.btn.title"),func(): _to_title(),"ui.cancel")
 	for b in [summary_retry_button,summary_new_seed_button,summary_title_button]:
 		b.autowrap_mode = TextServer.AUTOWRAP_OFF # a wrapping button in a row shrinks to one character per line
 		b.custom_minimum_size.x = 110
@@ -938,7 +1008,8 @@ func _retry_same_seed() -> void:
 	_stats_recorded = false
 	_rift_shown = false
 	flow.retry_same_seed()
-	current_notice = "Retry same seed: currencies / runes reset"
+	_begin_desk()
+	current_notice = tr("run.notice.retry")
 	_redraw_panel()
 
 func _new_seed() -> void:
@@ -947,19 +1018,59 @@ func _new_seed() -> void:
 	_stats_recorded = false
 	_rift_shown = false
 	flow.start_new_seed()
-	current_notice = "New seed: currencies / runes reset"
+	_begin_desk()
+	current_notice = tr("run.notice.new_seed")
 	_redraw_panel()
+
+## AD-130: every new run starts at the Sigil Desk when the config offers it.
+func _begin_desk() -> void:
+	if flow.prelude_available() and flow.enter_prelude()["ok"]:
+		guide.prelude_active = true
+
+func _desk_skippable() -> bool:
+	var save = get_node_or_null("/root/SaveService")
+	return save != null and bool(save.profile["stats"].get("sigil_desk_done",false))
+
+func _skip_desk() -> void:
+	if editor_open:
+		return
+	flow.finish_prelude(true)
+	_after_desk(true)
+	_flash_transition()
+	_redraw_panel()
+
+## Clears the prelude tip suppression once the desk is over; persists completion on the door path.
+func _after_desk(skipped: bool) -> void:
+	if flow.prelude:
+		return
+	guide.prelude_active = false
+	if skipped:
+		return
+	var save = get_node_or_null("/root/SaveService")
+	if save == null:
+		return
+	save.profile["stats"]["sigil_desk_done"] = true
+	var ids: Array = save.profile["stats"].get("onboarding_seen", [])
+	for id in guide.note_prelude_done():
+		if not ids.has(id):
+			ids.append(id)
+	save.profile["stats"]["onboarding_seen"] = ids
+	save.save_profile()
 
 func _to_title() -> void:
 	flow.experiment.end_session()
 	close_pause()
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
 
-func _exit() -> void:
+func _exit(take_optional: bool = true) -> void:
 	if editor_open:
 		return
-	var result: Dictionary = flow.try_exit(flow.session.sim.actor.position)
-	current_notice = "Door: "+str(result.get("reason","OPEN") if result["ok"] == false else "NEXT ROOM")
+	var was_desk: bool = flow.prelude
+	var desk_skipped: bool = was_desk and not flow.prelude_ready()
+	var result: Dictionary = flow.try_exit(flow.session.sim.actor.position, take_optional)
+	if was_desk and result["ok"]:
+		_after_desk(desk_skipped)
+	current_notice = tr("run.notice.door") % (str(result.get("reason","OPEN")) if result["ok"] == false else tr("run.notice.next_room"))
 	if result["ok"]:
 		_flash_transition()
 	_redraw_panel()
@@ -971,25 +1082,80 @@ func _flash_transition() -> void:
 	var tween := create_tween()
 	tween.tween_property(transition_veil,"modulate:a",0.0,0.4)
 
+## Dev cheat: kill every enemy (waves included) via normal damage + sim steps so clear/reward logic runs as usual.
+func _dev_clear_room() -> void:
+	for i in 3000:
+		if flow.state != "fighting":
+			return
+		for enemy in flow.session.enemies:
+			if enemy.target.alive():
+				enemy.target.receive_damage(100000,"fire",1,100)
+		flow.step()
+
+func _dev_kill_all() -> void:
+	if not dev_tools_enabled() or editor_open:
+		return
+	_dev_clear_room()
+	current_notice = tr("run.notice.dev_cheat") % flow.state
+	_redraw_panel()
+
+## Dev cheat: clear, take reward 0, leave by the exit (skips optional rooms). Returns true when a new room was entered.
+func _dev_advance() -> bool:
+	if editor_open:
+		return false
+	if flow.prelude:
+		flow.finish_prelude(true)
+		_after_desk(true)
+		return not flow.prelude
+	_dev_clear_room()
+	if flow.state == "cleared" and not flow.reward_collected and not flow.reward_options.is_empty():
+		flow.choose_reward(0)
+	if flow.state not in ["cleared","workshop"]:
+		return false
+	if flow.mode != "workshop":
+		flow.session.sim.actor.position = flow.room.marker("exit")
+	return flow.try_exit(flow.session.sim.actor.position,false)["ok"]
+
+func _dev_skip_room() -> void:
+	if not dev_tools_enabled():
+		return
+	if _dev_advance():
+		_flash_transition()
+	current_notice = tr("run.notice.dev_cheat") % str(flow.room.values["id"])
+	_redraw_panel()
+
+func _dev_next_stage() -> void:
+	if not dev_tools_enabled():
+		return
+	var start := int(flow.room.values.get("stage",0)) if not flow.prelude else 0
+	for guard in 60:
+		if not _dev_advance():
+			break
+		if not flow.prelude and int(flow.room.values.get("stage",0)) > start:
+			break
+	_flash_transition()
+	current_notice = tr("run.notice.dev_cheat") % str(flow.room.values["id"])
+	_redraw_panel()
+
 func _policy() -> void:
 	var next := "cleared_room" if flow.edit_policy == "workshop_only" else "workshop_only"
 	flow.change_edit_policy(next)
-	current_notice = "Edit policy: "+next+" (test switch, not final rule)"
+	current_notice = tr("run.notice.edit_policy") % next
 	_redraw_panel()
 
 func _slot_name(fi: int) -> String:
-	return str(flow.run.formulas[fi]["display_name"]) if fi < flow.run.formulas.size() else "(empty)"
+	return str(flow.run.formulas[fi]["display_name"]) if fi < flow.run.formulas.size() else tr("run.loadout.empty")
 
 func _open_editor(index: int) -> void:
 	if editor_open:
 		return
 	if index <= 0:
-		current_notice = "Slot 1 is locked (Basic Bolt) — cannot edit"
+		current_notice = tr("run.notice.slot1_locked")
 		_update_labels()
 		return
 	var result: Dictionary = flow.open_editor(index-1)
 	if not result["ok"]:
-		current_notice = "Editor: "+str(result.get("reason","BLOCKED"))
+		current_notice = tr("run.notice.editor") % str(result.get("reason","BLOCKED"))
 		_update_labels()
 		return
 	editor_open = true
@@ -1002,36 +1168,13 @@ func _open_editor(index: int) -> void:
 func _editor_rebuild() -> void:
 	_clear(editor_controls)
 	var e = flow.editor
-	_heading(editor_controls,"SPELL EDITOR / SLOT "+str(e.slot+2),20)
-	_heading(editor_controls,"Essence → Manifestation → Modifier → On Hit")
-	_heading(editor_controls,"Essence",14)
-	var essence: OptionButton = _option(editor_controls,e.available("essence"),str(e.draft["root"]["essence_id"]))
-	essence.item_selected.connect(func(idx):
-		e.set_root(str(essence.get_item_metadata(idx)),str(e.draft["root"]["manifestation_id"]))
-		_editor_rebuild())
-	_heading(editor_controls,"Manifestation",14)
-	var form: OptionButton = _option(editor_controls,e.available("form"),str(e.draft["root"]["manifestation_id"]))
-	form.item_selected.connect(func(idx):
-		e.set_root(str(e.draft["root"]["essence_id"]),str(form.get_item_metadata(idx)))
-		_editor_rebuild())
-	_heading(editor_controls,"Projectile modifiers",14)
-	for item in e.available("modifier"):
-		var b := CheckBox.new()
-		b.text = str(item["id"])+(" [LOCKED]" if item["locked"] else "")
-		b.button_pressed = str(item["id"]) in e.draft["root"]["modifier_ids"]
-		b.disabled = bool(item["locked"]) or str(e.draft["root"]["manifestation_id"]) != "form.projectile"
-		editor_controls.add_child(b)
-		b.toggled.connect(func(_enabled): e.toggle_modifier(str(item["id"]));_editor_rebuild())
-	var onhit := CheckBox.new()
-	onhit.text = "On Hit → Burst child"
-	onhit.button_pressed = e.draft.has("on_hit")
-	onhit.disabled = "trigger.on_hit" not in e.run.unlocked or str(e.draft["root"]["manifestation_id"]) != "form.projectile"
-	editor_controls.add_child(onhit)
-	onhit.toggled.connect(func(enabled):
-		e.set_trigger(enabled)
-		_editor_rebuild())
+	_heading(editor_controls,tr("run.editor.title") % (e.slot+2),20)
+	if not e.guided_runes.is_empty():
+		_heading(editor_controls,tr("run.desk.guided") % _rune_label(e.guided_next()),14)
+	_heading(editor_controls,tr("run.editor.chain"))
+	_build_rune_palette(e)
 	if e.draft.has("on_hit"):
-		_heading(editor_controls,"Child Burst Essence",14)
+		_heading(editor_controls,tr("run.editor.child_essence"),14)
 		var child: OptionButton = _option(editor_controls,e.available("essence"),
 			str(e.draft["on_hit"]["payload"]["essence_id"]))
 		child.item_selected.connect(func(idx):
@@ -1042,17 +1185,72 @@ func _editor_rebuild() -> void:
 	editor_controls.add_child(editor_preview)
 	var verdict: Dictionary = e.validate()
 	if verdict["ok"]:
-		editor_preview.text = "VALID / Mana %d / Cooldown %d ticks / Complexity %d / %d cap\n%s" % [
-			verdict["mana"],verdict["cooldown"],verdict["complexity"],verdict["complexity_cap"],verdict["summary"]]
+		editor_preview.text = tr("run.editor.valid") % [
+			verdict["mana"],verdict["cooldown"],verdict["complexity"],verdict["complexity_cap"]]+"\n"+str(verdict["summary"])
 	else:
-		editor_preview.text = "INVALID — cannot apply:\n"
+		editor_preview.text = tr("run.editor.invalid")+"\n"
 		for issue in verdict["issues"]:
-			editor_preview.text += str(issue["code"])+": "+str(issue["message"])+"\n"
-	_button(editor_controls,"Undo",func(): e.undo(); _editor_rebuild())
-	_button(editor_controls,"Reset draft",func(): e.reset_draft();_editor_rebuild())
-	_button(editor_controls,"Cancel (restore original)",func(): _close_editor(false),"ui.cancel")
-	var apply := _button(editor_controls,"Apply valid formula",func(): _close_editor(true))
+			var reason := tr(str(issue["reason_key"]))
+			var args: Array = issue["reason_args"]
+			editor_preview.text += (reason % args if not args.is_empty() else reason)+"\n"
+	_button(editor_controls,tr("run.btn.undo"),func(): e.undo(); _editor_rebuild())
+	_button(editor_controls,tr("run.btn.reset_draft"),func(): e.reset_draft();_editor_rebuild())
+	_button(editor_controls,tr("run.btn.cancel_edit"),func(): _close_editor(false),"ui.cancel")
+	var apply := _button(editor_controls,tr("run.btn.apply"),func(): _close_editor(true))
 	apply.disabled = not verdict["ok"]
+
+func _build_rune_palette(e) -> void:
+	var tabs := TabContainer.new()
+	tabs.name = "RunePalette"
+	editor_controls.add_child(tabs)
+	var root: Dictionary = e.draft["root"]
+	for entry in e.palette():
+		var scroll := ScrollContainer.new()
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		scroll.custom_minimum_size = Vector2(0,160)
+		tabs.add_child(scroll)
+		var title := tr(str(entry["display_key"]))
+		tabs.set_tab_title(scroll.get_index(),str(entry["label"]) if title == str(entry["display_key"]) else title)
+		var list := VBoxContainer.new()
+		list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		scroll.add_child(list)
+		var kind := str(entry["id"])
+		for rune in entry["runes"]:
+			var id := str(rune["id"])
+			var b := Button.new()
+			b.toggle_mode = true
+			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			b.set_meta("rune_id",id)
+			b.text = _rune_label(id)+(tr("run.suffix.locked") if rune["locked"] else "")
+			b.tooltip_text = str(rune["description"])
+			var icon: Texture2D = _rune_icon(id)
+			if icon != null:
+				b.icon = icon
+			match kind:
+				"essence": b.button_pressed = str(root["essence_id"]) == id
+				"form": b.button_pressed = str(root["manifestation_id"]) == id
+				"modifier": b.button_pressed = id in root["modifier_ids"]
+				"trigger": b.button_pressed = e.draft.has("on_hit") and str(e.draft["on_hit"]["trigger_id"]) == id
+			if id == e.guided_next() and not e.guided_runes.is_empty():
+				b.modulate = Color("#efbc65")
+			var attach: Dictionary = e.can_attach(id) if kind in ["modifier","trigger"] else {"ok":true,"reason_key":""}
+			if not bool(attach["ok"]):
+				b.tooltip_text = tr(str(attach["reason_key"]))
+			b.disabled = bool(rune["locked"]) or not bool(attach["ok"])
+			list.add_child(b)
+			b.pressed.connect(func():
+				match kind:
+					"essence": e.set_root(id,str(e.draft["root"]["manifestation_id"]))
+					"form": e.set_root(str(e.draft["root"]["essence_id"]),id)
+					"modifier": e.toggle_modifier(id)
+					"trigger":
+						var active: bool = e.draft.has("on_hit") and str(e.draft["on_hit"]["trigger_id"]) == id
+						var payload := str(e.draft["on_hit"]["payload"]["essence_id"]) if e.draft.has("on_hit") else "essence.lightning"
+						e.set_trigger(not active,payload,id)
+				_editor_rebuild())
+	palette_tab = clampi(palette_tab,0,maxi(tabs.get_tab_count()-1,0))
+	tabs.current_tab = palette_tab
+	tabs.tab_changed.connect(func(index): palette_tab = index)
 
 func _rune_icon(rune_id: String) -> Texture2D:
 	return PortraitHUD.rune_icon_texture(rune_id)
@@ -1085,7 +1283,7 @@ func _option(parent: Node, list: Array, selection: String) -> OptionButton:
 	var current := -1
 	for i in list.size():
 		var item: Dictionary = list[i]
-		option.add_item(str(item["id"])+(" (locked)" if item["locked"] else ""))
+		option.add_item(str(item["id"])+(tr("run.suffix.locked_lower") if item["locked"] else ""))
 		option.set_item_metadata(i,str(item["id"]))
 		var rune_icon: Texture2D = _rune_icon(str(item["id"]))
 		if rune_icon != null:
@@ -1107,19 +1305,28 @@ func _close_editor(apply_changes: bool) -> void:
 	var duration := float(Time.get_ticks_msec()-opened_editor_ms)/1000.0
 	var result: Dictionary = flow.close_editor(apply_changes,duration)
 	if not result["ok"]:
-		current_notice = "Editor: "+str(result.get("reason","INVALID"))
+		current_notice = tr("run.notice.editor") % str(result.get("reason","INVALID"))
 		_editor_rebuild()
 		return
 	if apply_changes:
 		guide.note_valid_edit()
-	current_notice = ("Formula applied" if apply_changes else "Formula cancelled")+" / %.1f s" % duration
+	current_notice = (tr("run.notice.formula_applied") if apply_changes else tr("run.notice.formula_cancelled"))+tr("run.notice.duration") % duration
 	_close_visual_editor()
 	_redraw_panel()
 
 ## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.
 func apply_debug_shot_state(state: String) -> bool:
-	if not OS.is_debug_build() or not state in ["combat","reward","workshop_editor","merchant","pause","summary"]:
+	if not OS.is_debug_build() or not state in ["combat","reward","workshop_editor","merchant","pause","summary","sigil_desk"]:
 		return false
+	if state == "sigil_desk":
+		if not flow.prelude and not (flow.prelude_available() and flow.enter_prelude()["ok"]):
+			return false
+		guide.prelude_active = flow.prelude
+		_redraw_panel()
+		return true
+	if flow.prelude:
+		flow.finish_prelude(true)
+		guide.prelude_active = false
 	if state == "reward":
 		for i in 3000:
 			if flow.state != "fighting":
@@ -1129,7 +1336,10 @@ func apply_debug_shot_state(state: String) -> bool:
 					enemy.target.receive_damage(100000,"fire",1,100)
 			flow.step()
 	elif state == "workshop_editor" or state == "merchant":
-		flow.run.sequence_index = flow.config["rooms"].size()-2
+		for i in flow.rooms.size():
+			if str(flow.rooms[i].get("type","")) == "workshop":
+				flow.run.sequence_index = i
+				break
 		flow._enter_current()
 	elif state == "summary":
 		flow.session.sim.actor.receive_damage(100000,"fire",2,100)

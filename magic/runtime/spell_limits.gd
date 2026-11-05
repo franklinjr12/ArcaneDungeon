@@ -1,6 +1,6 @@
 extends RefCounted
 const PATH := "res://magic/data/spell_limits_v1.json"
-const FIELDS := ["max_complexity","max_event_depth","max_events_per_root_cast","max_effects_per_cast","max_active_effects","max_active_orbs","max_lifetime_ticks","max_chain_targets","min_rehit_delay_ticks"]
+const FIELDS := ["max_complexity","max_event_depth","max_events_per_root_cast","max_effects_per_cast","max_active_effects","max_active_orbs","max_lifetime_ticks","max_chain_targets","min_rehit_delay_ticks","max_active_beams","max_active_fields","max_targets_per_pulse"]
 var _values: Dictionary = {}
 
 func load_defaults() -> Dictionary:

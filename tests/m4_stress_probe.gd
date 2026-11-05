@@ -157,6 +157,7 @@ func _render_probe() -> Dictionary:
 	root.add_child(viewport)
 	var scene: Node = load("res://scenes/run.tscn").instantiate()
 	scene.show_dev_tools = false
+	scene.config_path = "res://world/data/vertical_slice_v1.json"
 	viewport.add_child(scene)
 	scene.set_physics_process(false) # this probe drives flow.step itself
 	var render := {"render_note":"draw-call/primitive monitors unavailable headless (dummy renderer); node counts and particle nodes are proxies. Arena is custom _draw on one canvas node, so effect_visuals are counted from sim effects/enemy shots, not scene nodes."}

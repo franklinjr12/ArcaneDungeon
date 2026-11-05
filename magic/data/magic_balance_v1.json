@@ -20,6 +20,28 @@
       "duration_ticks": 120,
       "max_stacks": 1,
       "refresh": "replace_duration"
+    },
+    "chilled": {
+      "duration_ticks": 180,
+      "max_stacks": 3,
+      "refresh": "replace_duration",
+      "move_scale": 0.6
+    },
+    "frozen": {
+      "duration_ticks": 120,
+      "max_stacks": 1,
+      "refresh": "replace_duration"
+    },
+    "brittle": {
+      "duration_ticks": 150,
+      "max_stacks": 1,
+      "refresh": "replace_duration",
+      "damage_taken_mult": 1.25
+    },
+    "blinded": {
+      "duration_ticks": 90,
+      "max_stacks": 1,
+      "refresh": "replace_duration"
     }
   },
   "channels": {
@@ -44,17 +66,98 @@
       "channel": "lightning",
       "apply": "charged",
       "remove": []
+    },
+    "essence.cold": {
+      "channel": "cold",
+      "apply": "chilled",
+      "remove": []
+    },
+    "essence.force": {
+      "channel": "force",
+      "apply": "",
+      "remove": [],
+      "knockback_force": 420
     }
+  },
+  "balance_targets": {
+    "_note": "AD-135 PROPOSED first-pass targets checked by tests/test_ad_rune_pool.gd _balance_sweep; not approved final balance.",
+    "max_root_mana": 40,
+    "max_total_mana": 40,
+    "max_cooldown_ticks": 30,
+    "min_casts_from_full_mana": 3,
+    "min_complexity_headroom_for_core_combo": 3,
+    "trigger_mana_premium_max": 22
   },
   "combat": {
     "armor_scale": 100,
     "arc_radius": 220,
+    "water_conduct_radius": 360,
     "arc_damage_scale": 0.65,
     "regen_mana_per_tick": 0.3,
     "player_max_mana": 120,
     "base_target_hp": 120,
     "player_team": 1,
-    "enemy_team": 2
+    "enemy_team": 2,
+    "knockback_decay_per_tick": 0.8,
+    "knockback_min_speed": 12
+  },
+  "reactions": {
+    "chill_freeze_stacks": 3,
+    "knockback_immune_tags": [
+      "boss"
+    ],
+    "rules": [
+      {
+        "id": "wet_cold_freeze",
+        "channel": "cold",
+        "requires_any": [
+          "wet"
+        ],
+        "remove": [
+          "wet",
+          "chilled"
+        ],
+        "apply": [
+          "frozen"
+        ],
+        "bonus_damage_scale": 0,
+        "suppress_channel_apply": true
+      },
+      {
+        "id": "frozen_force_shatter",
+        "channel": "force",
+        "requires_any": [
+          "frozen"
+        ],
+        "remove": [
+          "frozen"
+        ],
+        "apply": [
+          "brittle"
+        ],
+        "bonus_damage_scale": 1.5,
+        "suppress_channel_apply": false
+      },
+      {
+        "id": "fire_thaw_steam",
+        "channel": "fire",
+        "requires_any": [
+          "chilled",
+          "frozen"
+        ],
+        "remove": [
+          "chilled",
+          "frozen"
+        ],
+        "apply": [],
+        "bonus_damage_scale": 0,
+        "suppress_channel_apply": true,
+        "area_apply": {
+          "status": "blinded",
+          "radius": 120
+        }
+      }
+    ]
   },
   "sandbox": {
     "width": 920,

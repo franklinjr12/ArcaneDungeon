@@ -3,6 +3,8 @@ extends RefCounted
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 var bounds := Rect2()
 var walls: Array = []
+## AD-138: rects that block walking only (deep water); spells and sight cross them.
+var ground_blockers: Array = []
 func _init(arena: Dictionary) -> void:
 	bounds = Rect2(0,0,float(arena["width"]),float(arena["height"]))
 	for dims in arena["walls"]:
@@ -15,7 +17,15 @@ func valid_position(point: Vector2, radius: float) -> bool:
 		var nearest := Vector2(clampf(point.x,wall.position.x,wall.end.x),clampf(point.y,wall.position.y,wall.end.y))
 		if nearest.distance_squared_to(point) < radius*radius:
 			return false
+	for blocker in ground_blockers:
+		var nearest := Vector2(clampf(point.x,blocker.position.x,blocker.end.x),clampf(point.y,blocker.position.y,blocker.end.y))
+		if nearest.distance_squared_to(point) < radius*radius:
+			return false
 	return true
+
+func add_ground_blockers(rects: Array) -> void:
+	for rect in rects:
+		ground_blockers.append(rect)
 
 func move_body(point: Vector2, movement: Vector2, radius: float) -> Vector2:
 	# Substepping prevents fast dash/mob traversal from skipping walls.
@@ -35,12 +45,21 @@ func clear_sight(origin: Vector2, destination: Vector2, padding: float = 0.0) ->
 			return false
 	return true
 
+## Sight plus ground blockers: what an actor can walk straight along (spells and sight ignore blockers).
+func walk_clear(origin: Vector2, destination: Vector2, padding: float = 0.0) -> bool:
+	if not clear_sight(origin,destination,padding):
+		return false
+	for blocker in ground_blockers:
+		if Projectile.segment_wall_time(origin,destination,blocker,padding) < 0.99999:
+			return false
+	return true
+
 ## Stable visibility graph path around axis-aligned obstacles, not a terrain/navmesh system.
 func navigate_direction(start: Vector2, destination: Vector2, radius: float) -> Vector2:
-	if clear_sight(start,destination,radius):
+	if walk_clear(start,destination,radius):
 		return (destination-start).normalized()
 	var points: Array = [start,destination]
-	for wall in walls:
+	for wall in walls+ground_blockers:
 		var space: float = radius+7.0
 		for x in [wall.position.x-space,wall.end.x+space]:
 			for y in [wall.position.y-space,wall.end.y+space]:
@@ -70,7 +89,7 @@ func navigate_direction(start: Vector2, destination: Vector2, radius: float) -> 
 		for candidate_index in points.size():
 			if visited[candidate_index] or candidate_index == index:
 				continue
-			if not clear_sight(points[index],points[candidate_index],radius):
+			if not walk_clear(points[index],points[candidate_index],radius):
 				continue
 			var candidate_distance: float = best+points[index].distance_to(points[candidate_index])
 			if candidate_distance+0.0001 < float(distances[candidate_index]):

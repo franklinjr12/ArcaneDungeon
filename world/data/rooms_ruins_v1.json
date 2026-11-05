@@ -1,0 +1,936 @@
+{
+ "schema_version": 1,
+ "stage": "ruins",
+ "rules": {
+  "min_spawn_distance": 160,
+  "player_radius": 22,
+  "spawn_radius": 20,
+  "grid_step": 20,
+  "pool_size": 10
+ },
+ "pool": [
+  "ruins_p01",
+  "ruins_p02",
+  "ruins_p03",
+  "ruins_p04",
+  "ruins_p05",
+  "ruins_p06",
+  "ruins_p07",
+  "ruins_p08",
+  "ruins_p09",
+  "ruins_p10"
+ ],
+ "treasure_room": "ruins_treasure_v1",
+ "challenge_room": "ruins_challenge_v1",
+ "room_templates": {
+  "ruins_p01": {
+   "id": "ruins_p01",
+   "stage": 0,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [],
+    "props": [
+     [
+      "pillar",
+      420,
+      300
+     ],
+     [
+      "rubble",
+      800,
+      700
+     ]
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       420,
+       200
+      ],
+      [
+       "bone_thrall",
+       420,
+       700
+      ]
+     ]
+    }
+   ]
+  },
+  "ruins_p02": {
+   "id": "ruins_p02",
+   "stage": 0,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      380,
+      120,
+      40,
+      160
+     ],
+     [
+      380,
+      620,
+      40,
+      160
+     ]
+    ],
+    "props": [
+     [
+      "brazier",
+      400,
+      450
+     ]
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "fallen_adept",
+       1080,
+       255
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 30,
+     "enemies": [
+      [
+       "bone_thrall",
+       700,
+       455
+      ],
+      [
+       "grave_hound",
+       1120,
+       640
+      ]
+     ]
+    }
+   ]
+  },
+  "ruins_p03": {
+   "id": "ruins_p03",
+   "stage": 0,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      760,
+      230,
+      160,
+      36
+     ],
+     [
+      760,
+      640,
+      160,
+      36
+     ]
+    ],
+    "props": [
+     [
+      "sarcophagus",
+      1000,
+      450
+     ]
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       450,
+       300
+      ],
+      [
+       "fallen_adept",
+       1100,
+       200
+      ],
+      [
+       "wailing_spirit",
+       1100,
+       720
+      ]
+     ]
+    }
+   ]
+  },
+  "ruins_p04": {
+   "id": "ruins_p04",
+   "stage": 0,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      400,
+      440,
+      120,
+      28
+     ]
+    ],
+    "props": [
+     [
+      "rubble",
+      300,
+      200
+     ],
+     [
+      "rubble",
+      300,
+      700
+     ]
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "grave_hound",
+       1120,
+       640
+      ],
+      [
+       "grave_hound",
+       1120,
+       260
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 30,
+     "enemies": [
+      [
+       "bone_thrall",
+       700,
+       455
+      ],
+      [
+       "wailing_spirit",
+       1000,
+       450
+      ]
+     ]
+    }
+   ]
+  },
+  "ruins_p05": {
+   "id": "ruins_p05",
+   "stage": 0,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      1010,
+      150,
+      36,
+      170
+     ],
+     [
+      1010,
+      580,
+      36,
+      170
+     ]
+    ],
+    "props": [
+     [
+      "pillar",
+      800,
+      450
+     ]
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       420,
+       260
+      ],
+      [
+       "bone_thrall",
+       420,
+       640
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 30,
+     "enemies": [
+      [
+       "fallen_adept",
+       1100,
+       450
+      ]
+     ]
+    }
+   ]
+  },
+  "ruins_p06": {
+   "id": "ruins_p06",
+   "stage": 0,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      300,
+      200,
+      36,
+      120
+     ],
+     [
+      300,
+      580,
+      36,
+      120
+     ],
+     [
+      760,
+      440,
+      36,
+      24
+     ]
+    ],
+    "props": [
+     [
+      "brazier",
+      480,
+      450
+     ]
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "fallen_adept",
+       1080,
+       255
+      ],
+      [
+       "fallen_adept",
+       410,
+       665
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 30,
+     "enemies": [
+      [
+       "corpse_bloat",
+       700,
+       455
+      ],
+      [
+       "grave_hound",
+       1120,
+       640
+      ]
+     ]
+    }
+   ]
+  },
+  "ruins_p07": {
+   "id": "ruins_p07",
+   "stage": 0,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      440,
+      300,
+      28,
+      300
+     ]
+    ],
+    "props": [
+     [
+      "sarcophagus",
+      900,
+      200
+     ],
+     [
+      "sarcophagus",
+      900,
+      700
+     ]
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "grave_hound",
+       1120,
+       640
+      ],
+      [
+       "ossuary_shieldbearer",
+       700,
+       200
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 30,
+     "enemies": [
+      [
+       "fallen_adept",
+       1080,
+       255
+      ],
+      [
+       "fallen_adept",
+       1080,
+       700
+      ]
+     ]
+    }
+   ]
+  },
+  "ruins_p08": {
+   "id": "ruins_p08",
+   "stage": 0,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      700,
+      60,
+      40,
+      100
+     ],
+     [
+      700,
+      740,
+      40,
+      100
+     ]
+    ],
+    "props": [
+     [
+      "pillar",
+      500,
+      450
+     ]
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       420,
+       200
+      ],
+      [
+       "ossuary_shieldbearer",
+       420,
+       700
+      ],
+      [
+       "fallen_adept",
+       1080,
+       450
+      ]
+     ]
+    }
+   ]
+  },
+  "ruins_p09": {
+   "id": "ruins_p09",
+   "stage": 0,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      1100,
+      330,
+      36,
+      60
+     ],
+     [
+      1100,
+      510,
+      36,
+      60
+     ],
+     [
+      330,
+      340,
+      28,
+      220
+     ]
+    ],
+    "props": [
+     [
+      "rubble",
+      700,
+      300
+     ]
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "fallen_adept",
+       1000,
+       200
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 30,
+     "enemies": [
+      [
+       "grave_hound",
+       1120,
+       640
+      ],
+      [
+       "grave_hound",
+       1120,
+       260
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 30,
+     "enemies": [
+      [
+       "bone_thrall",
+       700,
+       455
+      ],
+      [
+       "corpse_bloat",
+       420,
+       700
+      ]
+     ]
+    }
+   ]
+  },
+  "ruins_p10": {
+   "id": "ruins_p10",
+   "stage": 0,
+   "room": 0,
+   "type": "combat",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      300,
+      120,
+      200,
+      28
+     ],
+     [
+      300,
+      750,
+      200,
+      28
+     ],
+     [
+      1000,
+      120,
+      28,
+      100
+     ]
+    ],
+    "props": [
+     [
+      "brazier",
+      700,
+      450
+     ],
+     [
+      "pillar",
+      1000,
+      750
+     ]
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "ossuary_shieldbearer",
+       420,
+       300
+      ],
+      [
+       "bone_thrall",
+       420,
+       600
+      ],
+      [
+       "fallen_adept",
+       1080,
+       255
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 30,
+     "enemies": [
+      [
+       "grave_hound",
+       1120,
+       640
+      ],
+      [
+       "fallen_adept",
+       700,
+       455
+      ],
+      [
+       "corpse_bloat",
+       700,
+       300
+      ]
+     ]
+    }
+   ]
+  },
+  "ruins_treasure_v1": {
+   "id": "ruins_treasure_v1",
+   "stage": 0,
+   "room": 0,
+   "type": "treasure",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      540,
+      300,
+      40,
+      40
+     ],
+     [
+      540,
+      560,
+      40,
+      40
+     ]
+    ],
+    "props": [
+     [
+      "altar",
+      700,
+      450
+     ],
+     [
+      "chest",
+      1000,
+      450
+     ]
+    ]
+   },
+   "pedestals": [
+    {
+     "id": "ped_a",
+     "kind": "artifact",
+     "position": [
+      700,
+      300
+     ]
+    },
+    {
+     "id": "ped_b",
+     "kind": "rune",
+     "position": [
+      700,
+      600
+     ]
+    }
+   ],
+   "choice_count": 1,
+   "waves": []
+  },
+  "ruins_challenge_v1": {
+   "id": "ruins_challenge_v1",
+   "stage": 0,
+   "room": 0,
+   "type": "challenge",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "walls": [
+     [
+      640,
+      380,
+      40,
+      140
+     ]
+    ],
+    "props": [
+     [
+      "brazier",
+      900,
+      300
+     ],
+     [
+      "brazier",
+      900,
+      600
+     ]
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "bone_thrall",
+       450,
+       250
+      ],
+      [
+       "bone_thrall",
+       450,
+       650
+      ],
+      [
+       "fallen_adept",
+       1080,
+       255
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 45,
+     "enemies": [
+      [
+       "grave_hound",
+       1120,
+       640
+      ],
+      [
+       "grave_hound",
+       1120,
+       260
+      ],
+      [
+       "fallen_adept",
+       720,
+       455
+      ]
+     ]
+    }
+   ],
+   "elite": {
+    "hp_multiplier": 1.6,
+    "damage_multiplier": 1.25,
+    "affix": "none"
+   },
+   "challenge_reward": {
+    "currency_multiplier": 2.0,
+    "reward_choices_bonus": 1,
+    "extra_artifact_chance": 0.5
+   },
+   "mini_boss_slot": null
+  }
+ }
+}

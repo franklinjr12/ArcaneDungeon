@@ -2,8 +2,8 @@ extends Control
 ## Reference-inspired bottom-centre HUD (canvas set, AD-014): portrait, HP/mana bars, 4 loadout slots with keys, cost and a dash marker, render-only.
 const Art = preload("res://ui/pixel_art_renderer.gd")
 const MAGE = preload("res://assets/pixel/mage_sheet.png")
-const KEY_LABELS := ["LMB","RMB","Q","E"] # mirrors the cast_slot_1..4 input map (ui/input_actions.gd)
-const DASH_KEY := "SPACE" # mirrors the dash input action
+const KEY_LABELS := ["hud.key.lmb","hud.key.rmb","Q","E"] # mirrors the cast_slot_1..4 input map (ui/input_actions.gd)
+const DASH_KEY := "hud.key.space" # mirrors the dash input action
 const TICKS_PER_SECOND := 60.0
 const SLOT_SIZE := 54.0
 const SLOT_GAP := 10.0
@@ -73,7 +73,7 @@ func slot_view(i: int) -> Dictionary:
 		state = "cooldown"
 	elif not affordable:
 		state = "no_mana"
-	return {"key_label":KEY_LABELS[i] if i < KEY_LABELS.size() else "","locked":loadout.is_locked(i),"empty":empty,
+	return {"key_label":tr(KEY_LABELS[i]) if i < KEY_LABELS.size() else "","locked":loadout.is_locked(i),"empty":empty,
 		"name":"" if empty else str(formula.get("display_name","")),
 		"element":"" if empty else str(formula.get("root",{}).get("essence_id","")).trim_prefix("essence."),
 		"mana_cost":cost,"cooldown_left":cooldown_left,
@@ -116,10 +116,10 @@ func _draw_combat_panel() -> void:
 	var bar_width: float = (bar_px.x-10.0)/2.0
 	var bar_at := origin+Vector2(content_x,8)
 	_draw_bar9("ad_ui_bar_hp",bar_at,bar_width,hp/maxf(1,max_hp))
-	_text(bar_at+Vector2(8,15),"HP %d/%d" % [ceili(hp),int(max_hp)],Color("#fff1d4"),MIN_FONT_SIZE)
+	_text(bar_at+Vector2(8,15),tr("hud.hp") % [ceili(hp),int(max_hp)],Color("#fff1d4"),MIN_FONT_SIZE)
 	var mana_at := bar_at+Vector2(bar_width+10,0)
 	_draw_bar9("ad_ui_bar_mana",mana_at,bar_width,mana/maxf(1,max_mana))
-	_text(mana_at+Vector2(8,15),"MP %d/%d" % [int(mana),int(max_mana)],Color("#eff8ff"),MIN_FONT_SIZE)
+	_text(mana_at+Vector2(8,15),tr("hud.mp") % [int(mana),int(max_mana)],Color("#eff8ff"),MIN_FONT_SIZE)
 	var bar_origin := Vector2(origin.x+content_x,origin.y+36.0)
 	var bar_tex: Texture2D = Art._texs[HUD_BAR]
 	draw_texture_rect_region(bar_tex,Rect2(bar_origin,bar_px),_frame(HUD_BAR,0))
@@ -134,14 +134,14 @@ func _draw_combat_panel() -> void:
 		_text(Vector2(at.x+2.0,key_y),"%d %s" % [i+1,view["key_label"]],Color("#e9d5a8"),MIN_FONT_SIZE)
 		if not view["empty"]:
 			var no_mana: bool = view["state"] == "no_mana"
-			_text(Vector2(at.x+2.0,cost_y),"%d MP" % int(view["mana_cost"]),Color("#ff8f8f") if no_mana else Color("#83d8ff"),MIN_FONT_SIZE)
+			_text(Vector2(at.x+2.0,cost_y),tr("hud.mana_cost") % int(view["mana_cost"]),Color("#ff8f8f") if no_mana else Color("#83d8ff"),MIN_FONT_SIZE)
 	var dash := dash_view()
 	draw_texture_rect_region(bar_tex,Rect2(bar_origin,bar_px),_frame(HUD_BAR,dash_frame(dash)))
 	var ready: bool = dash["ready"]
 	var dash_x: float = bar_origin.x+114.0*sc-6.0
-	_text(Vector2(dash_x,key_y),"DASH" if ready else "%.1f" % (float(dash["cooldown_left"])/TICKS_PER_SECOND),
+	_text(Vector2(dash_x,key_y),tr("hud.dash") if ready else "%.1f" % (float(dash["cooldown_left"])/TICKS_PER_SECOND),
 		Color("#8fe3c1") if ready else Color("#fff1d4"),MIN_FONT_SIZE)
-	_text(Vector2(dash_x,cost_y),DASH_KEY,Color("#e9d5a8"),MIN_FONT_SIZE)
+	_text(Vector2(dash_x,cost_y),tr(DASH_KEY),Color("#e9d5a8"),MIN_FONT_SIZE)
 
 func _draw_slot(at: Vector2, view: Dictionary, sc: float) -> void:
 	var state: String = view["state"]

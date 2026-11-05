@@ -84,6 +84,9 @@ func pending_count() -> int:
 func active_effect_count() -> int:
 	return _active_effect_count
 
+func note_budget_exceeded(context: Dictionary, reason: String, limit_key: String) -> void:
+	_budget_exceeded(context,reason,limit_key)
+
 func _budget_exceeded(event: Dictionary, reason: String, limit_key: String) -> void:
 	var root := int(event.get("root_cast_id",event.get("cast_id",0)))
 	var key := str(root)+":"+reason

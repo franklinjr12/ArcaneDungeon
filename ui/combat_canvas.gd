@@ -102,7 +102,7 @@ func _draw() -> void:
 	var tick_seg := aim_tick_segment(at,hover-offset)
 	if not tick_seg.is_empty():
 		draw_line(tick_seg[0],tick_seg[1],Color("#6adbea",0.20),1)
-	var actor_casting: bool = session.sim.active.size()>0 and tick%14<5
+	var actor_casting: bool = (session.sim.active.size()>0 or session.sim.is_channelling()) and tick%14<5
 	var player_velocity: Vector2 = mage.position-last_player_at
 	last_player_at = mage.position
 	var mage_motion: Vector2 = session.player.dash_heading*16.0 if session.player.dash_left>0 else player_velocity
@@ -116,21 +116,25 @@ func _draw() -> void:
 	Art.entity(self,"mage",at,tick,mage_motion,actor_casting,mage_hurt,not mage.alive(),mage_tint,mage_anim)
 	_health_bar(at,25,mage.health.current/mage.health.maximum,Color("#da686e"))
 	if show_debug:
-		_label(at+Vector2(-17,-45),"MAGE",Color("#f8e7ba"))
+		_label(at+Vector2(-17,-45),tr("combat.mage_label"),Color("#f8e7ba"))
 		draw_arc(at,mage.radius,0.0,TAU,32,HITBOX_COLOR,1.0)
 	Art.icon(self,"health",at+Vector2(-40,23),Vector2(15,15))
+	Art.draw_water(self,session,offset)
+	Art.draw_hazards(self,session,offset)
 	for enemy in session.enemies:
 		var target = enemy.target
 		var enemy_at: Vector2 = target.position-offset
+		var enemy_mod: Color = Art.placeholder_modulate(enemy.kind,Color(str(enemy.tuning.get("color","#ffffff"))),enemy.get("intangible") == true,enemy.get("intangible_warning") == true and tick%6<3)
 		var movement: Vector2 = target.position-last_enemy_at.get(target.id,target.position)
 		last_enemy_at[target.id] = target.position
 		var dissolved: int = int(_fx_memo.get("dead",{}).get(target.id,tick+1))
 		var enemy_anim := _enemy_anim(enemy,mage,tick,movement)
 		if Art.actor_has_tag(enemy.kind,"death_side"):
 			if not enemy_anim.is_empty():
-				Art.entity(self,enemy.kind,enemy_at,tick,movement,false,false,not target.alive(),Color.WHITE,enemy_anim)
+				Art.entity(self,enemy.kind,enemy_at,tick,movement,false,false,not target.alive(),enemy_mod,enemy_anim)
 		elif tick-dissolved < 20 or target.alive():
-			Art.entity(self,enemy.kind,enemy_at,tick,movement,enemy.state=="windup",false,not target.alive())
+			Art.entity(self,enemy.kind,enemy_at,tick,movement,enemy.state=="windup",false,not target.alive(),enemy_mod)
+		Art.draw_enemy_markers(self,enemy,enemy_at,tick,offset)
 		if target.alive():
 			_health_bar(enemy_at,target.radius+12,target.health.current/target.health.maximum,Color("#dc7060"))
 			if enemy.kind == "undead_warden" or show_debug:
@@ -146,13 +150,14 @@ func _draw() -> void:
 	if _fx_session != session:
 		_fx_session = session
 		_fx_memo = {}
+	Art.draw_form_visuals(self,session.sim.visuals,offset)
 	for fx in Art.collect_fx(session,tick,_fx_memo):
 		var fp := ReduceMotion.fx_draw_params(reduced,fx["event"],fx["age"])
 		Art.draw_fx(self,fx["event"],fx["at"]-offset,fp["age"],fx["rotation"],fx["length"],fp["modulate"],fx["slot"],fx.get("uniform",0.0),int(fx.get("window",0)))
 	_draw_floating_text(offset,tick)
 	_draw_death_banner()
 	if show_debug:
-		_label(Vector2(18,20),"DEBUG: wall/attack geometry and live target state",Color("#d6edf7"))
+		_label(Vector2(18,20),tr("combat.debug_geometry"),Color("#d6edf7"))
 
 ## Dark frame around the arena when the view is larger than the arena bounds (extreme aspects).
 func _draw_frame(arena_view: Rect2) -> void:
@@ -270,7 +275,7 @@ func _draw_floating_text(offset: Vector2, tick: int) -> void:
 	var arc_index := 0
 	for visual in session.sim.visuals:
 		if visual["kind"] == "arc":
-			var text := "ARC!"
+			var text := tr("combat.arc")
 			var size := font.get_string_size(text,HORIZONTAL_ALIGNMENT_LEFT,-1,12)
 			var at: Vector2 = (visual["from"]+visual["to"])/2.0-offset+Vector2(-12,-15)
 			items.append({"kind":"label","text":text,"color":Color("#ffeda4"),"anchor":at-Vector2(0,font.get_ascent(12)),"size":size,"group":"arc%d" % arc_index,"order":order})
@@ -311,7 +316,7 @@ func _draw_death_banner() -> void:
 	if session == null or session.sim.actor.alive():
 		return
 	var font := ThemeDB.fallback_font
-	var text := "DEFEATED"
+	var text := tr("combat.defeated")
 	var size := font.get_string_size(text,HORIZONTAL_ALIGNMENT_LEFT,-1,28)
 	var view := view_size()
 	var box := Rect2(Vector2((view.x-size.x)/2.0-16,view.y*0.22-size.y/2.0-8),size+Vector2(32,16))
