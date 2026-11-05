@@ -664,7 +664,7 @@ func _redraw_panel() -> void:
 			var item: Dictionary = flow.reward_options[i]
 			var caption := ""
 			if item["kind"] == "rune":
-				caption = str(item["name"])+"\n"+str(item["behaviour"])
+				caption = tr(str(item["name_key"]))+"\n"+tr(str(item["behaviour_key"]))
 			else:
 				caption = tr("run.reward.currency") % int(item["amount"])
 			var card := _button(row,"%d) %s" % [i+1,caption],_choose_reward.bind(i))
@@ -777,7 +777,7 @@ func _build_shop_panel() -> void:
 		col.custom_minimum_size.x = 150
 		col.add_theme_constant_override("separation",4)
 		card.add_child(col)
-		var b := _button(col,tr("run.shop.item_price") % [str(item["label"]),str(item["price"])],_buy.bind(i))
+		var b := _button(col,tr("run.shop.item_price") % [MerchantScript.item_label(item),str(item["price"])],_buy.bind(i))
 		b.disabled = flow.merchant.bought.has(item["id"]) or not affordable
 		b.icon = PortraitHUD.rune_icon_texture(str(item["rune_id"])) if item["kind"] == "rune" else PortraitHUD.ui_icon_texture("hp")
 		b.expand_icon = false

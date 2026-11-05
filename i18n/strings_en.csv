@@ -66,6 +66,29 @@ run.btn.continue_stage2,Continue to stage 2 (F)
 run.btn.door_optional,Enter the side door
 run.btn.door_skip,Take the main path
 run.merchant.buy_once, — buy once per item
+rune.essence.fire.name,Fire
+rune.essence.water.name,Water
+rune.essence.lightning.name,Lightning
+rune.essence.cold.name,Cold
+rune.essence.force.name,Force
+rune.form.projectile.name,Projectile
+rune.form.burst.name,Burst
+rune.form.orb.name,Orb
+rune.form.beam.name,Beam
+rune.form.field.name,Field
+rune.mod.homing.name,Homing
+rune.mod.split.name,Split
+rune.mod.pierce.name,Pierce
+rune.mod.chain.name,Chain
+rune.mod.expand.name,Expand
+rune.mod.rapid.name,Rapid
+rune.trigger.on_hit.name,On Hit
+rune.trigger.on_kill.name,On Kill
+rune.trigger.on_expire.name,On Expire
+rune.trigger.timer.name,Timer
+rune.essence.neutral.name,Basic Bolt
+run.shop.rune_label,Rune: %s
+run.shop.hp_label,Max HP +%d
 run.shop.item_price,%s / %s coins
 run.shop.max_hp,Increase max HP by %d (run-persistent)
 run.shop.purchased,Purchased

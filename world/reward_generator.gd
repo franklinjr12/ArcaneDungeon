@@ -20,13 +20,37 @@ func choices(run, room_id: String) -> Array:
 	random.seed = hash_value
 	var wanted := Difficulty.scale_i(int(config["reward_choices"]),"reward_rate")
 	var options: Array = []
-	while not possible.is_empty() and options.size() < wanted:
-		var idx := random.randi_range(0,possible.size()-1)
-		var id: String = possible[idx]
+	for id in pick_weighted(possible,wanted,random,config):
 		var card: Dictionary = config.get("reward_cards", {}).get(id, {})
-		options.append({"kind":"rune","id":id,"name":str(card.get("name",id)),
-			"behaviour":str(card.get("behaviour",""))})
-		possible.remove_at(idx)
+		options.append({"kind":"rune","id":id,"name_key":str(card.get("name_key","rune."+id+".name")),
+			"behaviour_key":str(card.get("behaviour_key","rune."+id+".desc")),"rarity":rarity_of(id,config)})
 	if options.size() < wanted:
 		options.append({"kind":"currency","amount":Difficulty.scale_i(int(config["room_reward_currency"]),"coin_rate",0)})
 	return options
+
+static func rarity_of(id: String, tuning: Dictionary) -> String:
+	return str(tuning.get("rune_rarity",{}).get(id,"common"))
+
+static func weight_of(id: String, tuning: Dictionary) -> float:
+	var weights: Dictionary = tuning.get("rarity_weights",{})
+	var rarity := rarity_of(id,tuning)
+	return float(weights.get(rarity,weights.get("common",1)))
+
+## Weighted sampling without replacement; candidate order is preserved, weight <= 0 is never picked.
+static func pick_weighted(candidates: Array, count: int, random: RandomNumberGenerator, tuning: Dictionary) -> Array:
+	var pool: Array = candidates.filter(func(id): return weight_of(str(id),tuning) > 0.0)
+	var picked: Array = []
+	while not pool.is_empty() and picked.size() < count:
+		var total := 0.0
+		for id in pool:
+			total += weight_of(str(id),tuning)
+		var roll := random.randf()*total
+		var idx := pool.size()-1
+		for i in pool.size():
+			roll -= weight_of(str(pool[i]),tuning)
+			if roll < 0.0:
+				idx = i
+				break
+		picked.append(pool[idx])
+		pool.remove_at(idx)
+	return picked
