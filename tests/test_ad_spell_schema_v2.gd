@@ -5,6 +5,7 @@ const Codec = preload("res://magic/compile/spell_codec.gd")
 const Validator = preload("res://magic/compile/spell_validator.gd")
 const Compiler = preload("res://magic/compile/spell_compiler.gd")
 const LEGACY := "res://tests/fixtures/runes_v1_legacy.json"
+const Flow = preload("res://world/run_flow.gd")
 const CATEGORY_IDS := ["essence", "form", "modifier", "trigger"]
 
 func run(t) -> void:
@@ -118,3 +119,18 @@ func _formula_migration(t, registry) -> void:
 	t.contains_issue(Codec.decode(JSON.stringify(future))["issues"], "SCHEMA_UNSUPPORTED", "AD-129 schema 3 rejected by decode")
 	t.contains_issue(Codec.migrate(future)["issues"], "SCHEMA_UNSUPPORTED", "AD-129 schema 3 rejected by migrate")
 	t.contains_issue(validator.validate(future, unlocked)["issues"], "SCHEMA_UNSUPPORTED", "AD-129 schema 3 rejected by validator")
+
+	var flow = Flow.new(20261029)
+	flow.run.sequence_index = flow.config["rooms"].size() - 2
+	flow._enter_current()
+	t.check(flow.open_editor(2)["ok"], "AD-129 editor opens for palette")
+	var palette: Array = flow.editor.palette()
+	var palette_ids: Array = []
+	var palette_runes := 0
+	for entry in palette:
+		palette_ids.append(entry["id"])
+		palette_runes += entry["runes"].size()
+		for rune in entry["runes"]:
+			t.check(rune["id"] != "essence.neutral", "AD-129 palette excludes builtin " + str(rune["id"]))
+	t.equal(palette_ids, CATEGORY_IDS, "AD-129 palette category order")
+	t.equal(palette_runes, 10, "AD-129 palette lists 10 runes")

@@ -55,6 +55,7 @@ var editor_panel: PanelContainer
 var editor_dock: MarginContainer
 var editor_controls: VBoxContainer
 var editor_preview: Label
+var palette_tab := 0
 var transition_veil: ColorRect
 var current_notice := ""
 var summary_retry_button: Button
@@ -1023,32 +1024,7 @@ func _editor_rebuild() -> void:
 	var e = flow.editor
 	_heading(editor_controls,tr("run.editor.title") % (e.slot+2),20)
 	_heading(editor_controls,tr("run.editor.chain"))
-	_heading(editor_controls,tr("run.editor.essence"),14)
-	var essence: OptionButton = _option(editor_controls,e.available("essence"),str(e.draft["root"]["essence_id"]))
-	essence.item_selected.connect(func(idx):
-		e.set_root(str(essence.get_item_metadata(idx)),str(e.draft["root"]["manifestation_id"]))
-		_editor_rebuild())
-	_heading(editor_controls,tr("run.editor.manifestation"),14)
-	var form: OptionButton = _option(editor_controls,e.available("form"),str(e.draft["root"]["manifestation_id"]))
-	form.item_selected.connect(func(idx):
-		e.set_root(str(e.draft["root"]["essence_id"]),str(form.get_item_metadata(idx)))
-		_editor_rebuild())
-	_heading(editor_controls,tr("run.editor.modifiers"),14)
-	for item in e.available("modifier"):
-		var b := CheckBox.new()
-		b.text = str(item["id"])+(tr("run.suffix.locked") if item["locked"] else "")
-		b.button_pressed = str(item["id"]) in e.draft["root"]["modifier_ids"]
-		b.disabled = bool(item["locked"]) or str(e.draft["root"]["manifestation_id"]) != "form.projectile"
-		editor_controls.add_child(b)
-		b.toggled.connect(func(_enabled): e.toggle_modifier(str(item["id"]));_editor_rebuild())
-	var onhit := CheckBox.new()
-	onhit.text = tr("run.editor.onhit")
-	onhit.button_pressed = e.draft.has("on_hit")
-	onhit.disabled = "trigger.on_hit" not in e.run.unlocked or str(e.draft["root"]["manifestation_id"]) != "form.projectile"
-	editor_controls.add_child(onhit)
-	onhit.toggled.connect(func(enabled):
-		e.set_trigger(enabled)
-		_editor_rebuild())
+	_build_rune_palette(e)
 	if e.draft.has("on_hit"):
 		_heading(editor_controls,tr("run.editor.child_essence"),14)
 		var child: OptionButton = _option(editor_controls,e.available("essence"),
@@ -1072,6 +1048,52 @@ func _editor_rebuild() -> void:
 	_button(editor_controls,tr("run.btn.cancel_edit"),func(): _close_editor(false),"ui.cancel")
 	var apply := _button(editor_controls,tr("run.btn.apply"),func(): _close_editor(true))
 	apply.disabled = not verdict["ok"]
+
+func _build_rune_palette(e) -> void:
+	var tabs := TabContainer.new()
+	tabs.name = "RunePalette"
+	editor_controls.add_child(tabs)
+	var root: Dictionary = e.draft["root"]
+	var is_projectile := str(root["manifestation_id"]) == "form.projectile"
+	for entry in e.palette():
+		var scroll := ScrollContainer.new()
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		scroll.custom_minimum_size = Vector2(0,160)
+		tabs.add_child(scroll)
+		var title := tr(str(entry["display_key"]))
+		tabs.set_tab_title(scroll.get_index(),str(entry["label"]) if title == str(entry["display_key"]) else title)
+		var list := VBoxContainer.new()
+		list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		scroll.add_child(list)
+		var kind := str(entry["id"])
+		for rune in entry["runes"]:
+			var id := str(rune["id"])
+			var b := Button.new()
+			b.toggle_mode = true
+			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			b.set_meta("rune_id",id)
+			b.text = id+(tr("run.suffix.locked") if rune["locked"] else "")
+			b.tooltip_text = str(rune["description"])
+			var icon: Texture2D = _rune_icon(id)
+			if icon != null:
+				b.icon = icon
+			match kind:
+				"essence": b.button_pressed = str(root["essence_id"]) == id
+				"form": b.button_pressed = str(root["manifestation_id"]) == id
+				"modifier": b.button_pressed = id in root["modifier_ids"]
+				"trigger": b.button_pressed = e.draft.has("on_hit")
+			b.disabled = bool(rune["locked"]) or (kind in ["modifier","trigger"] and not is_projectile)
+			list.add_child(b)
+			b.pressed.connect(func():
+				match kind:
+					"essence": e.set_root(id,str(e.draft["root"]["manifestation_id"]))
+					"form": e.set_root(str(e.draft["root"]["essence_id"]),id)
+					"modifier": e.toggle_modifier(id)
+					"trigger": e.set_trigger(not e.draft.has("on_hit"))
+				_editor_rebuild())
+	palette_tab = clampi(palette_tab,0,maxi(tabs.get_tab_count()-1,0))
+	tabs.current_tab = palette_tab
+	tabs.tab_changed.connect(func(index): palette_tab = index)
 
 func _rune_icon(rune_id: String) -> Texture2D:
 	return PortraitHUD.rune_icon_texture(rune_id)

@@ -143,3 +143,11 @@ func available(category: String) -> Array:
 		result.append({"id":rune["id"],"locked":rune["id"] not in run.unlocked,
 			"description":rune["description"]})
 	return result
+
+## One entry per registry category, in registry order, for the data-driven palette.
+func palette() -> Array:
+	var result: Array = []
+	for category in registry.list_categories():
+		result.append({"id":category["id"],"display_key":category["display_key"],
+			"label":category["label"],"runes":available(str(category["id"]))})
+	return result

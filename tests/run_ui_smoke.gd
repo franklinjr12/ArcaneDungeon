@@ -255,8 +255,15 @@ func _run() -> void:
 	expect(control.editor_open and control.editor_panel.visible,"structured editor panel opens")
 	expect(not (control.editor_panel.get_parent() is CenterContainer),"AD-093 editor is docked, not centred")
 	expect(not control.workshop_holder.visible,"AD-093 workshop side panel hidden while editor open")
-	expect(control.editor_controls.find_children("*","OptionButton",true,false).size()>=2,
-		"editor has root Essence and Manifestation selectors")
+	var palette_tabs = control.editor_controls.find_child("RunePalette",true,false)
+	var palette_ids: Array = []
+	for b in control.editor_controls.find_children("*","Button",true,false):
+		if b.has_meta("rune_id"):
+			palette_ids.append(str(b.get_meta("rune_id")))
+	palette_ids.sort()
+	expect(palette_tabs is TabContainer and palette_tabs.get_tab_count()==4 and palette_ids.size()==10
+		and palette_ids==run.session.sim.registry.get_ids(),
+		"AD-129 editor has RunePalette with 4 category tabs and 10 rune buttons")
 	var old: Dictionary = run.run.formulas[0].duplicate(true)
 	run.editor.set_root("essence.water","form.projectile")
 	control._editor_rebuild()
