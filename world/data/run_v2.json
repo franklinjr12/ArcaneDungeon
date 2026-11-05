@@ -215,24 +215,70 @@
       "telegraph_radius": 190
     },
     "cistern_boss": {
-      "kind": "undead_warden",
-      "display_name": "Cistern guardian (placeholder)",
-      "hp": 590,
+      "_note": "AD-142 PROPOSED numbers (Demo Plan default 'Drowned Archivist', pending Franklin)",
+      "kind": "drowned_archivist",
+      "display_name": "Drowned Archivist",
+      "hp": 950,
+      "channel_resistances": {"fire": 0.8, "water": -0.2, "lightning": -0.5, "neutral": 0.1},
       "radius": 49,
       "position": [
         1030,
         450
       ],
-      "windup_ticks": 48,
-      "recovery_ticks": 44,
-      "phase_threshold": 0.5,
-      "second_phase_windup_ticks": 33,
-      "radial_shots": 8,
-      "radial_damage": 9,
-      "shot_damage": 16,
-      "shot_speed": 300,
+      "recovery_ticks": 50,
+      "min_telegraph_ticks": 36,
+      "shot_speed": 280,
       "shot_spread": 0,
-      "telegraph_radius": 190
+      "telegraph_radius": 190,
+      "phases": [
+        {
+          "threshold": 1.0,
+          "patterns": [
+            "water_bolt",
+            "wet_zone"
+          ],
+          "windup_ticks": 48
+        },
+        {
+          "threshold": 0.66,
+          "patterns": [
+            "flood",
+            "water_bolt",
+            "wet_zone"
+          ],
+          "windup_ticks": 44
+        },
+        {
+          "threshold": 0.33,
+          "patterns": [
+            "summon_wisps",
+            "storm_pulse",
+            "water_bolt"
+          ],
+          "windup_ticks": 40
+        }
+      ],
+      "water_bolt_shots": 5,
+      "water_bolt_arc_degrees": 40,
+      "water_bolt_damage": 10,
+      "wet_zone_radius": 90,
+      "wet_zone_duration_ticks": 180,
+      "wet_zone_interval_ticks": 30,
+      "flood_duration_ticks": 240,
+      "flood_sets": [
+        [
+          {"kind": "shallow", "rect": [300, 120, 320, 220]},
+          {"kind": "shallow", "rect": [300, 560, 320, 220]}
+        ],
+        [
+          {"kind": "shallow", "rect": [560, 330, 260, 240]},
+          {"kind": "shallow", "rect": [700, 100, 260, 160]}
+        ]
+      ],
+      "wisp_offsets": [[60, -170], [60, 170]],
+      "wisp_cap": 2,
+      "storm_pulse_radius": 220,
+      "storm_pulse_damage": 14
     }
   },
   "stages": [
@@ -656,7 +702,15 @@
         450
       ],
       "waves": [],
-      "boss": "cistern_boss"
+      "boss": "cistern_boss",
+      "layout": {
+        "water": [
+          {"kind": "shallow", "rect": [380, 130, 260, 170]},
+          {"kind": "shallow", "rect": [380, 600, 260, 170]},
+          {"kind": "shallow", "rect": [700, 360, 150, 180]},
+          {"kind": "deep", "rect": [520, 20, 120, 80]}
+        ]
+      }
     },
     "workshop": {
       "id": "workshop",

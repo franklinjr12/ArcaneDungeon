@@ -2,6 +2,7 @@ extends RefCounted
 ## TASK-042 telegraphed phase boss using the same MagicTarget and hostile projectile pipeline.
 const Difficulty = preload("res://game/core/difficulty.gd")
 const AttackIntent = preload("res://combat/attack_intent.gd")
+const FLOOD_TAG := "archivist_flood"
 var target
 var kind := "undead_warden"
 var tuning: Dictionary
@@ -12,6 +13,11 @@ var death_announced := false
 var transitions: Array = []
 var intent
 var phase := 1
+## AD-142: attack chosen when the current windup started; flood bookkeeping for the optional `phases` path.
+var _windup_attack := ""
+var _reset_cycle_after_fire := false
+var flood_count := 0
+var flood_age := -1
 
 func _init(target_entity, settings: Dictionary) -> void:
 	target = target_entity
@@ -32,9 +38,21 @@ func _init(target_entity, settings: Dictionary) -> void:
 			tuning[key] = maxi(int(tuning[key]),floor_ticks)
 	if not tuning.has("patterns"):
 		tuning["patterns"] = ["radial","targeted"]
+	if settings.has("phases"):
+		_init_phases(elite_damage,floor_ticks)
 	tuning["color"] = str(settings.get("color","#e8c38b"))
 	tuning["attack_range"] = float(settings["telegraph_radius"])
 	tuning["telegraph_ticks"] = int(tuning["windup_ticks"])
+
+## AD-142: per-phase windups and the new damage keys get the same Difficulty scaling and telegraph floor as the 2-phase path.
+func _init_phases(elite_damage: float, floor_ticks: int) -> void:
+	for key in ["water_bolt_damage","storm_pulse_damage"]:
+		if tuning.has(key):
+			tuning[key] = Difficulty.scale_f(float(tuning[key])*elite_damage,"enemy_damage")
+	for entry in tuning["phases"]:
+		entry["windup_ticks"] = maxi(Difficulty.scale_i(int(entry["windup_ticks"]),"telegraph_length"),floor_ticks)
+	tuning["windup_ticks"] = int(tuning["phases"][0]["windup_ticks"])
+	tuning["patterns"] = tuning["phases"][0]["patterns"]
 
 func _state(to: String, tick: int) -> void:
 	if state == to:
@@ -45,6 +63,7 @@ func _state(to: String, tick: int) -> void:
 
 func advance(session) -> void:
 	if not target.alive():
+		_drain_flood(session)
 		_state("dead",session.sim.clock.tick)
 		if not death_announced:
 			death_announced = true
@@ -53,14 +72,20 @@ func advance(session) -> void:
 	if session.state != "playing":
 		return
 	var hp_fraction: float = target.health.current/target.health.maximum
-	if hp_fraction <= float(tuning["phase_threshold"]):
+	if tuning.has("phases"):
+		_update_phase(hp_fraction,session.sim.clock.tick)
+	elif hp_fraction <= float(tuning["phase_threshold"]):
 		phase = 2
+	if flood_age >= 0:
+		flood_age += 1
+		if flood_age >= int(tuning["flood_duration_ticks"]):
+			_drain_flood(session)
 	state_tick += 1
 	match state:
 		"acquire":
 			_start_windup(session)
 		"windup":
-			var duration := int(tuning["second_phase_windup_ticks"]) if phase == 2 else int(tuning["windup_ticks"])
+			var duration := int(intent.snapshot()["telegraph_ticks"]) if tuning.has("phases") else (int(tuning["second_phase_windup_ticks"]) if phase == 2 else int(tuning["windup_ticks"]))
 			if state_tick >= duration:
 				_fire(session)
 				_state("recover",session.sim.clock.tick)
@@ -69,39 +94,133 @@ func advance(session) -> void:
 				_start_windup(session)
 
 func _attack() -> String:
-	var patterns: Array = tuning["patterns"]
+	var patterns: Array = tuning["phases"][phase-1]["patterns"] if tuning.has("phases") else tuning["patterns"]
 	return str(patterns[cycle%patterns.size()])
+
+## Phase = highest index whose threshold >= hp fraction; it only ever increases and restarts the pattern cycle.
+func _update_phase(hp_fraction: float, tick: int) -> void:
+	var reached := phase
+	var phases: Array = tuning["phases"]
+	for index in phases.size():
+		if hp_fraction <= float(phases[index]["threshold"]):
+			reached = maxi(reached,index+1)
+	if reached == phase:
+		return
+	transitions.append({"from":"phase%d" % phase,"to":"phase%d" % reached,"tick":tick,"enemy_id":target.id})
+	phase = reached
+	if state == "windup":
+		_reset_cycle_after_fire = true
+	else:
+		cycle = 0
+
+func _range_key(attack: String) -> String:
+	match attack:
+		"pulse":
+			return "pulse_radius"
+		"wet_zone":
+			return "wet_zone_radius"
+		"storm_pulse":
+			return "storm_pulse_radius"
+	return "telegraph_radius"
 
 func _start_windup(session) -> void:
 	var attack := _attack()
-	var range_key := "pulse_radius" if attack == "pulse" else "telegraph_radius"
-	intent = AttackIntent.new({"kind":attack,"origin":target.position,
-		"telegraph_ticks":int(tuning["second_phase_windup_ticks"]) if phase == 2 else int(tuning["windup_ticks"]),
-		"range":float(tuning[range_key])})
+	if attack == "flood" and flood_age >= 0:
+		cycle += 1
+		attack = _attack()
+	_windup_attack = attack
+	var ticks := int(tuning["phases"][phase-1]["windup_ticks"]) if tuning.has("phases") else (int(tuning["second_phase_windup_ticks"]) if phase == 2 else int(tuning["windup_ticks"]))
+	var fields := {"kind":attack,"origin":target.position,"telegraph_ticks":ticks,"range":float(tuning[_range_key(attack)])}
+	if attack == "wet_zone":
+		fields["target"] = session.sim.actor.position
+	elif attack == "flood":
+		fields["rects"] = _flood_entries().map(func(entry): return entry["rect"])
+	intent = AttackIntent.new(fields)
 	tuning["telegraph_ticks"] = intent.snapshot()["telegraph_ticks"]
+	tuning["attack_range"] = float(fields["range"])
 	_state("windup",session.sim.clock.tick)
 	session._notify("! BOSS "+attack.to_upper(),target.position)
+
+func _flood_entries() -> Array:
+	var sets: Array = tuning["flood_sets"]
+	return sets[flood_count%sets.size()]
+
+func _drain_flood(session) -> void:
+	if flood_age < 0:
+		return
+	flood_age = -1
+	if session.water != null:
+		session.water.remove_tag(FLOOD_TAG)
 
 func _fire(session) -> void:
 	if not target.alive() or not session.sim.actor.alive():
 		return
-	var attack := _attack()
+	var attack := _windup_attack
 	if attack == "pulse":
 		if session.sim.actor.position.distance_to(target.position) <= float(tuning["pulse_radius"]):
 			session.damage_player(target.id,float(tuning["pulse_damage"]),"lightning")
-	elif attack == "fan":
-		var number := int(tuning.get("fan_shots",5))
-		var arc := deg_to_rad(float(tuning.get("fan_arc_degrees",50)))
+	elif attack == "fan" or attack == "water_bolt":
+		var prefix := "water_bolt_" if attack == "water_bolt" else "fan_"
+		var number := int(tuning.get(prefix+"shots",5))
+		var arc := deg_to_rad(float(tuning.get(prefix+"arc_degrees",50)))
+		var damage := float(tuning["water_bolt_damage"]) if attack == "water_bolt" else float(tuning["shot_damage"])
 		var centre: Vector2 = (session.sim.actor.position-target.position).normalized()
 		for index in number:
 			var offset := 0.0 if number <= 1 else arc*(float(index)/float(number-1)-0.5)
-			session.spawn_enemy_projectile(target.id,target.position,centre.rotated(offset),float(tuning["shot_damage"]),float(tuning["shot_speed"]))
+			session.spawn_enemy_projectile(target.id,target.position,centre.rotated(offset),damage,float(tuning["shot_speed"]))
 	elif attack == "radial":
 		var number := int(tuning["radial_shots"])
 		for index in number:
 			var heading := Vector2.RIGHT.rotated(TAU*float(index)/float(number))
 			session.spawn_enemy_projectile(target.id,target.position,heading,float(tuning["radial_damage"]),float(tuning["shot_speed"]))
+	elif attack == "wet_zone":
+		session.add_hazard({"kind":"puddle","status":"wet","position":intent.snapshot()["target"],
+			"radius":float(tuning["wet_zone_radius"]),"duration_ticks":int(tuning["wet_zone_duration_ticks"]),
+			"interval_ticks":int(tuning["wet_zone_interval_ticks"]),"source_id":target.id})
+	elif attack == "flood":
+		_fire_flood(session)
+	elif attack == "summon_wisps":
+		_fire_summon(session)
+	elif attack == "storm_pulse":
+		_fire_storm_pulse(session)
 	else:
 		var aim: Vector2 = (session.sim.actor.position-target.position).normalized()
 		session.spawn_enemy_projectile(target.id,target.position,aim,float(tuning["shot_damage"]),float(tuning["shot_speed"]),float(tuning["shot_spread"]))
-	cycle += 1
+	if _reset_cycle_after_fire:
+		_reset_cycle_after_fire = false
+		cycle = 0
+	else:
+		cycle += 1
+
+func _fire_flood(session) -> void:
+	if flood_age >= 0:
+		return
+	var entries: Array = []
+	for entry in _flood_entries():
+		entries.append(entry.merged({"tag":FLOOD_TAG}))
+	flood_count += 1
+	if session.water == null:
+		session.set_water([])
+	session.water.add_entries(entries)
+	flood_age = 0
+
+func _fire_summon(session) -> void:
+	var kind := str(tuning.get("wisp_kind","lantern_wisp"))
+	var radius := float(session.data["enemies"][kind]["radius"])
+	for offset in tuning["wisp_offsets"]:
+		if session.summons_owned_by(target.id) >= int(tuning["wisp_cap"]):
+			break
+		var at: Vector2 = target.position+Vector2(float(offset[0]),float(offset[1]))
+		if session.world.valid_position(at,radius):
+			session.pending_spawns.append({"kind":kind,"position":at,"summoner_id":target.id})
+
+func _fire_storm_pulse(session) -> void:
+	var actor = session.sim.actor
+	if target.position.distance_to(actor.position) > float(tuning["storm_pulse_radius"])+actor.radius:
+		return
+	var result: Dictionary = session.damage_player(target.id,float(tuning["storm_pulse_damage"]),"lightning")
+	if result.get("accepted",true) == false:
+		return
+	var statuses: Dictionary = session.sim.settings["statuses"]
+	if statuses.has("charged"):
+		actor.status.apply("charged",session.sim.clock.tick,statuses["charged"],{"source_id":target.id})

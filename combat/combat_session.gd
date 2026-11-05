@@ -217,6 +217,8 @@ func spawn_boss(settings: Dictionary, at: Vector2):
 	var target = sim.add_target(at,Vector2.ZERO,Difficulty.scale_f(hp,"enemy_hp"))
 	target.radius = float(settings["radius"])
 	target.tags = ["enemy","boss",kind]
+	if typeof(settings.get("channel_resistances")) == TYPE_DICTIONARY:
+		target.health.resistances = settings["channel_resistances"].duplicate(true)
 	if bool(settings.get("mini_boss",false)):
 		target.tags.append("mini_boss")
 	var boss = Boss.new(target,settings)

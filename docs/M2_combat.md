@@ -131,6 +131,18 @@ Components: `charged_pulse` (`pulse_radius`, `pulse_channel`, `pulse_status`; te
 
 Cistern rooms: storm crystal from p06 (p06, p08, challenge), rust golem from p08 (p08, p10, challenge), lantern wisp from p09 (p09, p10, challenge; always with at least one other enemy). They replace generic entries at the same coordinates, so spawns stay valid and never land in deep water. Placeholder sprites via `PLACEHOLDER_KIND`: crystal borrows fallen_adept, golem bone_thrall, wisp grave_hound, tinted by `color`.
 
+### Stage 2 final boss: Drowned Archivist (AD-142, numbers [PROPOSED FOR PROTOTYPE])
+
+Config: `world/data/run_v2.json` `bosses.cistern_boss` (hp, `phases`, `min_telegraph_ticks` 36, per-pattern numbers, `flood_sets`, `wisp_*`, `storm_pulse_*`, `channel_resistances`; none fully resisted). Logic: `combat/boss_combat.gd` (phase = highest threshold crossed by hp, never decreases; each phase cycles its `patterns`). Flood toggles tagged water entries via `WaterTiles.add_entries/remove_tag` (`world/water_tiles.gd`). `combat_session.spawn_boss` applies optional `channel_resistances`.
+
+| phase (hp) | patterns | notes |
+| --- | --- | --- |
+| 1 (100%) | `water_bolt` fan, `wet_zone` puddle at the locked player position | windup 48 ticks (0.8 s) |
+| 2 (<= 66%) | `flood`, `water_bolt`, `wet_zone` | flood windup 44 ticks shows the rects, then shallow water appears for `flood_duration_ticks` and drains |
+| 3 (<= 33%) | `summon_wisps`, `storm_pulse`, `water_bolt` | wisps capped by `wisp_cap` alive+pending; pulse hits only inside `storm_pulse_radius` and applies Charged; windup 40 ticks |
+
+The boss room (`room_templates.cistern_boss.layout.water`) has static shallow water plus one small deep rect away from the entrance-boss route. Tests: `tests/test_ad_final_boss.gd` (phases, telegraph floor, arena validity, 2 scripted builds 0 and 2 plus a no-Water Fire+Lightning loadout each killing the boss in 5400-10800 ticks = 90-180 s with identical kill ticks on re-run, run summary `won` after the kill). Run one suite with a script that loads `tests/test_ad_final_boss.gd` and calls `run(context)`, or the whole suite: `godot --headless --path . --script res://tests/run_tests.gd`.
+
 ## Boundaries and owner decisions
 
 The arena is *not* M3 room progression, boss design, loot, a spell editor, a production sprite pipeline or gamepad integration. Player motion, dodge timings, enemy archetypes/HP and attack damage, Burst range/LOS, fixed arena obstacles, accessible flash treatment, two loadout slots, initial seed, and encounter recipes are **PROPOSED FOR PROTOTYPE**, not locked design. A later human playtest should verify warning legibility, pacing, actual 60-FPS rendering, camera comfort and combat feel before treating M2 as polished.
