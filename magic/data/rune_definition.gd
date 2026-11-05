@@ -2,11 +2,13 @@ extends Resource
 ## Public API exposes snapshots only. Registry keeps its own private copy.
 const REQUIRED := ["id", "category", "schema_version", "params", "compatibility_tags", "complexity_weight", "mana_cost", "cooldown_ticks", "description", "display_key"]
 const CATEGORIES := ["essence", "form", "modifier", "trigger"]
+const SCHEMA_VERSION := 2
+const SUPPORTED_VERSIONS := [1, 2]
 const PARAM_TYPES := ["bool", "int", "float", "string"]
 const OPTIONAL := ["builtin"]
 var _definition: Dictionary = {}
 
-func from_dict(value: Dictionary) -> Array:
+func from_dict(value: Dictionary, allowed_categories: Array = CATEGORIES) -> Array:
 	var issues: Array = []
 	for key in REQUIRED:
 		if not value.has(key):
@@ -18,10 +20,10 @@ func from_dict(value: Dictionary) -> Array:
 		return issues
 	if typeof(value["id"]) != TYPE_STRING or not _id_valid(value["id"]):
 		issues.append(_issue("RUNE_INVALID_ID", "id", "Expected stable lowercase dotted rune ID"))
-	if typeof(value["schema_version"]) not in [TYPE_INT,TYPE_FLOAT] or value["schema_version"] != 1:
-		issues.append(_issue("RUNE_SCHEMA_VERSION", "schema_version", "Only v1 rune data is supported"))
-	if typeof(value["category"]) != TYPE_STRING or value["category"] not in CATEGORIES:
-		issues.append(_issue("RUNE_CATEGORY_INVALID", "category", "Category must be essence, form, modifier or trigger"))
+	if typeof(value["schema_version"]) not in [TYPE_INT,TYPE_FLOAT] or float(value["schema_version"]) != floor(float(value["schema_version"])) or int(value["schema_version"]) not in SUPPORTED_VERSIONS:
+		issues.append(_issue("RUNE_SCHEMA_VERSION", "schema_version", "Only v1 and v2 rune data are supported"))
+	if typeof(value["category"]) != TYPE_STRING or value["category"] not in allowed_categories:
+		issues.append(_issue("RUNE_CATEGORY_INVALID", "category", "Category must be one of: " + ", ".join(allowed_categories)))
 	if typeof(value["params"]) != TYPE_DICTIONARY:
 		issues.append(_issue("RUNE_PARAMS_INVALID", "params", "Typed parameter definitions must be a dictionary"))
 	else:
@@ -66,7 +68,7 @@ func from_dict(value: Dictionary) -> Array:
 			issues.append(_issue("RUNE_TEXT_INVALID", string_key, "Expected short text"))
 	if issues.is_empty():
 		_definition = value.duplicate(true)
-		_definition["schema_version"] = 1
+		_definition["schema_version"] = SCHEMA_VERSION
 		_definition["builtin"] = bool(value.get("builtin", false))
 		for number_key in ["complexity_weight","mana_cost","cooldown_ticks"]:
 			_definition[number_key] = int(_definition[number_key])

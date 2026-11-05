@@ -2,7 +2,7 @@ extends RefCounted
 ## AD-022: flavour text limits, rune descriptions, rift line shown once per run.
 const Merchant = preload("res://world/merchant.gd")
 const Controller = preload("res://ui/run_controller.gd")
-const RUNES := "res://magic/data/runes_v1.json"
+const RUNES := "res://magic/data/runes_v2.json"
 
 func run(t) -> void:
 	var f: Dictionary = Merchant.load_flavour()

@@ -3,7 +3,7 @@ extends RefCounted
 const MANIFEST := "res://art/export/manifest.json"
 const MAP := "res://art/export/engine_map.json"
 const INDEX := "res://art/export/ico/ad_ico_atlas_mvp_index.json"
-const RUNES := "res://magic/data/runes_v1.json"
+const RUNES := "res://magic/data/runes_v2.json"
 const Hud = preload("res://ui/pixel_hud.gd")
 const ATLAS := "res://art/export/ico/ad_ico_atlas_mvp.png"
 

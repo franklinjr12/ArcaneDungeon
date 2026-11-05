@@ -50,7 +50,7 @@ A root **Burst** is centered on the cursor (click the desired impact point). Pro
 ## Source of truth / architecture
 
 - `docs/architecture/magic_contract_v1.md`: technical shared contract, v1.2 M1-compatible.
-- `magic/data/runes_v1.json`: stable IDs and typed, bounded default parameters.
+- `magic/data/runes_v2.json`: stable IDs and typed, bounded default parameters.
 - `magic/data/magic_balance_v1.json`: prototype damage channels, state interactions, durations, DOT, mana, arc, spawn/debug tuning. These are **not approved balancing decisions**.
 - `magic/data/spell_limits_v1.json`: finite resource and event budgets, including a dedicated max-active-Orbs limit (prototype 6).
 - `magic/data/sandbox_samples_v1.json`: eight example formulas using **formula JSON schema v1**.
@@ -66,7 +66,7 @@ The tick phases are: cooldown and mana regeneration → deterministic movement o
 
 **When two Wet candidates are equally close, the lowest stable target ID wins.** Statuses remain on living enemies until expiration or a resolver rule removes them; Water removes Burning and adds Wet. The lightning reaction is a single derived hit and never recurses or consumes Wet. Split children and Pierce contacts preserve root cast, formula and parent effect IDs.
 
-The formula JSON remains **schema_version=1**. Compiler plans include resolved defaults and immutable copied rune snapshots; M1 adds a backward-compatible technical contract revision, not a new formula file schema. Modifier order remains stored but does not change runtime phase order in v1.
+The formula JSON was **schema_version=1** in M1; AD-129 bumped it to v2 (`SpellCodec.migrate` upgrades v1 formulas, no structural change; rune data now `runes_v2.json` with categories and param blocks). Compiler plans include resolved defaults and immutable copied rune snapshots; M1 adds a backward-compatible technical contract revision, not a new formula file schema. Modifier order remains stored but does not change runtime phase order in v1.
 
 ## Validation
 

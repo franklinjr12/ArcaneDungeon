@@ -49,7 +49,7 @@ func run(t) -> void:
 			continue
 		var encoded: Dictionary = Codec.encode(decoded["formula"])
 		t.check(encoded["ok"],"TASK-005 encode "+filename)
-		t.equal(encoded["json"],raw,"TASK-005 golden canonical JSON "+filename)
+		t.equal(encoded["json"],raw.replace('"schema_version":1','"schema_version":2'),"TASK-005 golden canonical JSON (v1 fixture re-encoded as v2) "+filename)
 		t.equal(Codec.decode(encoded["json"])["formula"],decoded["formula"],"TASK-005 round-trip "+filename)
 		formulas.append(decoded["formula"])
 		json_texts.append(encoded["json"])

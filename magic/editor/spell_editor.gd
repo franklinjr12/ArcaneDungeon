@@ -31,7 +31,7 @@ func _starter_draft(index: int) -> Dictionary:
 		if not entry["locked"]:
 			essence = entry["id"]
 			break
-	return {"schema_version":1,"formula_id":"custom.slot_"+str(index+1),
+	return {"schema_version":2,"formula_id":"custom.slot_"+str(index+1),
 		"display_name":"Custom Spell "+str(index+1),
 		"root":{"essence_id":essence,"manifestation_id":"form.projectile","modifier_ids":[],"params":{}}}
 
