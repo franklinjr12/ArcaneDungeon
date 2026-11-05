@@ -129,13 +129,13 @@ run.notice.edit_policy,"Edit policy: %s (test switch, not final rule)"
 run.notice.slot1_locked,Slot 1 is locked (Basic Bolt) — cannot edit
 run.notice.editor,Editor: %s
 run.editor.title,SPELL EDITOR / SLOT %d
-run.editor.chain,Essence → Manifestation → Modifier → On Hit
+run.editor.chain,Essence → Form → Modifiers → Trigger
 run.editor.essence,Essence
 run.editor.manifestation,Manifestation
 run.editor.modifiers,Modifiers (order has no effect)
 run.suffix.locked, [LOCKED]
 run.suffix.locked_lower, (locked)
-run.editor.onhit,On Hit → Burst child
+run.editor.onhit,Trigger → Burst payload
 run.editor.child_essence,Child Burst Essence
 run.editor.valid,VALID / Mana %d / Cooldown %d ticks / Complexity %d / %d cap
 run.editor.invalid,INVALID — cannot apply:
@@ -302,3 +302,20 @@ run.goal.desk,Sigil Desk - build slot 4
 run.btn.desk_door,Go through the door (F)
 run.btn.desk_skip,Skip the desk
 run.btn.desk_slot,Edit slot %d
+editor.issue.modifier_projectile_only,This modifier works only on a Projectile.
+editor.issue.trigger_projectile_only,On Hit works only on a Projectile.
+editor.issue.trigger_needs_lasting,This trigger needs a lasting form (Projectile Orb Beam or Field).
+editor.issue.payload_must_be_burst,The trigger payload must be a Burst.
+editor.issue.payload_no_modifiers,The trigger payload cannot carry modifiers.
+editor.issue.complexity_exceeded,Too complex: %d exceeds the cap of %d.
+editor.issue.rune_locked,Rune not unlocked yet: %s
+editor.issue.modifier_duplicate,Each modifier can be used only once.
+editor.issue.root_form_invalid,That form cannot be the main form.
+editor.issue.trigger_unknown,Unknown trigger.
+editor.issue.rune_unknown,Unknown rune.
+editor.issue.rune_wrong_category,That rune is in the wrong slot.
+editor.issue.rune_builtin_forbidden,That rune is reserved and cannot be used.
+editor.issue.unknown_parameter,A parameter is not valid for these runes.
+editor.issue.parameter_type_invalid,A parameter has the wrong type.
+editor.issue.parameter_out_of_range,A parameter is outside its allowed range.
+editor.issue.generic,This spell cannot be built.
