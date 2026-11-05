@@ -114,3 +114,23 @@ Run the local wrapper above. It scans stdout/stderr for Godot parser/runtime err
 ## Open owner decisions
 
 Initial 10-rune roster and restricted On Hit grammar, two manual slots, all damage numbers, mana, cooldowns, event caps, status durations, arc radius, orbit/split behavior and editor-access rules are **PROPOSED**, not approved final game balance. More complex spell graphs, VR, detailed final art/VFX/audio, broad dungeon progression, M2 player combat and M3 workshop systems remain outside M1 scope.
+
+## AD-135 rune pool and balance pass
+
+All numbers below are **PROPOSED**, not approved balance.
+
+- **Pool:** all 20 player runes (5 essences, 5 forms, 6 modifiers, 4 triggers; `essence.neutral` is built-in and never offered) are in `world/data/run_v2.json` `reward_pool`. Rarity tier per rune is `rune_rarity`; weights `rarity_weights` are common 6, uncommon 3, rare 1 (uncommon: cold, force, orb, beam, field, chain, expand, rapid, On Hit; rare: On Kill, On Expire, Timer). Reward cards never repeat a rune within one pick and are deterministic per run seed + room.
+- **Merchant:** stocks exactly one not-yet-unlocked rune per visit, chosen by the same seeded weighted pick; nothing is stocked once all 20 are unlocked. Card name/description use `rune.<id>.name` / `rune.<id>.desc` tr keys.
+- **Editor reasons:** invalid combinations (modifier/trigger/payload incompatibilities, over-complexity) show translated reasons from the validation issue codes.
+- **Balance targets** (`magic/data/magic_balance_v1.json` `balance_targets`): `max_root_mana` 40, `max_total_mana` 40 (>= 3 casts from 120 mana), `max_cooldown_ticks` 30, `min_casts_from_full_mana` 3, `min_complexity_headroom_for_core_combo` 3 (1 form + 1 essence + 1 any-form modifier + 1 trigger with Burst payload, cap 12), `trigger_mana_premium_max` 22 (trigger + payload mana over the same spell without trigger).
+- **Sweep result:** 4,200 legal formulas (5 essences x 5 forms x 0-1 modifier or any legal pair x no trigger or each trigger with each essence Burst payload): mana 6..40, cooldown 1..12, max complexity 9/12.
+- **Cost changes** (only `mana_cost`; first sweep had combos at 41-42 mana):
+
+| Rune | Mana before | Mana after | Reason |
+|---|---|---|---|
+| `form.field` | 10 | 9 | cheapest field+timer stacks exceeded 40 mana |
+| `mod.expand` | 3 | 2 | slows Burst cooldown, so priced like Rapid/Pierce |
+| `mod.chain` | 3 | 2 | stacked modifier pairs plus Timer payload exceeded 40 |
+
+No cooldown or complexity values changed; no golden fixtures changed.
+- **Rerun the sweep:** `godot --headless --path . --script res://tests/run_tests.gd` (the `_balance_sweep` section of `tests/test_ad_rune_pool.gd` prints an `AD-135 sweep:` summary line and lists any `target miss`).

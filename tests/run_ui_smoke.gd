@@ -291,18 +291,21 @@ func _run() -> void:
 	control._open_editor(3)
 	expect(control.editor_open and control.editor_preview.text.contains("VALID") and control.editor_preview.text.contains("Cooldown") and control.editor_preview.text.contains("cap"),
 		"slot 4 opens with cap-aware preview")
+	var locked_mod := "mod.pierce" if "mod.pierce" not in run.run.unlocked else "mod.homing"
+	if locked_mod in run.run.unlocked:
+		locked_mod = "mod.chain"
 	run.editor.set_root("essence.fire","form.projectile")
-	run.editor.toggle_modifier("mod.pierce")
+	run.editor.toggle_modifier(locked_mod)
 	control._editor_rebuild()
 	var apply_disabled := false
 	for b in control.editor_controls.find_children("*","Button",true,false):
 		if b.text.begins_with("Apply"):
 			apply_disabled = b.disabled
-	expect(control.editor_preview.text.contains("INVALID") and control.editor_preview.text.contains("RUNE_LOCKED") and apply_disabled,
+	expect(control.editor_preview.text.contains("INVALID") and control.editor_preview.text.contains(control.tr("editor.issue.rune_locked").get_slice(":",0)) and apply_disabled,
 		"invalid formula shows reason, Apply disabled")
 	control._close_editor(true)
 	expect(control.editor_open and run.run.formulas.size()==2,"invalid formula cannot be equipped")
-	run.editor.toggle_modifier("mod.pierce")
+	run.editor.toggle_modifier(locked_mod)
 	run.editor.set_root("essence.lightning","form.projectile")
 	control._editor_rebuild()
 	control._close_editor(true)
@@ -310,6 +313,43 @@ func _run() -> void:
 		"valid slot 4 applied")
 	var cast4: Dictionary = control._test_cast_slot(3,run.range_sim.actor.position+Vector2(200,0))
 	expect(cast4.get("accepted",false),"slot 4 casts in range")
+	# AD-135: five new rune combinations built through the editor API
+	for rune_id in run.session.sim.registry.get_ids():
+		if rune_id not in run.run.unlocked and not rune_id.begins_with("essence.neutral"):
+			run.run.unlocked.append(rune_id)
+	var combos := [
+		["essence.cold","form.beam",["mod.chain"],"",""],
+		["essence.force","form.field",["mod.expand"],"trigger.timer","essence.fire"],
+		["essence.lightning","form.orb",["mod.rapid"],"trigger.on_expire","essence.water"],
+		["essence.fire","form.burst",["mod.chain"],"trigger.on_kill","essence.cold"],
+		["essence.water","form.projectile",["mod.pierce","mod.rapid"],"trigger.on_hit","essence.lightning"]]
+	for combo in combos:
+		control._open_editor(3)
+		var ed = run.editor
+		ed.set_root(combo[0],combo[1])
+		for mod_id in combo[2]:
+			ed.toggle_modifier(mod_id)
+		if combo[3] != "":
+			ed.set_trigger(true,combo[4],combo[3])
+		control._editor_rebuild()
+		expect(control.editor_preview.text.contains("VALID") and not control.editor_preview.text.contains("INVALID"),
+			"AD-135 combo %s shows VALID" % str(combo))
+		var before_apply: int = run.run.formulas.size()
+		control._close_editor(true)
+		expect(not control.editor_open and run.run.formulas.size()==before_apply
+			and run.run.formulas[before_apply-1]["root"]["manifestation_id"]==combo[1],
+			"AD-135 combo %s applied" % str(combo))
+	control._open_editor(3)
+	run.editor.set_root("essence.fire","form.burst")
+	run.editor.set_trigger(true,"essence.cold","trigger.timer")
+	control._editor_rebuild()
+	var neg_apply_disabled := false
+	for b in control.editor_controls.find_children("*","Button",true,false):
+		if b.text.begins_with("Apply"):
+			neg_apply_disabled = b.disabled
+	expect(control.editor_preview.text.contains(control.tr("editor.issue.trigger_needs_lasting")) and neg_apply_disabled,
+		"AD-135 burst + timer shows lasting-form reason, Apply disabled")
+	control._close_editor(false)
 	run.wet_kills += 1
 	control._update_labels()
 	expect(control.guide.current=="wet_try_lightning" and control.tip.text.contains("Lightning") and not control.is_paused()

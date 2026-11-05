@@ -53,3 +53,48 @@ func run(t) -> void:
 	# (f) no neutral essence in palette
 	for entry in flow.editor.available("essence"):
 		t.check(entry["id"] != "essence.neutral","AD-023 palette excludes neutral")
+
+	# AD-135: any-form modifiers, trigger switching, reason keys
+	var unlocked_all: Array = flow.session.sim.registry.get_ids()
+	flow.run.unlocked = unlocked_all.duplicate()
+	flow.editor.cancel()
+	t.check(flow.open_editor(2)["ok"],"AD-135 reopen slot 4")
+	var ed = flow.editor
+	ed.set_root("essence.fire","form.projectile")
+	ed.toggle_modifier("mod.chain")
+	ed.toggle_modifier("mod.split")
+	var beam: Dictionary = ed.set_root("essence.fire","form.beam")
+	t.check(beam["ok"] and ed.draft["root"]["modifier_ids"]==["mod.chain"],"AD-135 beam keeps mod.chain and drops mod.split")
+	t.check(not ed.can_attach("mod.split")["ok"] and ed.can_attach("mod.split")["reason_key"]=="editor.issue.modifier_projectile_only","AD-135 can_attach split on beam")
+	t.check(ed.can_attach("trigger.timer")["ok"] and not ed.can_attach("trigger.on_hit")["ok"],"AD-135 beam allows timer, not on_hit")
+	ed.set_trigger(true,"essence.water","trigger.timer")
+	ed.set_trigger(true,"essence.water","trigger.on_kill")
+	t.equal(ed.draft["on_hit"]["trigger_id"],"trigger.on_kill","AD-135 set_trigger switches trigger id")
+	t.equal(ed.draft["on_hit"]["payload"]["essence_id"],"essence.water","AD-135 switch keeps payload")
+	ed.set_root("essence.fire","form.burst")
+	t.check(ed.draft.has("on_hit"),"AD-135 on_kill survives burst")
+	ed.set_trigger(true,"essence.water","trigger.on_expire")
+	var bad_burst: Dictionary = ed.set_root("essence.fire","form.burst")
+	t.check(not ed.draft.has("on_hit") and bad_burst["ok"],"AD-135 lasting_only trigger dropped on burst")
+	ed.set_root("essence.fire","form.beam")
+	ed.set_trigger(true,"essence.water","trigger.on_hit")
+	var inc: Dictionary = ed.validate()
+	t.check(not inc["ok"] and inc["issues"][0]["reason_key"]=="editor.issue.trigger_projectile_only","AD-135 on_hit on beam reason")
+	ed.set_trigger(true,"essence.water","trigger.timer")
+	ed.set_root("essence.fire","form.burst")
+	ed.draft["on_hit"] = {"trigger_id":"trigger.timer","payload":{"essence_id":"essence.water","manifestation_id":"form.burst","modifier_ids":[],"params":{}}}
+	t.equal(ed.issue_reason_key(ed.validate()["issues"][0]),"editor.issue.trigger_needs_lasting","AD-135 timer on burst reason")
+	t.equal(ed.issue_reason_key({"code":"PAYLOAD_FORM_INVALID"}),"editor.issue.payload_must_be_burst","AD-135 payload form key")
+	t.equal(ed.issue_reason_key({"code":"PAYLOAD_MODIFIER_FORBIDDEN"}),"editor.issue.payload_no_modifiers","AD-135 payload modifier key")
+	t.equal(ed.issue_reason_key({"code":"COMPLEXITY_EXCEEDED"}),"editor.issue.complexity_exceeded","AD-135 complexity key")
+	t.equal(ed.issue_reason_key({"code":"RUNE_LOCKED"}),"editor.issue.rune_locked","AD-135 locked key")
+	t.equal(ed.issue_reason_key({"code":"MODIFIER_DUPLICATE"}),"editor.issue.modifier_duplicate","AD-135 duplicate key")
+	t.equal(ed.issue_reason_key({"code":"NOPE"}),"editor.issue.generic","AD-135 generic fallback")
+	var csv := FileAccess.get_file_as_string("res://i18n/strings_en.csv")
+	var keys: Array = ["editor.issue.generic"]
+	for code in ed.ISSUE_KEYS:
+		keys.append("editor.issue."+code.to_lower())
+	for k in ["modifier_projectile_only","trigger_projectile_only","trigger_needs_lasting","payload_must_be_burst","payload_no_modifiers","complexity_exceeded","rune_locked","modifier_duplicate"]:
+		keys.append("editor.issue."+k)
+	for k in keys:
+		t.check(csv.contains("\n"+k+","),"AD-135 CSV has "+k)

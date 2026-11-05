@@ -79,6 +79,15 @@
       "knockback_force": 420
     }
   },
+  "balance_targets": {
+    "_note": "AD-135 PROPOSED first-pass targets checked by tests/test_ad_rune_pool.gd _balance_sweep; not approved final balance.",
+    "max_root_mana": 40,
+    "max_total_mana": 40,
+    "max_cooldown_ticks": 30,
+    "min_casts_from_full_mana": 3,
+    "min_complexity_headroom_for_core_combo": 3,
+    "trigger_mana_premium_max": 22
+  },
   "combat": {
     "armor_scale": 100,
     "arc_radius": 220,

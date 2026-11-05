@@ -664,7 +664,7 @@ func _redraw_panel() -> void:
 			var item: Dictionary = flow.reward_options[i]
 			var caption := ""
 			if item["kind"] == "rune":
-				caption = str(item["name"])+"\n"+str(item["behaviour"])
+				caption = tr(str(item["name_key"]))+"\n"+tr(str(item["behaviour_key"]))
 			else:
 				caption = tr("run.reward.currency") % int(item["amount"])
 			var card := _button(row,"%d) %s" % [i+1,caption],_choose_reward.bind(i))
@@ -722,9 +722,10 @@ func _build_desk_panel() -> void:
 	if _desk_skippable():
 		desk_skip_button = _button(context,tr("run.btn.desk_skip"),func(): _skip_desk(),"ui.cancel")
 
-## Palette buttons show the raw rune id, so the guide does too.
 func _rune_label(id: String) -> String:
-	return id
+	var key := "rune."+id+".name"
+	var text := tr(key)
+	return id if text == key else text
 
 func _sync_shop() -> void:
 	if shop_overlay != null:
@@ -777,7 +778,7 @@ func _build_shop_panel() -> void:
 		col.custom_minimum_size.x = 150
 		col.add_theme_constant_override("separation",4)
 		card.add_child(col)
-		var b := _button(col,tr("run.shop.item_price") % [str(item["label"]),str(item["price"])],_buy.bind(i))
+		var b := _button(col,tr("run.shop.item_price") % [MerchantScript.item_label(item),str(item["price"])],_buy.bind(i))
 		b.disabled = flow.merchant.bought.has(item["id"]) or not affordable
 		b.icon = PortraitHUD.rune_icon_texture(str(item["rune_id"])) if item["kind"] == "rune" else PortraitHUD.ui_icon_texture("hp")
 		b.expand_icon = false
@@ -1110,7 +1111,9 @@ func _editor_rebuild() -> void:
 	else:
 		editor_preview.text = tr("run.editor.invalid")+"\n"
 		for issue in verdict["issues"]:
-			editor_preview.text += str(issue["code"])+": "+str(issue["message"])+"\n"
+			var reason := tr(str(issue["reason_key"]))
+			var args: Array = issue["reason_args"]
+			editor_preview.text += (reason % args if not args.is_empty() else reason)+"\n"
 	_button(editor_controls,tr("run.btn.undo"),func(): e.undo(); _editor_rebuild())
 	_button(editor_controls,tr("run.btn.reset_draft"),func(): e.reset_draft();_editor_rebuild())
 	_button(editor_controls,tr("run.btn.cancel_edit"),func(): _close_editor(false),"ui.cancel")
@@ -1122,7 +1125,6 @@ func _build_rune_palette(e) -> void:
 	tabs.name = "RunePalette"
 	editor_controls.add_child(tabs)
 	var root: Dictionary = e.draft["root"]
-	var is_projectile := str(root["manifestation_id"]) == "form.projectile"
 	for entry in e.palette():
 		var scroll := ScrollContainer.new()
 		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -1140,7 +1142,7 @@ func _build_rune_palette(e) -> void:
 			b.toggle_mode = true
 			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 			b.set_meta("rune_id",id)
-			b.text = id+(tr("run.suffix.locked") if rune["locked"] else "")
+			b.text = _rune_label(id)+(tr("run.suffix.locked") if rune["locked"] else "")
 			b.tooltip_text = str(rune["description"])
 			var icon: Texture2D = _rune_icon(id)
 			if icon != null:
@@ -1149,17 +1151,23 @@ func _build_rune_palette(e) -> void:
 				"essence": b.button_pressed = str(root["essence_id"]) == id
 				"form": b.button_pressed = str(root["manifestation_id"]) == id
 				"modifier": b.button_pressed = id in root["modifier_ids"]
-				"trigger": b.button_pressed = e.draft.has("on_hit")
+				"trigger": b.button_pressed = e.draft.has("on_hit") and str(e.draft["on_hit"]["trigger_id"]) == id
 			if id == e.guided_next() and not e.guided_runes.is_empty():
 				b.modulate = Color("#efbc65")
-			b.disabled = bool(rune["locked"]) or (kind in ["modifier","trigger"] and not is_projectile)
+			var attach: Dictionary = e.can_attach(id) if kind in ["modifier","trigger"] else {"ok":true,"reason_key":""}
+			if not bool(attach["ok"]):
+				b.tooltip_text = tr(str(attach["reason_key"]))
+			b.disabled = bool(rune["locked"]) or not bool(attach["ok"])
 			list.add_child(b)
 			b.pressed.connect(func():
 				match kind:
 					"essence": e.set_root(id,str(e.draft["root"]["manifestation_id"]))
 					"form": e.set_root(str(e.draft["root"]["essence_id"]),id)
 					"modifier": e.toggle_modifier(id)
-					"trigger": e.set_trigger(not e.draft.has("on_hit"))
+					"trigger":
+						var active: bool = e.draft.has("on_hit") and str(e.draft["on_hit"]["trigger_id"]) == id
+						var payload := str(e.draft["on_hit"]["payload"]["essence_id"]) if e.draft.has("on_hit") else "essence.lightning"
+						e.set_trigger(not active,payload,id)
 				_editor_rebuild())
 	palette_tab = clampi(palette_tab,0,maxi(tabs.get_tab_count()-1,0))
 	tabs.current_tab = palette_tab

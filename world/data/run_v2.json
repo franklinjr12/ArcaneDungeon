@@ -16,7 +16,11 @@
   "sigil_desk": {
     "enabled": true,
     "room_template": "workshop",
-    "runes": ["essence.lightning", "form.projectile", "mod.split"],
+    "runes": [
+      "essence.lightning",
+      "form.projectile",
+      "mod.split"
+    ],
     "formula_index": 2,
     "require_test_cast": true,
     "target_seconds": 60
@@ -31,32 +35,134 @@
   "max_active_enemies": 8,
   "reward_choices": 3,
   "reward_pool": [
-    "mod.split",
-    "mod.homing",
-    "mod.pierce",
+    "essence.fire",
+    "essence.water",
+    "essence.lightning",
+    "essence.cold",
+    "essence.force",
+    "form.projectile",
+    "form.burst",
     "form.orb",
-    "trigger.on_hit"
+    "form.beam",
+    "form.field",
+    "mod.homing",
+    "mod.split",
+    "mod.pierce",
+    "mod.chain",
+    "mod.expand",
+    "mod.rapid",
+    "trigger.on_hit",
+    "trigger.on_kill",
+    "trigger.on_expire",
+    "trigger.timer"
   ],
+  "rarity_weights": {
+    "common": 6,
+    "uncommon": 3,
+    "rare": 1
+  },
+  "rune_rarity": {
+    "essence.fire": "common",
+    "essence.water": "common",
+    "essence.lightning": "common",
+    "essence.cold": "uncommon",
+    "essence.force": "uncommon",
+    "form.projectile": "common",
+    "form.burst": "common",
+    "form.orb": "uncommon",
+    "form.beam": "uncommon",
+    "form.field": "uncommon",
+    "mod.homing": "common",
+    "mod.split": "common",
+    "mod.pierce": "common",
+    "mod.chain": "uncommon",
+    "mod.expand": "uncommon",
+    "mod.rapid": "uncommon",
+    "trigger.on_hit": "uncommon",
+    "trigger.on_kill": "rare",
+    "trigger.on_expire": "rare",
+    "trigger.timer": "rare"
+  },
   "reward_cards": {
-    "mod.split": {
-      "name": "Split",
-      "behaviour": "projectiles fan out into 3"
+    "essence.fire": {
+      "name_key": "rune.essence.fire.name",
+      "behaviour_key": "rune.essence.fire.desc"
     },
-    "mod.homing": {
-      "name": "Homing",
-      "behaviour": "projectiles curve toward nearby enemies"
+    "essence.water": {
+      "name_key": "rune.essence.water.name",
+      "behaviour_key": "rune.essence.water.desc"
     },
-    "mod.pierce": {
-      "name": "Pierce",
-      "behaviour": "projectiles pass through up to 3 enemies"
+    "essence.lightning": {
+      "name_key": "rune.essence.lightning.name",
+      "behaviour_key": "rune.essence.lightning.desc"
+    },
+    "essence.cold": {
+      "name_key": "rune.essence.cold.name",
+      "behaviour_key": "rune.essence.cold.desc"
+    },
+    "essence.force": {
+      "name_key": "rune.essence.force.name",
+      "behaviour_key": "rune.essence.force.desc"
+    },
+    "form.projectile": {
+      "name_key": "rune.form.projectile.name",
+      "behaviour_key": "rune.form.projectile.desc"
+    },
+    "form.burst": {
+      "name_key": "rune.form.burst.name",
+      "behaviour_key": "rune.form.burst.desc"
     },
     "form.orb": {
-      "name": "Orb",
-      "behaviour": "spells orbit you and hit what they touch"
+      "name_key": "rune.form.orb.name",
+      "behaviour_key": "rune.form.orb.desc"
+    },
+    "form.beam": {
+      "name_key": "rune.form.beam.name",
+      "behaviour_key": "rune.form.beam.desc"
+    },
+    "form.field": {
+      "name_key": "rune.form.field.name",
+      "behaviour_key": "rune.form.field.desc"
+    },
+    "mod.homing": {
+      "name_key": "rune.mod.homing.name",
+      "behaviour_key": "rune.mod.homing.desc"
+    },
+    "mod.split": {
+      "name_key": "rune.mod.split.name",
+      "behaviour_key": "rune.mod.split.desc"
+    },
+    "mod.pierce": {
+      "name_key": "rune.mod.pierce.name",
+      "behaviour_key": "rune.mod.pierce.desc"
+    },
+    "mod.chain": {
+      "name_key": "rune.mod.chain.name",
+      "behaviour_key": "rune.mod.chain.desc"
+    },
+    "mod.expand": {
+      "name_key": "rune.mod.expand.name",
+      "behaviour_key": "rune.mod.expand.desc"
+    },
+    "mod.rapid": {
+      "name_key": "rune.mod.rapid.name",
+      "behaviour_key": "rune.mod.rapid.desc"
     },
     "trigger.on_hit": {
-      "name": "On Hit",
-      "behaviour": "projectile hits release a Burst payload"
+      "name_key": "rune.trigger.on_hit.name",
+      "behaviour_key": "rune.trigger.on_hit.desc"
+    },
+    "trigger.on_kill": {
+      "name_key": "rune.trigger.on_kill.name",
+      "behaviour_key": "rune.trigger.on_kill.desc"
+    },
+    "trigger.on_expire": {
+      "name_key": "rune.trigger.on_expire.name",
+      "behaviour_key": "rune.trigger.on_expire.desc"
+    },
+    "trigger.timer": {
+      "name_key": "rune.trigger.timer.name",
+      "behaviour_key": "rune.trigger.timer.desc"
     }
   },
   "boss": {
@@ -83,7 +189,8 @@
     "rune_price": 40,
     "max_hp_upgrade_price": 35,
     "max_hp_upgrade_amount": 25,
-    "stock_numeric_upgrade": "max_hp"
+    "stock_numeric_upgrade": "max_hp",
+    "seed_salt": 47017
   },
   "bosses": {
     "ruins_warden": {
