@@ -291,8 +291,11 @@ func _run() -> void:
 	control._open_editor(3)
 	expect(control.editor_open and control.editor_preview.text.contains("VALID") and control.editor_preview.text.contains("Cooldown") and control.editor_preview.text.contains("cap"),
 		"slot 4 opens with cap-aware preview")
+	var locked_mod := "mod.pierce" if "mod.pierce" not in run.run.unlocked else "mod.homing"
+	if locked_mod in run.run.unlocked:
+		locked_mod = "mod.chain"
 	run.editor.set_root("essence.fire","form.projectile")
-	run.editor.toggle_modifier("mod.pierce")
+	run.editor.toggle_modifier(locked_mod)
 	control._editor_rebuild()
 	var apply_disabled := false
 	for b in control.editor_controls.find_children("*","Button",true,false):
@@ -302,7 +305,7 @@ func _run() -> void:
 		"invalid formula shows reason, Apply disabled")
 	control._close_editor(true)
 	expect(control.editor_open and run.run.formulas.size()==2,"invalid formula cannot be equipped")
-	run.editor.toggle_modifier("mod.pierce")
+	run.editor.toggle_modifier(locked_mod)
 	run.editor.set_root("essence.lightning","form.projectile")
 	control._editor_rebuild()
 	control._close_editor(true)
