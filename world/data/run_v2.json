@@ -13,6 +13,14 @@
     "sample.fire_shot",
     "sample.split_water"
   ],
+  "sigil_desk": {
+    "enabled": true,
+    "room_template": "workshop",
+    "runes": ["essence.lightning", "form.projectile", "mod.split"],
+    "formula_index": 2,
+    "require_test_cast": true,
+    "target_seconds": 60
+  },
   "initial_currency": 0,
   "duplicate_reward_currency": 12,
   "room_reward_currency": 24,
