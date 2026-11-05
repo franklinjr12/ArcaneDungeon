@@ -261,9 +261,9 @@ func _run() -> void:
 		if b.has_meta("rune_id"):
 			palette_ids.append(str(b.get_meta("rune_id")))
 	palette_ids.sort()
-	expect(palette_tabs is TabContainer and palette_tabs.get_tab_count()==4 and palette_ids.size()==10
+	expect(palette_tabs is TabContainer and palette_tabs.get_tab_count()==4 and palette_ids.size()==run.session.sim.registry.get_ids().size()
 		and palette_ids==run.session.sim.registry.get_ids(),
-		"AD-129 editor has RunePalette with 4 category tabs and 10 rune buttons")
+		"AD-129 editor has RunePalette with 4 category tabs and one button per registered rune")
 	var old: Dictionary = run.run.formulas[0].duplicate(true)
 	run.editor.set_root("essence.water","form.projectile")
 	control._editor_rebuild()

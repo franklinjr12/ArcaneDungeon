@@ -244,6 +244,7 @@ func advance_one_tick() -> void:
 	loadout.cooldown_tick()
 	mana = minf(float(settings["combat"]["player_max_mana"]),mana+float(settings["combat"]["regen_mana_per_tick"]))
 	targets.advance_movers(1.0/float(clock.tick_rate),bounds)
+	_advance_knockback()
 	# Every source effect is moved once; callback work stays queued until the movement pass is complete.
 	for entry in active.duplicate():
 		var effect = entry["effect"]
@@ -299,19 +300,27 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 		return
 	var effect_plan: Dictionary = detail["plan"]
 	var ctx: Dictionary = detail["context"]
+	var push: Vector2 = target.position-Vector2(detail["location"])
+	if push.is_zero_approx():
+		push = target.position-actor.position
+	if push.is_zero_approx():
+		push = Vector2.RIGHT
+	push = push.normalized()
 	var payload: Dictionary = {
 		"essence_id":str(effect_plan["essence"]["id"]),
 		"damage":float(effect_plan["params"]["base_damage"]),
 		"team":int(ctx["team"]),"caster_id":int(ctx["caster_id"]),
 		"cast_id":int(ctx["cast_id"]),"root_cast_id":int(ctx["root_cast_id"]),
 		"formula_id":str(ctx["formula_id"]),
-		"knockback":{"force":0.0,"direction":Vector2.ZERO}}
+		"knockback":{"force":0.0,"direction":push}}
 	var hit = HitPayload.new(payload,settings["channels"])
 	var result: Dictionary = resolver.resolve(hit,target,targets,clock.tick)
 	if not result["accepted"]:
 		return
 	total_hit_count += 1
 	_track_damage(float(result["damage"]))
+	if result.has("knockback"):
+		target.impulse += push*float(result["knockback"]["force"])
 	trace.record("hit",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
 		"formula_id":ctx["formula_id"],"effect_id":detail["effect_id"],
 		"target_id":target.id,"amount":roundi(float(result["damage"])),"tick":clock.tick})
@@ -319,6 +328,19 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 	for state_change in result["status_events"]:
 		trace.record("status",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],"formula_id":ctx["formula_id"],
 			"target_id":target.id,"reason":state_change["state"]+":"+state_change["action"],"tick":clock.tick})
+	for entry in result["reactions"]:
+		var bonus := float(entry["bonus_damage"])
+		if bonus > 0.0:
+			_track_damage(bonus)
+			total_hit_count += 1
+		trace.record("reaction",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
+			"formula_id":ctx["formula_id"],"source_id":target.id,"target_id":target.id,
+			"reason":str(entry["id"]),"amount":roundi(bonus),"tick":clock.tick})
+		for affected_id in entry["affected_ids"]:
+			if int(affected_id) != target.id:
+				trace.record("status",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],"formula_id":ctx["formula_id"],
+					"target_id":int(affected_id),"reason":"blinded:applied","tick":clock.tick})
+		visuals.append({"kind":"reaction","reaction":str(entry["id"]),"position":target.position,"until":clock.tick+17})
 	if not result["reaction"].is_empty() and queue.chain_targets_allowed(1,ctx):
 		var react_ctx := {"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
 			"formula_id":ctx["formula_id"],"parent_effect_id":detail["effect_id"],
@@ -357,9 +379,39 @@ func _react(event: Dictionary, detail: Dictionary) -> void:
 		"reason":"wet_lightning_arc","amount":roundi(dealt),"tick":clock.tick})
 	visuals.append({"kind":"arc","from":source.position,"to":selected.position,"until":clock.tick+17})
 
+## Deterministic knockback: id-ordered, wall/bounds-safe, fixed-tick decay (all rates from data).
+func _advance_knockback() -> void:
+	var dt := 1.0/float(clock.tick_rate)
+	var decay := float(settings["combat"]["knockback_decay_per_tick"])
+	var min_speed := float(settings["combat"]["knockback_min_speed"])
+	for t in targets.all():
+		if t.impulse.is_zero_approx():
+			continue
+		if not t.alive():
+			t.impulse = Vector2.ZERO
+			continue
+		var next: Vector2 = t.position+t.impulse*dt
+		next.x = clampf(next.x,bounds.position.x+t.radius,bounds.end.x-t.radius)
+		next.y = clampf(next.y,bounds.position.y+t.radius,bounds.end.y-t.radius)
+		var blocked := false
+		for wall in collision_walls:
+			if _circle_hits_rect(next,t.radius,wall):
+				blocked = true
+				break
+		if not blocked:
+			t.position = next
+		t.impulse *= decay
+		if t.impulse.length() < min_speed:
+			t.impulse = Vector2.ZERO
+
+static func _circle_hits_rect(center: Vector2, radius: float, rect: Rect2) -> bool:
+	var closest := Vector2(clampf(center.x,rect.position.x,rect.end.x),clampf(center.y,rect.position.y,rect.end.y))
+	return closest.distance_squared_to(center) < radius*radius
+
 func _tick_statuses() -> void:
 	for t in targets.all():
 		if not t.alive():
+			t.impulse = Vector2.ZERO
 			t.status.clear()
 			continue
 		for due in t.status.tick(clock.tick,settings["statuses"]):

@@ -36,7 +36,10 @@ func change_state(next: String, tick: int) -> void:
 func _move(session, desired: Vector2) -> void:
 	if desired.is_zero_approx():
 		return
-	var displacement := desired.normalized()*float(tuning["move_speed"])/float(session.sim.clock.tick_rate)
+	var speed := float(tuning["move_speed"])
+	if target.status.has("chilled",session.sim.clock.tick):
+		speed *= float(session.sim.settings["statuses"]["chilled"].get("move_scale",1.0))
+	var displacement := desired.normalized()*speed/float(session.sim.clock.tick_rate)
 	var before: Vector2 = target.position
 	target.position = session.world.move_body(target.position,displacement,target.radius)
 	# If a direct approach is blocked, choose a deterministic side to navigate.
@@ -63,6 +66,9 @@ func advance(session) -> void:
 			session.on_enemy_death(self)
 		return
 	if session.state != "playing":
+		return
+	# Frozen: the whole brain is suspended (no movement, state progress, cooldown or windup completion).
+	if target.status.has("frozen",session.sim.clock.tick):
 		return
 	state_tick += 1
 	cooldown = maxi(0,cooldown-1)
@@ -98,7 +104,8 @@ func advance(session) -> void:
 				elif distance < preferred-50.0:
 					movement -= toward.normalized()*0.75
 			_move(session,movement)
-			if cooldown == 0 and distance <= float(tuning["attack_range"]) and sight:
+			var blinded: bool = str(tuning["attack_kind"]) == "ranged" and target.status.has("blinded",session.sim.clock.tick)
+			if cooldown == 0 and distance <= float(tuning["attack_range"]) and sight and not blinded:
 				var attack := {"source_id":target.id,"kind":kind,"geometry":str(tuning["attack_kind"]),
 					"origin":target.position,"direction":toward.normalized(),"range":float(tuning["attack_range"]),
 					"telegraph_ticks":int(tuning["telegraph_ticks"]),"damage":float(tuning["damage"])}

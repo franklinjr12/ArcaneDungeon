@@ -125,6 +125,50 @@
         ],
         "params": {}
       }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.cold_shot",
+      "display_name": "Cold Shot",
+      "root": {
+        "essence_id": "essence.cold",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.force_shot",
+      "display_name": "Force Shot",
+      "root": {
+        "essence_id": "essence.force",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [],
+        "params": {}
+      }
+    },
+    {
+      "schema_version": 1,
+      "formula_id": "sample.water_pierce_cold_trigger",
+      "display_name": "Piercing Water → Cold",
+      "root": {
+        "essence_id": "essence.water",
+        "manifestation_id": "form.projectile",
+        "modifier_ids": [
+          "mod.pierce"
+        ],
+        "params": {}
+      },
+      "on_hit": {
+        "trigger_id": "trigger.on_hit",
+        "payload": {
+          "essence_id": "essence.cold",
+          "manifestation_id": "form.burst",
+          "modifier_ids": [],
+          "params": {}
+        }
+      }
     }
   ]
 }
