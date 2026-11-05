@@ -66,7 +66,7 @@ func initialize(room: Dictionary, arena: Dictionary, known_enemy_types: Array) -
 		for key in ["exit","reward"]:
 			if points.has(key) and not reachable(world,points["entrance"],points[key],radius,step):
 				issues.append({"code":"ROOM_EXIT_UNREACHABLE","path":key,"message":key+" not reachable from entrance"})
-		if room["type"] == "treasure":
+		if room["type"] == "treasure" and room.has("pedestals"):
 			var pedestals = room.get("pedestals",[])
 			if typeof(pedestals) != TYPE_ARRAY or pedestals.is_empty() or int(room.get("choice_count",1)) < 1 or int(room.get("choice_count",1)) > pedestals.size():
 				issues.append({"code":"ROOM_PEDESTAL_INVALID","path":"pedestals","message":"Treasure room needs pedestals and a valid choice_count"})
@@ -75,7 +75,7 @@ func initialize(room: Dictionary, arena: Dictionary, known_enemy_types: Array) -
 					var at := Vector2(float(ped["position"][0]),float(ped["position"][1]))
 					if str(ped.get("kind","")) not in ["artifact","rune"] or not world.valid_position(at,22) or not reachable(world,points["entrance"],at,radius,step):
 						issues.append({"code":"ROOM_PEDESTAL_INVALID","path":"pedestals","message":"Pedestal kind/position invalid or unreachable"})
-		if room["type"] == "challenge" and (typeof(room.get("elite")) != TYPE_DICTIONARY or typeof(room.get("challenge_reward")) != TYPE_DICTIONARY):
+		if room["type"] == "challenge" and room.has("elite") and (typeof(room.get("elite")) != TYPE_DICTIONARY or typeof(room.get("challenge_reward")) != TYPE_DICTIONARY):
 			issues.append({"code":"ROOM_CHALLENGE_INVALID","path":"elite","message":"Challenge room needs elite and challenge_reward blocks"})
 	values = room.duplicate(true) if issues.is_empty() else {}
 	return {"ok":issues.is_empty(),"issues":issues.duplicate(true)}
