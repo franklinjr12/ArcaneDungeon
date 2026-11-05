@@ -35,6 +35,9 @@ rune.mod.chain.desc,"Each hit jumps to 2 more nearby enemies within 160 units, n
 rune.mod.expand.desc,"Bigger area or longer beam (x1.5), but the spell travels or pulses slower."
 rune.mod.rapid.desc,Shorter cooldown (x0.6) but deals 30% less damage.
 rune.trigger.on_hit.desc,"When the projectile hits, it releases its attached Burst payload."
+rune.trigger.on_kill.desc,"When the spell kills an enemy, it releases its Burst payload at that enemy."
+rune.trigger.on_expire.desc,"When the effect ends, it releases its Burst payload where it ended."
+rune.trigger.timer.desc,"While the effect lives, it releases its Burst payload every 0.5 seconds."
 rune.essence.neutral.desc,"Basic Bolt: a neutral projectile that deals plain damage, no element."
 run.loadout,Loadout
 run.btn.pause,Pause (Esc)

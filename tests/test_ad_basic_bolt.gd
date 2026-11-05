@@ -8,7 +8,7 @@ const Reward = preload("res://world/reward_generator.gd")
 const Merchant = preload("res://world/merchant.gd")
 const Compiler = preload("res://magic/compile/spell_compiler.gd")
 const Runner = preload("res://magic/runtime/spell_runner.gd")
-const COLLECTIBLE := ["essence.cold","essence.fire","essence.force","essence.lightning","essence.water","form.beam","form.burst","form.field","form.orb","form.projectile","mod.chain","mod.expand","mod.homing","mod.pierce","mod.rapid","mod.split","trigger.on_hit"]
+const COLLECTIBLE := ["essence.cold","essence.fire","essence.force","essence.lightning","essence.water","form.beam","form.burst","form.field","form.orb","form.projectile","mod.chain","mod.expand","mod.homing","mod.pierce","mod.rapid","mod.split","trigger.on_expire","trigger.on_hit","trigger.on_kill","trigger.timer"]
 
 func run(t) -> void:
 	var registry = Registry.new()

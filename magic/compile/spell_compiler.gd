@@ -80,7 +80,12 @@ func _build(formula: Dictionary, formula_hash: String, mana_override: int, coold
 		runes.append(on_hit["trigger_id"])
 		runes.append(on_hit["payload"]["essence_id"])
 		runes.append(on_hit["payload"]["manifestation_id"])
-		payload = {"trigger":registry.get_rune(on_hit["trigger_id"]).snapshot(),"effect":_compile_effect(on_hit["payload"])}
+		var trigger_snapshot: Dictionary = registry.get_rune(on_hit["trigger_id"]).snapshot()
+		var trigger_params: Dictionary = {}
+		for key in trigger_snapshot["params"]:
+			if trigger_snapshot["params"][key].has("default"):
+				trigger_params[key] = trigger_snapshot["params"][key]["default"]
+		payload = {"trigger":trigger_snapshot,"trigger_params":trigger_params,"effect":_compile_effect(on_hit["payload"])}
 	var mana := 0
 	var complexity := 0
 	var cooldown := 0

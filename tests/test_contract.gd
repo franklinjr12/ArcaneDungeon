@@ -8,11 +8,11 @@ func run(t) -> void:
 	var registry = Registry.new()
 	var load_result: Dictionary = registry.load_seed()
 	t.check(load_result["ok"], "TASK-004 seed registry loads: " + str(load_result["issues"]))
-	t.equal(registry.get_ids().size(),17,"TASK-004 all seventeen prototype runes")
+	t.equal(registry.get_ids().size(),20,"TASK-004 all twenty prototype runes")
 	t.equal(registry.list_by_category("essence").size(),5,"TASK-004 enumerate essence without hardcoded UI IDs")
 	t.equal(registry.list_by_category("form").size(),5,"TASK-004 enumerate manifestations")
 	t.equal(registry.list_by_category("modifier").size(),6,"TASK-004 enumerate modifiers")
-	t.equal(registry.list_by_category("trigger").size(),1,"TASK-004 enumerate triggers")
+	t.equal(registry.list_by_category("trigger").size(),4,"TASK-004 enumerate triggers")
 	t.check(registry.get_rune("invalid") == null,"TASK-004 unknown rune returns null")
 	var snapshot = registry.get_rune("essence.fire").snapshot()
 	snapshot["mana_cost"] = 900
@@ -25,7 +25,7 @@ func run(t) -> void:
 	var failed_load: Dictionary = registry.replace_all(duplicates)
 	t.check(not failed_load["ok"],"TASK-004 duplicate rune rejected atomically")
 	t.contains_issue(failed_load["issues"],"RUNE_DUPLICATE_ID","TASK-004 duplicate rune diagnostics")
-	t.equal(registry.get_ids().size(),17,"TASK-004 rejection does not corrupt registry")
+	t.equal(registry.get_ids().size(),20,"TASK-004 rejection does not corrupt registry")
 	var missing_category := entries.duplicate(true)
 	missing_category[0].erase("category")
 	var rejected := registry.replace_all(missing_category)
@@ -120,4 +120,4 @@ func run(t) -> void:
 			def["params"]["speed"]["default"] = "faster"
 	t.contains_issue(registry.replace_all(erroneous_defaults)["issues"],"RUNE_PARAM_DEFAULT_TYPE",
 		"TASK-004/M1 typed rune defaults reject incompatible values")
-	t.equal(registry.get_ids().size(),17,"TASK-004/M1 invalid defaults leave loaded registry unchanged")
+	t.equal(registry.get_ids().size(),20,"TASK-004/M1 invalid defaults leave loaded registry unchanged")
