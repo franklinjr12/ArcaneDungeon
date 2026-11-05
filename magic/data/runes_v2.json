@@ -284,7 +284,7 @@
       "params": {},
       "compatibility_tags": ["root", "area", "field"],
       "complexity_weight": 2,
-      "mana_cost": 10,
+      "mana_cost": 9,
       "cooldown_ticks": 12,
       "description": "Creates a zone at the target that applies its essence to enemies inside for 4 seconds.",
       "display_key": "form.field"
@@ -386,7 +386,7 @@
         "any_form"
       ],
       "complexity_weight": 1,
-      "mana_cost": 3,
+      "mana_cost": 2,
       "cooldown_ticks": 2,
       "description": "Each hit jumps to 2 more nearby enemies within 160 units, never the same one twice.",
       "display_key": "mod.chain"
@@ -413,7 +413,7 @@
         "any_form"
       ],
       "complexity_weight": 1,
-      "mana_cost": 3,
+      "mana_cost": 2,
       "cooldown_ticks": 1,
       "description": "Bigger area or longer beam (x1.5), but the spell travels or pulses slower.",
       "display_key": "mod.expand"
