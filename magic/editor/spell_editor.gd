@@ -15,6 +15,8 @@ var allowed := false
 var is_new := false
 var max_presets := 3
 var complexity_cap := DEFAULT_CAP
+## AD-130: optional guided mode (Sigil Desk prelude); empty means normal editing.
+var guided_runes: Array = []
 
 func _init(run_state, rune_registry, max_preset_slots: int = 3) -> void:
 	run = run_state
@@ -151,3 +153,21 @@ func palette() -> Array:
 		result.append({"id":category["id"],"display_key":category["display_key"],
 			"label":category["label"],"runes":available(str(category["id"]))})
 	return result
+
+func set_guided(runes: Array) -> void:
+	guided_runes = runes.duplicate()
+
+## First guided rune missing from the draft, in essence, manifestation, modifier order; "" when none.
+func guided_next() -> String:
+	var held: Array = []
+	if draft.has("root"):
+		held = [str(draft["root"]["essence_id"]),str(draft["root"]["manifestation_id"])]
+		held.append_array(draft["root"]["modifier_ids"])
+	for prefix in ["essence.","form.","mod."]:
+		for id in guided_runes:
+			if str(id).begins_with(prefix) and str(id) not in held:
+				return str(id)
+	return ""
+
+func guided_done() -> bool:
+	return guided_next() == "" and validate()["ok"]

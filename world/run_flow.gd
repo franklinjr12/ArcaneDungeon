@@ -49,6 +49,10 @@ var _prior_reactions := 0
 ## AD-084: read-only UI signals. arcs banks arcs from replaced sims; use arc_total() for the live count.
 var wet_kills := 0
 var arcs := 0
+## AD-130: opt-in Sigil Desk prelude (not part of rooms/sequence_index/save schema).
+var prelude := false
+var prelude_built := false
+var prelude_tested := false
 ## AD-020: output-only audio sink (Callable(cue_id, position)); the simulation never reads it.
 var audio_sink: Callable
 
@@ -123,6 +127,9 @@ func start_new(run_seed: int) -> void:
 	kills = 0
 	ticks_elapsed = 0
 	spells_used = 0
+	prelude = false
+	prelude_built = false
+	prelude_tested = false
 	edit_policy = str(config["edit_policy"])
 	logs.clear()
 	experiment.record("run_restart")
@@ -143,11 +150,11 @@ func arc_total() -> int:
 func _bank_arcs() -> void:
 	arcs += _live_arcs(session.sim if session != null else null) + _live_arcs(range_sim)
 
-func _enter_current() -> Dictionary:
-	_bank_arcs()
+## Shared room/session/loadout setup for _enter_current and the Sigil Desk prelude.
+func _build_room(entry: Dictionary) -> Dictionary:
 	var template = Room.new()
 	var geometry: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))
-	var verdict: Dictionary = template.initialize(rooms[run.sequence_index],geometry["arena"],geometry["enemies"].keys())
+	var verdict: Dictionary = template.initialize(entry,geometry["arena"],geometry["enemies"].keys())
 	if not verdict["ok"]:
 		state = "error"
 		return verdict
@@ -175,6 +182,13 @@ func _enter_current() -> Dictionary:
 	range_sim = null
 	encounter = null
 	rewards = Reward.new(config)
+	return {"ok":true}
+
+func _enter_current() -> Dictionary:
+	_bank_arcs()
+	var built: Dictionary = _build_room(rooms[run.sequence_index])
+	if not built["ok"]:
+		return built
 	if mode == "workshop":
 		session.state = "cleared"
 		state = "workshop"
@@ -201,6 +215,54 @@ func _enter_current() -> Dictionary:
 	experiment.record("room_enter",{"room_index":run.sequence_index})
 	logs.append({"kind":"room_enter","id":room.values["id"],"index":run.sequence_index})
 	return {"ok":true}
+
+func prelude_available() -> bool:
+	var desk = config.get("sigil_desk")
+	return desk is Dictionary and bool(desk.get("enabled",false))
+
+func prelude_ready() -> bool:
+	if not prelude_built:
+		return false
+	return prelude_tested or not bool(config["sigil_desk"].get("require_test_cast",true))
+
+## Call right after start_new: puts the player at the Sigil Desk (workshop template) before room 1.
+func enter_prelude() -> Dictionary:
+	if not prelude_available():
+		return {"ok":false,"reason":"PRELUDE_UNAVAILABLE"}
+	if run.sequence_index != 0 or rooms_cleared > 0 or ticks_elapsed > 0 or state == "dead":
+		return {"ok":false,"reason":"PRELUDE_TOO_LATE"}
+	var desk: Dictionary = config["sigil_desk"]
+	var templates: Dictionary = config.get("room_templates",{})
+	if not templates.has(str(desk["room_template"])):
+		return {"ok":false,"reason":"PRELUDE_ROOM_MISSING"}
+	for id in desk["runes"]:
+		if not run.unlocked.has(str(id)):
+			run.unlocked.append(str(id))
+	_bank_arcs()
+	var built: Dictionary = _build_room(templates[str(desk["room_template"])])
+	if not built["ok"]:
+		return built
+	mode = "workshop"
+	state = "workshop"
+	session.state = "cleared"
+	prelude = true
+	prelude_built = false
+	prelude_tested = false
+	enter_test_range()
+	_cue("amb.workshop")
+	experiment.record("prelude_enter")
+	logs.append({"kind":"prelude_enter","id":room.values["id"]})
+	return {"ok":true}
+
+func finish_prelude(skipped: bool) -> Dictionary:
+	if editor != null and editor.allowed:
+		return {"ok":false,"reason":"EDITOR_OPEN"}
+	if not skipped and not (prelude and prelude_ready()):
+		return {"ok":false,"reason":"PRELUDE_INCOMPLETE"}
+	prelude = false
+	experiment.record("prelude_skipped" if skipped else "prelude_complete")
+	logs.append({"kind":"prelude_skipped" if skipped else "prelude_complete"})
+	return _enter_current()
 
 func _slot_has_spell(runner, slot: int) -> bool:
 	return slot >= 0 and slot < runner.loadout.slots.size() and runner.loadout.slots[slot]["compiled"] != null
@@ -335,6 +397,8 @@ func try_exit(position: Vector2, take_optional: bool = true) -> Dictionary:
 		return {"ok":false,"reason":"EDITOR_OPEN"}
 	if state not in ["cleared","workshop"]:
 		return {"ok":false,"reason":"DOOR_LOCKED"}
+	if prelude:
+		return finish_prelude(false)
 	# Workshop is drawn as the test range only (no visible door), so leaving it is a menu action.
 	if mode != "workshop" and position.distance_to(room.marker("exit")) > 72.0:
 		return {"ok":false,"reason":"EXIT_TOO_FAR"}
@@ -394,6 +458,8 @@ func test_cast(slot: int, direction: Vector2) -> Dictionary:
 	if mode != "workshop" or range_sim == null:
 		return {"accepted":false,"reason":"TEST_ONLY_WORKSHOP"}
 	var result: Dictionary = range_sim.try_cast(slot,range_sim.actor.position,direction)
+	if prelude and bool(result["accepted"]) and slot == int(config["sigil_desk"]["formula_index"])+PRESET_SLOT_OFFSET:
+		prelude_tested = true
 	if _slot_has_spell(range_sim,slot):
 		experiment.record("test_cast",{"slot":slot,"is_workshop":true,"cast_accepted":result["accepted"]},range_sim.loadout.slots[slot]["formula"])
 	return result
@@ -408,6 +474,8 @@ func open_editor(slot: int) -> Dictionary:
 	editor = Editor.new(run,session.sim.registry,session.sim.loadout.slots.size()-PRESET_SLOT_OFFSET)
 	var result: Dictionary = editor.open(slot)
 	if result["ok"]:
+		if prelude and slot == int(config["sigil_desk"]["formula_index"]):
+			editor.set_guided(config["sigil_desk"]["runes"])
 		session.player.modal = true
 		experiment.record("editor_open",{"room_index":run.sequence_index,"slot":slot})
 		logs.append({"kind":"editor_open","slot":slot,"room":room.values["id"]})
@@ -428,6 +496,8 @@ func close_editor(apply_changes: bool, duration_seconds: float = 0.0) -> Diction
 		session.sim.loadout.allow_edit = false
 		if not equipped["ok"]:
 			return equipped
+		if prelude and edit_slot == int(config["sigil_desk"]["formula_index"]):
+			prelude_built = true
 		experiment.record("formula_edit",{"room_index":run.sequence_index,"slot":edit_slot},run.formulas[edit_slot])
 		if mode == "workshop":
 			# Reset only test runtime, never the run's HP/currency/progression.
@@ -468,7 +538,7 @@ func snapshot() -> Dictionary:
 	return {"state":state,"room_id":room.values["id"],"index":run.sequence_index,
 		"mode":mode,"door_open":state in ["cleared","workshop"],"rewards":reward_options.duplicate(true),
 		"collected":reward_collected,"run":run.snapshot(),"boss_events":boss_defeated_events,
-		"outcome":outcome,"win_events":win_events}
+		"outcome":outcome,"win_events":win_events,"prelude":prelude}
 
 func recover(saved: Variant) -> Dictionary:
 	var validated = State.new()
