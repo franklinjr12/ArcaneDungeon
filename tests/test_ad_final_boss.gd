@@ -3,6 +3,12 @@ extends RefCounted
 const Session = preload("res://combat/combat_session.gd")
 const AT := Vector2(1030,450)
 const FLOOR_TICKS := 36
+const Driver = preload("res://tests/m3_run_driver.gd")
+const Flow = preload("res://world/run_flow.gd")
+const BUILDS := [0,2]
+const MAX_TICKS := 12000
+const MIN_KILL_TICKS := 5400
+const MAX_KILL_TICKS := 10800
 
 func run(t) -> void:
 	var cfg := _cfg()
@@ -13,6 +19,9 @@ func run(t) -> void:
 	_telegraph_floor(t,cfg)
 	_beatable_any_element(t,cfg)
 	_deterministic(t)
+	_arena_room(t)
+	_scripted_wins(t)
+	_run_summary(t)
 
 func _cfg() -> Dictionary:
 	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://world/data/run_v2.json"))
@@ -196,3 +205,107 @@ func _deterministic(t) -> void:
 		snap.erase("frame_ms")
 		snaps.append(JSON.stringify(snap))
 	t.equal(snaps[0],snaps[1],"AD-142 1500-tick run is deterministic")
+
+func _doc() -> Dictionary:
+	return JSON.parse_string(FileAccess.get_file_as_string("res://world/data/run_v2.json"))
+
+func _arena_water() -> Array:
+	return _doc()["room_templates"]["cistern_boss"]["layout"]["water"]
+
+func _arena_room(t) -> void:
+	var room: Dictionary = _doc()["room_templates"]["cistern_boss"]
+	var tuning: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))
+	var template = preload("res://world/room_template.gd").new()
+	var verdict: Dictionary = template.initialize(room.duplicate(true),tuning["arena"],tuning["enemies"].keys())
+	t.check(verdict["ok"],"AD-142 water arena passes room template validation")
+	t.check(_arena_water().size() >= 2,"AD-142 boss room declares layout.water")
+	var s = Session.new(1424,"empty",0)
+	s.set_water(_arena_water())
+	for key in ["entrance","exit","reward"]:
+		t.check(s.world.valid_position(Vector2(float(room[key][0]),float(room[key][1])),30.0),"AD-142 arena %s marker is clear" % key)
+	t.check(s.world.valid_position(AT,float(_cfg()["radius"])),"AD-142 boss position is clear in the arena")
+	var path: Vector2 = s.world.navigate_direction(Vector2(185,450),AT,s.sim.actor.radius)
+	t.check(not path.is_zero_approx(),"AD-142 a walking route from the entrance to the boss exists")
+
+class Harness:
+	var session
+	var boss
+	var state := "fighting"
+	func step(command: Dictionary) -> void:
+		session.issue(command)
+		session.step()
+		if session.state != "playing" or not boss.target.alive():
+			state = "done"
+
+## loadout: Array of two sample ids, or empty to use the starter build index.
+func _kill(build: int, loadout: Array = []) -> Dictionary:
+	var s = Session.new(1423,"empty",build)
+	s.defer_clear = true
+	s.set_water(_arena_water())
+	if not loadout.is_empty():
+		s.sim.loadout.allow_edit = true
+		s.sim.equip_starter_loadout([s.samples[loadout[0]],s.samples[loadout[1]]])
+		s.sim.loadout.allow_edit = false
+	var boss = s.spawn_boss(_cfg(),AT)
+	var h := Harness.new()
+	h.session = s
+	h.boss = boss
+	Driver.fight(h,MAX_TICKS)
+	var phases: Array = [1]
+	for x in boss.transitions:
+		if str(x["to"]).begins_with("phase"):
+			phases.append(int(str(x["to"]).trim_prefix("phase")))
+	return {"dead":not boss.target.alive(),"alive":s.sim.actor.health.current > 0.0,"tick":s.sim.clock.tick,"hp":s.sim.actor.health.current,"phases":phases}
+
+func _check_win(t, label: String, a: Dictionary) -> void:
+	t.check(a["dead"] and a["alive"],"AD-142 %s kills the archivist and survives (tick %d, hp %.0f)" % [label,a["tick"],a["hp"]])
+	t.check(a["phases"].has(1) and a["phases"].has(2) and a["phases"].has(3),"AD-142 %s reaches all 3 phases" % label)
+	t.check(a["tick"] >= MIN_KILL_TICKS and a["tick"] <= MAX_KILL_TICKS,"AD-142 %s fight lasts 90-180 s (tick %d)" % [label,a["tick"]])
+
+func _scripted_wins(t) -> void:
+	for build in BUILDS:
+		var a: Dictionary = _kill(build)
+		_check_win(t,"build %d" % build,a)
+		t.equal(_kill(build)["tick"],a["tick"],"AD-142 build %d kill tick deterministic" % build)
+	# Fire + Lightning has no Water; with build 0 (no Lightning) and build 2 (no Fire) no single element is required.
+	_check_win(t,"no-water loadout",_kill(0,["sample.fire_shot","sample.lightning_shot"]))
+
+## Reaches the cistern_boss room the way test_ad_run_v2 does, kills the archivist and checks the run summary.
+func _run_summary(t) -> void:
+	var flow = Flow.new(20261022,Flow.CONFIG_V2)
+	for guard in 80:
+		if flow.state == "fighting" and str(flow.room.values["id"]) == "cistern_boss":
+			break
+		if flow.state == "fighting":
+			for i in 3000:
+				if flow.state != "fighting":
+					break
+				for enemy in flow.session.enemies:
+					if enemy.target.alive():
+						enemy.target.receive_damage(100000,"fire",1,100)
+				flow.step()
+		if flow.state == "won" or flow.state == "dead":
+			break
+		if flow.state == "cleared" and not flow.reward_collected and flow.room.values["type"] != "boss":
+			flow.choose_reward(0)
+		var pos: Vector2 = flow.room.marker("exit")
+		flow.session.sim.actor.position = pos
+		flow.try_exit(pos,false)
+	t.equal(str(flow.room.values["id"]),"cistern_boss","AD-142 run reaches the cistern boss room")
+	t.check(flow.session.water != null,"AD-142 boss room installs layout water")
+	var archivist = null
+	for e in flow.session.enemies:
+		if e.kind == "drowned_archivist":
+			archivist = e
+	t.check(archivist != null,"AD-142 boss room spawns the Drowned Archivist")
+	t.equal(flow.state,"fighting","AD-142 boss fight is running")
+	archivist.target.health.current = 0.0
+	for i in 600:
+		if flow.state != "fighting":
+			break
+		flow.step()
+	t.equal(flow.state,"won","AD-142 killing the archivist wins the run")
+	t.equal(flow.outcome,"won","AD-142 flow outcome is won")
+	var summary: Dictionary = flow.summary()
+	t.equal(summary["outcome"],"won","AD-142 run summary reports won after the kill")
+	t.check(int(summary["rooms_cleared"]) > 0,"AD-142 run summary counts cleared rooms")

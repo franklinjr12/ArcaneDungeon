@@ -218,7 +218,8 @@
       "_note": "AD-142 PROPOSED numbers (Demo Plan default 'Drowned Archivist', pending Franklin)",
       "kind": "drowned_archivist",
       "display_name": "Drowned Archivist",
-      "hp": 1400,
+      "hp": 950,
+      "channel_resistances": {"fire": 0.8, "water": -0.2, "lightning": -0.5, "neutral": 0.1},
       "radius": 49,
       "position": [
         1030,
@@ -274,10 +275,7 @@
           {"kind": "shallow", "rect": [700, 100, 260, 160]}
         ]
       ],
-      "wisp_offsets": [
-        [-140, -110],
-        [-140, 110]
-      ],
+      "wisp_offsets": [[60, -170], [60, 170]],
       "wisp_cap": 2,
       "storm_pulse_radius": 220,
       "storm_pulse_damage": 14
@@ -704,7 +702,15 @@
         450
       ],
       "waves": [],
-      "boss": "cistern_boss"
+      "boss": "cistern_boss",
+      "layout": {
+        "water": [
+          {"kind": "shallow", "rect": [380, 130, 260, 170]},
+          {"kind": "shallow", "rect": [380, 600, 260, 170]},
+          {"kind": "shallow", "rect": [700, 360, 150, 180]},
+          {"kind": "deep", "rect": [520, 20, 120, 80]}
+        ]
+      }
     },
     "workshop": {
       "id": "workshop",
