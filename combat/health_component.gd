@@ -17,7 +17,8 @@ func alive() -> bool:
 func damage(amount: float, channel: String, armor_scale: float) -> float:
 	if not alive():
 		return 0.0
-	var fraction := clampf(float(resistances.get(channel, 0.0)), 0.0, 1.0)
+	# -1..1: a negative resistance is a weakness (-0.5 = 150% damage taken) (AD-137).
+	var fraction := clampf(float(resistances.get(channel, 0.0)), -1.0, 1.0)
 	var received := maxf(0.0,amount) * (1.0 - fraction)
 	received *= maxf(0.0,armor_scale) / (maxf(0.0,armor_scale) + armor)
 	var dealt := minf(current,received)

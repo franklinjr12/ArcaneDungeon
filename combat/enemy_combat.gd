@@ -20,6 +20,12 @@ var summoner_id := -1
 ## Transient per-tick multipliers (AD-136). EnemyCombat.begin_tick resets buffs; shield_scale is owned by shield_front.
 var shield_scale := 1.0
 var buff_damage_scale := 1.0
+## Owned by intangible_cycle; deliberately NOT reset in begin_tick (the component rewrites it on its own ticks).
+var phase_scale := 1.0
+## Presentation flags: shield_front sets shield_broken; intangible_cycle sets the other two.
+var shield_broken := false
+var intangible_warning := false
+var intangible := false
 var speed_scale := 1.0
 var ai: Dictionary = {}
 ## Set by modifier components (phase_walls): ignore walls when moving / ignore line of sight for attacks.
@@ -64,9 +70,9 @@ func begin_tick() -> void:
 	buff_damage_scale = 1.0
 	speed_scale = 1.0
 
-## Damage-taken precedence: shield_front's frontal scale and support_buff's scale multiply (see support_buff.gd).
+## Damage-taken precedence: shield_front's frontal scale, support_buff's scale and intangible_cycle's phase scale all multiply.
 func apply_scales() -> void:
-	target.damage_scale = shield_scale*buff_damage_scale
+	target.damage_scale = shield_scale*buff_damage_scale*phase_scale
 
 func change_state(next: String, tick: int) -> void:
 	if state == next:
@@ -134,7 +140,13 @@ func advance(session) -> void:
 	var distance: float = toward.length()
 	var sight: bool = ignore_sight or session.world.clear_sight(target.position,player.position,8.0)
 	if state != "attack" and not toward.is_zero_approx():
-		heading = toward.normalized()
+		var turn := float(tuning.get("turn_rate_degrees_per_tick",0.0))
+		if turn > 0.0:
+			var delta := heading.angle_to(toward)
+			var limit := deg_to_rad(turn)
+			heading = heading.rotated(clampf(delta,-limit,limit)).normalized()
+		else:
+			heading = toward.normalized()
 	var ctx := {"toward":toward,"distance":distance,"sight":sight,"player":player,"tick_rate":session.sim.clock.tick_rate}
 	for behaviour in behaviours:
 		behaviour.tick(self,session,ctx)

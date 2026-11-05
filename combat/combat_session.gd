@@ -111,6 +111,8 @@ func spawn_enemy(kind: String, at: Vector2):
 	var target = sim.add_target(at,Vector2.ZERO,Difficulty.scale_f(float(p["hp"]),"enemy_hp"))
 	target.radius = float(p["radius"])
 	target.tags = ["enemy",kind]
+	if typeof(p.get("channel_resistances")) == TYPE_DICTIONARY:
+		target.health.resistances = p["channel_resistances"].duplicate(true)
 	var enemy = Enemy.new(target,kind,p)
 	enemies.append(enemy)
 	return enemy
