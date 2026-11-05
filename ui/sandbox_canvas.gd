@@ -5,6 +5,9 @@ const Art = preload("res://ui/pixel_art_renderer.gd")
 var runner
 var hover := Vector2(420,340)
 var selected_id := -1
+## Optional exit door (Sigil Desk); Vector2.INF hides it.
+var door_at := Vector2.INF
+var door_open := true
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -24,6 +27,9 @@ func _draw() -> void:
 	if runner == null or not runner.initialized:
 		return
 	var tick: int = runner.clock.tick
+	if door_at != Vector2.INF:
+		Art.portal(self,door_at,door_open,tick)
+		_label(door_at+Vector2(-30,-39),tr("hud.exit_door") if door_open else tr("hud.exit_locked"),Color.WHITE,14)
 	draw_line(runner.actor.position,hover,Color("#6fe1fa",0.18),1)
 	Art.entity(self,"mage",runner.actor.position,tick,Vector2.ZERO,(runner.active.size()>0 or runner.is_channelling()) and tick%14<5)
 	_label(runner.actor.position+Vector2(-19,-46),tr("combat.mage_label"),Color("#fbe1a9"),11)
@@ -52,13 +58,16 @@ func _draw() -> void:
 			kind = "orb"
 		Art.effect(self,kind,effect.position,tick,Vector2(40,40) if kind=="orb" else Vector2(33,33))
 	for v in runner.visuals:
+		if v["kind"] in ["beam","field"]:
+			continue # drawn by Art.draw_form_visuals
 		var fade := clampf(float(int(v["until"])-tick)/20.0,0,1)
 		if v["kind"] == "arc":
 			draw_line(v["from"],v["to"],Color("#d4fdff",fade),3)
 			Art.effect(self,"arc",(v["from"]+v["to"])/2.0,tick,Vector2(35,35),fade)
 		else:
-			Art.effect(self,"impact",v["position"],tick,
-				Vector2(clampf(float(v["radius"])*2,32,105),clampf(float(v["radius"])*2,32,105)),fade)
+			# Reaction visuals carry no radius; fall back to a small impact.
+			var d := clampf(float(v.get("radius",20.0))*2,32,105)
+			Art.effect(self,"impact",v["position"],tick,Vector2(d,d),fade)
 
 func _label(at: Vector2, content: String, color: Color, font_size: int) -> void:
 	draw_string(ThemeDB.fallback_font,at,content,HORIZONTAL_ALIGNMENT_LEFT,-1,font_size,color)

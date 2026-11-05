@@ -104,6 +104,13 @@ func _route(t) -> void:
 	# Dash i-frames: the autoplay route no longer evades by chance after the AD-065 radii.
 	for k in 120:
 		arena.step()
+	# Full mana per room (owner 2026-11-05) can end the route before a thrall winds up; force one beside the player.
+	if not seen.has("sfx.tele.bone_thrall"):
+		arena.spawn_enemy("bone_thrall", arena.sim.actor.position + Vector2(70, 0))
+		for k in 60:
+			if seen.has("sfx.tele.bone_thrall"):
+				break
+			arena.step()
 	arena.issue({"dash": true, "move": Vector2.RIGHT})
 	arena.step()
 	arena.damage_player(killer.target.id, 5.0, "physical")

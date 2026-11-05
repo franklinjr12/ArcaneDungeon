@@ -192,6 +192,8 @@ func _build_room(entry: Dictionary) -> Dictionary:
 	session.sim.actor.position = room.marker("entrance")
 	session.sim.actor.health.maximum = run.max_hp
 	session.sim.actor.health.current = run.hp
+	# Owner request 2026-11-05: mana fully regenerates on every room change.
+	run.mana = float(session.sim.settings["combat"]["player_max_mana"])
 	session.sim.mana = run.mana
 	session.sim.loadout.unlocked = run.unlocked.duplicate(true)
 	session.sim.loadout.allow_edit = true
@@ -245,6 +247,10 @@ func _enter_current() -> Dictionary:
 func prelude_available() -> bool:
 	var desk = config.get("sigil_desk")
 	return desk is Dictionary and bool(desk.get("enabled",false))
+
+## Owner request 2026-11-05: the desk is optional practice unless the config sets "required": true.
+func prelude_required() -> bool:
+	return prelude_available() and bool(config["sigil_desk"].get("required",true))
 
 func prelude_ready() -> bool:
 	if not prelude_built:
@@ -424,7 +430,7 @@ func try_exit(position: Vector2, take_optional: bool = true) -> Dictionary:
 	if state not in ["cleared","workshop"]:
 		return {"ok":false,"reason":"DOOR_LOCKED"}
 	if prelude:
-		return finish_prelude(false)
+		return finish_prelude(not prelude_ready() and not prelude_required())
 	# Workshop is drawn as the test range only (no visible door), so leaving it is a menu action.
 	if mode != "workshop" and position.distance_to(room.marker("exit")) > 72.0:
 		return {"ok":false,"reason":"EXIT_TOO_FAR"}

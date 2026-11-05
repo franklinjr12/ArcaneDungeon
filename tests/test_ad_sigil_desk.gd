@@ -82,6 +82,17 @@ func run(t) -> void:
 	g.state = "cleared"
 	t.equal(g.open_editor(2).get("reason"),"POLICY_WORKSHOP_ONLY","AD-130 editing stays workshop-only")
 
+	# Owner request 2026-11-05: the v2 desk is optional, so the door works with nothing built.
+	var o = _desk_flow()
+	t.check(not o.prelude_required(),"desk optional in v2 config")
+	t.check(o.try_exit(Vector2.ZERO)["ok"] and o.state == "fighting","optional desk door leaves without building")
+	t.equal(o.run.formulas.size(),2,"optional desk leaves the loadout untouched")
+	var r = Flow.new(SEED,Flow.CONFIG_V2)
+	r.config = r.config.duplicate(true)
+	r.config["sigil_desk"]["required"] = true
+	r.enter_prelude()
+	t.equal(r.try_exit(Vector2.ZERO).get("reason"),"PRELUDE_INCOMPLETE","required desk still gates the door")
+
 	t.equal(_play(SEED),_play(SEED),"AD-130 same actions give identical room-1 snapshot")
 
 	var p = Prompts.new()
@@ -150,10 +161,12 @@ func _ui_section(t) -> void:
 	a.queue_free()
 
 	var b: Node = _run_scene(root)
-	t.check(b.flow.prelude and b.desk_skip_button != null,"AD-130 UI second run shows the skip button")
-	if b.desk_skip_button != null:
-		b.desk_skip_button.pressed.emit()
-	t.check(not b.flow.prelude and b.flow.state == "fighting" and b.flow.run.sequence_index == 0,"AD-130 UI skip reaches room 1 fighting")
+	t.check(b.flow.prelude and b.desk_skip_button == null,"UI optional desk needs no skip button")
+	t.check(b.test_canvas.door_at != Vector2.INF and b.test_canvas.door_open,"UI desk draws an open door")
+	b.flow.range_sim.actor.position = b.desk_door_position()
+	b._desk_door_walk()
+	t.check(not b.flow.prelude and b.flow.state == "fighting" and b.flow.run.sequence_index == 0,"UI walking into the desk door reaches room 1")
+	t.equal(b.flow.run.formulas.size(),2,"UI unbuilt desk exit keeps two formulas")
 	b.queue_free()
 
 	save.set_base_dir(old_dir)

@@ -43,6 +43,10 @@ run.loadout,Loadout
 run.btn.pause,Pause (Esc)
 run.btn.toggle_policy,Toggle edit policy (F2)
 run.btn.export_telemetry,Export telemetry JSON + CSV
+run.btn.dev_kill_all,[Cheat] Kill all enemies
+run.btn.dev_skip_room,[Cheat] Skip room
+run.btn.dev_next_stage,[Cheat] Jump to next stage
+run.notice.dev_cheat,Dev cheat: %s
 run.notice.test_cast,Test cast slot %d: %s
 run.notice.range_reset,Safe test range reset
 run.notice.room_cleared,"Room cleared! Pick a reward (keys 1-%d), then walk to EXIT and press F"
@@ -230,6 +234,7 @@ placeholder.sandbox,MAGIC SANDBOX
 placeholder.arena,COMBAT ARENA
 placeholder.caption,M0 bootstrap: gameplay is implemented in later milestones
 hud.exit_open,EXIT OPEN
+hud.exit_door,EXIT (F)
 hud.exit_locked,LOCKED
 hud.rune_choice,RUNE CHOICE
 hud.key.lmb,LMB
@@ -294,11 +299,12 @@ settings.action.dash,Dash
 settings.action.interact,Interact
 settings.action.pause,Pause
 run.desk.heading,Sigil Desk
-run.desk.step_build,1. Build slot 4: add %s
-run.desk.step_test,2. Test-cast slot 4 on a dummy
-run.desk.step_door,3. Walk through the door
+run.desk.step_build,"Build slot %d: %s"
+run.desk.step_test,Test-cast slot %d on a dummy
+run.desk.step_door,"Exit: walk into the door (right) or press F"
+run.desk.optional,Optional practice - leave any time
 run.desk.guided,Guided: pick %s
-run.goal.desk,Sigil Desk - build slot 4
+run.goal.desk,Sigil Desk - exit door on the right (F)
 run.btn.desk_door,Go through the door (F)
 run.btn.desk_skip,Skip the desk
 run.btn.desk_slot,Edit slot %d

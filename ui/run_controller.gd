@@ -86,6 +86,7 @@ const WORKSHOP_PANEL_WIDTH := 360.0
 const TOP_BAR_HEIGHT := 44
 const NOTICE_MS := 5000
 const TEST_RANGE_SIZE := Vector2(916,650)
+const DESK_DOOR_RADIUS := 34.0
 const EDITOR_SIZE := Vector2(500,665)
 var _prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
 
@@ -337,6 +338,9 @@ func _build_dev_overlay() -> void:
 	box.add_child(dev_label)
 	_button(box,tr("run.btn.toggle_policy"),func(): _policy())
 	_button(box,tr("run.btn.export_telemetry"),func(): _export_metrics())
+	_button(box,tr("run.btn.dev_kill_all"),func(): _dev_kill_all())
+	_button(box,tr("run.btn.dev_skip_room"),func(): _dev_skip_room())
+	_button(box,tr("run.btn.dev_next_stage"),func(): _dev_next_stage())
 
 func dev_tools_enabled() -> bool:
 	return show_dev_tools == true and InputActions.debug_keys_enabled()
@@ -563,6 +567,7 @@ func _physics_process(_delta: float) -> void:
 		if flow.state == "workshop" and flow.range_sim != null:
 			_move_test_mage(Input.get_vector("move_left","move_right","move_up","move_down"))
 			flow.range_sim.step()
+			_desk_door_walk()
 	cast_pending = -1
 	arena_canvas.queue_redraw()
 	portrait_hud.queue_redraw()
@@ -576,6 +581,16 @@ func _physics_process(_delta: float) -> void:
 			_redraw_panel()
 		else:
 			_update_labels()
+
+## Sigil Desk door sits on the right edge of the test range; walking into it leaves (same as F).
+func desk_door_position() -> Vector2:
+	return Vector2(test_canvas.size.x-44.0,test_canvas.size.y*0.5)
+
+func _desk_door_walk() -> void:
+	if not flow.prelude or editor_open or (flow.prelude_required() and not flow.prelude_ready()):
+		return
+	if flow.range_sim.actor.position.distance_to(desk_door_position()) <= DESK_DOOR_RADIUS:
+		_exit()
 
 func _move_test_mage(dir: Vector2) -> void:
 	# The visible workshop mage lives in the test range; walk it inside the range canvas.
@@ -631,6 +646,8 @@ func _redraw_panel() -> void:
 	arena_canvas.visible = flow.mode != "workshop"
 	test_canvas.visible = flow.mode == "workshop"
 	test_canvas.runner = flow.range_sim
+	test_canvas.door_at = desk_door_position() if flow.prelude else Vector2.INF
+	test_canvas.door_open = flow.prelude and (not flow.prelude_required() or flow.prelude_ready())
 	_rebuild_loadout()
 	_clear(context)
 	if scroll != null:
@@ -710,16 +727,22 @@ func _redraw_panel() -> void:
 func _build_desk_panel() -> void:
 	var slot_ui: int = int(flow.config["sigil_desk"]["formula_index"])+2
 	_heading(context,tr("run.desk.heading"))
+	var required: bool = flow.prelude_required()
 	var step := 0 if not flow.prelude_built else (1 if not flow.prelude_ready() else 2)
-	var next_rune: String = flow.editor.guided_next() if editor_open and flow.editor != null else ""
-	var lines := [tr("run.desk.step_build") % next_rune,tr("run.desk.step_test"),tr("run.desk.step_door")]
+	var recipe := PackedStringArray()
+	for id in flow.config["sigil_desk"]["runes"]:
+		recipe.append(_rune_label(str(id)))
+	var lines := [tr("run.desk.step_build") % [slot_ui," + ".join(recipe)],tr("run.desk.step_test") % slot_ui]
+	if not required:
+		_hint(context,tr("run.desk.optional"))
 	for i in lines.size():
 		_hint(context,("> " if i == step else "  ")+str(lines[i]).strip_edges())
+	_hint(context,("> " if step == 2 or not required else "  ")+tr("run.desk.step_door"))
 	_button(context,tr("run.btn.desk_slot") % slot_ui,func(): _open_editor(slot_ui-1))
 	_button(context,tr("run.btn.reset_targets"),func(): _reset_test_range())
 	var door := _button(context,tr("run.btn.desk_door"),func(): _exit())
-	door.disabled = not flow.prelude_ready()
-	if _desk_skippable():
+	door.disabled = required and not flow.prelude_ready()
+	if required and _desk_skippable():
 		desk_skip_button = _button(context,tr("run.btn.desk_skip"),func(): _skip_desk(),"ui.cancel")
 
 func _rune_label(id: String) -> String:
@@ -1043,9 +1066,10 @@ func _exit(take_optional: bool = true) -> void:
 	if editor_open:
 		return
 	var was_desk: bool = flow.prelude
+	var desk_skipped: bool = was_desk and not flow.prelude_ready()
 	var result: Dictionary = flow.try_exit(flow.session.sim.actor.position, take_optional)
 	if was_desk and result["ok"]:
-		_after_desk(false)
+		_after_desk(desk_skipped)
 	current_notice = tr("run.notice.door") % (str(result.get("reason","OPEN")) if result["ok"] == false else tr("run.notice.next_room"))
 	if result["ok"]:
 		_flash_transition()
@@ -1057,6 +1081,61 @@ func _flash_transition() -> void:
 	transition_veil.modulate.a = 0.85
 	var tween := create_tween()
 	tween.tween_property(transition_veil,"modulate:a",0.0,0.4)
+
+## Dev cheat: kill every enemy (waves included) via normal damage + sim steps so clear/reward logic runs as usual.
+func _dev_clear_room() -> void:
+	for i in 3000:
+		if flow.state != "fighting":
+			return
+		for enemy in flow.session.enemies:
+			if enemy.target.alive():
+				enemy.target.receive_damage(100000,"fire",1,100)
+		flow.step()
+
+func _dev_kill_all() -> void:
+	if not dev_tools_enabled() or editor_open:
+		return
+	_dev_clear_room()
+	current_notice = tr("run.notice.dev_cheat") % flow.state
+	_redraw_panel()
+
+## Dev cheat: clear, take reward 0, leave by the exit (skips optional rooms). Returns true when a new room was entered.
+func _dev_advance() -> bool:
+	if editor_open:
+		return false
+	if flow.prelude:
+		flow.finish_prelude(true)
+		_after_desk(true)
+		return not flow.prelude
+	_dev_clear_room()
+	if flow.state == "cleared" and not flow.reward_collected and not flow.reward_options.is_empty():
+		flow.choose_reward(0)
+	if flow.state not in ["cleared","workshop"]:
+		return false
+	if flow.mode != "workshop":
+		flow.session.sim.actor.position = flow.room.marker("exit")
+	return flow.try_exit(flow.session.sim.actor.position,false)["ok"]
+
+func _dev_skip_room() -> void:
+	if not dev_tools_enabled():
+		return
+	if _dev_advance():
+		_flash_transition()
+	current_notice = tr("run.notice.dev_cheat") % str(flow.room.values["id"])
+	_redraw_panel()
+
+func _dev_next_stage() -> void:
+	if not dev_tools_enabled():
+		return
+	var start := int(flow.room.values.get("stage",0)) if not flow.prelude else 0
+	for guard in 60:
+		if not _dev_advance():
+			break
+		if not flow.prelude and int(flow.room.values.get("stage",0)) > start:
+			break
+	_flash_transition()
+	current_notice = tr("run.notice.dev_cheat") % str(flow.room.values["id"])
+	_redraw_panel()
 
 func _policy() -> void:
 	var next := "cleared_room" if flow.edit_policy == "workshop_only" else "workshop_only"
