@@ -86,7 +86,9 @@
       "cooldown_ticks": 10,
       "damage": 14,
       "attack_kind": "melee",
-      "color": "#e49a73"
+      "color": "#e49a73",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}]
     },
     "fallen_adept": {
       "display_name": "Fallen adept",
@@ -103,7 +105,9 @@
       "projectile_speed": 310,
       "spread_degrees": 0,
       "attack_kind": "ranged",
-      "color": "#8cbaea"
+      "color": "#8cbaea",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "keep_distance", "approach_margin": 45, "retreat_margin": 60, "approach_without_sight": true}, {"id": "ranged_attack"}]
     },
     "grave_hound": {
       "display_name": "Grave hound",
@@ -121,7 +125,9 @@
       "spread_degrees": 0,
       "attack_kind": "ranged",
       "strafe_factor": 0.8,
-      "color": "#bf9dde"
+      "color": "#bf9dde",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "keep_distance", "approach_margin": 35, "retreat_margin": 50, "approach_weight": 0.75, "retreat_weight": 0.75}, {"id": "ranged_attack"}]
     }
   },
   "scenarios": {
