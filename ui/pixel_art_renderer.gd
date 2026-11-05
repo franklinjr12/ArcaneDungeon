@@ -836,6 +836,16 @@ static func draw_enemy_markers(canvas: CanvasItem, enemy, at: Vector2, tick: int
 				if enemy.state == "windup" or low:
 					canvas.draw_arc(at,float(behaviour["explode_radius"]),0.0,TAU,40,Color(0.8,0.9,0.3,0.45+0.25*float((tick/6)%2)),2.0)
 
+## AD-138 placeholder water: translucent shallow, darker opaque deep. Visual only.
+static func draw_water(canvas: CanvasItem, session, offset: Vector2) -> void:
+	if session.water == null:
+		return
+	for tile in session.water.view():
+		var rect: Rect2 = tile["rect"]
+		rect.position -= offset
+		var deep: bool = str(tile["kind"]) == "deep"
+		canvas.draw_rect(rect,Color(0.08,0.2,0.45,1.0) if deep else Color(0.55,0.78,0.95,0.4))
+
 static func draw_hazards(canvas: CanvasItem, session, offset: Vector2) -> void:
 	for hazard in session.hazards:
 		var at: Vector2 = hazard["position"]-offset

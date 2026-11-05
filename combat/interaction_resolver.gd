@@ -2,6 +2,8 @@ extends RefCounted
 const HitPayload = preload("res://combat/hit_payload.gd")
 ## Payload is element-agnostic; definition data provides channels and status rules.
 var settings: Dictionary = {}
+## AD-138: WaterTiles or null. Lightning hitting a target in water arcs to the nearest other target in the same water body.
+var water = null
 
 func _init(balance: Dictionary) -> void:
 	settings = balance.duplicate(true)
@@ -60,13 +62,29 @@ func resolve(hit: Variant, target, target_store, tick: int) -> Dictionary:
 				immune = true
 		if not immune:
 			outcome["knockback"] = {"force":knockback}
-	if channel == "lightning" and target.status.has("wet",tick):
-		var options: Array = target_store.query(target.position,float(combat["arc_radius"]),team,[target.id],"wet",tick)
-		if not options.is_empty():
-			outcome["reaction"] = {"source_id":target.id,"target_id":options[0].id,
+	if channel == "lightning":
+		var arc_target = _arc_target(target,target_store,team,tick)
+		if arc_target != null:
+			outcome["reaction"] = {"source_id":target.id,"target_id":arc_target.id,
 				"damage":float(payload.get("damage",0))*float(combat["arc_damage_scale"]),
 				"team":team,"channel":"lightning"}
 	return outcome
+
+## At most one arc per hit. In water: nearest other target in the same body. Otherwise: nearest other Wet target.
+func _arc_target(target, target_store, team: int, tick: int):
+	var combat: Dictionary = settings["combat"]
+	if water != null:
+		var body: int = water.body_of(target.position)
+		if body >= 0:
+			for option in target_store.query(target.position,float(combat["water_conduct_radius"]),team,[target.id],"",tick):
+				if water.body_of(option.position) == body:
+					return option
+			return null
+	if target.status.has("wet",tick):
+		var options: Array = target_store.query(target.position,float(combat["arc_radius"]),team,[target.id],"wet",tick)
+		if not options.is_empty():
+			return options[0]
+	return null
 
 ## Rules are keyed on hit channel + target states, never on spell identity. First match wins.
 func _match_reaction(rules: Array, channel: String, target, tick: int) -> Dictionary:
