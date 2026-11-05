@@ -387,5 +387,27 @@
       "sample.water_burst",
       "sample.lightning_shot"
     ]
-  ]
+  ],
+  "mini_bosses": {
+    "ruins_adept_elite": {
+      "_note": "AD-141 PROPOSED numbers (Demo Plan Q1 default pending Franklin)",
+      "kind": "fallen_adept", "base_enemy": "fallen_adept", "display_name": "Elite fallen adept",
+      "radius": 30, "hp": 260, "patterns": ["targeted","fan"],
+      "windup_ticks": 48, "second_phase_windup_ticks": 40, "min_telegraph_ticks": 36,
+      "recovery_ticks": 40, "phase_threshold": 0.5,
+      "shot_damage": 11, "shot_speed": 310, "shot_spread": 0,
+      "fan_shots": 5, "fan_arc_degrees": 50,
+      "radial_shots": 8, "radial_damage": 8, "telegraph_radius": 190, "color": "#b49cf0"
+    },
+    "cistern_crystal_elite": {
+      "_note": "AD-141 PROPOSED numbers (Demo Plan Q1 default pending Franklin)",
+      "kind": "storm_crystal", "base_enemy": "storm_crystal", "display_name": "Elite storm crystal",
+      "radius": 30, "hp": 280, "patterns": ["pulse","radial"],
+      "pulse_radius": 150, "pulse_damage": 12,
+      "windup_ticks": 50, "second_phase_windup_ticks": 40, "min_telegraph_ticks": 36,
+      "recovery_ticks": 40, "phase_threshold": 0.5,
+      "radial_shots": 8, "radial_damage": 8, "shot_damage": 10, "shot_speed": 280, "shot_spread": 0,
+      "telegraph_radius": 150, "color": "#7fe0ff"
+    }
+  }
 }
