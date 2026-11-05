@@ -88,6 +88,19 @@
         "min": 1,
         "max": 600
       }
+    },
+    "beam_channel": {
+      "beam_length": {"type": "float", "default": 320.0, "min": 16.0, "max": 640.0},
+      "beam_width": {"type": "float", "default": 12.0, "min": 1.0, "max": 40.0},
+      "tick_interval_ticks": {"type": "int", "default": 10, "min": 1, "max": 60},
+      "mana_per_tick": {"type": "float", "default": 2.0, "min": 0.0, "max": 20.0},
+      "lifetime_ticks": {"type": "int", "default": 180, "min": 1, "max": 600}
+    },
+    "ground_field": {
+      "field_radius": {"type": "float", "default": 70.0, "min": 8.0, "max": 200.0},
+      "field_duration_ticks": {"type": "int", "default": 240, "min": 1, "max": 600},
+      "tick_interval_ticks": {"type": "int", "default": 20, "min": 1, "max": 120},
+      "cast_range": {"type": "float", "default": 260.0, "min": 0.0, "max": 600.0}
     }
   },
   "runes": [
@@ -249,6 +262,32 @@
       "cooldown_ticks": 9,
       "description": "Circles you at 72 units for 6 seconds, hitting what it touches.",
       "display_key": "form.orb"
+    },
+    {
+      "id": "form.beam",
+      "category": "form",
+      "schema_version": 2,
+      "param_blocks": ["beam_channel"],
+      "params": {},
+      "compatibility_tags": ["root", "beam", "channel"],
+      "complexity_weight": 2,
+      "mana_cost": 6,
+      "cooldown_ticks": 6,
+      "description": "Channels a line that hits all along it and drains mana each pulse; walls stop it.",
+      "display_key": "form.beam"
+    },
+    {
+      "id": "form.field",
+      "category": "form",
+      "schema_version": 2,
+      "param_blocks": ["ground_field"],
+      "params": {},
+      "compatibility_tags": ["root", "area", "field"],
+      "complexity_weight": 2,
+      "mana_cost": 10,
+      "cooldown_ticks": 12,
+      "description": "Creates a zone at the target that applies its essence to enemies inside for 4 seconds.",
+      "display_key": "form.field"
     },
     {
       "id": "mod.homing",

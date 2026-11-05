@@ -227,6 +227,8 @@
   "form.projectile": "ad_ico_projectile",
   "form.burst": "ad_ico_burst",
   "form.orb": "ad_ico_orb",
+  "form.beam": "ad_ico_projectile",
+  "form.field": "ad_ico_burst",
   "mod.homing": "ad_ico_homing",
   "mod.split": "ad_ico_split",
   "mod.pierce": "ad_ico_pierce",
