@@ -14,6 +14,8 @@ const SCRIPTS := {
 	"death_puddle": preload("res://combat/enemy_behaviours/death_puddle.gd"),
 	"intangible_cycle": preload("res://combat/enemy_behaviours/intangible_cycle.gd"),
 	"support_buff": preload("res://combat/enemy_behaviours/support_buff.gd"),
+	"split_on_death": preload("res://combat/enemy_behaviours/split_on_death.gd"),
+	"zone_cast": preload("res://combat/enemy_behaviours/zone_cast.gd"),
 }
 
 static func role(id: String) -> String:
