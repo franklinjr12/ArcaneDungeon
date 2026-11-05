@@ -2,6 +2,7 @@ extends RefCounted
 ## M2 combat orchestration: reuses M1 SpellRunner and common MagicTarget/Health.
 const Runner = preload("res://magic/runtime/spell_runner.gd")
 const Geometry = preload("res://world/arena_geometry.gd")
+const WaterTiles = preload("res://world/water_tiles.gd")
 const Player = preload("res://combat/player_combat.gd")
 const Enemy = preload("res://combat/enemy_combat.gd")
 const Boss = preload("res://combat/boss_combat.gd")
@@ -23,6 +24,8 @@ var pending_spawns: Array = []
 ## Read-only for rendering; advanced by _step_hazards in fixed id order.
 var hazards: Array = []
 var _next_hazard_id := 1
+## AD-138 [PROPOSED FOR PROTOTYPE]: WaterTiles or null. Water Wets anyone standing in it every data.water.wet_interval_ticks; deep water blocks walking.
+var water = null
 var feedback: Array = []
 var damage_events: Array = []
 var ai_transitions: Array = []
@@ -77,6 +80,7 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	world = Geometry.new(data["arena"])
 	sim.bounds = world.bounds
 	sim.collision_walls = world.walls.duplicate()
+	water = null
 	sim.actor.health.maximum = Difficulty.scale_f(float(data["player"]["max_hp"]),"player_hp")
 	sim.actor.health.reset()
 	sim.actor.radius = float(data["player"]["radius"])
@@ -164,6 +168,28 @@ func _step_hazards() -> void:
 			kept.append(hazard)
 	hazards = kept
 
+## AD-138: installs water tiles; deep rects block walking only (spells and sight still cross them).
+func set_water(entries: Array) -> void:
+	water = WaterTiles.new(entries)
+	world.add_ground_blockers(water.deep_rects())
+	sim.resolver.water = water
+
+## Every wet_interval_ticks session ticks: the player, then each alive enemy in list order, becomes Wet while standing in water.
+func _step_water() -> void:
+	if water == null:
+		return
+	var tick: int = sim.clock.tick
+	var interval: int = maxi(1,int(data["water"]["wet_interval_ticks"]))
+	if tick % interval != 0 or not sim.settings["statuses"].has("wet"):
+		return
+	var wet: Dictionary = sim.settings["statuses"]["wet"]
+	var victims: Array = [sim.actor]
+	for enemy in enemies:
+		victims.append(enemy.target)
+	for victim in victims:
+		if victim.alive() and water.in_water(victim.position,victim.radius):
+			victim.status.apply("wet",tick,wet,{"source_id":0})
+
 ## Read-only hazard view for rendering: position, radius, remaining ticks.
 func hazard_view() -> Array:
 	var view: Array = []
@@ -237,6 +263,7 @@ func step() -> void:
 		enemy.advance(self)
 	_flush_pending_spawns()
 	_step_hazards()
+	_step_water()
 	for enemy in enemies:
 		if enemy is Enemy:
 			enemy.apply_scales()

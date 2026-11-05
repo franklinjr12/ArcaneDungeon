@@ -1,5 +1,8 @@
 {
   "schema_version": 1,
+  "water": {
+    "wet_interval_ticks": 15
+  },
   "arena": {
     "width": 1320,
     "height": 900,
