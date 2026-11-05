@@ -182,7 +182,7 @@ func _pool(t) -> void:
 	var treasure: Dictionary = doc["room_templates"][doc["treasure_room"]]
 	t.check(treasure["type"] == "treasure" and int(treasure["choice_count"]) == 1 and treasure["pedestals"].size() >= 2,"AD-138 treasure room offers a 1-of-N pedestal choice")
 	var challenge: Dictionary = doc["room_templates"][doc["challenge_room"]]
-	t.check(challenge["type"] == "challenge" and challenge["waves"].size() == 2 and challenge.has("elite") and challenge.has("challenge_reward") and challenge.has("mini_boss_slot") and challenge["mini_boss_slot"] == null,"AD-138 challenge room has 2 waves, elite, reward and empty mini-boss slot")
+	t.check(challenge["type"] == "challenge" and challenge["waves"].size() == 2 and challenge.has("elite") and challenge.has("challenge_reward") and challenge.has("mini_boss_slot") and challenge["mini_boss_slot"] is Dictionary and JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))["mini_bosses"].has(challenge["mini_boss_slot"]["id"]),"AD-138 challenge room has 2 waves, elite, reward and a mini-boss slot")
 
 func _pool_negative(t) -> void:
 	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(POOL_PATH))

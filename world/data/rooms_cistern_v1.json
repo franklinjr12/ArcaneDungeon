@@ -1258,7 +1258,7 @@
     "reward_choices_bonus": 1,
     "extra_artifact_chance": 0.5
    },
-   "mini_boss_slot": null
+   "mini_boss_slot": {"id":"cistern_crystal_elite","wave":1,"position":[1030,450]}
   }
  }
 }
