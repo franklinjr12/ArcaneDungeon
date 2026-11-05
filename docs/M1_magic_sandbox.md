@@ -58,13 +58,23 @@ Reactions are **state rules** keyed on the hit channel plus the target's current
 - **Golden traces:** `tests/ad_cold_force_golden_generator.gd` (`godot --headless --path . --script res://tests/ad_cold_force_golden_generator.gd`) -> `tests/fixtures/ad_cold_force_traces_v1.json` (`chill_to_frozen`, `wet_cold_force_shatter`, `cold_fire_steam`); review before accepting changes.
 - **PROPOSED tuning (not approved balance):** Chilled 180 ticks / 3 stacks / 0.6 move scale; Frozen 120 ticks; Brittle 150 ticks, x1.25 damage taken; Blinded 90 ticks; Steam radius 120; shatter bonus x1.5; knockback force 420.
 
+## Beam and Field (AD-132, Demo M3)
+
+- **Beam** (`form.beam`, params `beam_length`, `beam_width`, `tick_interval_ticks`, `mana_per_tick`, `lifetime_ticks`): a channelled line from the caster along the aim. It pulses every `tick_interval_ticks`, starting the first tick after the cast, and hits up to `max_targets_per_pulse` targets on the line. The up-front plan mana is paid on cast and `mana_per_tick` is paid per pulse; a beam that cannot pay ends early (cleanup reason `no_mana`). The line is clipped at the first `collision_walls` rect and at arena bounds, so targets behind a wall get no hits.
+- **Field** (`form.field`, params `field_radius`, `field_duration_ticks`, plus the pulse interval): a ground zone applying its essence to targets inside the radius every interval. The centre is the explicit `target_point` (or aim x `cast_range`), clamped to `cast_range`, stopped at the first wall and kept inside bounds.
+- **Limits** (`spell_limits_v1.json`): `max_active_beams` (1), `max_active_fields` (3), `max_targets_per_pulse` (6); overflow is logged as `budget_exceeded`.
+- **API:** `try_cast(slot, origin, dir, target_point = null)`, `stop_channel()` ends active beams, `is_channelling()` is true while a beam lives. Beams and fields reject Pierce/Homing/Split.
+- **Samples:** `sample.fire_beam`, `sample.lightning_beam`, `sample.cold_field`. Goldens: `tests/ad_forms_golden_generator.gd` -> `tests/fixtures/ad_forms_traces_v1.json` (`beam_line_pulses`, `beam_wall_stop`, `field_cold_freeze`); review before accepting changes.
+- **Visuals:** the canvases draw beam lines and field circles from `sim.visuals` (no new art); visuals never affect sim timing.
+- **Not approved balance:** all values are prototype tuning. **Follow-ups:** hold-to-channel input wiring and the AD-121 mage channel animation tag.
+
 ## Source of truth / architecture
 
 - `docs/architecture/magic_contract_v1.md`: technical shared contract, v1.2 M1-compatible.
 - `magic/data/runes_v2.json`: stable IDs and typed, bounded default parameters.
 - `magic/data/magic_balance_v1.json`: prototype damage channels, state interactions, durations, DOT, mana, arc, spawn/debug tuning. These are **not approved balancing decisions**.
 - `magic/data/spell_limits_v1.json`: finite resource and event budgets, including a dedicated max-active-Orbs limit (prototype 6).
-- `magic/data/sandbox_samples_v1.json`: example formulas (eight M1 + three AD-131 Cold/Force) using **formula JSON schema v1**.
+- `magic/data/sandbox_samples_v1.json`: example formulas (eight M1 + three AD-131 Cold/Force + three AD-132 Beam/Field) using **formula JSON schema v1**.
 - `combat/{health_component,status_component,magic_target,target_store,hit_payload,interaction_resolver}.gd`: shared team, HP, time-bound status, typed hit metadata, targeting and elemental effects, separate from visuals.
 - `magic/runtime/{spell_runner,spell_loadout,projectile_effect,burst_effect,orb_effect}.gd`: fixed-tick runner, compiled loadouts, and three generic manifestations.
 - `magic/runtime/magic_event_queue.gd`: existing M0 bounded event queue used by the M1 executor; event payloads use private event-ID contexts, never anonymous recursive calls.

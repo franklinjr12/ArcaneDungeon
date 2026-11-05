@@ -25,7 +25,7 @@ func _draw() -> void:
 		return
 	var tick: int = runner.clock.tick
 	draw_line(runner.actor.position,hover,Color("#6fe1fa",0.18),1)
-	Art.entity(self,"mage",runner.actor.position,tick,Vector2.ZERO,runner.active.size()>0 and tick%14<5)
+	Art.entity(self,"mage",runner.actor.position,tick,Vector2.ZERO,(runner.active.size()>0 or runner.is_channelling()) and tick%14<5)
 	_label(runner.actor.position+Vector2(-19,-46),tr("combat.mage_label"),Color("#fbe1a9"),11)
 	for t in runner.targets.all():
 		if t.id == runner.actor.id:
@@ -39,7 +39,10 @@ func _draw() -> void:
 		draw_rect(Rect2(t.position+Vector2(-23,t.radius+7),Vector2(46,6)),Color("#13232a"))
 		draw_rect(Rect2(t.position+Vector2(-22,t.radius+8),Vector2(44*maxf(0,t.health.current/t.health.maximum),4)),Color("#bf5448"))
 		Art.status_icons(self,t,tick,t.position+Vector2(-15,t.radius+21))
+	Art.draw_form_visuals(self,runner.visuals)
 	for entry in runner.active:
+		if entry["kind"] in ["beam","field"]:
+			continue
 		var effect = entry["effect"]
 		var kind := "fire"
 		match str(effect.root["essence"]["id"]):

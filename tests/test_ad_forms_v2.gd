@@ -1,6 +1,7 @@
 extends RefCounted
 ## AD-132: Beam and Field forms (channelled line, ground zone) with pulse budgets.
 const Runner = preload("res://magic/runtime/spell_runner.gd")
+const Golden = preload("res://tests/ad_forms_golden_generator.gd")
 
 func _formula(form: String, essence: String = "essence.fire", modifiers: Array = []) -> Dictionary:
 	return {"schema_version":2,"formula_id":"test.%s.%s" % [form,essence],"display_name":form,
@@ -36,6 +37,7 @@ func run(t) -> void:
 	_beam_mana(t)
 	_beam_channel(t)
 	_field(t)
+	_golden_tests(t)
 	_stress(t)
 	_determinism(t)
 
@@ -251,3 +253,17 @@ func _determinism(t) -> void:
 		traces.append(r.trace_json())
 	t.equal(traces[0],traces[1],"AD-132 same seed gives identical beam/field traces")
 	t.check(traces[0].length() > 100,"AD-132 determinism trace is non-trivial")
+
+func _golden_tests(t) -> void:
+	var expected: Dictionary = t.fixture("ad_forms_traces_v1.json")
+	for scenario in Golden.SCENARIOS:
+		var played: Dictionary = Golden.play(scenario)
+		t.check(not played["accepted"].has(false),"AD-132 "+scenario+" scripted cast accepted")
+		t.equal(Golden.normalize(played["run"].trace.snapshot()),expected[scenario],"AD-132 "+scenario+" golden trace")
+	var line: Dictionary = Golden.play("beam_line_pulses")
+	t.equal(_hits(line["run"],line["targets"][0]),_hits(line["run"],line["targets"][1]),"AD-132 beam_line_pulses hits both targets equally")
+	var wall: Dictionary = Golden.play("beam_wall_stop")
+	t.equal(_hits(wall["run"],wall["targets"][1]),0,"AD-132 beam_wall_stop spares the target behind the wall")
+	t.check(wall["targets"][0].hit_count > 0,"AD-132 beam_wall_stop hits the near target")
+	var field: Dictionary = Golden.play("field_cold_freeze")
+	t.check(field["targets"][0].status.has("frozen"),"AD-132 field_cold_freeze ends Frozen")

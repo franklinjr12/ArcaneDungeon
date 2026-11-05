@@ -515,6 +515,27 @@ static func _element(essence_id: String) -> String:
 	var el := essence_id.trim_prefix("essence.")
 	return el if el in FX_ELEMENTS else "neutral"
 
+## AD-132: beam/field colour by essence (visual only).
+static func essence_color(essence_id: String) -> Color:
+	match _element(essence_id):
+		"fire": return Color("#f08a3c")
+		"water": return Color("#4aa8e8")
+		"lightning": return Color("#f5e65a")
+		"cold": return Color("#9fe6f4")
+		"force": return Color("#c9a6f0")
+	return Color("#e8e0cc")
+
+## AD-132: draws beam lines and field circles from sim.visuals; `offset` is the camera offset.
+static func draw_form_visuals(canvas: CanvasItem, visuals: Array, offset: Vector2 = Vector2.ZERO) -> void:
+	for v in visuals:
+		var color := essence_color(str(v.get("essence", "")))
+		if v["kind"] == "beam":
+			canvas.draw_line(v["from"] - offset, v["to"] - offset, Color(color, 0.35), 9.0)
+			canvas.draw_line(v["from"] - offset, v["to"] - offset, color, 3.0)
+		elif v["kind"] == "field":
+			canvas.draw_circle(v["position"] - offset, float(v["radius"]), Color(color, 0.22))
+			canvas.draw_arc(v["position"] - offset, float(v["radius"]), 0.0, TAU, 48, Color(color, 0.8), 2.0)
+
 static func _pos(p: Variant) -> Vector2:
 	return Vector2(float(p["x"]), float(p["y"])) if p is Dictionary else Vector2(p)
 
@@ -532,6 +553,8 @@ static func collect_fx(session, tick: int, memo: Dictionary) -> Array:
 	var live: Dictionary = {}
 	var pierce_ids: Dictionary = {}
 	for entry in sim.active:
+		if entry["kind"] in ["beam", "field"]:
+			continue  # AD-132: drawn from sim.visuals as line / circle, not as a projectile sprite
 		var effect = entry["effect"]
 		var mods: Array = []
 		for m in effect.root.get("modifiers", []):
