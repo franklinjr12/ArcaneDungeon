@@ -10,6 +10,8 @@ var removed := false
 var motion := Vector2.ZERO
 ## Sim state (AD-131): knockback velocity in px/s, decayed per tick by SpellRunner; part of the deterministic simulation.
 var impulse := Vector2.ZERO
+## Sim state (AD-136): incoming-damage multiplier set each tick by enemy components (shield_front, support_buff); 1.0 = untouched.
+var damage_scale := 1.0
 var health
 var status
 var hit_count := 0
@@ -34,6 +36,8 @@ func alive() -> bool:
 func receive_damage(amount: float, channel: String, attacker_team: int, armor_scale: float) -> float:
 	if not eligible(attacker_team):
 		return 0.0
+	if damage_scale != 1.0:
+		amount *= damage_scale
 	var dealt: float = health.damage(amount,channel,armor_scale)
 	if dealt > 0:
 		hit_count += 1

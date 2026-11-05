@@ -17,6 +17,8 @@ var world
 var player
 var enemies: Array = []
 var enemy_shots: Array = []
+## AD-136: spawn requests {kind, position, summoner_id} queued by components during the AI loop; flushed in order after it.
+var pending_spawns: Array = []
 var feedback: Array = []
 var damage_events: Array = []
 var ai_transitions: Array = []
@@ -78,6 +80,7 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	player = Player.new(sim,world,data["player"])
 	enemies.clear()
 	enemy_shots.clear()
+	pending_spawns.clear()
 	feedback.clear()
 	damage_events.clear()
 	ai_transitions.clear()
@@ -111,6 +114,27 @@ func spawn_enemy(kind: String, at: Vector2):
 	var enemy = Enemy.new(target,kind,p)
 	enemies.append(enemy)
 	return enemy
+
+func _flush_pending_spawns() -> void:
+	if pending_spawns.is_empty():
+		return
+	var queue: Array = pending_spawns
+	pending_spawns = []
+	for spec in queue:
+		var spawned = spawn_enemy(str(spec["kind"]),spec["position"])
+		if spawned != null:
+			spawned.summoner_id = int(spec["summoner_id"])
+
+## Live summons owned by `summoner_id`, including ones still queued.
+func summons_owned_by(summoner_id: int) -> int:
+	var count := 0
+	for enemy in enemies:
+		if enemy is Enemy and enemy.summoner_id == summoner_id and enemy.target.alive():
+			count += 1
+	for spec in pending_spawns:
+		if int(spec["summoner_id"]) == summoner_id:
+			count += 1
+	return count
 
 func spawn_boss(settings: Dictionary, at: Vector2):
 	if not world.valid_position(at,float(settings["radius"])):
@@ -160,7 +184,14 @@ func step() -> void:
 		for enemy in enemies:
 			audio_before.append([enemy.state,int(enemy.get("phase")) if enemy.get("phase") != null else 1])
 	for enemy in enemies:
+		if enemy is Enemy:
+			enemy.begin_tick()
+	for enemy in enemies:
 		enemy.advance(self)
+	_flush_pending_spawns()
+	for enemy in enemies:
+		if enemy is Enemy:
+			enemy.apply_scales()
 	if audio_sink.is_valid():
 		_audio_step(audio_before)
 	advance_enemy_projectiles()
@@ -219,11 +250,12 @@ func alive_enemies() -> int:
 			count += 1
 	return count
 
-func damage_player(source_id: int, amount: float, channel: String, attack_id: int = -1) -> Dictionary:
+## `allow_dead_source` lets on-death damage (explode_on_death) come from the enemy that just died.
+func damage_player(source_id: int, amount: float, channel: String, attack_id: int = -1, allow_dead_source: bool = false) -> Dictionary:
 	if state != "playing" or not sim.actor.alive():
 		return {"accepted":false,"reason":"DEAD"}
 	var source = sim.targets.get_target(source_id)
-	if source == null or not source.alive() or source.team == sim.actor.team:
+	if source == null or (not source.alive() and not allow_dead_source) or source.team == sim.actor.team:
 		return {"accepted":false,"reason":"SOURCE_INVALID"}
 	if attack_id < 0:
 		attack_id = sim.clock.next_id("attack")
@@ -292,6 +324,10 @@ func advance_enemy_projectiles() -> void:
 			enemy_shots.erase(projectile)
 		else:
 			projectile["position"] = destination
+
+## Explosion marker; deliberately non-text (like other feedback labels it is output-only).
+func notify_blast(at: Vector2) -> void:
+	_notify("*",at)
 
 func _notify(message: String, at: Vector2) -> void:
 	feedback.append({"label":message,"position":at,"tick":sim.clock.tick})

@@ -74,6 +74,27 @@ godot --headless --path . --script res://tests/combat_ui_smoke.gd
 godot --headless --path . --script res://tests/m2_baseline_probe.gd
 ```
 
+## Enemy framework v2 (AD-136)
+
+Enemies are composed from a `behaviours` list in `combat/combat_tuning_v1.json` (`enemies.<kind>.behaviours`, objects `{"id": ..., params...}`); `combat/enemy_behaviours/registry.gd` validates ids and params (`Registry.validate_enemy`). Exactly one movement component and at most one attack component per enemy; any number of tick/modifier components. Component params override the enemy-level key of the same name; new damage/speed/telegraph keys follow `EnemyCombat._scale` (difficulty).
+
+| id | role | params |
+| --- | --- | --- |
+| `chase` | movement | `preferred_range` |
+| `keep_distance` | movement | `approach_margin`, `retreat_margin`, opt. `approach_weight`, `retreat_weight`, `strafe_factor`, `approach_without_sight` |
+| `turret` | movement (never moves) | none |
+| `melee_attack` / `ranged_attack` | attack | ranged: opt. `shots`, `spread_step_degrees` |
+| `charge` | attack | `charge_speed`, `charge_ticks`, opt. `contact_padding`, `damage`, `channel` |
+| `phase_walls` | modifier | opt. `ignore_sight` |
+| `summon` | tick | `summon_kind`, `summon_cooldown_ticks`, `count`, `max_alive`, `summon_radius` |
+| `shield_front` | tick | `front_damage_scale`, `front_arc_degrees` (half-angle around `heading`, which tracks the player) |
+| `explode_on_death` | on death | `explode_radius`, `explode_damage`, opt. `explode_channel` |
+| `support_buff` | tick | `buff_radius`, opt. `buff_damage_scale`, `buff_speed_scale` |
+
+Summons are queued in `CombatSession.pending_spawns` and spawned right after the AI loop (so `enemies` is never mutated mid-iteration); summons record `summoner_id`. `shield_front` and `support_buff` damage scales multiply into `MagicTarget.damage_scale` (`shield_scale * buff_damage_scale`, recomputed every tick from 1.0); buffs also scale move speed and lapse the tick the supporter dies, freezes or the ally leaves range. A frozen shielded enemy keeps its last scale. `explode_on_death` is allowed to damage from a dead source (`damage_player(..., allow_dead_source)`) and posts a `*` feedback marker.
+
+To add an enemy, copy an entry in `enemies`, edit its stats, and swap `behaviours`, e.g. a summoner: `[{"id":"chase"},{"id":"summon","summon_kind":"bone_thrall","summon_cooldown_ticks":240,"count":2,"max_alive":4,"summon_radius":60}]`. Then run `tests/test_ad_enemy_v2.gd`; golden traces for the three shipped enemies must stay unchanged (`tests/fixtures/ad_enemy_traces_v1.json`).
+
 ## Boundaries and owner decisions
 
 The arena is *not* M3 room progression, boss design, loot, a spell editor, a production sprite pipeline or gamepad integration. Player motion, dodge timings, enemy archetypes/HP and attack damage, Burst range/LOS, fixed arena obstacles, accessible flash treatment, two loadout slots, initial seed, and encounter recipes are **PROPOSED FOR PROTOTYPE**, not locked design. A later human playtest should verify warning legibility, pacing, actual 60-FPS rendering, camera comfort and combat feel before treating M2 as polished.
