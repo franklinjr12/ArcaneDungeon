@@ -577,7 +577,7 @@
        700
       ],
       [
-       "grave_hound",
+       "storm_crystal",
        700,
        450
       ]
@@ -784,12 +784,12 @@
        250
       ],
       [
-       "bone_thrall",
+       "rust_golem",
        420,
        650
       ],
       [
-       "drowned_acolyte",
+       "storm_crystal",
        1050,
        500
       ]
@@ -879,7 +879,7 @@
        150
       ],
       [
-       "bone_thrall",
+       "lantern_wisp",
        900,
        750
       ],
@@ -992,7 +992,7 @@
        200
       ],
       [
-       "bone_thrall",
+       "rust_golem",
        500,
        720
       ],
@@ -1002,7 +1002,7 @@
        250
       ],
       [
-       "grave_hound",
+       "lantern_wisp",
        820,
        680
       ]
@@ -1215,7 +1215,7 @@
        250
       ],
       [
-       "bone_thrall",
+       "rust_golem",
        450,
        650
       ],
@@ -1236,12 +1236,12 @@
        720
       ],
       [
-       "grave_hound",
+       "lantern_wisp",
        1120,
        260
       ],
       [
-       "drowned_acolyte",
+       "storm_crystal",
        720,
        455
       ]

@@ -25,7 +25,7 @@ func run(t) -> void:
 	var roster: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))["enemies"]
 	var ids: Array = roster.keys()
 	ids.sort()
-	t.equal(ids,["bone_thrall","cistern_slime","cistern_slimelet","corpse_bloat","deep_eel","drowned_acolyte","fallen_adept","grave_hound","ossuary_shieldbearer","wailing_spirit"],"AD-016 undead roster ids")
+	t.equal(ids,["bone_thrall","cistern_slime","cistern_slimelet","corpse_bloat","deep_eel","drowned_acolyte","fallen_adept","grave_hound","lantern_wisp","ossuary_shieldbearer","rust_golem","storm_crystal","wailing_spirit"],"AD-016 undead roster ids")
 	t.equal(roster["bone_thrall"]["display_name"],"Bone thrall","AD-016 bone_thrall display name")
 	t.equal(roster["fallen_adept"]["display_name"],"Fallen adept","AD-016 fallen_adept display name")
 	t.equal(roster["grave_hound"]["display_name"],"Grave hound","AD-016 grave_hound display name")

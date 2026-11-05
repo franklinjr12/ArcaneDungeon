@@ -18,6 +18,8 @@ const SCRIPTS := {
 	"zone_cast": preload("res://combat/enemy_behaviours/zone_cast.gd"),
 	"water_lurk": preload("res://combat/enemy_behaviours/water_lurk.gd"),
 	"lunge": preload("res://combat/enemy_behaviours/lunge.gd"),
+	"charged_pulse": preload("res://combat/enemy_behaviours/charged_pulse.gd"),
+	"conductor": preload("res://combat/enemy_behaviours/conductor.gd"),
 }
 
 static func role(id: String) -> String:

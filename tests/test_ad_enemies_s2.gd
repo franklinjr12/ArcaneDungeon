@@ -20,6 +20,18 @@ func run(t) -> void:
 	_eel_validate(t)
 	_eel_deterministic(t)
 	_rooms(t)
+	_crystal_config(t)
+	_crystal_static(t)
+	_crystal_pulse(t)
+	_crystal_conductor(t)
+	_crystal_validate(t)
+	_crystal_deterministic(t)
+	_golem_wisp_configs(t)
+	_golem_resist(t)
+	_wisp_shield(t)
+	_wisp_harmless(t)
+	_rooms_s2b(t)
+	_golem_wisp_deterministic(t)
 
 func _kill(s, enemy) -> void:
 	enemy.target.receive_damage(100000.0,"physical",s.sim.actor.team,0.0)
@@ -241,3 +253,159 @@ func _rooms(t) -> void:
 					t.check(not in_deep,"AD-139 %s %s spawn %s is not in deep water" % [room["id"],kind,str(pos)])
 	for kind in ["cistern_slime","drowned_acolyte","deep_eel"]:
 		t.check(used.has(kind),"AD-139 %s appears in Cistern waves" % kind)
+
+func _crystal_config(t) -> void:
+	var s = Session.new(140,"empty",0)
+	var cfg: Dictionary = s.data["enemies"]["storm_crystal"]
+	t.check(Registry.validate_enemy(cfg).is_empty(),"AD-140 storm_crystal config validates")
+	for entry in cfg["behaviours"]:
+		if Registry.role(entry["id"]) == "movement":
+			t.check(entry["id"] == "turret","AD-140 storm_crystal only moves via turret")
+
+func _crystal_static(t) -> void:
+	var s = Session.new(140,"empty",0)
+	var c = s.spawn_enemy("storm_crystal",s.sim.actor.position+Vector2(400,0))
+	var at: Vector2 = c.target.position
+	var moved := false
+	for i in 300:
+		s.step()
+		moved = moved or c.target.position != at
+	t.check(not moved,"AD-140 crystal never moves")
+
+func _pulse_run(dist: float) -> Array:
+	var s = Session.new(140,"empty",0)
+	var c = s.spawn_enemy("storm_crystal",s.sim.actor.position+Vector2(dist,0))
+	var hp0: float = s.sim.actor.health.current
+	var charged := false
+	for i in 200:
+		s.step()
+		charged = charged or s.sim.actor.status.has("charged",s.sim.clock.tick)
+	return [hp0-s.sim.actor.health.current,charged,s,c]
+
+func _crystal_pulse(t) -> void:
+	var inside := _pulse_run(100.0)
+	t.check(inside[0] > 0.0 and inside[1],"AD-140 pulse inside the radius damages and applies charged (%f)" % inside[0])
+	var outside := _pulse_run(400.0)
+	t.check(is_zero_approx(outside[0]) and not outside[1],"AD-140 pulse outside the radius does nothing")
+
+func _lightning(s, target) -> Dictionary:
+	var payload := {"team":s.sim.actor.team,"essence_id":"essence.lightning","damage":10.0,"cast_id":1,"root_cast_id":1}
+	return s.sim.resolver.resolve(payload,target,s.sim.targets,s.sim.clock.tick)
+
+func _crystal_conductor(t) -> void:
+	var s = Session.new(140,"empty",0)
+	s.sim.actor.position = Vector2(100,100)
+	var c = s.spawn_enemy("storm_crystal",Vector2(700,400))
+	var other = s.spawn_enemy("bone_thrall",Vector2(780,400))
+	var out := _lightning(s,c.target)
+	t.check(not out["reaction"].is_empty() and int(out["reaction"]["target_id"]) == other.target.id,"AD-140 Lightning on the crystal arcs to the nearby enemy")
+	var s2 = Session.new(140,"empty",0)
+	s2.sim.actor.position = Vector2(100,100)
+	var plain = s2.spawn_enemy("bone_thrall",Vector2(700,400))
+	s2.spawn_enemy("bone_thrall",Vector2(780,400))
+	t.check(_lightning(s2,plain.target)["reaction"].is_empty(),"AD-140 plain enemy gets no arc")
+
+func _crystal_validate(t) -> void:
+	for bad in [{"id":"charged_pulse"},{"id":"charged_pulse","pulse_radius":0},{"id":"charged_pulse","pulse_radius":-5},{"id":"charged_pulse","pulse_radius":50,"pulse_status":3}]:
+		t.check(not Registry.SCRIPTS["charged_pulse"].validate(bad).is_empty(),"AD-140 charged_pulse rejects %s" % str(bad))
+	t.check(Registry.SCRIPTS["charged_pulse"].validate({"id":"charged_pulse","pulse_radius":150}).is_empty(),"AD-140 charged_pulse accepts a valid config")
+
+func _crystal_trace() -> Array:
+	var r := _pulse_run(100.0)
+	return [r[0],r[1],r[3].target.health.current,r[3].state]
+
+func _crystal_deterministic(t) -> void:
+	t.check(_crystal_trace() == _crystal_trace(),"AD-140 crystal run deterministic")
+
+func _hit_loss(s, enemy, channel: String) -> float:
+	var before: float = enemy.target.health.current
+	enemy.target.receive_damage(10.0,channel,s.sim.actor.team,1.0)
+	return before-enemy.target.health.current
+
+func _golem_wisp_configs(t) -> void:
+	var s = Session.new(140,"empty",0)
+	for kind in ["rust_golem","lantern_wisp"]:
+		t.check(s.data["enemies"].has(kind) and Registry.validate_enemy(s.data["enemies"][kind]).is_empty(),"AD-140 %s config validates" % kind)
+
+func _golem_resist(t) -> void:
+	var s = Session.new(140,"empty",0)
+	var golem = s.spawn_enemy("rust_golem",Vector2(300,300))
+	var thrall = s.spawn_enemy("bone_thrall",Vector2(300,600))
+	var base: float = _hit_loss(s,thrall,"physical")
+	t.check(base > 0.0,"AD-140 base hit on thrall deals damage (%f)" % base)
+	var lightning: float = _hit_loss(s,golem,"lightning")
+	var cold: float = _hit_loss(s,golem,"cold")
+	var neutral: float = _hit_loss(s,golem,"neutral")
+	t.check(lightning > _hit_loss(s,thrall,"lightning"),"AD-140 golem takes more Lightning than a thrall (%f)" % lightning)
+	t.check(cold < _hit_loss(s,thrall,"cold"),"AD-140 golem takes less Cold than a thrall (%f)" % cold)
+	t.check(neutral < _hit_loss(s,thrall,"neutral"),"AD-140 golem takes less neutral damage than a thrall (%f)" % neutral)
+	t.check(lightning > cold,"AD-140 golem Lightning-weak vs Cold-resistant")
+
+func _wisp_scene() -> Array:
+	var s = Session.new(140,"empty",0)
+	var wisp = s.spawn_enemy("lantern_wisp",Vector2(400,450))
+	var near = s.spawn_enemy("bone_thrall",Vector2(500,450))
+	var far = s.spawn_enemy("bone_thrall",Vector2(400,780))
+	return [s,wisp,near,far]
+
+func _wisp_shield(t) -> void:
+	var sc := _wisp_scene()
+	var s = sc[0]
+	var wisp = sc[1]
+	var near = sc[2]
+	var far = sc[3]
+	var scale: float = float(wisp.tuning["behaviours"][1]["buff_damage_scale"])
+	s.step()
+	var d: float = wisp.target.position.distance_to(near.target.position)
+	var r: float = float(wisp.tuning["behaviours"][1]["buff_radius"])
+	t.check(d <= r and wisp.target.position.distance_to(far.target.position) > r,"AD-140 scene: thrall near wisp, other far (%f)" % d)
+	var full: float = _hit_loss(s,far,"physical")
+	var shielded: float = _hit_loss(s,near,"physical")
+	t.check(absf(shielded-full*scale) < 0.001,"AD-140 wisp scales ally damage by %f (%f vs %f)" % [scale,shielded,full])
+	_kill(s,wisp)
+	s.step()
+	t.check(is_equal_approx(_hit_loss(s,near,"physical"),full),"AD-140 shield ends the tick the wisp dies")
+
+func _wisp_harmless(t) -> void:
+	var s = Session.new(140,"empty",0)
+	var wisp = s.spawn_enemy("lantern_wisp",s.sim.actor.position+Vector2(200,0))
+	var hp0: float = s.sim.actor.health.current
+	for i in 600:
+		s.step()
+	t.check(wisp.target.alive() and s.sim.actor.health.current == hp0,"AD-140 wisp never damages the player")
+
+func _rooms_s2b(t) -> void:
+	var s = Session.new(140,"empty",0)
+	var rooms = JSON.parse_string(FileAccess.get_file_as_string("res://world/data/rooms_cistern_v1.json"))
+	var used := {}
+	for room in rooms["room_templates"].values():
+		var water := WaterTiles.new(room["layout"]["water"])
+		for wave in room["waves"]:
+			var kinds: Array = wave["enemies"].map(func(e): return e[0])
+			if kinds.has("lantern_wisp"):
+				t.check(kinds.size() >= 2,"AD-140 %s wisp is never alone in a wave" % room["id"])
+			for entry in wave["enemies"]:
+				var kind: String = entry[0]
+				used[kind] = true
+				t.check(s.data["enemies"].has(kind),"AD-140 %s wave kind %s exists" % [room["id"],kind])
+				var pos := Vector2(float(entry[1]),float(entry[2]))
+				if kind in ["storm_crystal","rust_golem","lantern_wisp"]:
+					var in_deep := false
+					for r in water.deep_rects():
+						in_deep = in_deep or r.has_point(pos)
+					t.check(not in_deep,"AD-140 %s %s spawn %s not in deep water" % [room["id"],kind,str(pos)])
+	for kind in ["storm_crystal","rust_golem","lantern_wisp"]:
+		t.check(used.has(kind),"AD-140 %s appears in Cistern waves" % kind)
+
+func _gw_trace() -> Array:
+	var s = Session.new(140,"empty",0)
+	var g = s.spawn_enemy("rust_golem",s.sim.actor.position+Vector2(300,0))
+	var w = s.spawn_enemy("lantern_wisp",s.sim.actor.position+Vector2(350,150))
+	var trace: Array = []
+	for i in 300:
+		s.step()
+		trace.append([g.target.position,w.target.position,g.state,s.sim.actor.health.current])
+	return trace
+
+func _golem_wisp_deterministic(t) -> void:
+	t.check(_gw_trace() == _gw_trace(),"AD-140 golem+wisp scenario deterministic")

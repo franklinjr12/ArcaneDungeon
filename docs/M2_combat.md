@@ -119,6 +119,18 @@ Components: `split_on_death` (`split_kind`, `count`, `split_radius`), `zone_cast
 
 Cistern rooms (`world/data/rooms_cistern_v1.json`): slime from p02, acolyte from p03, eel from p05 (p05, p07, p09, p10, challenge; eel spawns are in shallow water the validator treats as walkable, since deep water is solid; slime/acolyte never in deep water). Placeholder sprites via `PLACEHOLDER_KIND`: slime/slimelet borrow bone_thrall, acolyte fallen_adept, eel grave_hound, tinted by `color`.
 
+### Stage 2 enemies part 2 (AD-140, numbers PROPOSED)
+
+Components: `charged_pulse` (`pulse_radius`, `pulse_channel`, `pulse_status`; telegraphed pulse around the enemy that damages and applies Charged) and `conductor` (tags the target `conductor`; `interaction_resolver` arcs Lightning from it once to the nearest other target within `combat.arc_radius`). Rust golem and Lantern wisp need no new code: they use `channel_resistances` and `support_buff` (multiplies `buff_damage_scale` into damage taken by other living non-boss enemies within `buff_radius`, recomputed each tick). Tests in `tests/test_ad_enemies_s2.gd`.
+
+| enemy | behaviour | counter |
+| --- | --- | --- |
+| Storm crystal (`turret` + `charged_pulse` + `conductor`) | static, pulses Charged around itself | stay outside the pulse ring; Lightning on it arcs to enemies beside it |
+| Rust golem (hp 220, resists neutral/fire/water/force 30%, Cold 50%, Lightning x1.5) | slow armoured melee bruiser | Lightning, especially Wet + Lightning; avoid Cold |
+| Lantern wisp (hp 45, `support_buff` r220 x0.3, no attack) | keeps away, allies within 220 take 30% damage | kill the wisp first; the shield ends the tick it dies |
+
+Cistern rooms: storm crystal from p06 (p06, p08, challenge), rust golem from p08 (p08, p10, challenge), lantern wisp from p09 (p09, p10, challenge; always with at least one other enemy). They replace generic entries at the same coordinates, so spawns stay valid and never land in deep water. Placeholder sprites via `PLACEHOLDER_KIND`: crystal borrows fallen_adept, golem bone_thrall, wisp grave_hound, tinted by `color`.
+
 ## Boundaries and owner decisions
 
 The arena is *not* M3 room progression, boss design, loot, a spell editor, a production sprite pipeline or gamepad integration. Player motion, dodge timings, enemy archetypes/HP and attack damage, Burst range/LOS, fixed arena obstacles, accessible flash treatment, two loadout slots, initial seed, and encounter recipes are **PROPOSED FOR PROTOTYPE**, not locked design. A later human playtest should verify warning legibility, pacing, actual 60-FPS rendering, camera comfort and combat feel before treating M2 as polished.

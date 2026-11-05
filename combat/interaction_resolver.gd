@@ -73,6 +73,10 @@ func resolve(hit: Variant, target, target_store, tick: int) -> Dictionary:
 ## At most one arc per hit. In water: nearest other target in the same body. Otherwise: nearest other Wet target.
 func _arc_target(target, target_store, team: int, tick: int):
 	var combat: Dictionary = settings["combat"]
+	if target.tags.has("conductor"):
+		# query() sorts by distance then id, so [0] is the nearest other target.
+		var near: Array = target_store.query(target.position,float(combat["arc_radius"]),team,[target.id],"",tick)
+		return near[0] if not near.is_empty() else null
 	if water != null:
 		var body: int = water.body_of(target.position)
 		if body >= 0:
