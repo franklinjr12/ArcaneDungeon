@@ -260,3 +260,12 @@ settings.action.cast_slot_4,Cast slot 4
 settings.action.dash,Dash
 settings.action.interact,Interact
 settings.action.pause,Pause
+run.desk.heading,Sigil Desk
+run.desk.step_build,1. Build slot 4: add %s
+run.desk.step_test,2. Test-cast slot 4 on a dummy
+run.desk.step_door,3. Walk through the door
+run.desk.guided,Guided: pick %s
+run.goal.desk,Sigil Desk - build slot 4
+run.btn.desk_door,Go through the door (F)
+run.btn.desk_skip,Skip the desk
+run.btn.desk_slot,Edit slot %d

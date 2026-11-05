@@ -34,6 +34,7 @@ var shop_list: VBoxContainer
 var shop_open := false
 var _shop_offered := false
 var shop_reopen_button: Button
+var desk_skip_button: Button
 var shop_close_button: Button
 var summary_panel: PanelContainer
 var dev_panel: PanelContainer
@@ -93,6 +94,7 @@ func _ready() -> void:
 	if show_dev_tools == null:
 		show_dev_tools = OS.is_debug_build()
 	flow = Flow.new(-1, config_path)
+	_begin_desk()
 	_director = get_node_or_null("/root/AudioDirector")
 	if _director != null:
 		flow.audio_sink = _director.play
@@ -634,6 +636,7 @@ func _redraw_panel() -> void:
 	if scroll != null:
 		scroll.scroll_vertical = 0
 	summary_retry_button = null
+	desk_skip_button = null
 	summary_new_seed_button = null
 	summary_title_button = null
 	var in_summary: bool = flow.state in ["dead","won"]
@@ -680,6 +683,8 @@ func _redraw_panel() -> void:
 	elif flow.state == "cleared" and flow.next_is_optional():
 		_button(context,tr("run.btn.door_optional"),func(): _exit(true))
 		_button(context,tr("run.btn.door_skip"),func(): _exit(false))
+	elif in_workshop and flow.prelude:
+		_build_desk_panel()
 	elif in_workshop:
 		shop_reopen_button = _button(context,tr("run.btn.open_merchant"),func(): _set_shop_open(true))
 		_heading(context,tr("run.range.heading"))
@@ -691,7 +696,7 @@ func _redraw_panel() -> void:
 			flow.refill_test_mana()
 			current_notice = tr("run.notice.mana_refilled"))
 		_button(context,tr("run.btn.continue_stage2"),func(): _exit())
-	if in_workshop:
+	if in_workshop and not flow.prelude:
 		if not _shop_offered:
 			_shop_offered = true
 			shop_open = true
@@ -701,6 +706,25 @@ func _redraw_panel() -> void:
 		shop_open = false
 	_sync_shop()
 	_update_labels()
+
+func _build_desk_panel() -> void:
+	var slot_ui: int = int(flow.config["sigil_desk"]["formula_index"])+2
+	_heading(context,tr("run.desk.heading"))
+	var step := 0 if not flow.prelude_built else (1 if not flow.prelude_ready() else 2)
+	var next_rune: String = flow.editor.guided_next() if editor_open and flow.editor != null else ""
+	var lines := [tr("run.desk.step_build") % next_rune,tr("run.desk.step_test"),tr("run.desk.step_door")]
+	for i in lines.size():
+		_hint(context,("> " if i == step else "  ")+str(lines[i]).strip_edges())
+	_button(context,tr("run.btn.desk_slot") % slot_ui,func(): _open_editor(slot_ui-1))
+	_button(context,tr("run.btn.reset_targets"),func(): _reset_test_range())
+	var door := _button(context,tr("run.btn.desk_door"),func(): _exit())
+	door.disabled = not flow.prelude_ready()
+	if _desk_skippable():
+		desk_skip_button = _button(context,tr("run.btn.desk_skip"),func(): _skip_desk(),"ui.cancel")
+
+## Palette buttons show the raw rune id, so the guide does too.
+func _rune_label(id: String) -> String:
+	return id
 
 func _sync_shop() -> void:
 	if shop_overlay != null:
@@ -834,7 +858,7 @@ func _update_labels() -> void:
 	if tip != null:
 		_watch_hint_signals()
 		var active := ""
-		if flow.mode == "workshop":
+		if flow.mode == "workshop" and not flow.prelude:
 			active = "first_workshop"
 		elif flow.state == "fighting" and str(flow.room.values["id"]) == "s1_r1":
 			active = "room1"
@@ -861,7 +885,9 @@ func _update_labels() -> void:
 ## Compact top-left objective: room display name + goal for the current state, then the coin count.
 func _update_objective() -> void:
 	var goal := ""
-	if flow.mode == "workshop":
+	if flow.prelude:
+		goal = tr("run.goal.desk")
+	elif flow.mode == "workshop":
 		goal = tr("run.goal.workshop")
 	elif flow.state == "fighting":
 		goal = tr("run.goal.warden") if flow.room.values["type"] == "boss" else tr("run.goal.undead")
@@ -886,7 +912,7 @@ func _update_dev_label() -> void:
 
 ## AD-084: read-only watch on run-flow counters; never pauses the sim or opens dialogs.
 func _watch_hint_signals() -> void:
-	if flow.mode == "workshop":
+	if flow.mode == "workshop" and not flow.prelude:
 		guide.note_workshop(3 - flow.run.formulas.size())
 		if flow.run.formulas.size() >= 3 and guide.current == "workshop_empty_slot":
 			guide.current = ""
@@ -958,6 +984,7 @@ func _retry_same_seed() -> void:
 	_stats_recorded = false
 	_rift_shown = false
 	flow.retry_same_seed()
+	_begin_desk()
 	current_notice = tr("run.notice.retry")
 	_redraw_panel()
 
@@ -967,8 +994,44 @@ func _new_seed() -> void:
 	_stats_recorded = false
 	_rift_shown = false
 	flow.start_new_seed()
+	_begin_desk()
 	current_notice = tr("run.notice.new_seed")
 	_redraw_panel()
+
+## AD-130: every new run starts at the Sigil Desk when the config offers it.
+func _begin_desk() -> void:
+	if flow.prelude_available() and flow.enter_prelude()["ok"]:
+		guide.prelude_active = true
+
+func _desk_skippable() -> bool:
+	var save = get_node_or_null("/root/SaveService")
+	return save != null and bool(save.profile["stats"].get("sigil_desk_done",false))
+
+func _skip_desk() -> void:
+	if editor_open:
+		return
+	flow.finish_prelude(true)
+	_after_desk(true)
+	_flash_transition()
+	_redraw_panel()
+
+## Clears the prelude tip suppression once the desk is over; persists completion on the door path.
+func _after_desk(skipped: bool) -> void:
+	if flow.prelude:
+		return
+	guide.prelude_active = false
+	if skipped:
+		return
+	var save = get_node_or_null("/root/SaveService")
+	if save == null:
+		return
+	save.profile["stats"]["sigil_desk_done"] = true
+	var ids: Array = save.profile["stats"].get("onboarding_seen", [])
+	for id in guide.note_prelude_done():
+		if not ids.has(id):
+			ids.append(id)
+	save.profile["stats"]["onboarding_seen"] = ids
+	save.save_profile()
 
 func _to_title() -> void:
 	flow.experiment.end_session()
@@ -978,7 +1041,10 @@ func _to_title() -> void:
 func _exit(take_optional: bool = true) -> void:
 	if editor_open:
 		return
+	var was_desk: bool = flow.prelude
 	var result: Dictionary = flow.try_exit(flow.session.sim.actor.position, take_optional)
+	if was_desk and result["ok"]:
+		_after_desk(false)
 	current_notice = tr("run.notice.door") % (str(result.get("reason","OPEN")) if result["ok"] == false else tr("run.notice.next_room"))
 	if result["ok"]:
 		_flash_transition()
@@ -1023,6 +1089,8 @@ func _editor_rebuild() -> void:
 	_clear(editor_controls)
 	var e = flow.editor
 	_heading(editor_controls,tr("run.editor.title") % (e.slot+2),20)
+	if not e.guided_runes.is_empty():
+		_heading(editor_controls,tr("run.desk.guided") % _rune_label(e.guided_next()),14)
 	_heading(editor_controls,tr("run.editor.chain"))
 	_build_rune_palette(e)
 	if e.draft.has("on_hit"):
@@ -1082,6 +1150,8 @@ func _build_rune_palette(e) -> void:
 				"form": b.button_pressed = str(root["manifestation_id"]) == id
 				"modifier": b.button_pressed = id in root["modifier_ids"]
 				"trigger": b.button_pressed = e.draft.has("on_hit")
+			if id == e.guided_next() and not e.guided_runes.is_empty():
+				b.modulate = Color("#efbc65")
 			b.disabled = bool(rune["locked"]) or (kind in ["modifier","trigger"] and not is_projectile)
 			list.add_child(b)
 			b.pressed.connect(func():
@@ -1159,8 +1229,17 @@ func _close_editor(apply_changes: bool) -> void:
 
 ## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.
 func apply_debug_shot_state(state: String) -> bool:
-	if not OS.is_debug_build() or not state in ["combat","reward","workshop_editor","merchant","pause","summary"]:
+	if not OS.is_debug_build() or not state in ["combat","reward","workshop_editor","merchant","pause","summary","sigil_desk"]:
 		return false
+	if state == "sigil_desk":
+		if not flow.prelude and not (flow.prelude_available() and flow.enter_prelude()["ok"]):
+			return false
+		guide.prelude_active = flow.prelude
+		_redraw_panel()
+		return true
+	if flow.prelude:
+		flow.finish_prelude(true)
+		guide.prelude_active = false
 	if state == "reward":
 		for i in 3000:
 			if flow.state != "fighting":

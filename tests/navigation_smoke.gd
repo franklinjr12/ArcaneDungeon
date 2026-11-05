@@ -51,9 +51,9 @@ func _run() -> void:
 		current_scene.find_child("NewRunButton",true,false).pressed.emit()
 		await process_frame
 		await process_frame
-	if current_scene != null and current_scene.name == "VerticalSlice" and current_scene.flow.run.sequence_index == 0 and current_scene.flow.state == "fighting":
+	if current_scene != null and current_scene.name == "VerticalSlice" and current_scene.flow.run.sequence_index == 0 and current_scene.flow.prelude and current_scene.flow.state == "workshop":
 		print("NAVIGATION PASS: New Run")
 	else:
-		printerr("navigation: New Run button failed")
+		printerr("navigation: New Run button did not land at the Sigil Desk")
 		failures += 1
 	quit(1 if failures > 0 else 0)

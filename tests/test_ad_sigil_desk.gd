@@ -96,3 +96,65 @@ func run(t) -> void:
 	p.note_workshop(2)
 	t.equal(p.next_hint(),"","AD-130 taught hints stay quiet afterwards")
 	t.check(p.trigger("first_workshop") != "","AD-130 first_workshop kept for the real workshop")
+
+	_ui_section(t)
+
+func _run_scene(root: Node) -> Node:
+	var scene: Node = load("res://scenes/run.tscn").instantiate()
+	scene.show_dev_tools = false
+	root.add_child(scene)
+	return scene
+
+## Run-controller UI: New run lands at the desk, guided build + cast + door, then the profile skip flag.
+func _ui_section(t) -> void:
+	var root: Node = (Engine.get_main_loop() as SceneTree).root
+	var save = root.get_node_or_null("SaveService")
+	if save == null:
+		save = preload("res://game/core/save_service.gd").new()
+		save.name = "SaveService"
+		root.add_child(save)
+	var old_dir: String = save.base_dir
+	var old_profile = save.profile
+	var dir := "user://ad130_desk/"
+	DirAccess.make_dir_recursive_absolute(dir)
+	for name in DirAccess.get_files_at(dir):
+		DirAccess.remove_absolute(dir + name)
+	save.set_base_dir(dir)
+	save.profile = save.default_profile()
+
+	var a: Node = _run_scene(root)
+	t.check(a.flow.prelude and a.flow.state == "workshop" and a.flow.run.sequence_index == 0,"AD-130 UI new run lands at the desk")
+	t.check(a.desk_skip_button == null,"AD-130 UI no skip button on a fresh profile")
+	t.check(a.guide.prelude_active,"AD-130 UI onboarding hints quiet at the desk")
+	a._open_editor(a.flow.config["sigil_desk"]["formula_index"] + 1)
+	t.check(a.editor_open and not a.flow.editor.guided_runes.is_empty(),"AD-130 UI slot 4 opens in guided mode")
+	var highlighted := 0
+	for b in a.find_children("*","Button",true,false):
+		if b.has_meta("rune_id") and b.modulate != Color.WHITE:
+			highlighted += 1
+			t.equal(str(b.get_meta("rune_id")),a.flow.editor.guided_next(),"AD-130 UI highlights the next guided rune")
+	t.equal(highlighted,1,"AD-130 UI exactly one guided rune highlighted")
+	a.flow.editor.set_root("essence.lightning","form.projectile")
+	a.flow.editor.toggle_modifier("mod.split")
+	t.check(a.flow.editor.guided_done(),"AD-130 UI guided recipe is a valid slot-4 spell")
+	a._close_editor(true)
+	t.check(not a.editor_open and a.flow.prelude_built,"AD-130 UI slot 4 applied")
+	t.check(a.flow.range_sim != null and bool(a._test_cast_slot(3,a.flow.range_sim.actor.position + Vector2.RIGHT * 100.0)["accepted"]),"AD-130 UI slot 4 test cast accepted")
+	a._exit()
+	t.check(not a.flow.prelude and a.flow.state == "fighting" and a.flow.run.sequence_index == 0,"AD-130 UI door reaches room 1 fighting")
+	t.equal(a.flow.run.formulas.size(),3,"AD-130 UI three formulas in room 1")
+	t.check(bool(save.profile["stats"].get("sigil_desk_done",false)),"AD-130 UI profile flag persisted")
+	t.check(not a.guide.prelude_active,"AD-130 UI hints re-enabled after the desk")
+	for id in ["first_workshop","workshop_empty_slot"]:
+		t.check(not a.guide.shown_log.has(id),"AD-130 UI tip not shown during the desk: " + id)
+	a.queue_free()
+
+	var b: Node = _run_scene(root)
+	t.check(b.flow.prelude and b.desk_skip_button != null,"AD-130 UI second run shows the skip button")
+	if b.desk_skip_button != null:
+		b.desk_skip_button.pressed.emit()
+	t.check(not b.flow.prelude and b.flow.state == "fighting" and b.flow.run.sequence_index == 0,"AD-130 UI skip reaches room 1 fighting")
+	b.queue_free()
+
+	save.set_base_dir(old_dir)
+	save.profile = old_profile
