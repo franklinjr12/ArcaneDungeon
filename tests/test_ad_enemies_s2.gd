@@ -3,6 +3,7 @@ extends RefCounted
 const Session = preload("res://combat/combat_session.gd")
 const Registry = preload("res://combat/enemy_behaviours/registry.gd")
 const SPLIT := {"id":"split_on_death","split_kind":"cistern_slimelet","count":2,"split_radius":30}
+const POOL := {"kind":"deep","rect":[200,770,600,100]}
 const ZONE := {"id":"zone_cast","zone_radius":80,"zone_duration_ticks":240,"zone_interval_ticks":15}
 
 func run(t) -> void:
@@ -11,6 +12,12 @@ func run(t) -> void:
 	_split_deterministic(t)
 	_validate(t)
 	_zone(t)
+	_eel_config(t)
+	_eel_lurk(t)
+	_eel_lunge(t)
+	_eel_no_water(t)
+	_eel_validate(t)
+	_eel_deterministic(t)
 
 func _kill(s, enemy) -> void:
 	enemy.target.receive_damage(100000.0,"physical",s.sim.actor.team,0.0)
@@ -104,3 +111,109 @@ func _zone(t) -> void:
 		for i in 20:
 			s.step()
 		t.check(player.status.has("wet",s.sim.clock.tick),"AD-139 player standing in the zone becomes Wet")
+
+## Eel at (500,820) inside a deep pool whose land edge is y=770; the player starts on land far outside lunge range.
+func _eel_session(with_water: bool = true) -> Array:
+	var s = Session.new(139,"empty",0)
+	var eel = s.spawn_enemy("deep_eel",Vector2(500,820))
+	if with_water:
+		s.set_water([POOL])
+	s.sim.actor.position = Vector2(500,500)
+	return [s,eel]
+
+func _eel_config(t) -> void:
+	var s = Session.new(139,"empty",0)
+	var cfg: Dictionary = s.data["enemies"]["deep_eel"]
+	t.check(Registry.validate_enemy(cfg).is_empty(),"AD-139 deep_eel config validates")
+	var rate: float = float(s.sim.clock.tick_rate)
+	t.check(float(cfg["telegraph_ticks"])/rate >= 0.5,"AD-139 eel ripple telegraph >= 0.5 s (%d ticks at %d Hz)" % [int(cfg["telegraph_ticks"]),int(rate)])
+
+func _eel_lurk(t) -> void:
+	var run := _eel_session()
+	var s = run[0]
+	var eel = run[1]
+	var always_in := true
+	for i in 240:
+		s.step()
+		always_in = always_in and s.water.in_water(eel.target.position)
+	t.check(always_in,"AD-139 chasing eel never leaves water")
+	t.check(eel.state == "chase" and absf(eel.target.position.x-500.0) < 1.0 and eel.target.position.y < 780.0,"AD-139 eel drifts to the pool edge nearest the player (%s)" % str(eel.target.position))
+
+func _eel_lunge(t) -> void:
+	var run := _eel_session()
+	var s = run[0]
+	var eel = run[1]
+	for i in 240:
+		s.step()
+	var player = s.sim.actor
+	player.position = Vector2(500,700)
+	var guard := 0
+	while eel.state != "windup" and guard < 20:
+		s.step()
+		guard += 1
+	t.check(eel.state == "windup","AD-139 eel winds up with the player in range")
+	var spot: Vector2 = eel.target.position
+	var intent: Dictionary = eel.intent.snapshot()
+	t.check(intent.get("telegraph") == "ripple" and intent.get("submerged_origin") == spot,"AD-139 eel intent carries ripple telegraph")
+	var still := true
+	var windup_ticks := 0
+	while eel.state == "windup" and windup_ticks < 200:
+		still = still and eel.target.position == spot
+		s.step()
+		windup_ticks += 1
+	t.check(still and windup_ticks >= int(s.data["enemies"]["deep_eel"]["telegraph_ticks"]),"AD-139 eel stays put through the telegraph (%d ticks)" % windup_ticks)
+	var hp_before: float = player.health.current
+	var left_water := false
+	var hits := 0
+	var last_hp := hp_before
+	guard = 0
+	while eel.state in ["attack","recover"] and guard < 200:
+		left_water = left_water or not s.water.in_water(eel.target.position)
+		s.step()
+		guard += 1
+		if player.health.current < last_hp:
+			hits += 1
+			last_hp = player.health.current
+	t.check(left_water,"AD-139 eel lunges out of the water")
+	t.check(hits == 1 and player.health.current < hp_before,"AD-139 lunge damages the player exactly once (%d hits)" % hits)
+	player.position = Vector2(500,300)
+	for i in 120:
+		s.step()
+	t.check(s.water.in_water(eel.target.position),"AD-139 eel returns to water after the lunge")
+
+func _eel_no_water(t) -> void:
+	var run := _eel_session(false)
+	var s = run[0]
+	var eel = run[1]
+	s.sim.actor.position = Vector2(500,760)
+	var spot: Vector2 = eel.target.position
+	var attacked := false
+	for i in 200:
+		s.step()
+		attacked = attacked or eel.state in ["windup","attack"]
+	t.check(not attacked and eel.target.position == spot,"AD-139 eel without water never attacks or moves")
+
+func _eel_validate(t) -> void:
+	var lunge = Registry.SCRIPTS["lunge"]
+	t.check(lunge.validate({"charge_speed":520,"charge_ticks":14,"contact_padding":4}).is_empty(),"AD-139 valid lunge accepted")
+	for entry in [{"charge_ticks":14},{"charge_speed":520},{"charge_speed":0,"charge_ticks":14},{"charge_speed":520,"charge_ticks":0},
+			{"charge_speed":520,"charge_ticks":14,"contact_padding":"x"},{"charge_speed":520,"charge_ticks":14,"contact_padding":-1}]:
+		t.check(not lunge.validate(entry).is_empty(),"AD-139 bad lunge rejected %s" % str(entry))
+
+func _eel_trace() -> Array:
+	var run := _eel_session()
+	var s = run[0]
+	var trace: Array = []
+	for i in 400:
+		if i == 150:
+			s.sim.actor.position = Vector2(500,700)
+		if i == 300:
+			s.sim.actor.position = Vector2(500,300)
+		s.step()
+		trace.append(run[1].target.position)
+	return trace
+
+func _eel_deterministic(t) -> void:
+	var a := _eel_trace()
+	var b := _eel_trace()
+	t.check(a == b and a.size() == 400,"AD-139 eel trace deterministic across runs")

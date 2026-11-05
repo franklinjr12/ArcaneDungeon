@@ -243,6 +243,24 @@
       "color": "#5d8fd1",
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
       "behaviours": [{"id": "keep_distance", "approach_margin": 50, "retreat_margin": 70, "approach_without_sight": true}, {"id": "zone_cast", "zone_radius": 80, "zone_duration_ticks": 240, "zone_interval_ticks": 15}]
+    },
+    "deep_eel": {
+      "_note": "AD-139 PROPOSED numbers. Lurks in deep water and lunges out after a ripple telegraph (30 ticks = 0.5 s at 60 Hz). Counter: stay out of the lunge line, or bait the ripple, step aside and punish while it is beached.",
+      "display_name": "Deep eel",
+      "hp": 70,
+      "radius": 22,
+      "move_speed": 110,
+      "perception_radius": 1250,
+      "preferred_range": 0,
+      "attack_range": 130,
+      "telegraph_ticks": 30,
+      "recovery_ticks": 60,
+      "cooldown_ticks": 60,
+      "damage": 12,
+      "attack_kind": "line",
+      "color": "#2f6f8f",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "water_lurk"}, {"id": "lunge", "charge_speed": 520, "charge_ticks": 14, "contact_padding": 4}]
     }
   },
   "scenarios": {

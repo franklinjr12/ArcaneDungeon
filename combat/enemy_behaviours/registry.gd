@@ -16,6 +16,8 @@ const SCRIPTS := {
 	"support_buff": preload("res://combat/enemy_behaviours/support_buff.gd"),
 	"split_on_death": preload("res://combat/enemy_behaviours/split_on_death.gd"),
 	"zone_cast": preload("res://combat/enemy_behaviours/zone_cast.gd"),
+	"water_lurk": preload("res://combat/enemy_behaviours/water_lurk.gd"),
+	"lunge": preload("res://combat/enemy_behaviours/lunge.gd"),
 }
 
 static func role(id: String) -> String:
