@@ -11,6 +11,7 @@ const SCRIPTS := {
 	"summon": preload("res://combat/enemy_behaviours/summon.gd"),
 	"shield_front": preload("res://combat/enemy_behaviours/shield_front.gd"),
 	"explode_on_death": preload("res://combat/enemy_behaviours/explode_on_death.gd"),
+	"death_puddle": preload("res://combat/enemy_behaviours/death_puddle.gd"),
 	"intangible_cycle": preload("res://combat/enemy_behaviours/intangible_cycle.gd"),
 	"support_buff": preload("res://combat/enemy_behaviours/support_buff.gd"),
 }

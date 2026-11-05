@@ -9,6 +9,7 @@ func run(t) -> void:
 	_force_break(t)
 	_weakness(t)
 	_intangible(t)
+	_puddle(t)
 	_registry(t)
 
 func _spawn(offset: Vector2, overrides: Dictionary) -> Array:
@@ -108,3 +109,46 @@ func _registry(t) -> void:
 	for entry in bad:
 		t.check(not Registry.SCRIPTS["intangible_cycle"].validate(entry).is_empty(),"AD-137 bad intangible_cycle rejected %s" % str(entry))
 	t.check(not Registry.SCRIPTS["shield_front"].validate({"front_damage_scale":0.5,"front_arc_degrees":60,"break_impulse_speed":-1}).is_empty(),"AD-137 negative break_impulse_speed rejected")
+
+const PUDDLE := {"id":"death_puddle","puddle_radius":60,"puddle_duration_ticks":40,"puddle_interval_ticks":10}
+
+func _puddle_run(t, check: bool) -> Array:
+	var pair := _spawn(Vector2(300,0),{"behaviours":[{"id":"turret"},PUDDLE]})
+	var s = pair[0]
+	var enemy = pair[1]
+	var inside = s.spawn_enemy("probe",enemy.target.position+Vector2(0,30))
+	var outside = s.spawn_enemy("probe",enemy.target.position+Vector2(-150,0))
+	var death_at: Vector2 = enemy.target.position
+	enemy.target.receive_damage(100000.0,"physical",s.sim.actor.team,0.0)
+	s.step()
+	var log: Array = []
+	if check:
+		t.check(s.hazards.size() == 1 and s.hazards[0]["position"] == death_at,"AD-137 puddle: exactly one hazard at the death position")
+		t.check(s.snapshot()["hazards"].size() == 1,"AD-137 puddle: hazards exposed in snapshot")
+	for i in 45:
+		s.step()
+		var tick: int = s.sim.clock.tick
+		log.append([s.hazards.size(),inside.target.status.has("wet",tick),outside.target.status.has("wet",tick),s.sim.actor.status.has("wet",tick)])
+		if check and i == 11:
+			t.check(inside.target.status.has("wet",tick),"AD-137 puddle: enemy inside becomes Wet")
+			t.check(not outside.target.status.has("wet",tick),"AD-137 puddle: enemy outside stays dry")
+	return [s,log,inside,enemy]
+
+func _puddle(t) -> void:
+	var run := _puddle_run(t,true)
+	t.check(run[0].hazards.is_empty(),"AD-137 puddle: hazard gone after duration_ticks")
+	var player_pair := _spawn(Vector2(300,0),{"behaviours":[{"id":"turret"},PUDDLE]})
+	var s = player_pair[0]
+	s.sim.actor.position = player_pair[1].target.position+Vector2(20,0)
+	player_pair[1].target.receive_damage(100000.0,"physical",s.sim.actor.team,0.0)
+	_steps(s,3)
+	t.check(s.sim.actor.status.has("wet",s.sim.clock.tick),"AD-137 puddle: player inside becomes Wet")
+	t.check(run[1] == _puddle_run(t,false)[1],"AD-137 puddle: deterministic across runs")
+	var bad: Array = [{"puddle_duration_ticks":40,"puddle_interval_ticks":10},
+		{"puddle_radius":0,"puddle_duration_ticks":40,"puddle_interval_ticks":10},
+		{"puddle_radius":60,"puddle_duration_ticks":0,"puddle_interval_ticks":10},
+		{"puddle_radius":60,"puddle_duration_ticks":40,"puddle_interval_ticks":-1},
+		{"puddle_radius":60,"puddle_duration_ticks":40,"puddle_interval_ticks":10,"puddle_status":3}]
+	for entry in bad:
+		t.check(not Registry.SCRIPTS["death_puddle"].validate(entry).is_empty(),"AD-137 bad death_puddle rejected %s" % str(entry))
+	t.check(Registry.SCRIPTS["death_puddle"].validate(PUDDLE).is_empty(),"AD-137 valid death_puddle accepted")

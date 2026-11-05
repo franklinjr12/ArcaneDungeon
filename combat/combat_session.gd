@@ -19,6 +19,10 @@ var enemies: Array = []
 var enemy_shots: Array = []
 ## AD-136: spawn requests {kind, position, summoner_id} queued by components during the AI loop; flushed in order after it.
 var pending_spawns: Array = []
+## AD-137: session ground hazards (puddles) {id, kind, status, position, radius, duration_ticks, interval_ticks, age, source_id}.
+## Read-only for rendering; advanced by _step_hazards in fixed id order.
+var hazards: Array = []
+var _next_hazard_id := 1
 var feedback: Array = []
 var damage_events: Array = []
 var ai_transitions: Array = []
@@ -81,6 +85,8 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	enemies.clear()
 	enemy_shots.clear()
 	pending_spawns.clear()
+	hazards.clear()
+	_next_hazard_id = 1
 	feedback.clear()
 	damage_events.clear()
 	ai_transitions.clear()
@@ -126,6 +132,45 @@ func _flush_pending_spawns() -> void:
 		var spawned = spawn_enemy(str(spec["kind"]),spec["position"])
 		if spawned != null:
 			spawned.summoner_id = int(spec["summoner_id"])
+
+func add_hazard(spec: Dictionary) -> int:
+	var hazard: Dictionary = spec.duplicate(true)
+	hazard["id"] = _next_hazard_id
+	hazard["age"] = 0
+	_next_hazard_id += 1
+	hazards.append(hazard)
+	return int(hazard["id"])
+
+## Ages every hazard by one tick (hazards are stored in id order); applies its status on age 1 and every interval after.
+func _step_hazards() -> void:
+	if hazards.is_empty():
+		return
+	var tick: int = sim.clock.tick
+	var statuses: Dictionary = sim.settings["statuses"]
+	var kept: Array = []
+	for hazard in hazards:
+		hazard["age"] = int(hazard["age"])+1
+		var age: int = hazard["age"]
+		if age <= int(hazard["duration_ticks"]):
+			if (age-1) % int(hazard["interval_ticks"]) == 0 and statuses.has(str(hazard["status"])):
+				var victims: Array = []
+				for enemy in enemies:
+					victims.append(enemy.target)
+				victims.append(sim.actor)
+				for victim in victims:
+					if victim.alive() and hazard["position"].distance_to(victim.position) <= float(hazard["radius"])+victim.radius:
+						victim.status.apply(str(hazard["status"]),tick,statuses[str(hazard["status"])],{"source_id":hazard["source_id"]})
+		if age < int(hazard["duration_ticks"]):
+			kept.append(hazard)
+	hazards = kept
+
+## Read-only hazard view for rendering: position, radius, remaining ticks.
+func hazard_view() -> Array:
+	var view: Array = []
+	for hazard in hazards:
+		view.append({"kind":hazard["kind"],"position":hazard["position"],"radius":hazard["radius"],
+			"remaining_ticks":int(hazard["duration_ticks"])-int(hazard["age"])})
+	return view
 
 ## Live summons owned by `summoner_id`, including ones still queued.
 func summons_owned_by(summoner_id: int) -> int:
@@ -191,6 +236,7 @@ func step() -> void:
 	for enemy in enemies:
 		enemy.advance(self)
 	_flush_pending_spawns()
+	_step_hazards()
 	for enemy in enemies:
 		if enemy is Enemy:
 			enemy.apply_scales()
@@ -343,4 +389,4 @@ func snapshot() -> Dictionary:
 		"player_position":sim.actor.position,"player_mana":sim.mana,"enemy_count":alive_enemies(),
 		"dashes":player.dashes,"casts":player.casts,"damage_taken":damage_received,"hits_received":attacks_received,
 		"reactions":reactions,"enemy_shots":enemy_shots.size(),"effects":sim.queue.active_effect_count(),
-		"frame_ms":elapsed_frame_ms,"foes":foe_data}
+		"frame_ms":elapsed_frame_ms,"foes":foe_data,"hazards":hazard_view()}
