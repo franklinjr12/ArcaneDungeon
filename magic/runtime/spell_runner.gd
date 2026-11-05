@@ -13,6 +13,8 @@ const HitPayload = preload("res://combat/hit_payload.gd")
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 const Burst = preload("res://magic/runtime/burst_effect.gd")
 const Orb = preload("res://magic/runtime/orb_effect.gd")
+const Beam = preload("res://magic/runtime/beam_effect.gd")
+const Field = preload("res://magic/runtime/field_effect.gd")
 const Compiler = preload("res://magic/compile/spell_compiler.gd")
 const Loadout = preload("res://magic/runtime/spell_loadout.gd")
 const CONFIG := "res://magic/data/magic_balance_v1.json"
@@ -123,7 +125,7 @@ func equip_starter_loadout(presets: Array) -> Dictionary:
 			return cleared
 	return {"ok":true}
 
-func try_cast(slot: int, origin: Vector2, direction: Vector2) -> Dictionary:
+func try_cast(slot: int, origin: Vector2, direction: Vector2, target_point = null) -> Dictionary:
 	var cast_id: int = clock.next_id("cast")
 	var formula_id := ""
 	if slot >= 0 and slot < loadout.slots.size():
@@ -146,9 +148,15 @@ func try_cast(slot: int, origin: Vector2, direction: Vector2) -> Dictionary:
 	var kind := str(plan["root"]["manifestation"]["id"])
 	if kind == "form.orb" and _active_orb_count() >= limits.get_limit("max_active_orbs"):
 		return _reject(ctx,"ORB_BUDGET_EXCEEDED")
+	if kind == "form.beam" and _active_count("beam") >= limits.get_limit("max_active_beams"):
+		return _reject(ctx,"BEAM_BUDGET_EXCEEDED")
+	if kind == "form.field" and _active_count("field") >= limits.get_limit("max_active_fields"):
+		return _reject(ctx,"FIELD_BUDGET_EXCEEDED")
 	var duration := 1
-	if kind == "form.projectile" or kind == "form.orb":
+	if kind == "form.projectile" or kind == "form.orb" or kind == "form.beam":
 		duration = int(plan["root"]["params"]["lifetime_ticks"])
+	elif kind == "form.field":
+		duration = int(plan["root"]["params"]["field_duration_ticks"])
 	if not queue.reserve_effect(cast_id,duration,cast_id,formula_id):
 		return _reject(ctx,"EFFECT_BUDGET_EXCEEDED")
 	mana = maxf(0.0,mana-float(plan["mana_cost"]))
@@ -156,7 +164,7 @@ func try_cast(slot: int, origin: Vector2, direction: Vector2) -> Dictionary:
 	trace.record("cost_paid",{"cast_id":cast_id,"root_cast_id":cast_id,"formula_id":formula_id,"amount":int(plan["mana_cost"]),"tick":clock.tick})
 	var base := {"cast_id":cast_id,"root_cast_id":cast_id,"caster_id":actor.id,"team":actor.team,
 		"formula_id":formula_id,"parent_effect_id":0,"depth":0}
-	_spawn_root(plan,origin,direction.normalized(),base)
+	_spawn_root(plan,origin,direction.normalized(),base,target_point)
 	return {"accepted":true,"reason":"CAST","cast_id":cast_id}
 
 func _reject(ctx: Dictionary, reason: String) -> Dictionary:
@@ -171,7 +179,7 @@ func _reject(ctx: Dictionary, reason: String) -> Dictionary:
 		trace.record("cast_rejected",rejected)
 	return {"accepted":false,"reason":reason,"cast_id":int(ctx["cast_id"])}
 
-func _spawn_root(plan: Dictionary, origin: Vector2, aim: Vector2, context: Dictionary) -> void:
+func _spawn_root(plan: Dictionary, origin: Vector2, aim: Vector2, context: Dictionary, target_point = null) -> void:
 	var root: Dictionary = plan["root"]
 	var ids: Array = _modifier_ids(root)
 	var kind := str(root["manifestation"]["id"])
@@ -202,8 +210,40 @@ func _spawn_root(plan: Dictionary, origin: Vector2, aim: Vector2, context: Dicti
 		var orb = Orb.new(spec)
 		active.append({"kind":"orb","effect":orb,"context":context.duplicate(true)})
 		_trace_spawn(context,orb.id,origin)
+	elif kind == "form.beam":
+		var spec: Dictionary = context.duplicate()
+		spec["effect_id"] = clock.next_id("effect")
+		spec["root"] = root
+		spec["position"] = origin
+		spec["direction"] = aim
+		var beam = Beam.new(spec)
+		active.append({"kind":"beam","effect":beam,"context":context.duplicate(true)})
+		_trace_spawn(context,beam.id,origin)
+	elif kind == "form.field":
+		var spec: Dictionary = context.duplicate()
+		spec["effect_id"] = clock.next_id("effect")
+		spec["root"] = root
+		spec["position"] = _field_center(root["params"],origin,aim,target_point)
+		var field = Field.new(spec)
+		active.append({"kind":"field","effect":field,"context":context.duplicate(true)})
+		_trace_spawn(context,field.id,field.position)
 	else:
 		queue.release_effect()
+
+## Field centre: target point (or aim * range) limited to cast_range, then stopped at the first wall and kept inside bounds.
+func _field_center(params: Dictionary, origin: Vector2, aim: Vector2, target_point) -> Vector2:
+	var reach := float(params["cast_range"])
+	var offset: Vector2 = aim*reach
+	if typeof(target_point) == TYPE_VECTOR2:
+		offset = target_point-origin
+		if offset.length() > reach:
+			offset = offset.normalized()*reach
+	var center := origin+offset
+	var along := 1.0
+	for wall in collision_walls:
+		along = minf(along,Projectile.segment_wall_time(origin,center,wall,0.0))
+	center = origin.lerp(center,along)
+	return Vector2(clampf(center.x,bounds.position.x,bounds.end.x),clampf(center.y,bounds.position.y,bounds.end.y))
 
 func _spawn_burst(effect_plan: Dictionary, origin: Vector2, context: Dictionary, already_reserved: bool = false) -> bool:
 	if not already_reserved and not queue.reserve_effect(int(context["root_cast_id"]),1,
@@ -256,14 +296,28 @@ func advance_one_tick() -> void:
 		elif entry["kind"] == "orb":
 			hits = effect.advance(1.0/float(clock.tick_rate),clock.tick,actor,targets,
 				limits.get_limit("min_rehit_delay_ticks"))
+		elif entry["kind"] == "beam":
+			var pulse: Dictionary = effect.advance(clock.tick,actor,targets,bounds,collision_walls,
+				limits.get_limit("max_targets_per_pulse"))
+			hits = _charge_pulse(entry,pulse)
+			visuals.append({"kind":"beam","from":actor.position,"to":effect.end_point,
+				"essence":str(effect.root["essence"]["id"]),"until":clock.tick+1})
+		elif entry["kind"] == "field":
+			hits = _charge_pulse(entry,effect.advance(clock.tick,targets,limits.get_limit("max_targets_per_pulse")))
+			if not effect.expired:
+				visuals.append({"kind":"field","position":effect.position,"radius":effect.radius,
+					"essence":str(effect.root["essence"]["id"]),"until":clock.tick+1})
 		for hit in hits:
 			_queue_hit(effect.root,int(hit["target_id"]),hit["position"],entry["context"],effect.id,
 				effect.on_hit if entry["kind"] == "projectile" else {})
 		if effect.expired:
 			active.erase(entry)
 			queue.release_effect()
-			trace.record("cleanup",{"cast_id":entry["context"]["cast_id"],"root_cast_id":entry["context"]["root_cast_id"],
-				"formula_id":entry["context"]["formula_id"],"effect_id":effect.id,"tick":clock.tick})
+			var cleaned := {"cast_id":entry["context"]["cast_id"],"root_cast_id":entry["context"]["root_cast_id"],
+				"formula_id":entry["context"]["formula_id"],"effect_id":effect.id,"tick":clock.tick}
+			if entry["kind"] == "beam":
+				cleaned["reason"] = effect.end_reason
+			trace.record("cleanup",cleaned)
 	# Damage/status from earlier hit events resolve ahead of periodic damage at the same tick.
 	queue.drain(_process_event,1024)
 	# Cleanup traces follow damage/trigger/reaction resolution, not precede it.
@@ -278,6 +332,37 @@ func advance_one_tick() -> void:
 	visuals = visuals.filter(func(v): return int(v["until"]) > clock.tick)
 	var min_tick: int = clock.tick-int(settings["sandbox"]["dps_window_ticks"])
 	recent_damage = recent_damage.filter(func(v): return int(v["tick"]) >= min_tick)
+
+## Beams pay mana_per_tick on each pulse (no mana ends the beam without hits); both forms report cap truncation once.
+func _charge_pulse(entry: Dictionary, pulse: Dictionary) -> Array:
+	if not pulse["pulse"]:
+		return []
+	var effect = entry["effect"]
+	if entry["kind"] == "beam":
+		var cost := float(effect.root["params"]["mana_per_tick"])
+		if mana + 0.00001 < cost:
+			effect.expire("no_mana")
+			return []
+		mana = maxf(0.0,mana-cost)
+		trace.record("cost_paid",{"cast_id":entry["context"]["cast_id"],"root_cast_id":entry["context"]["root_cast_id"],
+			"formula_id":entry["context"]["formula_id"],"amount":roundi(cost),"tick":clock.tick})
+	if pulse["truncated"]:
+		queue.note_budget_exceeded(entry["context"],"targets_per_pulse","max_targets_per_pulse")
+	return pulse["hits"]
+
+## Hold-to-channel hooks (mage "channel" animation tag, AD-121, keys off is_channelling()).
+func stop_channel() -> void:
+	for entry in active:
+		if entry["kind"] == "beam":
+			entry["effect"].expire("released")
+
+func set_channel_aim(direction: Vector2) -> void:
+	for entry in active:
+		if entry["kind"] == "beam":
+			entry["effect"].set_aim(direction)
+
+func is_channelling() -> bool:
+	return _active_count("beam") > 0
 
 func _process_event(event: Dictionary) -> void:
 	var id: int = int(event["event_id"])
@@ -442,9 +527,12 @@ func _modifier_ids(plan: Dictionary) -> Array:
 	return result
 
 func _active_orb_count() -> int:
+	return _active_count("orb")
+
+func _active_count(kind: String) -> int:
 	var count := 0
-	for effect in active:
-		if effect["kind"] == "orb":
+	for entry in active:
+		if entry["kind"] == kind and not entry["effect"].expired:
 			count += 1
 	return count
 
