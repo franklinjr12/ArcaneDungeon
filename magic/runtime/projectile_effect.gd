@@ -16,6 +16,10 @@ var on_hit: Dictionary = {}
 var root: Dictionary = {}
 var expired := false
 var age := 0
+## AD-143 Rebound Sigil: remaining wall/bounds bounces (0 = expire on contact, as before).
+var bounces_left := 0
+## Engine epsilon (not a tunable): steps a bounced projectile off the surface so the next sweep starts clear of it.
+const BOUNCE_NUDGE := 0.5
 
 func _init(spec: Dictionary) -> void:
 	id = int(spec["effect_id"])
@@ -32,6 +36,7 @@ func _init(spec: Dictionary) -> void:
 	radius = float(params["radius"])
 	life_ticks = int(params["lifetime_ticks"])
 	max_targets = int(spec.get("max_targets",1))
+	bounces_left = int(spec.get("bounces_left",0))
 
 func steer(dt: float, target_store, params: Dictionary) -> void:
 	var acquire := float(params.get("acquire_radius",0))
@@ -84,7 +89,15 @@ func advance(dt: float, target_store, bounds: Rect2, walls: Array = []) -> Array
 			return hits
 	position = start.lerp(end,exit_time)
 	if exit_time < 1.0:
-		expired = true
+		if bounces_left > 0:
+			# Bounce choice: reverse the heading (rather than reflecting on the hit axis), which also covers
+			# starts inside a wall and corners; targets may be hit again on the way back.
+			bounces_left -= 1
+			direction = -direction
+			hit_ids.clear()
+			position += direction * BOUNCE_NUDGE
+		else:
+			expired = true
 	return hits
 
 static func _segment_circle_time(start: Vector2, finish: Vector2, center: Vector2, combined_radius: float) -> float:

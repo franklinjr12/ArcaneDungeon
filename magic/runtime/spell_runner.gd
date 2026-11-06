@@ -43,7 +43,11 @@ var total_hit_count := 0
 var run_seed_value := 12345
 var initialized := false
 ## AD-143: held artifacts (world/artifacts.gd instance) or null; null keeps behaviour unchanged.
-var artifacts = null
+var artifacts = null:
+	set(value):
+		artifacts = value
+		if resolver != null:
+			resolver.artifacts = value
 
 func _init(run_seed: int = 12345, record_trace: bool = true) -> void:
 	var data := FileAccess.open(CONFIG,FileAccess.READ)
@@ -80,6 +84,7 @@ func reset(run_seed: int = -1) -> void:
 	queue = Queue.new(clock,limits,trace)
 	targets = Store.new()
 	resolver = Resolver.new(settings)
+	resolver.artifacts = artifacts
 	loadout = Loadout.new(registry,registry.get_ids(),limits.get_limit("max_complexity"))
 	actor = Target.new(clock.next_id("target"),int(settings["combat"]["player_team"]),Vector2(140,340),100.0)
 	targets.add(actor)
@@ -147,7 +152,11 @@ func try_cast(slot: int, origin: Vector2, direction: Vector2, target_point = nul
 	var plan: Dictionary = compiled.snapshot()
 	if int(plan["complexity"]) > limits.get_limit("max_complexity"):
 		return _reject(ctx,"COMPLEXITY_EXCEEDED")
-	if mana + 0.00001 < float(plan["mana_cost"]):
+	var cost := float(plan["mana_cost"])
+	var free_cast := _art("momentum_rune") and int(artifacts.state.get("momentum",0)) > 0
+	if free_cast:
+		cost = 0.0
+	if mana + 0.00001 < cost:
 		return _reject(ctx,"INSUFFICIENT_MANA")
 	var kind := str(plan["root"]["manifestation"]["id"])
 	if kind == "form.orb" and _active_orb_count() >= limits.get_limit("max_active_orbs"):
@@ -163,13 +172,57 @@ func try_cast(slot: int, origin: Vector2, direction: Vector2, target_point = nul
 		duration = int(plan["root"]["params"]["field_duration_ticks"])
 	if not queue.reserve_effect(cast_id,duration,cast_id,formula_id):
 		return _reject(ctx,"EFFECT_BUDGET_EXCEEDED")
-	mana = maxf(0.0,mana-float(plan["mana_cost"]))
+	mana = maxf(0.0,mana-cost)
+	if free_cast:
+		artifacts.state["momentum"] = int(artifacts.state["momentum"])-1
 	loadout.slots[slot]["cooldown"] = int(plan["cooldown_ticks"])
-	trace.record("cost_paid",{"cast_id":cast_id,"root_cast_id":cast_id,"formula_id":formula_id,"amount":int(plan["mana_cost"]),"tick":clock.tick})
+	trace.record("cost_paid",{"cast_id":cast_id,"root_cast_id":cast_id,"formula_id":formula_id,"amount":int(cost),"tick":clock.tick})
 	var base := {"cast_id":cast_id,"root_cast_id":cast_id,"caster_id":actor.id,"team":actor.team,
 		"formula_id":formula_id,"parent_effect_id":0,"depth":0}
 	_spawn_root(plan,origin,direction.normalized(),base,target_point)
+	if _art("echo_chamber"):
+		_echo_cast(slot,plan,kind,origin,direction.normalized(),formula_id,target_point)
 	return {"accepted":true,"reason":"CAST","cast_id":cast_id}
+
+## AD-143: cheap guard; every artifact hook starts here so a null/empty holder changes nothing.
+func _art(id: String) -> bool:
+	return artifacts != null and artifacts.has(id)
+
+## AD-143 Momentum Rune: a dash arms the next free_casts casts at zero mana.
+func artifact_dash() -> void:
+	if _art("momentum_rune"):
+		artifacts.state["momentum"] = int(artifacts.param("momentum_rune","free_casts",1))
+
+## AD-143 Echo Chamber: every `every`-th accepted cast per slot repeats once, free, at damage_scale.
+## The echo is a new cast (own cast_id and reservation) spawned after the original, never from a callback.
+func _echo_cast(slot: int, plan: Dictionary, kind: String, origin: Vector2, aim: Vector2, formula_id: String, target_point) -> void:
+	var counts: Dictionary = artifacts.state.get("echo_counts",{})
+	artifacts.state["echo_counts"] = counts
+	counts[slot] = int(counts.get(slot,0))+1
+	if counts[slot] % maxi(1,int(artifacts.param("echo_chamber","every",5))) != 0:
+		return
+	if (kind == "form.orb" and _active_orb_count() >= limits.get_limit("max_active_orbs")) \
+			or (kind == "form.beam" and _active_count("beam") >= limits.get_limit("max_active_beams")) \
+			or (kind == "form.field" and _active_count("field") >= limits.get_limit("max_active_fields")):
+		return
+	var echo_id: int = clock.next_id("cast")
+	if not queue.reserve_effect(echo_id,_plan_duration(plan,kind),echo_id,formula_id):
+		return
+	var echo_plan: Dictionary = plan.duplicate(true)
+	var params: Dictionary = echo_plan["root"]["params"]
+	params["base_damage"] = float(params["base_damage"])*float(artifacts.param("echo_chamber","damage_scale",0.5))
+	var context := {"cast_id":echo_id,"root_cast_id":echo_id,"caster_id":actor.id,"team":actor.team,
+		"formula_id":formula_id,"parent_effect_id":0,"depth":0}
+	trace.record("artifact",{"cast_id":echo_id,"root_cast_id":echo_id,"formula_id":formula_id,
+		"reason":"artifact.echo_chamber","tick":clock.tick})
+	_spawn_root(echo_plan,origin,aim,context,target_point)
+
+func _plan_duration(plan: Dictionary, kind: String) -> int:
+	if kind == "form.projectile" or kind == "form.orb" or kind == "form.beam":
+		return int(plan["root"]["params"]["lifetime_ticks"])
+	if kind == "form.field":
+		return int(plan["root"]["params"]["field_duration_ticks"])
+	return 1
 
 func _reject(ctx: Dictionary, reason: String) -> Dictionary:
 	last_rejection = reason
@@ -189,6 +242,8 @@ func _spawn_root(plan: Dictionary, origin: Vector2, aim: Vector2, context: Dicti
 	var kind := str(root["manifestation"]["id"])
 	if kind == "form.projectile":
 		var count := int(root["params"].get("projectile_count",1)) if "mod.split" in ids else 1
+		if "mod.split" in ids and _art("split_prism"):
+			count += int(artifacts.param("split_prism","extra_projectiles",1))
 		var spread := deg_to_rad(float(root["params"].get("spread_degrees",0))) if count > 1 else 0.0
 		for index in count:
 			var offset := (float(index)-(float(count)-1.0)/2.0)*spread
@@ -202,6 +257,8 @@ func _spawn_root(plan: Dictionary, origin: Vector2, aim: Vector2, context: Dicti
 			spec["root"] = root
 			spec["on_hit"] = plan["on_hit"]
 			spec["max_targets"] = int(root["params"].get("max_targets",1)) if "mod.pierce" in ids else 1
+			if _art("rebound_sigil"):
+				spec["bounces_left"] = int(artifacts.param("rebound_sigil","bounces",1))
 			var projectile = Projectile.new(spec)
 			active.append(_entry("projectile",projectile,context,plan["on_hit"]))
 			_trace_spawn(context,int(spec["effect_id"]),origin)
@@ -269,10 +326,33 @@ func _spawn_burst(effect_plan: Dictionary, origin: Vector2, context: Dictionary,
 	visuals.append({"kind":"burst","position":origin,"radius":radius,"essence":str(effect_plan["essence"]["id"]),"until":clock.tick+int(settings["sandbox"]["visual_ticks"])})
 	for hit in Burst.contacts(origin,radius,int(context["team"]),targets):
 		_queue_hit(effect_plan,int(hit["target_id"]),hit["position"],context,effect_id,attached_trigger if _trigger_id(attached_trigger) == "trigger.on_kill" else {})
+	if already_reserved and int(context["depth"]) == 0 and _art("residue_crystal"):
+		_spawn_residue(effect_plan,origin,context)
 	# Hold the effect reservation until queued contacts finish resolving.
 	# Releasing here would let same-tick trigger bursts bypass global active limits.
 	_deferred_burst_cleanup.append({"effect_id":effect_id,"context":context.duplicate(true)})
 	return true
+
+## AD-143 Residue Crystal: a root Burst leaves a short Field of its essence. Skipped silently over budget.
+func _spawn_residue(burst_plan: Dictionary, origin: Vector2, context: Dictionary) -> void:
+	if _active_count("field") >= limits.get_limit("max_active_fields"):
+		return
+	var duration := int(artifacts.param("residue_crystal","duration_ticks",120))
+	if not queue.reserve_effect(int(context["root_cast_id"]),duration,int(context["cast_id"]),str(context["formula_id"])):
+		return
+	var root := {"essence":burst_plan["essence"].duplicate(true),"manifestation":{"id":"form.field"},"modifiers":[],
+		"params":{"field_radius":float(artifacts.param("residue_crystal","field_radius",48)),
+			"field_duration_ticks":duration,
+			"tick_interval_ticks":int(artifacts.param("residue_crystal","pulse_interval_ticks",30)),
+			"cast_range":0.0,
+			"base_damage":float(artifacts.param("residue_crystal","damage_per_pulse",2))}}
+	var spec: Dictionary = context.duplicate()
+	spec["effect_id"] = clock.next_id("effect")
+	spec["root"] = root
+	spec["position"] = origin
+	var field = Field.new(spec)
+	active.append(_entry("field",field,context,{}))
+	_trace_spawn(context,field.id,origin)
 
 func _trace_spawn(ctx: Dictionary, effect_id: int, at: Vector2) -> void:
 	trace.record("spawn",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
@@ -333,6 +413,8 @@ func advance_one_tick() -> void:
 			hit_trigger = effect.on_hit
 		for hit in hits:
 			_queue_hit(effect.root,int(hit["target_id"]),hit["position"],entry["context"],effect.id,hit_trigger)
+			if entry["kind"] == "orb" and _art("gravity_lens"):
+				_gravity_pull(int(hit["target_id"]))
 		if not effect.expired and trigger_id == "trigger.timer" and clock.tick >= int(entry["timer_next"]):
 			_fire_trigger(entry["trigger"],entry["context"],effect.id,0,_trigger_location(entry))
 			entry["timer_next"] = int(entry["timer_next"])+int(entry["trigger"]["trigger_params"]["interval_ticks"])
@@ -361,6 +443,15 @@ func advance_one_tick() -> void:
 	visuals = visuals.filter(func(v): return int(v["until"]) > clock.tick)
 	var min_tick: int = clock.tick-int(settings["sandbox"]["dps_window_ticks"])
 	recent_damage = recent_damage.filter(func(v): return int(v["tick"]) >= min_tick)
+
+## AD-143 Gravity Lens: orb hits pull the target toward the orbit centre (the caster) through the knockback impulse.
+func _gravity_pull(target_id: int) -> void:
+	var target = targets.get_target(target_id)
+	if target == null or not target.alive():
+		return
+	var toward: Vector2 = actor.position-target.position
+	if not toward.is_zero_approx():
+		target.impulse += toward.normalized()*float(artifacts.param("gravity_lens","pull_force",160))
 
 ## Where an On Expire / Timer payload lands: beams end at their end point, everything else at its position.
 func _trigger_location(entry: Dictionary) -> Vector2:
@@ -554,6 +645,25 @@ func _react(event: Dictionary, detail: Dictionary) -> void:
 		"formula_id":event["formula_id"],"source_id":source.id,"target_id":selected.id,
 		"reason":"wet_lightning_arc","amount":roundi(dealt),"tick":clock.tick})
 	visuals.append({"kind":"arc","from":source.position,"to":selected.position,"until":clock.tick+17})
+	if int(arc.get("jumps_left",0)) > 0:
+		_storm_jump(event,detail,arc,selected)
+
+## AD-143 Stormglass: queue the next arc to the nearest eligible target not yet in this arc chain (distance, then id).
+func _storm_jump(event: Dictionary, detail: Dictionary, arc: Dictionary, from) -> void:
+	var seen: Array = arc["seen"]
+	var near: Array = targets.query(from.position,float(settings["combat"]["arc_radius"]),int(arc["team"]),seen,"",clock.tick)
+	if near.is_empty() or not queue.chain_targets_allowed(seen.size(),detail["context"]):
+		return
+	var next_arc: Dictionary = arc.duplicate(true)
+	next_arc["source_id"] = from.id
+	next_arc["target_id"] = near[0].id
+	next_arc["jumps_left"] = int(arc["jumps_left"])-1
+	next_arc["seen"] = seen+[near[0].id]
+	var item = queue.push({"type":"reaction","cast_id":event["cast_id"],"root_cast_id":event["root_cast_id"],
+		"formula_id":event["formula_id"],"parent_effect_id":event.get("parent_effect_id",0),
+		"source_id":from.id,"target_id":near[0].id,"depth":event["depth"]})
+	if item["accepted"]:
+		_contexts[int(item["event"]["event_id"])] = {"arc":next_arc,"context":detail["context"].duplicate(true)}
 
 ## Deterministic knockback: id-ordered, wall/bounds-safe, fixed-tick decay (all rates from data).
 func _advance_knockback() -> void:

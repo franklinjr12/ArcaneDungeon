@@ -5,6 +5,8 @@ const State = preload("res://world/run_state.gd")
 const Reward = preload("res://world/reward_generator.gd")
 const Merchant = preload("res://world/merchant.gd")
 const Flow = preload("res://world/run_flow.gd")
+const Runner = preload("res://magic/runtime/spell_runner.gd")
+const Session = preload("res://combat/combat_session.gd")
 const SEED := 20261022
 const IDS := ["rebound_sigil","residue_crystal","shatterheart","momentum_rune","echo_chamber","stormglass",
 	"tidewalkers_boots","ember_heart","gravity_lens","split_prism","archivists_quill","warding_lantern"]
@@ -16,6 +18,14 @@ func run(t) -> void:
 	_rewards(t)
 	_merchant(t)
 	_treasure(t)
+	_momentum_rune(t)
+	_echo_chamber(t)
+	_split_prism(t)
+	_rebound_sigil(t)
+	_stormglass(t)
+	_gravity_lens(t)
+	_residue_crystal(t)
+	_no_artifacts_identical(t)
 
 func _csv_keys() -> Dictionary:
 	var keys := {}
@@ -191,3 +201,193 @@ func _treasure(t) -> void:
 	var outcome: Dictionary = flow.choose_reward(index)
 	t.check(outcome["ok"] and outcome["kind"] == "artifact" and outcome["id"] == id,"AD-143 choosing the card succeeds")
 	t.check(flow.run.artifacts.has(id) and flow.session.sim.artifacts.has(id),"AD-143 artifact added to run and active in the sim")
+
+## --- AD-143 step 2: cast/hit/dash hooks -------------------------------------------------------------
+
+func _formula(form: String, essence: String = "essence.fire", modifiers: Array = []) -> Dictionary:
+	return {"schema_version":2,"formula_id":"test.%s.%s" % [form,essence],"display_name":form,
+		"root":{"essence_id":essence,"manifestation_id":form,"modifier_ids":modifiers,"params":{}}}
+
+## A sim with no mana regen and the given artifact ids (null = no holder at all).
+func _sim(form: String, essence: String = "essence.fire", modifiers: Array = [], ids = []):
+	var r = Runner.new(143)
+	r.settings["combat"]["regen_mana_per_tick"] = 0.0
+	r.mana = float(r.settings["combat"]["player_max_mana"])
+	t_equip(r,_formula(form,essence,modifiers))
+	if ids != null:
+		r.artifacts = Artifacts.new(ids)
+	return r
+
+func t_equip(r, formula: Dictionary) -> void:
+	var equipped: Dictionary = r.equip(0,formula)
+	if not equipped["ok"]:
+		printerr("equip failed: ",equipped)
+
+func _step(r, ticks: int) -> void:
+	for i in ticks:
+		r.step()
+
+## Casts slot 0 once the slot is ready again (mana is topped up so only the artifact effect is observed).
+func _cast(r) -> Dictionary:
+	r.mana = float(r.settings["combat"]["player_max_mana"])
+	for i in 120:
+		var result: Dictionary = r.try_cast(0,r.actor.position,Vector2.RIGHT)
+		if result["accepted"]:
+			return result
+		r.step()
+	return {"accepted":false}
+
+func _count(r, kind: String) -> int:
+	return r.trace.filter_records(-1,"",kind).size()
+
+func _momentum_rune(t) -> void:
+	var session = Session.new(143)
+	session.sim.artifacts = Artifacts.new(["momentum_rune"])
+	session.sim.settings["combat"]["regen_mana_per_tick"] = 0.0
+	var sim = session.sim
+	var full: float = float(sim.settings["combat"]["player_max_mana"])
+	sim.mana = full
+	t.check(session.issue({"dash":true})["accepted"] and session.player.dashes == 1,"AD-143 momentum: dash accepted")
+	t.equal(int(sim.artifacts.state.get("momentum",0)),int(sim.artifacts.param("momentum_rune","free_casts")),"AD-143 momentum: dash arms free_casts")
+	for i in 120:
+		if session.player.dash_left == 0 and session.player.recovery_left == 0:
+			break
+		session.step()
+	sim.mana = full
+	var free: Dictionary = session.issue({"cast":1})
+	t.check(free["accepted"],"AD-143 momentum: post-dash cast accepted")
+	t.equal(sim.mana,full,"AD-143 momentum: post-dash cast costs no mana")
+	t.equal(int(sim.trace.filter_records(int(free["cast_id"]),"","cost_paid")[0]["amount"]),0,"AD-143 momentum: cost_paid records 0")
+	for i in 120:
+		if sim.loadout.check_slot(1) == "READY":
+			break
+		session.step()
+	session.issue({"cast":1})
+	t.check(sim.mana < full,"AD-143 momentum: the next cast pays mana again")
+
+func _echo_chamber(t) -> void:
+	var r = _sim("form.projectile","essence.fire",[],["echo_chamber"])
+	var every := int(r.artifacts.param("echo_chamber","every"))
+	var target = r.add_target(Vector2(420,340),Vector2.ZERO,100000.0)
+	for i in every-1:
+		_cast(r)
+	t.equal(_count(r,"artifact"),0,"AD-143 echo: no echo before the every-th cast")
+	var spawned: int = _count(r,"spawn")
+	var fifth: Dictionary = _cast(r)
+	t.equal(_count(r,"artifact"),1,"AD-143 echo: the every-th cast echoes once")
+	t.equal(r.trace.filter_records(-1,"","artifact")[0]["reason"],"artifact.echo_chamber","AD-143 echo: trace reason")
+	t.equal(_count(r,"spawn")-spawned,2,"AD-143 echo: the fifth cast spawns twice")
+	_step(r,60)
+	var amounts := {}
+	for hit in r.trace.filter_records(-1,"","hit"):
+		amounts[int(hit["cast_id"])] = int(hit["amount"])
+	var echo_id := int(r.trace.filter_records(-1,"","artifact")[0]["cast_id"])
+	t.check(echo_id != int(fifth["cast_id"]) and amounts.has(echo_id) and amounts.has(int(fifth["cast_id"])),"AD-143 echo: own cast id, both hit")
+	t.check(amounts[echo_id] < amounts[int(fifth["cast_id"])],"AD-143 echo: damage scaled down")
+	_cast(r)
+	t.equal(_count(r,"artifact"),1,"AD-143 echo: sixth cast does not echo")
+	t.check(target.alive(),"AD-143 echo: scenario sanity")
+
+func _split_prism(t) -> void:
+	var base = _sim("form.projectile","essence.fire",["mod.split"])
+	var prism = _sim("form.projectile","essence.fire",["mod.split"],["split_prism"])
+	_cast(base)
+	_cast(prism)
+	var extra := int(prism.artifacts.param("split_prism","extra_projectiles"))
+	t.equal(_count(prism,"spawn"),_count(base,"spawn")+extra,"AD-143 split prism: +extra_projectiles on a Split cast")
+	var plain = _sim("form.projectile","essence.fire",[],["split_prism"])
+	_cast(plain)
+	t.equal(_count(plain,"spawn"),1,"AD-143 split prism: no effect without Split")
+
+func _rebound_sigil(t) -> void:
+	var wall := Rect2(300,300,20,80)
+	var plain = _sim("form.projectile","essence.fire",[],null)
+	plain.collision_walls = [wall]
+	_cast(plain)
+	_step(plain,60)
+	t.equal(plain.active.size(),0,"AD-143 rebound: without the artifact the projectile dies at the wall")
+	var r = _sim("form.projectile","essence.fire",[],["rebound_sigil"])
+	r.collision_walls = [wall]
+	_cast(r)
+	var bounced := false
+	for i in 60:
+		r.step()
+		if not r.active.is_empty() and r.active[0]["effect"].bounces_left == 0:
+			bounced = true
+			break
+	t.check(bounced and r.active.size() == 1 and not r.active[0]["effect"].expired,"AD-143 rebound: projectile survives the wall contact")
+	var effect = r.active[0]["effect"]
+	t.check(effect.direction.x < 0.0,"AD-143 rebound: it now travels the opposite way")
+	var x: float = effect.position.x
+	_step(r,3)
+	t.check(not effect.expired and effect.position.x < x,"AD-143 rebound: and keeps moving away from the wall")
+	_step(r,200)
+	t.equal(r.active.size(),0,"AD-143 rebound: bounces are limited, it expires at the bounds")
+
+func _stormglass(t) -> void:
+	var plain = _sim("form.projectile","essence.lightning",[],null)
+	var storm = _sim("form.projectile","essence.lightning",[],["stormglass"])
+	for r in [plain,storm]:
+		r.add_target(Vector2(300,340),Vector2.ZERO,100000.0)
+		r.add_target(Vector2(400,340),Vector2.ZERO,100000.0)
+		r.add_target(Vector2(500,340),Vector2.ZERO,100000.0)
+		_cast(r)
+		_step(r,40)
+	t.equal(plain.trace.filter_records(-1,"","reaction").size(),0,"AD-143 stormglass: dry targets do not arc without it")
+	var arcs: Array = storm.trace.filter_records(-1,"","reaction").filter(func(e): return e["reason"] == "wet_lightning_arc")
+	t.equal(arcs.size(),1+int(storm.artifacts.param("stormglass","extra_jumps")),"AD-143 stormglass: dry arc plus extra_jumps further arcs")
+	var direct: int = int(storm.trace.filter_records(-1,"","hit")[0]["amount"])
+	t.check(int(arcs[0]["amount"]) > 0 and int(arcs[0]["amount"]) < direct,"AD-143 stormglass: dry arc hits for reduced damage")
+	t.check(int(arcs[0]["target_id"]) != int(arcs[1]["target_id"]) and int(arcs[1]["target_id"]) != int(arcs[0]["source_id"]),"AD-143 stormglass: the jump reaches a new target")
+
+func _gravity_lens(t) -> void:
+	var distances: Array = []
+	for ids in [[],["gravity_lens"]]:
+		var r = _sim("form.orb","essence.fire",[],ids)
+		var orbit := float(r.loadout.get_plan(0).snapshot()["root"]["params"]["orbit_radius"])
+		var target = r.add_target(r.actor.position+Vector2(orbit+4.0,0),Vector2.ZERO,100000.0)
+		_cast(r)
+		_step(r,6)
+		distances.append(target.position.distance_to(r.actor.position))
+	t.check(distances[1] < distances[0]-0.5,"AD-143 gravity lens: an orb hit pulls the target toward the player")
+
+func _residue_crystal(t) -> void:
+	var r = _sim("form.burst","essence.fire",[],["residue_crystal"])
+	r.add_target(Vector2(215,340),Vector2.ZERO,100000.0)
+	var cast: Dictionary = r.try_cast(0,Vector2(215,340),Vector2.RIGHT)
+	t.check(cast["accepted"],"AD-143 residue: burst accepted")
+	t.equal(r._active_count("field"),1,"AD-143 residue: the burst leaves a field")
+	var field = r.active[0]["effect"]
+	t.equal(field.radius,float(r.artifacts.param("residue_crystal","field_radius")),"AD-143 residue: field radius from data")
+	t.equal(str(field.root["essence"]["id"]),"essence.fire","AD-143 residue: field keeps the burst essence")
+	var burst_hits := _count(r,"hit")
+	_step(r,int(r.artifacts.param("residue_crystal","pulse_interval_ticks"))+2)
+	t.check(_count(r,"hit") > burst_hits,"AD-143 residue: the field pulses damage")
+	_step(r,int(r.artifacts.param("residue_crystal","duration_ticks"))+2)
+	t.equal(r._active_count("field"),0,"AD-143 residue: the field expires after duration_ticks")
+	t.equal(r.queue.active_effect_count(),0,"AD-143 residue: reservations are released")
+	var full = _sim("form.burst","essence.fire",[],["residue_crystal"])
+	for i in int(full.limits.get_limit("max_active_fields")):
+		full.active.append({"kind":"field","effect":Runner.Field.new({"effect_id":900+i,"cast_id":1,"formula_id":"x","caster_id":1,"team":1,
+			"root":{"params":{"field_radius":1.0,"field_duration_ticks":9}},"position":Vector2.ZERO}),"context":{},"trigger":{}})
+	_cast(full)
+	t.equal(full._active_count("field"),int(full.limits.get_limit("max_active_fields")),"AD-143 residue: skipped silently over the field budget")
+
+## The same scripted fight with no holder and with an empty holder must give the identical trace.
+func _no_artifacts_identical(t) -> void:
+	var traces: Array = []
+	for holder in [null,[]]:
+		var r = _sim("form.projectile","essence.lightning",["mod.split"],holder)
+		r.collision_walls = [Rect2(600,300,20,80)]
+		r.add_target(Vector2(300,340),Vector2.ZERO,100000.0)
+		r.add_target(Vector2(420,380),Vector2.ZERO,100000.0)
+		for i in 6:
+			_cast(r)
+		_step(r,90)
+		var burst = _sim("form.burst","essence.fire",[],holder)
+		burst.add_target(Vector2(215,340))
+		burst.try_cast(0,Vector2(215,340),Vector2.RIGHT)
+		_step(burst,60)
+		traces.append(r.trace_json()+burst.trace_json())
+	t.check(traces[0].length() > 500,"AD-143 empty holder: scenario trace is non-trivial")
+	t.equal(traces[1],traces[0],"AD-143 empty holder: trace identical to no holder")

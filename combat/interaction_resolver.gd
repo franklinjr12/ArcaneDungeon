@@ -4,6 +4,8 @@ const HitPayload = preload("res://combat/hit_payload.gd")
 var settings: Dictionary = {}
 ## AD-138: WaterTiles or null. Lightning hitting a target in water arcs to the nearest other target in the same water body.
 var water = null
+## AD-143: world/artifacts.gd holder or null (set by the runner); null keeps every arc rule unchanged.
+var artifacts = null
 
 func _init(balance: Dictionary) -> void:
 	settings = balance.duplicate(true)
@@ -64,10 +66,21 @@ func resolve(hit: Variant, target, target_store, tick: int) -> Dictionary:
 			outcome["knockback"] = {"force":knockback}
 	if channel == "lightning":
 		var arc_target = _arc_target(target,target_store,team,tick)
+		var storm: bool = artifacts != null and artifacts.has("stormglass")
+		var dry_scale := 1.0
+		if storm and arc_target == null and not target.status.has("wet",tick) and (water == null or water.body_of(target.position) < 0):
+			# Stormglass: a dry hit still arcs to the nearest eligible target (query is distance, then id).
+			var near: Array = target_store.query(target.position,float(combat["arc_radius"]),team,[target.id],"",tick)
+			if not near.is_empty():
+				arc_target = near[0]
+				dry_scale = float(artifacts.param("stormglass","dry_damage_scale",0.5))
 		if arc_target != null:
 			outcome["reaction"] = {"source_id":target.id,"target_id":arc_target.id,
-				"damage":float(payload.get("damage",0))*float(combat["arc_damage_scale"]),
+				"damage":float(payload.get("damage",0))*float(combat["arc_damage_scale"])*dry_scale,
 				"team":team,"channel":"lightning"}
+			if storm:
+				outcome["reaction"]["jumps_left"] = int(artifacts.param("stormglass","extra_jumps",1))
+				outcome["reaction"]["seen"] = [target.id,arc_target.id]
 	return outcome
 
 ## At most one arc per hit. In water: nearest other target in the same body. Otherwise: nearest other Wet target.

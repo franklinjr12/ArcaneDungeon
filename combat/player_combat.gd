@@ -54,6 +54,7 @@ func process_command(command: Dictionary) -> Dictionary:
 		invulnerable_left = int(tuning["dash_invulnerable_ticks"])
 		dash_cooldown = int(tuning["dash_cooldown_ticks"])
 		dashes += 1
+		sim.artifact_dash()
 	var wanted: Vector2 = delta*float(tuning["move_speed"])/float(sim.clock.tick_rate)
 	if dash_left > 0:
 		wanted = dash_heading*float(tuning["dash_speed"])/float(sim.clock.tick_rate)
