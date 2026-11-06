@@ -4,12 +4,16 @@ const KIT_PATH := "res://assets/ui/ad_ui_kit.json"
 const ATLAS := preload("res://assets/ui/ad_ui_kit_atlas.png")
 const ATLAS_GLOW := preload("res://assets/ui/ad_ui_kit_atlas_glow.png")
 const LAYOUT_DIR := "res://assets/ui/layouts/"
+const ICON_ATLAS := preload("res://assets/ui/icons/ad_ico_atlas_demo.png")
+const ICON_INDEX_PATH := "res://assets/ui/icons/ad_ico_atlas_demo_index.json"
+const PIXEL_HUD_PATH := "res://ui/pixel_hud.gd" # loaded lazily: pixel_hud.gd preloads this file
 const CANVAS := Vector2(640, 360)
 ## Game-art note: the pause layout names the busy 25% dither; code uses the 50% dim.
 const SPRITE_REMAP := {"ad_ui_modal_backdrop_25": "ad_ui_modal_backdrop_50"}
 
 static var _kit: Dictionary = {}
 static var _layouts: Dictionary = {}
+static var _icons: Dictionary = {}
 
 static func _read_json(path: String) -> Dictionary:
 	var f := FileAccess.open(path, FileAccess.READ)
@@ -45,7 +49,8 @@ static func glow_region(name: String) -> AtlasTexture:
 static func stylebox(name: String, content_margin: float = 4) -> StyleBoxTexture:
 	var s := StyleBoxTexture.new()
 	s.texture = region(name)
-	var nine: Dictionary = kit().get("sprites", {}).get(resolve(name), {}).get("nine", {})
+	var raw = kit().get("sprites", {}).get(resolve(name), {}).get("nine") # null for flat sprites (slots, dividers)
+	var nine: Dictionary = raw if raw is Dictionary else {}
 	s.texture_margin_left = nine.get("left", 0)
 	s.texture_margin_top = nine.get("top", 0)
 	s.texture_margin_right = nine.get("right", 0)
@@ -72,3 +77,65 @@ static func place(control: Control, widget: Dictionary, scale: float, origin: Ve
 static func label_color(state: String) -> Color:
 	var c: Array = kit().get("label_colors", {}).get(state, kit().get("label_colors", {}).get("normal", [255, 255, 255]))
 	return Color8(int(c[0]), int(c[1]), int(c[2]))
+
+static func _icon_key(name: String) -> String:
+	var icons: Dictionary = icon_index()
+	if icons.has(name):
+		return name
+	return "ad_ico_" + name if icons.has("ad_ico_" + name) else ""
+
+static func icon_index() -> Dictionary:
+	if _icons.is_empty():
+		_icons = _read_json(ICON_INDEX_PATH).get("icons", {})
+	return _icons
+
+static func has_icon(name: String) -> bool:
+	return _icon_key(name) != ""
+
+## Demo atlas icon by name (with or without `ad_ico_`); empty region when missing.
+## Callers may fall back to PixelHud.ui_icon_texture when has_icon is false.
+static func icon(name: String) -> AtlasTexture:
+	var t := AtlasTexture.new()
+	t.atlas = ICON_ATLAS
+	var k := _icon_key(name)
+	if k != "":
+		var s: Dictionary = icon_index()[k]
+		t.region = Rect2(s.x, s.y, s.w, s.h)
+	return t
+
+## Demo atlas first, then the MVP atlas lookup.
+static func icon_or_mvp(name: String) -> AtlasTexture:
+	if has_icon(name):
+		return icon(name)
+	return load(PIXEL_HUD_PATH).ui_icon_texture(name)
+
+static func widgets_by_id(screen: String) -> Dictionary:
+	var out := {}
+	for w in layout(screen).get("widgets", []):
+		out[str(w.get("id", ""))] = w
+	return out
+
+## Rune icon for a registry id ("essence.fire"): demo atlas first, then the MVP rune atlas.
+static func rune_icon(rune_id: String) -> AtlasTexture:
+	var short := rune_id.get_slice(".", 1) if rune_id.contains(".") else rune_id
+	return icon(short) if has_icon(short) else load(PIXEL_HUD_PATH).rune_icon_texture(rune_id)
+
+## Rune ids of a formula in chain order: essence, form, modifiers, then the On Hit trigger and its payload.
+static func formula_rune_ids(formula: Dictionary) -> Array:
+	var root: Dictionary = formula.get("root", {})
+	var ids: Array = [root.get("essence_id", ""), root.get("manifestation_id", "")]
+	ids.append_array(root.get("modifier_ids", []))
+	if formula.has("on_hit"):
+		var on_hit: Dictionary = formula["on_hit"]
+		var payload: Dictionary = on_hit.get("payload", {})
+		ids.append_array([on_hit.get("trigger_id", ""), payload.get("essence_id", ""), payload.get("manifestation_id", "")])
+	return ids.filter(func(id): return str(id) != "")
+
+## Translated key label of loadout slot i (mirrors the cast_slot_1..4 input map).
+static func slot_key(i: int) -> String:
+	var keys := ["hud.key.lmb", "hud.key.rmb", "Q", "E"]
+	return TranslationServer.translate(keys[i]) if i < keys.size() else ""
+
+## Mana text colour of the mocks (not a kit label state).
+static func mana_color() -> Color:
+	return Color8(80, 160, 220)

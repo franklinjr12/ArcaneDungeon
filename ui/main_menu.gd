@@ -212,10 +212,10 @@ func _close_compendium() -> void:
 	panel.get_node("CompendiumButton").grab_focus()
 
 ## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.
-const SHOT_RUN_STATES := ["combat","reward","workshop_editor","merchant","pause","summary"]
+const SHOT_RUN_STATES := ["combat","reward","loadout","workshop_editor","merchant","pause","summary","summary_win"]
 
 func apply_debug_shot_state(state: String) -> bool:
-	if not OS.is_debug_build() or not state in ["title","settings","compendium","settings_audio","settings_video","settings_controls","settings_access"]:
+	if not OS.is_debug_build() or not state in ["title","settings","compendium","compendium_runes","compendium_reactions","compendium_enemies","compendium_artifacts","settings_audio","settings_video","settings_controls","settings_access"]:
 		return false
 	if state.begins_with("settings"):
 		open_settings()
@@ -223,6 +223,9 @@ func apply_debug_shot_state(state: String) -> bool:
 			settings_screen.select_tab(state.trim_prefix("settings_"))
 	elif state == "compendium":
 		open_compendium()
+	elif state.begins_with("compendium_"):
+		open_compendium()
+		compendium_screen.select_tab(state.trim_prefix("compendium_"))
 	return true
 
 func _debug_shot_entry() -> void:

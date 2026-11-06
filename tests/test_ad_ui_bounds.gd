@@ -7,9 +7,9 @@ extends RefCounted
 const REPORT_ONLY := false
 const SIZES := [Vector2i(1280,720), Vector2i(1366,768), Vector2i(1600,900), Vector2i(1920,1080), Vector2i(2560,1440),
 	Vector2i(3840,2160), Vector2i(1280,800), Vector2i(1920,1200), Vector2i(2560,1080), Vector2i(3440,1440), Vector2i(1024,768)]
-const MENU_STATES := ["title","settings","settings_video","settings_controls","settings_access"]
+const MENU_STATES := ["title","settings","settings_video","settings_controls","settings_access","compendium","compendium_reactions","compendium_enemies","compendium_artifacts"]
 const DEV_TEXTS := ["ARCANE DUNGEON / M4","Edit policy","Render FPS","Waves scheduled","telemetry","Toggle debug","Toggle edit policy"]
-const RUN_STATES := ["combat","reward","workshop_editor","merchant","pause","summary","sigil_desk"]
+const RUN_STATES := ["combat","reward","loadout","workshop_editor","merchant","pause","summary","summary_win","sigil_desk"]
 
 var issues := 0
 
@@ -258,9 +258,9 @@ func _check_release_run(t, viewport: Node, scene: Node, window: Vector2i, state:
 	if state in ["combat","reward","merchant","pause"]:
 		var guarded: Array = [scene.arena_canvas.slot_hud, scene.objective, scene.coins_label, scene.pause_button]
 		if state == "reward":
-			guarded.append(scene.context)
+			guarded.append(scene.reward_overlay)
 		elif state == "merchant":
-			guarded.append(scene.shop_panel)
+			guarded.append(scene.shop_overlay)
 		for c in guarded:
 			t.check(not _has_scroll_ancestor(c), "AD-092 %s not inside a ScrollContainer at %s" % [c.name, tag])
 	if state == "combat":

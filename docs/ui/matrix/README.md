@@ -85,3 +85,20 @@ Known deviations:
 - Settings video shot: the light preview uses the in-game test sprite, not the mock's mage.
 
 Review: game-design and game-art review is pending.
+
+## AD-153 (skin A in-run)
+
+Regenerated 2026-11-06: `bash tools/ui_matrix.sh --godot /usr/local/bin/godot --states "combat reward workshop_editor merchant summary summary_win loadout compendium compendium_reactions compendium_enemies compendium_artifacts"`; the run ended with `SUMMARY: 143 shots, 0 failed`. Sheets are in `sheets/<state>.png`. `tests/test_ad_ui_bounds.gd` enforces bounds for the new states at every size.
+
+- **New shot states:** run hook `summary_win` (reached by the `_dev_advance` clear/reward/exit loop until `flow.state == "won"`, so it is deterministic); `loadout` already existed. Main-menu hook: `compendium_runes`, `compendium_reactions`, `compendium_enemies`, `compendium_artifacts` (via `select_tab`); `compendium` stays the default (runes) tab.
+- **Mock to state** (`mocks/ad_ui_screen_<mock>_2x.png`): hud -> `combat`; reward -> `reward`; merchant -> `merchant`; editor -> `workshop_editor`; loadout -> `loadout`; summary_win -> `summary_win`; summary_lose -> `summary`; compendium_<tab> -> `compendium` (runes), `compendium_reactions`, `compendium_enemies`, `compendium_artifacts`.
+
+Known deviations:
+- Engine default font instead of m5x7, so text is mixed case and sized differently from the mocks.
+- Placeholder copy: stand-in text and procedural rune/enemy/reaction art until the AD-159 finals are swapped in (layout unchanged).
+- Summary: stats not tracked by the sim (damage dealt, compendium unlocks, milestone line) are replaced by tracked ones (spells used, coins held); the Final Loadout shows the 4 spell slots only (no artifact row) and spell names are clipped in their cells (for example "BASIC B"); the mock's right-hand hero art and the Compendium button are absent; the stage shows "2" rather than "2 / 2".
+- Loadout: no artifact rarity cards (generic glyphs), upgrades use placeholder rows.
+- Compendium: entries show only the name or `?`; per-entry stats and the milestone list are not tracked, so they are absent.
+- Reward and merchant extras icons fall back to the MVP atlas when the AD-123 atlas lacks an icon.
+
+Review: game-design and game-art review pending.

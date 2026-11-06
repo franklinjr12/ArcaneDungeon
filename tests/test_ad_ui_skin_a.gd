@@ -1,7 +1,7 @@
 extends RefCounted
 ## AD-152: skin A kit loader, layouts and theme.
 const SkinA = preload("res://ui/skin_a.gd")
-const SCREENS := ["menu", "pause", "settings_audio", "settings_video", "settings_controls", "settings_access"]
+const SCREENS := ["menu", "pause", "settings_audio", "settings_video", "settings_controls", "settings_access", "hud", "loadout", "reward", "merchant", "editor", "compendium_runes", "compendium_reactions", "compendium_enemies", "compendium_artifacts", "summary_win", "summary_lose"]
 
 func run(t) -> void:
 	t.check(SkinA.kit().get("sprites", {}).size() == 118, "AD-152 kit has 118 sprites")
@@ -12,7 +12,7 @@ func run(t) -> void:
 		var outside := 0
 		for w in l.get("widgets", []):
 			var sp := str(w.get("sprite", ""))
-			if sp != "" and sp != "ad_key_logo" and not SkinA.has_sprite(sp):
+			if sp != "" and sp != "ad_key_logo" and not (SkinA.has_sprite(sp) or SkinA.has_icon(sp)):
 				bad += 1
 			if w.x < 0 or w.y < 0 or w.x + w.w > SkinA.CANVAS.x or w.y + w.h > SkinA.CANVAS.y:
 				outside += 1
@@ -24,3 +24,7 @@ func run(t) -> void:
 	t.check(sb.texture_margin_left == 12 and sb.texture_margin_top == 12 and sb.texture_margin_right == 12 and sb.texture_margin_bottom == 12, "AD-152 panel_large margins 12")
 	t.equal(SkinA.canvas_scale(Vector2(1280, 720)), 2.0, "AD-152 canvas scale at 1280x720")
 	t.equal(SkinA.canvas_origin(Vector2(1280, 720), 2.0), Vector2.ZERO, "AD-152 canvas origin")
+	t.check(SkinA.has_icon("ad_ico_hp_up") and SkinA.has_icon("ad_ico_reroll") and SkinA.has_icon("ad_ico_mana_up"), "AD-153 demo icons present")
+	t.check(SkinA.has_icon("reroll") and not SkinA.has_icon("nope"), "AD-153 icon prefix optional")
+	t.check(SkinA.icon("ad_ico_reroll").region.size == Vector2(16, 16), "AD-153 icon region")
+	t.check(SkinA.widgets_by_id("hud").size() > 0, "AD-153 widgets_by_id")

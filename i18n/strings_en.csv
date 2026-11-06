@@ -149,6 +149,26 @@ run.editor.onhit,Trigger → Burst payload
 run.editor.child_essence,Child Burst Essence
 run.editor.valid,VALID / Mana %d / Cooldown %d ticks / Complexity %d / %d cap
 run.editor.invalid,INVALID — cannot apply:
+editor.spell_slots,Spell slots
+editor.chain_title,Slot %d chain   %s
+editor.role.essence,Essence
+editor.role.form,Form
+editor.role.mod,Mod
+editor.role.trigger,Trigger
+editor.role.payload,Payload
+editor.remove_tip,Click or right click to remove this rune.
+editor.locked_tip,Locked runes unlock by discovery.
+editor.tab.all,All
+editor.tab.essence,Essence
+editor.tab.form,Form
+editor.tab.modifier,Modifier
+editor.tab.trigger,Trigger
+editor.hint1,Click a rune to add or remove it
+editor.hint2,Locked runes unlock by discovery
+editor.btn.cancel,Cancel
+editor.btn.undo,Undo
+editor.btn.reset,Reset
+editor.btn.apply,Apply
 run.btn.undo,Undo
 run.btn.reset_draft,Reset draft
 run.btn.cancel_edit,Cancel (restore original)
@@ -257,10 +277,9 @@ hud.rune_choice,RUNE CHOICE
 hud.key.lmb,LMB
 hud.key.rmb,RMB
 hud.key.space,SPACE
-hud.hp,HP %d/%d
-hud.mp,MP %d/%d
-hud.mana_cost,%d MP
-hud.dash,DASH
+hud.value,%d/%d
+hud.stage,STAGE %d   ROOM %d
+hud.dash_charges,X%d
 sandbox.header,MAGIC SANDBOX  /  M1
 sandbox.hint,LMB/RMB cast • WASD debug move
 sandbox.select_formula,Select formula for highlighted slot
@@ -378,6 +397,19 @@ compendium.section.artifacts,Artifacts
 compendium.milestones,Milestones
 compendium.progress,%d/%d
 compendium.met,[done]
+compendium.discovered,DISCOVERED %d / %d
+compendium.tag.rune,RUNE
+compendium.tag.reaction,REACTION
+compendium.tag.enemy,ENEMY
+compendium.tag.artifact,ARTIFACT
+compendium.note1,NO PERMANENT STAT POWER
+compendium.note2,MILESTONES UNLOCK NEW RUNES
+compendium.undiscovered,NOT DISCOVERED
+compendium.recipe.wet_lightning_arc,LIGHTNING + WET
+compendium.recipe.chill_freeze,3 CHILLED = FROZEN
+compendium.recipe.wet_cold_freeze,WET + COLD
+compendium.recipe.frozen_force_shatter,FROZEN + FORCE
+compendium.recipe.fire_thaw_steam,FIRE + CHILLED
 compendium.locked,[locked]
 compendium.reaction.wet_lightning_arc,Lightning Arc
 compendium.reaction.chill_freeze,Chill Freeze
@@ -407,13 +439,23 @@ run.notice.resumed,Run resumed in the workshop.
 run.notice.resume_failed,The saved run could not be loaded; a new run has started.
 run.btn.loadout_view,Loadout (Tab)
 loadout_view.title,Loadout
-loadout_view.slot,Slot %d: %s
 loadout_view.locked, [LOCKED]
-loadout_view.cost,%d MP · %.1fs cooldown
 loadout_view.artifacts,Artifacts
 loadout_view.no_artifacts,No artifacts yet
 loadout_view.read_only,Read-only. Spells can only be edited at the workshop.
-loadout_view.close,Close (Tab)
+loadout_view.back,Back
+loadout_view.continue,Continue
+loadout_view.spells,Spells
+loadout_view.status,Status
+loadout_view.upgrades,Upgrades
+loadout_view.mp,MP %d
+loadout_view.cooldown,%.1f s
+loadout_view.charges,%d charges
+loadout_view.artifacts_count,Artifacts  %d / %d
+loadout_view.room_cleared,Room %d cleared
+loadout_view.hp_up,Max HP +%d
+loadout_view.mana_up,Max MP +%d
+loadout_view.dash_up,Dash +%d
 settings.tab.audio,Audio
 settings.tab.video,Video
 settings.tab.controls,Controls
@@ -490,3 +532,38 @@ settings.help.hold_cast,Hold the cast button instead of clicking repeatedly.
 settings.help.aim_assist,Nudges spells toward the nearest enemy.
 settings.help.visual_cues,Shows an icon on screen for important sounds.
 settings.help.telemetry,Writes anonymous play stats to a local file only. Nothing is sent anywhere.
+run.reward.title,CHOOSE A REWARD
+run.reward.subtitle,ROOM %d CLEARED   TAKE ONE
+run.reward.take,TAKE
+run.reward.coins,COINS %d
+run.reward.coins_name,+%d COINS
+run.reward.coins_desc,Coins for the merchant. Added to your purse right away.
+run.reward.tag_rune,%s RUNE
+run.reward.tag_artifact,%s ARTIFACT
+run.reward.tag_upgrade,%s UPGRADE
+run.reward.tag_currency,%s REWARD
+run.rarity.common,COMMON
+run.rarity.uncommon,UNCOMMON
+run.rarity.rare,RARE
+run.rarity.epic,EPIC
+run.shop.price_coins,%d COINS
+run.shop.sold,SOLD
+run.shop.buy,BUY
+run.shop.need_short,NEED %d
+run.shop.coins,%d COINS
+run.shop.reroll_btn,REROLL   %d
+run.shop.reroll_spent,REROLLED
+run.shop.reroll_note,ONE PAID REROLL PER VISIT
+run.shop.leave,LEAVE
+run.shop.hint,ARROWS BROWSE   ENTER BUY   ESC LEAVE
+run.summary.title_win,RUN COMPLETE
+run.summary.title_lose,RUN OVER
+run.summary.sub_win,THE BOSS FALLS.
+run.summary.sub_lose,FELL IN STAGE %d.
+run.summary.l_stage,STAGE REACHED
+run.summary.l_rooms,ROOMS CLEARED
+run.summary.l_time,TIME
+run.summary.l_kills,ENEMIES DEFEATED
+run.summary.l_spells,SPELLS USED
+run.summary.l_coins,COINS HELD
+run.summary.loadout,FINAL LOADOUT
