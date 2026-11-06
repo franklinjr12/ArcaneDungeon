@@ -2,6 +2,7 @@ extends Resource
 ## TASK-036. Lightweight validated Resource wrapper around versioned room dictionaries.
 const Geometry = preload("res://world/arena_geometry.gd")
 const WaterTiles = preload("res://world/water_tiles.gd")
+const EnvProps = preload("res://world/env_props.gd")
 var values: Dictionary = {}
 var issues: Array = []
 
@@ -34,6 +35,20 @@ func initialize(room: Dictionary, arena: Dictionary, known_enemy_types: Array) -
 			issues.append(issue)
 		if water_issues.is_empty():
 			world.add_ground_blockers(WaterTiles.new(layout["water"]).deep_rects())
+	# AD-150: optional layout.env_props. Solid props join the walls before every marker/spawn/reachability check,
+	# so a prop can never block entrance->exit, the reward or a spawn (props are never required to win).
+	var env_rects: Array = []
+	if typeof(layout) == TYPE_DICTIONARY and layout.has("env_props"):
+		var env_data: Dictionary = EnvProps.load_data()
+		var env_issues: Array = EnvProps.validate(layout["env_props"],env_data.get("kinds",{}))
+		for issue in env_issues:
+			issue["path"] = "layout."+str(issue["path"])
+			issues.append(issue)
+		if env_issues.is_empty():
+			for prop in EnvProps.new(layout["env_props"],env_data).props:
+				env_rects.append(prop["rect"])
+				if bool(prop["rule"].get("solid_walk",false)):
+					world.walls.append(prop["rect"])
 	var min_spawn := float(room.get("min_spawn_distance",45))
 	var points: Dictionary = {}
 	for key in ["entrance","exit","reward"]:
@@ -45,6 +60,9 @@ func initialize(room: Dictionary, arena: Dictionary, known_enemy_types: Array) -
 		points[key] = location
 		if not world.valid_position(location,22):
 			issues.append({"code":"ROOM_MARKER_BLOCKED","path":key,"message":"Marker overlaps solid geometry"})
+		for rect in env_rects:
+			if (rect as Rect2).grow(22.0).has_point(location):
+				issues.append({"code":"ROOM_ENV_PROP_BLOCKS","path":"layout.env_props","message":"Env prop overlaps the "+key+" marker"})
 	var count := 0
 	if typeof(room["waves"]) != TYPE_ARRAY:
 		issues.append({"code":"ROOM_WAVES_INVALID","path":"waves","message":"Expected wave array"})

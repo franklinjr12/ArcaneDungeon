@@ -128,6 +128,28 @@
     450
    ],
    "layout": {
+    "env_props": [
+     {
+      "id": "crate1",
+      "kind": "crate",
+      "rect": [
+       560,
+       230,
+       40,
+       40
+      ]
+     },
+     {
+      "id": "web1",
+      "kind": "cobweb",
+      "rect": [
+       1000,
+       250,
+       48,
+       48
+      ]
+     }
+    ],
     "walls": [
      [
       420,
@@ -425,6 +447,24 @@
     450
    ],
    "layout": {
+    "env_props": [
+     {
+      "id": "urn1",
+      "kind": "urn",
+      "position": [
+       500,
+       300
+      ]
+     },
+     {
+      "id": "brazier1",
+      "kind": "brazier",
+      "position": [
+       560,
+       520
+      ]
+     }
+    ],
     "walls": [],
     "props": [
      [
@@ -690,6 +730,28 @@
     450
    ],
    "layout": {
+    "env_props": [
+     {
+      "id": "puddle1",
+      "kind": "puddle",
+      "rect": [
+       560,
+       700,
+       120,
+       60
+      ]
+     },
+     {
+      "id": "niche1",
+      "kind": "cracked_wall",
+      "rect": [
+       950,
+       150,
+       48,
+       48
+      ]
+     }
+    ],
     "walls": [
      [
       900,

@@ -606,6 +606,8 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 		"cast_id":int(ctx["cast_id"]),"root_cast_id":int(ctx["root_cast_id"]),
 		"formula_id":str(ctx["formula_id"]),
 		"knockback":{"force":0.0,"direction":push}}
+	if bool(ctx.get("ignited",false)):
+		payload["ignite"] = true
 	var hit = HitPayload.new(payload,settings["channels"])
 	var was_alive: bool = target.alive()
 	var result: Dictionary = resolver.resolve(hit,target,targets,clock.tick)

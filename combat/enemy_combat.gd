@@ -90,8 +90,14 @@ func step_body(session, from: Vector2, displacement: Vector2) -> Vector2:
 	return Vector2(clampf(point.x,bounds.position.x+target.radius,bounds.end.x-target.radius),
 		clampf(point.y,bounds.position.y+target.radius,bounds.end.y-target.radius))
 
+## AD-150: last per-tick displacement, only tracked while the session has env props (ice slide).
+var last_displacement := Vector2.ZERO
+
 func _move(session, desired: Vector2) -> void:
-	if desired.is_zero_approx():
+	var ice: bool = session.env_props != null and session.env_props.on_ice(target.position)
+	if desired.is_zero_approx() and not (ice and not last_displacement.is_zero_approx()):
+		if session.env_props != null:
+			last_displacement = Vector2.ZERO
 		return
 	var speed := float(tuning["move_speed"])
 	if speed_scale != 1.0:
@@ -99,6 +105,11 @@ func _move(session, desired: Vector2) -> void:
 	if target.status.has("chilled",session.sim.clock.tick):
 		speed *= float(session.sim.settings["statuses"]["chilled"].get("move_scale",1.0))
 	var displacement := desired.normalized()*speed/float(session.sim.clock.tick_rate)
+	if session.env_props != null:
+		# AD-150 [PROPOSED FOR PROTOTYPE]: on ice the move blends toward the wish; low grip keeps momentum.
+		if ice:
+			displacement = last_displacement.lerp(displacement,session.env_props.ice_grip())
+		last_displacement = displacement
 	var before: Vector2 = target.position
 	target.position = step_body(session,target.position,displacement)
 	# If a direct approach is blocked, choose a deterministic side to navigate.

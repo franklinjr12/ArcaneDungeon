@@ -152,6 +152,7 @@ func _draw() -> void:
 		draw_arc(at,mage.radius,0.0,TAU,32,HITBOX_COLOR,1.0)
 	Art.icon(self,"health",at+Vector2(-40,23),Vector2(15,15))
 	Art.draw_water(self,session,offset)
+	Art.draw_env_props(self,session,offset)
 	Art.draw_hazards(self,session,offset)
 	for enemy in session.enemies:
 		var target = enemy.target
