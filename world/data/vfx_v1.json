@@ -1,7 +1,7 @@
 {
  "version": 1,
  "_note": "[PROPOSED FOR PROTOTYPE] AD-149 render-only VFX tunables; none of these values touch sim state or timing. Textures are optional AD-117 / game-art hooks: empty or missing paths fall back to procedural textures.",
- "particle_texture": "",
+ "particle_texture": "res://art/export/vfx/ad_fx_ptc_mote_8.png",
  "glow_texture": "",
  "fallback_texture_px": 32,
  "particle_cap": {
@@ -34,7 +34,7 @@
    "glow": {
     "radius": 28.0,
     "alpha": 0.5,
-    "texture": ""
+    "texture": "res://art/export/vfx/ad_fx_ptc_ember_16.png"
    }
   },
   "water": {
@@ -56,7 +56,7 @@
    "glow": {
     "radius": 28.0,
     "alpha": 0.4,
-    "texture": ""
+    "texture": "res://art/export/vfx/ad_fx_ptc_droplet_16.png"
    }
   },
   "lightning": {
@@ -78,7 +78,7 @@
    "glow": {
     "radius": 28.0,
     "alpha": 0.7,
-    "texture": ""
+    "texture": "res://art/export/vfx/ad_fx_ptc_spark_16.png"
    }
   },
   "cold": {
@@ -100,7 +100,7 @@
    "glow": {
     "radius": 28.0,
     "alpha": 0.4,
-    "texture": ""
+    "texture": "res://art/export/vfx/ad_fx_ptc_frost_16.png"
    }
   },
   "force": {
@@ -122,7 +122,7 @@
    "glow": {
     "radius": 28.0,
     "alpha": 0.45,
-    "texture": ""
+    "texture": "res://art/export/vfx/ad_fx_ptc_glyph_16.png"
    }
   },
   "neutral": {
@@ -144,7 +144,7 @@
    "glow": {
     "radius": 22.0,
     "alpha": 0.35,
-    "texture": ""
+    "texture": "res://art/export/vfx/ad_fx_ptc_wisp_16.png"
    }
   }
  },

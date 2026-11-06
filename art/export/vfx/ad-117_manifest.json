@@ -1,0 +1,828 @@
+{
+ "ad_fx_cookie_radial_soft": {
+  "kind": "cookie",
+  "fw": 128,
+  "fh": 128,
+  "n": 1,
+  "ms": 100,
+  "tags": [
+   [
+    "loop",
+    0,
+    0
+   ]
+  ]
+ },
+ "ad_fx_cookie_torch_flicker": {
+  "kind": "cookie",
+  "fw": 128,
+  "fh": 128,
+  "n": 4,
+  "ms": 90,
+  "tags": [
+   [
+    "flicker",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_cookie_brazier": {
+  "kind": "cookie",
+  "fw": 128,
+  "fh": 128,
+  "n": 4,
+  "ms": 110,
+  "tags": [
+   [
+    "flicker",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_cookie_rune_circle": {
+  "kind": "cookie",
+  "fw": 128,
+  "fh": 128,
+  "n": 4,
+  "ms": 120,
+  "tags": [
+   [
+    "pulse",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_cookie_window_shaft": {
+  "kind": "cookie",
+  "fw": 64,
+  "fh": 96,
+  "n": 1,
+  "ms": 100,
+  "tags": [
+   [
+    "still",
+    0,
+    0
+   ]
+  ]
+ },
+ "ad_fx_cookie_grate_shaft": {
+  "kind": "cookie",
+  "fw": 64,
+  "fh": 64,
+  "n": 1,
+  "ms": 100,
+  "tags": [
+   [
+    "still",
+    0,
+    0
+   ]
+  ]
+ },
+ "ad_fx_cookie_boss_key": {
+  "kind": "cookie",
+  "fw": 256,
+  "fh": 256,
+  "n": 1,
+  "ms": 100,
+  "tags": [
+   [
+    "still",
+    0,
+    0
+   ]
+  ]
+ },
+ "ad_fx_cookie_spell_fire": {
+  "kind": "cookie",
+  "fw": 64,
+  "fh": 64,
+  "n": 4,
+  "ms": 80,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_cookie_spell_water": {
+  "kind": "cookie",
+  "fw": 64,
+  "fh": 64,
+  "n": 4,
+  "ms": 80,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_cookie_spell_lightning": {
+  "kind": "cookie",
+  "fw": 64,
+  "fh": 64,
+  "n": 4,
+  "ms": 80,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_cookie_spell_cold": {
+  "kind": "cookie",
+  "fw": 64,
+  "fh": 64,
+  "n": 4,
+  "ms": 80,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_cookie_spell_force": {
+  "kind": "cookie",
+  "fw": 64,
+  "fh": 64,
+  "n": 4,
+  "ms": 80,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_cookie_spell_nature": {
+  "kind": "cookie",
+  "fw": 64,
+  "fh": 64,
+  "n": 4,
+  "ms": 80,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_spark_8_mask": {
+  "kind": "mask",
+  "fw": 8,
+  "fh": 8,
+  "n": 3,
+  "ms": 70,
+  "tags": [
+   [
+    "loop",
+    0,
+    2
+   ]
+  ]
+ },
+ "ad_fx_ptc_spark_8": {
+  "kind": "sprite",
+  "fw": 8,
+  "fh": 8,
+  "n": 3,
+  "ms": 70,
+  "tags": [
+   [
+    "loop",
+    0,
+    2
+   ]
+  ]
+ },
+ "ad_fx_ptc_spark_8_glow": {
+  "kind": "glow",
+  "fw": 8,
+  "fh": 8,
+  "n": 3,
+  "ms": 70,
+  "tags": [
+   [
+    "loop",
+    0,
+    2
+   ]
+  ]
+ },
+ "ad_fx_ptc_spark_16_mask": {
+  "kind": "mask",
+  "fw": 16,
+  "fh": 16,
+  "n": 3,
+  "ms": 70,
+  "tags": [
+   [
+    "loop",
+    0,
+    2
+   ]
+  ]
+ },
+ "ad_fx_ptc_spark_16": {
+  "kind": "sprite",
+  "fw": 16,
+  "fh": 16,
+  "n": 3,
+  "ms": 70,
+  "tags": [
+   [
+    "loop",
+    0,
+    2
+   ]
+  ]
+ },
+ "ad_fx_ptc_spark_16_glow": {
+  "kind": "glow",
+  "fw": 16,
+  "fh": 16,
+  "n": 3,
+  "ms": 70,
+  "tags": [
+   [
+    "loop",
+    0,
+    2
+   ]
+  ]
+ },
+ "ad_fx_ptc_ember_8_mask": {
+  "kind": "mask",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 110,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_ember_8": {
+  "kind": "sprite",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 110,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_ember_8_glow": {
+  "kind": "glow",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 110,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_ember_16_mask": {
+  "kind": "mask",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 110,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_ember_16": {
+  "kind": "sprite",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 110,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_ember_16_glow": {
+  "kind": "glow",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 110,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_mote_8_mask": {
+  "kind": "mask",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 140,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_mote_8": {
+  "kind": "sprite",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 140,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_mote_8_glow": {
+  "kind": "glow",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 140,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_mote_16_mask": {
+  "kind": "mask",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 140,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_mote_16": {
+  "kind": "sprite",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 140,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_mote_16_glow": {
+  "kind": "glow",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 140,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_droplet_8_mask": {
+  "kind": "mask",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 90,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_droplet_8": {
+  "kind": "sprite",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 90,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_droplet_16_mask": {
+  "kind": "mask",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 90,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_droplet_16": {
+  "kind": "sprite",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 90,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_frost_8_mask": {
+  "kind": "mask",
+  "fw": 8,
+  "fh": 8,
+  "n": 3,
+  "ms": 100,
+  "tags": [
+   [
+    "loop",
+    0,
+    2
+   ]
+  ]
+ },
+ "ad_fx_ptc_frost_8": {
+  "kind": "sprite",
+  "fw": 8,
+  "fh": 8,
+  "n": 3,
+  "ms": 100,
+  "tags": [
+   [
+    "loop",
+    0,
+    2
+   ]
+  ]
+ },
+ "ad_fx_ptc_frost_16_mask": {
+  "kind": "mask",
+  "fw": 16,
+  "fh": 16,
+  "n": 3,
+  "ms": 100,
+  "tags": [
+   [
+    "loop",
+    0,
+    2
+   ]
+  ]
+ },
+ "ad_fx_ptc_frost_16": {
+  "kind": "sprite",
+  "fw": 16,
+  "fh": 16,
+  "n": 3,
+  "ms": 100,
+  "tags": [
+   [
+    "loop",
+    0,
+    2
+   ]
+  ]
+ },
+ "ad_fx_ptc_dust_8_mask": {
+  "kind": "mask",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 120,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_dust_8": {
+  "kind": "sprite",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 120,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_dust_16_mask": {
+  "kind": "mask",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 120,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_dust_16": {
+  "kind": "sprite",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 120,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_smoke_8_mask": {
+  "kind": "mask",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 140,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_smoke_8": {
+  "kind": "sprite",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 140,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_smoke_16_mask": {
+  "kind": "mask",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 140,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_smoke_16": {
+  "kind": "sprite",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 140,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_wisp_8_mask": {
+  "kind": "mask",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 120,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_wisp_8": {
+  "kind": "sprite",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 120,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_wisp_8_glow": {
+  "kind": "glow",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 120,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_wisp_16_mask": {
+  "kind": "mask",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 120,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_wisp_16": {
+  "kind": "sprite",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 120,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_wisp_16_glow": {
+  "kind": "glow",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 120,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_glyph_8_mask": {
+  "kind": "mask",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 90,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_glyph_8": {
+  "kind": "sprite",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 90,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_glyph_8_glow": {
+  "kind": "glow",
+  "fw": 8,
+  "fh": 8,
+  "n": 4,
+  "ms": 90,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_glyph_16_mask": {
+  "kind": "mask",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 90,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_glyph_16": {
+  "kind": "sprite",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 90,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ },
+ "ad_fx_ptc_glyph_16_glow": {
+  "kind": "glow",
+  "fw": 16,
+  "fh": 16,
+  "n": 4,
+  "ms": 90,
+  "tags": [
+   [
+    "loop",
+    0,
+    3
+   ]
+  ]
+ }
+}

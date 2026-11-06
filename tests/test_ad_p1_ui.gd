@@ -2,11 +2,11 @@ extends RefCounted
 ## AD-040: P1 HUD parts / reward card are in the manifest and every rune id has an icon cell.
 const MANIFEST := "res://art/export/manifest.json"
 const MAP := "res://art/export/engine_map.json"
-const INDEX := "res://art/export/ico/ad_ico_atlas_mvp_index.json"
+const INDEX := "res://art/export/ico/ad_ico_atlas_demo_index.json"
 const RUNES := "res://magic/data/runes_v2.json"
 const Hud = preload("res://ui/pixel_hud.gd")
 const SkinA = preload("res://ui/skin_a.gd")
-const ATLAS := "res://art/export/ico/ad_ico_atlas_mvp.png"
+const ATLAS := "res://art/export/ico/ad_ico_atlas_demo.png"
 
 func _load_json(path: String):
 	return JSON.parse_string(FileAccess.get_file_as_string(path))

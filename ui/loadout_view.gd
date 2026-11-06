@@ -3,8 +3,8 @@ extends "res://ui/skin_a_overlay.gd"
 ## Shows the 4 spell slots with their rune chains, held artifacts, run upgrades and vitals. No edit controls; purely visual
 ## (never touches the sim). Back and Continue both close the view: the exit door is still walked to.
 const Artifacts = preload("res://world/artifacts.gd")
+const Art = preload("res://ui/pixel_art_renderer.gd")
 const Difficulty = preload("res://game/core/difficulty.gd")
-const ARTIFACT_ICON := "upgrade" # no per-artifact icons yet; same generic glyph as the HUD
 const BASE_HP := 150.0 # mirrors RunState.initialize; only used to read the merchant's HP bonus
 signal close_requested
 
@@ -125,7 +125,7 @@ func _artifacts(flow) -> void:
 		if not held:
 			continue
 		var r := rect_of(id)
-		picture(id + "_icon", SkinA.icon_or_mvp(ARTIFACT_ICON), {"x": r["x"] + 4.0, "y": r["y"] + 4.0, "w": 32, "h": 32})
+		picture(id + "_icon", Art.artifact_icon(str(_artifact_ids[i]), 32), {"x": r["x"] + 4.0, "y": r["y"] + 4.0, "w": 32, "h": 32})
 		slot.mouse_filter = Control.MOUSE_FILTER_STOP
 		slot.mouse_entered.connect(_show_artifact.bind(i))
 	frame("artifact_tooltip", "ad_ui_panel_tooltip", rect_of("artifact_tooltip"))

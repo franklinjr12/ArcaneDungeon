@@ -188,7 +188,7 @@ func _draw() -> void:
 	if _fx_session != session:
 		_fx_session = session
 		_fx_memo = {}
-	Art.draw_form_visuals(self,session.sim.visuals,offset)
+	Art.draw_form_visuals(self,session.sim.visuals,offset,tick)
 	var fx_list: Array = Art.collect_fx(session,tick,_fx_memo)
 	for fx in fx_list:
 		var fp := ReduceMotion.fx_draw_params(reduced,fx["event"],fx["age"])
