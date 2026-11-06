@@ -201,12 +201,20 @@ func _run() -> void:
 	expect(slot_rows==4,"AD-147 view shows 4 slot rows")
 	var art_ok: bool = false
 	for l in control.loadout_view.find_children("*","Label",true,false):
-		if l.text==tr("loadout_view.artifacts") or l.text==tr("loadout_view.no_artifacts"): art_ok = true
+		if l.text.begins_with(tr("loadout_view.artifacts").to_upper()) or l.text==tr("loadout_view.no_artifacts").to_upper(): art_ok = true
 	expect(art_ok,"AD-147 view shows artifacts section")
-	var view_buttons: Array = control.loadout_view.find_children("*","Button",true,false)
-	expect(view_buttons.size()==1 and view_buttons[0].name=="LoadoutCloseButton"
+	var view_names: Array = []
+	for b in control.loadout_view.find_children("*","Button",true,false):
+		view_names.append(str(b.name))
+	view_names.sort()
+	expect(view_names==["LoadoutCloseButton","LoadoutContinueButton"]
 		and control.loadout_view.find_children("*","OptionButton",true,false).is_empty()
-		and control.loadout_view.find_children("*","LineEdit",true,false).is_empty(),"AD-147 view is read-only (close button only)")
+		and control.loadout_view.find_children("*","LineEdit",true,false).is_empty(),"AD-147 view is read-only (Back/Continue only)")
+	var chain_icons: int = 0
+	for n in control.loadout_view.find_children("spell_*_rune_*","TextureRect",true,false):
+		chain_icons += 1
+	expect(chain_icons>=2 and control.loadout_view.find_child("tt_name",true,false) != null and control.loadout_view.find_child("ico_hp",true,false) != null,
+		"AD-153 loadout shows rune chain icons, artifact tooltip and status block")
 	control._open_editor(2)
 	var edit_try: Dictionary = control.flow.open_editor(1)
 	expect(not control.editor_open and not edit_try["ok"] and str(edit_try.get("reason",""))=="POLICY_WORKSHOP_ONLY" and run.edit_policy=="workshop_only",

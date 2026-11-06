@@ -406,13 +406,23 @@ run.notice.resumed,Run resumed in the workshop.
 run.notice.resume_failed,The saved run could not be loaded; a new run has started.
 run.btn.loadout_view,Loadout (Tab)
 loadout_view.title,Loadout
-loadout_view.slot,Slot %d: %s
 loadout_view.locked, [LOCKED]
-loadout_view.cost,%d MP · %.1fs cooldown
 loadout_view.artifacts,Artifacts
 loadout_view.no_artifacts,No artifacts yet
 loadout_view.read_only,Read-only. Spells can only be edited at the workshop.
-loadout_view.close,Close (Tab)
+loadout_view.back,Back
+loadout_view.continue,Continue
+loadout_view.spells,Spells
+loadout_view.status,Status
+loadout_view.upgrades,Upgrades
+loadout_view.mp,MP %d
+loadout_view.cooldown,%.1f s
+loadout_view.charges,%d charges
+loadout_view.artifacts_count,Artifacts  %d / %d
+loadout_view.room_cleared,Room %d cleared
+loadout_view.hp_up,Max HP +%d
+loadout_view.mana_up,Max MP +%d
+loadout_view.dash_up,Dash +%d
 settings.tab.audio,Audio
 settings.tab.video,Video
 settings.tab.controls,Controls

@@ -113,3 +113,28 @@ static func widgets_by_id(screen: String) -> Dictionary:
 	for w in layout(screen).get("widgets", []):
 		out[str(w.get("id", ""))] = w
 	return out
+
+## Rune icon for a registry id ("essence.fire"): demo atlas first, then the MVP rune atlas.
+static func rune_icon(rune_id: String) -> AtlasTexture:
+	var short := rune_id.get_slice(".", 1) if rune_id.contains(".") else rune_id
+	return icon(short) if has_icon(short) else load(PIXEL_HUD_PATH).rune_icon_texture(rune_id)
+
+## Rune ids of a formula in chain order: essence, form, modifiers, then the On Hit trigger and its payload.
+static func formula_rune_ids(formula: Dictionary) -> Array:
+	var root: Dictionary = formula.get("root", {})
+	var ids: Array = [root.get("essence_id", ""), root.get("manifestation_id", "")]
+	ids.append_array(root.get("modifier_ids", []))
+	if formula.has("on_hit"):
+		var on_hit: Dictionary = formula["on_hit"]
+		var payload: Dictionary = on_hit.get("payload", {})
+		ids.append_array([on_hit.get("trigger_id", ""), payload.get("essence_id", ""), payload.get("manifestation_id", "")])
+	return ids.filter(func(id): return str(id) != "")
+
+## Translated key label of loadout slot i (mirrors the cast_slot_1..4 input map).
+static func slot_key(i: int) -> String:
+	var keys := ["hud.key.lmb", "hud.key.rmb", "Q", "E"]
+	return TranslationServer.translate(keys[i]) if i < keys.size() else ""
+
+## Mana text colour of the mocks (not a kit label state).
+static func mana_color() -> Color:
+	return Color8(80, 160, 220)

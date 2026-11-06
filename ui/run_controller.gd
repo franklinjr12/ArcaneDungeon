@@ -1560,7 +1560,7 @@ func _close_editor(apply_changes: bool) -> void:
 
 ## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.
 func apply_debug_shot_state(state: String) -> bool:
-	if not OS.is_debug_build() or not state in ["combat","reward","workshop_editor","merchant","pause","summary","sigil_desk"]:
+	if not OS.is_debug_build() or not state in ["combat","reward","loadout","workshop_editor","merchant","pause","summary","sigil_desk"]:
 		return false
 	if state == "sigil_desk":
 		if not flow.prelude and not (flow.prelude_available() and flow.enter_prelude()["ok"]):
@@ -1571,7 +1571,7 @@ func apply_debug_shot_state(state: String) -> bool:
 	if flow.prelude:
 		flow.finish_prelude(true)
 		guide.prelude_active = false
-	if state == "reward":
+	if state == "reward" or state == "loadout":
 		for i in 3000:
 			if flow.state != "fighting":
 				break
@@ -1596,6 +1596,8 @@ func apply_debug_shot_state(state: String) -> bool:
 		_set_shop_open(true)
 	elif state == "pause":
 		open_pause()
+	elif state == "loadout":
+		open_loadout_view()
 	return true
 
 func _debug_shot_entry() -> void:
