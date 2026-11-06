@@ -1,0 +1,214 @@
+{
+ "version": 1,
+ "_note": "[PROPOSED FOR PROTOTYPE] AD-149 render-only VFX tunables; none of these values touch sim state or timing. Textures are optional AD-117 / game-art hooks: empty or missing paths fall back to procedural textures.",
+ "particle_texture": "",
+ "glow_texture": "",
+ "fallback_texture_px": 32,
+ "particle_cap": {
+  "high": 256,
+  "low": 96,
+  "off": 0
+ },
+ "spawn_per_tick_cap": {
+  "high": 24,
+  "low": 8,
+  "off": 0
+ },
+ "elements": {
+  "fire": {
+   "trail": {
+    "rate_per_tick": 1,
+    "life_ticks": 14,
+    "speed": 0.6,
+    "size": 3.0,
+    "color": "#f08a3c",
+    "color_end": "#a8321c"
+   },
+   "impact": {
+    "count": 10,
+    "life_ticks": 18,
+    "speed": 2.2,
+    "size": 3.5,
+    "color": "#f08a3c"
+   },
+   "glow": {
+    "radius": 28.0,
+    "alpha": 0.5,
+    "texture": ""
+   }
+  },
+  "water": {
+   "trail": {
+    "rate_per_tick": 1,
+    "life_ticks": 14,
+    "speed": 0.48,
+    "size": 3.0,
+    "color": "#4aa8e8",
+    "color_end": "#1f5c9e"
+   },
+   "impact": {
+    "count": 10,
+    "life_ticks": 18,
+    "speed": 1.76,
+    "size": 3.5,
+    "color": "#4aa8e8"
+   },
+   "glow": {
+    "radius": 28.0,
+    "alpha": 0.4,
+    "texture": ""
+   }
+  },
+  "lightning": {
+   "trail": {
+    "rate_per_tick": 1,
+    "life_ticks": 8,
+    "speed": 0.84,
+    "size": 3.0,
+    "color": "#f5e65a",
+    "color_end": "#e8a020"
+   },
+   "impact": {
+    "count": 14,
+    "life_ticks": 12,
+    "speed": 3.08,
+    "size": 3.5,
+    "color": "#f5e65a"
+   },
+   "glow": {
+    "radius": 28.0,
+    "alpha": 0.7,
+    "texture": ""
+   }
+  },
+  "cold": {
+   "trail": {
+    "rate_per_tick": 1,
+    "life_ticks": 16,
+    "speed": 0.36,
+    "size": 3.0,
+    "color": "#9fe6f4",
+    "color_end": "#5a9ec8"
+   },
+   "impact": {
+    "count": 10,
+    "life_ticks": 20,
+    "speed": 1.32,
+    "size": 3.5,
+    "color": "#9fe6f4"
+   },
+   "glow": {
+    "radius": 28.0,
+    "alpha": 0.4,
+    "texture": ""
+   }
+  },
+  "force": {
+   "trail": {
+    "rate_per_tick": 1,
+    "life_ticks": 12,
+    "speed": 0.54,
+    "size": 3.0,
+    "color": "#c9a6f0",
+    "color_end": "#6a4a9e"
+   },
+   "impact": {
+    "count": 10,
+    "life_ticks": 16,
+    "speed": 1.98,
+    "size": 3.5,
+    "color": "#c9a6f0"
+   },
+   "glow": {
+    "radius": 28.0,
+    "alpha": 0.45,
+    "texture": ""
+   }
+  },
+  "neutral": {
+   "trail": {
+    "rate_per_tick": 1,
+    "life_ticks": 12,
+    "speed": 0.42,
+    "size": 3.0,
+    "color": "#e8e0cc",
+    "color_end": "#8a8470"
+   },
+   "impact": {
+    "count": 10,
+    "life_ticks": 16,
+    "speed": 1.54,
+    "size": 3.5,
+    "color": "#e8e0cc"
+   },
+   "glow": {
+    "radius": 22.0,
+    "alpha": 0.35,
+    "texture": ""
+   }
+  }
+ },
+ "status": {
+  "burning": {
+   "rate_period_ticks": 5,
+   "life_ticks": 20,
+   "rise": 0.9,
+   "size": 3.0,
+   "color": "#f08a3c"
+  },
+  "wet": {
+   "rate_period_ticks": 7,
+   "life_ticks": 24,
+   "rise": 0.6,
+   "size": 2.5,
+   "color": "#4aa8e8"
+  },
+  "charged": {
+   "rate_period_ticks": 3,
+   "life_ticks": 16,
+   "rise": 0.2,
+   "size": 2.5,
+   "color": "#f5e65a"
+  },
+  "chilled": {
+   "rate_period_ticks": 8,
+   "life_ticks": 26,
+   "rise": 0.4,
+   "size": 2.5,
+   "color": "#9fe6f4"
+  },
+  "frozen": {
+   "rate_period_ticks": 12,
+   "life_ticks": 30,
+   "rise": 0.2,
+   "size": 3.0,
+   "color": "#d8f6ff"
+  },
+  "brittle": {
+   "rate_period_ticks": 9,
+   "life_ticks": 28,
+   "rise": 0.3,
+   "size": 2.5,
+   "color": "#b8c8e0"
+  },
+  "blinded": {
+   "rate_period_ticks": 9,
+   "life_ticks": 28,
+   "rise": 0.3,
+   "size": 3.0,
+   "color": "#6a5a8a"
+  }
+ },
+ "reduced": {
+  "glow_alpha_mult": 0.4,
+  "impact_count_mult": 0.5,
+  "max_alpha": 0.45,
+  "no_white_core": true
+ },
+ "hit_flash": {
+  "ticks": 6,
+  "strength": 0.85,
+  "reduced_strength": 0.0,
+  "color": "#ffffff"
+ }
+}

@@ -12,6 +12,9 @@ var _anim_memo: Dictionary = {}
 var _anim_session = null
 const SlotHUD = preload("res://ui/pixel_hud.gd")
 const Lighting = preload("res://ui/lighting.gd")
+const VfxLayer = preload("res://ui/vfx/vfx_layer.gd")
+const HitFlashOverlay = preload("res://ui/vfx/hit_flash_overlay.gd")
+const VfxData = preload("res://ui/vfx/vfx_data.gd")
 var session
 var settings = null
 var hover := Vector2(440,440)
@@ -28,6 +31,9 @@ var lighting_stage := 0
 var lighting_room_type := "combat"
 var lighting_props: Array = []
 var lighting
+## AD-149: render-only additive particles/glow and the actor hit-flash overlay (children above the arena, below the slot HUD).
+var vfx
+var hit_flash
 ## AD-091: the run screen sets this node's `scale` to texel/(2*physical scale) so one art texel is a whole number of
 ## physical pixels, and `size` to the visible world size. Node scale (not draw_set_transform) because the renderer resets the draw transform.
 const FRAME_COLOR := Color("#0b1320")
@@ -41,6 +47,14 @@ func _ready() -> void:
 	lighting.name = "Lighting"
 	add_child(lighting)
 	lighting.setup(self)
+	vfx = VfxLayer.new()
+	vfx.name = "Vfx"
+	add_child(vfx)
+	vfx.setup(self)
+	hit_flash = HitFlashOverlay.new()
+	hit_flash.name = "HitFlash"
+	add_child(hit_flash)
+	move_child(slot_hud,get_child_count()-1)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	clip_contents = true
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -100,6 +114,8 @@ func _draw() -> void:
 	Art.tile_floor(self,Rect2(Vector2.ZERO,view_size()),offset,environment_id)
 	if session == null:
 		lighting.hide_all()
+		vfx.hide_all()
+		hit_flash.set_entries([])
 		return
 	_draw_frame(Rect2(arena.position-offset,arena.size))
 	Art.walls(self,session.world.walls,offset)
@@ -121,6 +137,11 @@ func _draw() -> void:
 	var mage_hurt: bool = session.player.hit_flash>0 and not reduced
 	var mage_tint := ReduceMotion.hurt_tint(reduced,session.player.hit_flash)
 	var mage_anim := _mage_anim(mage,tick,player_velocity,mage_hurt)
+	var flash_entries: Array = []
+	var flash_total := int(VfxData.hit_flash_cfg().get("ticks",0))
+	var mage_entry := mage_flash_entry(reduced,at,tick,mage_motion,mage_anim)
+	if not mage_entry.is_empty():
+		flash_entries.append(mage_entry)
 	if session.player.invulnerable() and Art.iframe_outline_on(tick):
 		for step in [Vector2.LEFT,Vector2.RIGHT,Vector2.UP,Vector2.DOWN]:
 			Art.entity(self,"mage",at+step*2.0,tick,mage_motion,actor_casting,mage_hurt,not mage.alive(),Art.IFRAME_OUTLINE,mage_anim)
@@ -145,6 +166,11 @@ func _draw() -> void:
 				Art.entity(self,enemy.kind,enemy_at,tick,movement,false,false,not target.alive(),enemy_mod,enemy_anim)
 		elif tick-dissolved < 20 or target.alive():
 			Art.entity(self,enemy.kind,enemy_at,tick,movement,enemy.state=="windup",false,not target.alive(),enemy_mod)
+		var hit_at = _anim_memo["actors"].get(target.id,{}).get("hit")
+		if hit_at != null and target.alive() and not enemy_anim.is_empty():
+			var enemy_flash := ReduceMotion.hit_flash_strength(reduced,flash_total-(tick-int(hit_at)),flash_total)
+			if enemy_flash > 0.0:
+				flash_entries.append({"kind":enemy.kind,"at":enemy_at,"tick":tick,"motion":movement,"anim":enemy_anim,"strength":enemy_flash})
 		Art.draw_enemy_markers(self,enemy,enemy_at,tick,offset)
 		if target.alive():
 			_health_bar(enemy_at,target.radius+12,target.health.current/target.health.maximum,Color("#dc7060"))
@@ -162,7 +188,8 @@ func _draw() -> void:
 		_fx_session = session
 		_fx_memo = {}
 	Art.draw_form_visuals(self,session.sim.visuals,offset)
-	for fx in Art.collect_fx(session,tick,_fx_memo):
+	var fx_list: Array = Art.collect_fx(session,tick,_fx_memo)
+	for fx in fx_list:
 		var fp := ReduceMotion.fx_draw_params(reduced,fx["event"],fx["age"])
 		Art.draw_fx(self,fx["event"],fx["at"]-offset,fp["age"],fx["rotation"],fx["length"],fp["modulate"],fx["slot"],fx.get("uniform",0.0),int(fx.get("window",0)))
 	_draw_floating_text(offset,tick)
@@ -170,6 +197,15 @@ func _draw() -> void:
 	if show_debug:
 		_label(Vector2(18,20),tr("combat.debug_geometry"),Color("#d6edf7"))
 	lighting.sync(self,session,settings,lighting_stage,lighting_room_type,lighting_props)
+	vfx.sync(self,session,settings,fx_list,tick)
+	hit_flash.set_entries(flash_entries)
+
+## AD-149: hit-flash overlay entry for the mage, or {} when there is nothing to flash (dead, expired or reduce-flash).
+func mage_flash_entry(reduced: bool, at: Vector2, tick: int, motion: Vector2, anim: Dictionary) -> Dictionary:
+	var strength := ReduceMotion.hit_flash_strength(reduced,session.player.hit_flash,int(session.player.tuning.get("hit_flash_ticks",1)))
+	if not session.sim.actor.alive() or strength <= 0.0:
+		return {}
+	return {"kind":"mage","at":at,"tick":tick,"motion":motion,"anim":anim,"strength":strength}
 
 ## Dark frame around the arena when the view is larger than the arena bounds (extreme aspects).
 func _draw_frame(arena_view: Rect2) -> void:
