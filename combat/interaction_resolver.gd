@@ -49,6 +49,10 @@ func resolve(hit: Variant, target, target_store, tick: int) -> Dictionary:
 		if not apply_status.is_empty():
 			target.status.apply(apply_status,tick,statuses[apply_status],context)
 			outcome["status_events"].append({"state":apply_status,"action":"applied"})
+	# AD-150 [PROPOSED FOR PROTOTYPE]: a projectile that crossed a lit brazier also ignites its target.
+	if bool(payload.get("ignite",false)) and statuses.has("burning"):
+		target.status.apply("burning",tick,statuses["burning"],context)
+		outcome["status_events"].append({"state":"burning","action":"applied"})
 	var freeze_stacks := int(reactions.get("chill_freeze_stacks",0))
 	if freeze_stacks > 0 and target.status.stacks("chilled",tick) >= freeze_stacks:
 		target.status.remove("chilled")

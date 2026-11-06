@@ -38,6 +38,9 @@ func from_dict(fields: Dictionary, channels: Dictionary = {}) -> Dictionary:
 		"caster_id":int(fields.get("caster_id",0)),"formula_id":str(fields.get("formula_id","")),
 		"knockback":{"force":amount,"direction":{"x":direction.x,"y":direction.y}}
 	}
+	# AD-150: brazier ignition flag; only present when true so existing snapshots are unchanged.
+	if bool(fields.get("ignite",false)):
+		_data["ignite"] = true
 	valid = true
 	return {"ok":true,"issues":[]}
 

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "enabled": true,
+  "difficulty": {
+    "burn_ticks_scale": 1.0,
+    "coin_scale": 1.0
+  },
+  "kinds": {
+    "crate": {"shape": "rect", "size": [40, 40], "solid_walk": true, "blocks_spells": true,
+      "ignite_by": ["essence.fire"], "burn_ticks": 60, "coins": 0},
+    "cobweb": {"shape": "rect", "size": [48, 48], "solid_walk": false, "blocks_spells": true,
+      "ignite_by": ["essence.fire"], "burn_ticks": 30, "coins": 0},
+    "puddle": {"shape": "rect", "size": [120, 60], "solid_walk": false, "blocks_spells": false,
+      "water_kind": "shallow", "freeze_by": ["essence.cold"], "ice_ticks": 240},
+    "ice": {"enemy_grip": 0.12},
+    "brazier": {"shape": "circle", "radius": 18, "lit": true, "ignite_status": "burning",
+      "ignite_except": ["essence.fire"]},
+    "urn": {"shape": "circle", "radius": 14, "solid_walk": false, "blocks_spells": false,
+      "break_by": ["essence.force"], "coins": 3},
+    "cracked_wall": {"shape": "rect", "size": [48, 48], "solid_walk": true, "blocks_spells": true,
+      "break_by": ["essence.force"], "coins": 8}
+  }
+}
