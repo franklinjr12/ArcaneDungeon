@@ -15,8 +15,8 @@ const ALLOW := {
 	],
 	"ui/combat_canvas.gd": ["DEFEAT"], # prefix compared against sim feedback labels, never displayed
 	"ui/room_placeholder.gd": ["MagicSandbox"], # scene node name comparison
-	"ui/main_menu.gd": ["NewRunButton"], # node name
-	"ui/pause_menu.gd": ["ResumeButton", "SettingsButton", "ControlsButton", "TipsButton", "RetryButton", "QuitButton", "ConfirmButton", "CancelButton", "ControlsBackButton"], # node names
+	"ui/main_menu.gd": ["NewRunButton", "CompendiumButton", "ContinueButton"], # node name
+	"ui/pause_menu.gd": ["ResumeButton", "SettingsButton", "ControlsButton", "TipsButton", "RetryButton", "QuitButton", "SaveQuitButton", "ConfirmButton", "CancelButton", "ControlsBackButton"], # node names
 	"ui/pixel_theme.gd": ["PanelContainer", "Button", "Label", "LineEdit", "OptionButton", "CheckBox"], # Godot theme type names
 }
 

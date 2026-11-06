@@ -2,6 +2,7 @@ extends RefCounted
 ## TASK-039: serialized run progression, never runtime entities, queues or enemies.
 const VERSION := 1
 const Difficulty = preload("res://game/core/difficulty.gd")
+const Artifacts = preload("res://world/artifacts.gd")
 var seed := 0
 var sequence_index := 0
 var hp := 150.0
@@ -15,6 +16,10 @@ var purchases: Array = []
 var edit_seconds := 0.0
 var edit_count := 0
 var quick_edit_count := 0
+var artifacts: Array = []
+## AD-144 merchant upgrades, run-persistent.
+var max_mana_bonus := 0.0
+var dash_charges_bonus := 0
 
 func initialize(run_seed: int, config: Dictionary, formulas_by_id: Dictionary) -> void:
 	seed = run_seed
@@ -32,13 +37,17 @@ func initialize(run_seed: int, config: Dictionary, formulas_by_id: Dictionary) -
 	edit_seconds = 0
 	edit_count = 0
 	quick_edit_count = 0
+	artifacts.clear()
+	max_mana_bonus = 0.0
+	dash_charges_bonus = 0
 
 func snapshot() -> Dictionary:
 	return {"schema_version":VERSION,"seed":seed,"sequence_index":sequence_index,
 		"hp":hp,"mana":mana,"max_hp":max_hp,"currency":currency,"unlocked":unlocked.duplicate(true),
 		"formulas":formulas.duplicate(true),"collected":collected.duplicate(true),
 		"purchases":purchases.duplicate(true),"edit_seconds":edit_seconds,
-		"edit_count":edit_count,"quick_edit_count":quick_edit_count}
+		"edit_count":edit_count,"quick_edit_count":quick_edit_count,"artifacts":artifacts.duplicate(true),
+		"max_mana_bonus":max_mana_bonus,"dash_charges_bonus":dash_charges_bonus}
 
 func restore(data: Variant, registry, max_rooms: int) -> Dictionary:
 	if typeof(data) != TYPE_DICTIONARY:
@@ -60,8 +69,24 @@ func restore(data: Variant, registry, max_rooms: int) -> Dictionary:
 	for key in ["currency","edit_count","quick_edit_count"]:
 		if not _whole_number(data[key]):
 			return {"ok":false,"reason":"RUN_INTEGER_INVALID_"+key}
-	if float(data["max_hp"]) < 1.0 or float(data["hp"]) > float(data["max_hp"]) or float(data["mana"]) > Difficulty.scale_f(120.0,"player_mana"):
+	# AD-144: optional so saves from before merchant upgrades still load.
+	for key in ["max_mana_bonus","dash_charges_bonus"]:
+		if data.has(key) and (typeof(data[key]) not in [TYPE_INT,TYPE_FLOAT] or not is_finite(float(data[key])) or float(data[key]) < 0):
+			return {"ok":false,"reason":"RUN_UPGRADES_INVALID"}
+	if data.has("dash_charges_bonus") and not _whole_number(data["dash_charges_bonus"]):
+		return {"ok":false,"reason":"RUN_UPGRADES_INVALID"}
+	var mana_bonus := float(data.get("max_mana_bonus",0.0))
+	if float(data["max_hp"]) < 1.0 or float(data["hp"]) > float(data["max_hp"]) or float(data["mana"]) > Difficulty.scale_f(120.0,"player_mana")+mana_bonus:
 		return {"ok":false,"reason":"RUN_RESOURCES_INVALID"}
+	# AD-143: optional so saves from before artifacts still load.
+	if data.has("artifacts"):
+		if typeof(data["artifacts"]) != TYPE_ARRAY or data["artifacts"].size() > Artifacts.max_held():
+			return {"ok":false,"reason":"RUN_ARTIFACTS_INVALID"}
+		var seen: Array = []
+		for artifact in data["artifacts"]:
+			if typeof(artifact) != TYPE_STRING or not Artifacts.is_known(artifact) or artifact in seen:
+				return {"ok":false,"reason":"RUN_ARTIFACTS_INVALID"}
+			seen.append(artifact)
 	var ids: Array = registry.get_ids()
 	for rune in data["unlocked"]:
 		if typeof(rune) != TYPE_STRING or rune not in ids:
@@ -83,7 +108,17 @@ func restore(data: Variant, registry, max_rooms: int) -> Dictionary:
 	edit_seconds = float(data["edit_seconds"])
 	edit_count = int(data["edit_count"])
 	quick_edit_count = int(data["quick_edit_count"])
+	artifacts = data["artifacts"].duplicate(true) if data.has("artifacts") else []
+	max_mana_bonus = mana_bonus
+	dash_charges_bonus = int(data.get("dash_charges_bonus",0))
 	return {"ok":true,"reason":"LOADED"}
+
+func add_artifact(id: String) -> Dictionary:
+	var holder = Artifacts.new(artifacts)
+	var outcome: Dictionary = holder.add(id)
+	if outcome["ok"]:
+		artifacts = holder.ids()
+	return outcome
 
 func unlock(rune_id: String, duplicate_currency: int) -> Dictionary:
 	if rune_id in unlocked:

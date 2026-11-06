@@ -7,11 +7,37 @@ var _rects: Array = []
 var _body_ids: Array = []
 
 func _init(entries: Array = []) -> void:
+	_append(entries)
+	_build_bodies()
+
+## AD-142: runtime toggle. Entries may carry an optional string `tag` so a whole group can be removed again.
+func add_entries(entries: Array) -> void:
+	_append(entries)
+	_build_bodies()
+
+## Removes every entry carrying `tag`; returns how many were removed.
+func remove_tag(tag: String) -> int:
+	var kept_entries: Array = []
+	var kept_rects: Array = []
+	for i in _entries.size():
+		if _entries[i].has("tag") and _entries[i]["tag"] == tag:
+			continue
+		kept_entries.append(_entries[i])
+		kept_rects.append(_rects[i])
+	var removed := _entries.size()-kept_entries.size()
+	_entries = kept_entries
+	_rects = kept_rects
+	_build_bodies()
+	return removed
+
+func _append(entries: Array) -> void:
 	for entry in entries:
 		var dims: Array = entry["rect"]
-		_entries.append({"kind":str(entry["kind"]),"rect":Rect2(float(dims[0]),float(dims[1]),float(dims[2]),float(dims[3]))})
-		_rects.append(_entries.back()["rect"])
-	_build_bodies()
+		var parsed := {"kind":str(entry["kind"]),"rect":Rect2(float(dims[0]),float(dims[1]),float(dims[2]),float(dims[3]))}
+		if entry.has("tag"):
+			parsed["tag"] = str(entry["tag"])
+		_entries.append(parsed)
+		_rects.append(parsed["rect"])
 
 static func validate(entries) -> Array:
 	var issues: Array = []
@@ -35,6 +61,8 @@ static func validate(entries) -> Array:
 			good = good and float(dims[2]) > 0.0 and float(dims[3]) > 0.0
 		if not good:
 			issues.append({"code":"WATER_TILE_INVALID","path":path+".rect","message":"rect must be [x,y,w,h] numbers with w,h > 0"})
+		if entry.has("tag") and typeof(entry["tag"]) != TYPE_STRING:
+			issues.append({"code":"WATER_TILE_INVALID","path":path+".tag","message":"tag must be a string"})
 	return issues
 
 func deep_rects() -> Array[Rect2]:
@@ -57,7 +85,10 @@ func body_of(pos: Vector2) -> int:
 func view() -> Array:
 	var result: Array = []
 	for i in _entries.size():
-		result.append({"kind":_entries[i]["kind"],"rect":_entries[i]["rect"],"body":int(_body_ids[i])})
+		var item := {"kind":_entries[i]["kind"],"rect":_entries[i]["rect"],"body":int(_body_ids[i])}
+		if _entries[i].has("tag"):
+			item["tag"] = _entries[i]["tag"]
+		result.append(item)
 	return result
 
 func _build_bodies() -> void:

@@ -49,7 +49,7 @@ func run(t) -> void:
 	t.check(not svc2.settings.volumes.has("Bogus") and svc2.settings.screen_shake,"AD-019 wrong type ignored")
 	# Migration v0 -> v1.
 	var m: Dictionary = Service.migrate({"runs":5,"wins":2,"best_time":50.0})
-	t.equal(m["schema_version"],1,"AD-019 migrated version")
+	t.equal(m["schema_version"],2,"AD-019 migrated version")
 	t.equal([m["stats"]["runs"],m["stats"]["wins"],m["stats"]["deaths"],m["stats"]["best_time_seconds"]],[5,2,0,50.0],"AD-019 v0 flat keys wrapped")
 	_write("profile.json",JSON.stringify({"runs":4,"wins":1,"deaths":3,"last_seed":9}))
 	svc2.load_profile()

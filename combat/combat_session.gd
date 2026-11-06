@@ -3,6 +3,7 @@ extends RefCounted
 const Runner = preload("res://magic/runtime/spell_runner.gd")
 const Geometry = preload("res://world/arena_geometry.gd")
 const WaterTiles = preload("res://world/water_tiles.gd")
+const EnvProps = preload("res://world/env_props.gd")
 const Player = preload("res://combat/player_combat.gd")
 const Enemy = preload("res://combat/enemy_combat.gd")
 const Boss = preload("res://combat/boss_combat.gd")
@@ -26,6 +27,8 @@ var hazards: Array = []
 var _next_hazard_id := 1
 ## AD-138 [PROPOSED FOR PROTOTYPE]: WaterTiles or null. Water Wets anyone standing in it every data.water.wet_interval_ticks; deep water blocks walking.
 var water = null
+## AD-150 [PROPOSED FOR PROTOTYPE]: world/env_props.gd instance or null. Null leaves every rule unchanged.
+var env_props = null
 var feedback: Array = []
 var damage_events: Array = []
 var ai_transitions: Array = []
@@ -81,6 +84,7 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	sim.bounds = world.bounds
 	sim.collision_walls = world.walls.duplicate()
 	water = null
+	env_props = null
 	sim.actor.health.maximum = Difficulty.scale_f(float(data["player"]["max_hp"]),"player_hp")
 	sim.actor.health.reset()
 	sim.actor.radius = float(data["player"]["radius"])
@@ -174,6 +178,15 @@ func set_water(entries: Array) -> void:
 	world.add_ground_blockers(water.deep_rects())
 	sim.resolver.water = water
 
+## AD-150: installs env props from layout entries (call after set_water: puddles join the existing water). Invalid layouts are ignored.
+func set_env_props(entries: Array) -> void:
+	var table: Dictionary = EnvProps.load_data()
+	if table.is_empty() or not bool(table.get("enabled",true)) or entries.is_empty() \
+			or not EnvProps.validate(entries,table.get("kinds",{})).is_empty():
+		return
+	env_props = EnvProps.new(entries,table)
+	env_props.attach(self)
+
 ## Every wet_interval_ticks session ticks: the player, then each alive enemy in list order, becomes Wet while standing in water.
 func _step_water() -> void:
 	if water == null:
@@ -212,12 +225,28 @@ func summons_owned_by(summoner_id: int) -> int:
 func spawn_boss(settings: Dictionary, at: Vector2):
 	if not world.valid_position(at,float(settings["radius"])):
 		return null
-	var target = sim.add_target(at,Vector2.ZERO,Difficulty.scale_f(float(settings["hp"]),"enemy_hp"))
+	var kind := str(settings.get("kind","undead_warden"))
+	var hp := float(settings["hp"])*float(settings.get("elite_hp_multiplier",1.0))
+	var target = sim.add_target(at,Vector2.ZERO,Difficulty.scale_f(hp,"enemy_hp"))
 	target.radius = float(settings["radius"])
-	target.tags = ["enemy","boss","undead_warden"]
+	target.tags = ["enemy","boss",kind]
+	if typeof(settings.get("channel_resistances")) == TYPE_DICTIONARY:
+		target.health.resistances = settings["channel_resistances"].duplicate(true)
+	if bool(settings.get("mini_boss",false)):
+		target.tags.append("mini_boss")
 	var boss = Boss.new(target,settings)
 	enemies.append(boss)
 	return boss
+
+func spawn_mini_boss(id: String, at: Vector2, elite: Dictionary = {}):
+	var table: Dictionary = data.get("mini_bosses",{})
+	if not table.has(id):
+		return null
+	var settings: Dictionary = table[id].duplicate(true)
+	settings["mini_boss"] = true
+	settings["elite_hp_multiplier"] = float(elite.get("hp_multiplier",1.0))
+	settings["elite_damage_multiplier"] = float(elite.get("damage_multiplier",1.0))
+	return spawn_boss(settings,at)
 
 func issue(command: Dictionary) -> Dictionary:
 	if state != "playing":
@@ -250,6 +279,8 @@ func step() -> void:
 		return
 	var start_usec: int = Time.get_ticks_usec()
 	player.step_timers()
+	if env_props != null:
+		env_props.pre_step(sim)
 	sim.step()
 	# AI progresses once after all player spells for the tick.
 	var audio_before: Array = []
@@ -264,6 +295,9 @@ func step() -> void:
 	_flush_pending_spawns()
 	_step_hazards()
 	_step_water()
+	if env_props != null:
+		env_props.post_step(sim)
+		env_props.step_timers(sim.clock.tick)
 	for enemy in enemies:
 		if enemy is Enemy:
 			enemy.apply_scales()
@@ -341,6 +375,10 @@ func damage_player(source_id: int, amount: float, channel: String, attack_id: in
 		_cue("sfx.dash.iframe",sim.actor.position)
 		_notify("DASH_EVADE",sim.actor.position)
 		return {"accepted":false,"reason":"INVULNERABLE"}
+	if player.shield > 0:
+		player.shield -= 1
+		_notify("SHIELDED",sim.actor.position)
+		return {"accepted":false,"reason":"SHIELDED"}
 	var event = DamageEvent.new(source_id,source.team,sim.actor.id,amount,channel,attack_id,sim.clock.tick)
 	var dealt: float = sim.actor.receive_damage(amount,channel,source.team,float(sim.settings["combat"]["armor_scale"]))
 	if dealt > 0:

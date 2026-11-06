@@ -38,12 +38,18 @@ func advance() -> void:
 			wave["trigger"] == "on_clear" and clear_triggered and now >= int(wave["delay_ticks"])+cleared_wave_tick)
 		if not allowed:
 			continue
-		if session.alive_enemies() + wave["enemies"].size() > cap:
+		var slot = room.values.get("mini_boss_slot")
+		var has_boss: bool = slot is Dictionary and int(slot.get("wave",-1)) == idx
+		if session.alive_enemies() + wave["enemies"].size() + (1 if has_boss else 0) > cap:
 			continue
 		launched[idx] = now
 		for spawn in wave["enemies"]:
 			session.spawn_enemy(str(spawn[0]),Vector2(float(spawn[1]),float(spawn[2])))
 		log.append({"event":"wave_spawn","index":idx,"tick":now})
+		if has_boss:
+			var pos: Array = slot["position"]
+			if session.spawn_mini_boss(str(slot["id"]),Vector2(float(pos[0]),float(pos[1])),room.values.get("elite",{})) != null:
+				log.append({"event":"mini_boss_spawn","id":str(slot["id"]),"tick":now})
 	if session.alive_enemies() > 0:
 		return
 	if launched.size() < schedule.size():

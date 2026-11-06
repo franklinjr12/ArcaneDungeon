@@ -82,5 +82,9 @@ func _retry_via_pause_menu(t, trace1: Array) -> void:
 	t.check(not scene.is_paused(), "AD-086 pause menu closes after retry")
 	t.equal(scene.flow.run.sequence_index, 0, "AD-086 pause-menu retry resets to first room")
 	t.equal(scene.flow.run.seed, SEED, "AD-086 pause-menu retry keeps the seed")
-	_compare(t, trace1, _play(scene.flow), "AD-086 pause-menu retry same seed reproduces the first playthrough")
+	# AD-145: the scene applies the profile's meta locks, so the baseline must run under the same locks.
+	var locked_base = Flow.new(SEED)
+	locked_base.set_meta_locks(scene.flow.meta_locked_runes, scene.flow.meta_locked_artifacts)
+	locked_base.start_new(SEED)
+	_compare(t, _play(locked_base), _play(scene.flow), "AD-086 pause-menu retry same seed reproduces the first playthrough")
 	viewport.queue_free()

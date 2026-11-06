@@ -196,11 +196,47 @@ func _run() -> void:
 	control._input(key_one)
 	expect(run.reward_collected,"key 1 grants first reward")
 	expect(str(run.room.values["id"]) in run.run.collected,"collect event recorded")
+	expect(control.loadout_view_button.is_visible_in_tree(),"AD-147 loadout button visible after clear")
+	var tab := InputEventKey.new()
+	tab.keycode = KEY_TAB
+	tab.physical_keycode = KEY_TAB
+	tab.pressed = true
+	control._input(tab)
+	expect(control.is_loadout_view_open(),"AD-147 Tab opens the loadout view")
+	var slot_rows := 0
+	for i in 4:
+		if control.loadout_view.find_child("LoadoutSlot%d" % i,true,false) != null: slot_rows += 1
+	expect(slot_rows==4,"AD-147 view shows 4 slot rows")
+	var art_ok: bool = false
+	for l in control.loadout_view.find_children("*","Label",true,false):
+		if l.text==tr("loadout_view.artifacts") or l.text==tr("loadout_view.no_artifacts"): art_ok = true
+	expect(art_ok,"AD-147 view shows artifacts section")
+	var view_buttons: Array = control.loadout_view.find_children("*","Button",true,false)
+	expect(view_buttons.size()==1 and view_buttons[0].name=="LoadoutCloseButton"
+		and control.loadout_view.find_children("*","OptionButton",true,false).is_empty()
+		and control.loadout_view.find_children("*","LineEdit",true,false).is_empty(),"AD-147 view is read-only (close button only)")
+	control._open_editor(2)
+	var edit_try: Dictionary = control.flow.open_editor(1)
+	expect(not control.editor_open and not edit_try["ok"] and str(edit_try.get("reason",""))=="POLICY_WORKSHOP_ONLY" and run.edit_policy=="workshop_only",
+		"AD-147 editing impossible outside the workshop")
+	var room_before = run.room.values["id"]
+	var collected_before: bool = run.reward_collected
+	control._input(key_one)
+	expect(control.is_loadout_view_open() and run.reward_collected==collected_before and run.room.values["id"]==room_before,"AD-147 gameplay keys swallowed while open")
+	control._input(tab)
+	expect(not control.is_loadout_view_open(),"AD-147 Tab closes the view")
+	control.loadout_view_button.emit_signal("pressed")
+	expect(control.is_loadout_view_open(),"AD-147 button opens the view")
+	control.loadout_view.find_child("LoadoutCloseButton",true,false).emit_signal("pressed")
+	expect(not control.is_loadout_view_open(),"AD-147 close button closes the view")
+	control.loadout_view_button.emit_signal("pressed")
 	control._exit()
 	expect(run.room.values["id"]=="s1_r1","far-away exit button cannot skip door")
 	run.session.sim.actor.position = run.room.marker("exit")
 	control._exit()
 	expect(run.room.values["id"]=="s1_r2","exit button from marker traverses to room 2")
+	control.open_loadout_view()
+	expect(not control.is_loadout_view_open() and not control.loadout_view_button.visible,"AD-147 view closed and button hidden in next room")
 	control._policy()
 	expect(run.edit_policy=="cleared_room","edit-policy toggle")
 	for i in [1,2,3]:
@@ -219,6 +255,10 @@ func _run() -> void:
 		run.session.sim.actor.position = run.room.marker("exit")
 		control._exit()
 	expect(run.room.values["id"]=="workshop","UI traversal reaches workshop after boss")
+	expect(save.has_run(),"AD-146 entering the workshop writes a run save")
+	control.open_pause()
+	expect(control.pause_menu.save_quit_button.visible,"AD-146 Save & Quit visible in workshop pause")
+	control.close_pause()
 	expect(run.mode=="workshop" and control.test_canvas.visible,"test canvas enabled in safe workshop")
 	var w0: int = run.range_sim.clock.tick
 	var wpos: Vector2 = run.range_sim.actor.position
@@ -239,7 +279,7 @@ func _run() -> void:
 		if label.text.contains("Affordable") or label.text.contains("Need "):
 			previews = true
 	expect(previews,"merchant displays effect preview and affordability")
-	var stock_buttons: Array = control.shop_list.find_children("*","Button",true,false).filter(func(b): return b.text.contains(" coins"))
+	var stock_buttons: Array = control.shop_list.find_children("*","Button",true,false).filter(func(b): return b.text.contains(" coins") and b != control.shop_reroll_button)
 	expect(not stock_buttons.is_empty() and stock_buttons.all(func(b): return b.icon != null),"AD-040 merchant stock buttons have icons")
 	control.shop_close_button.emit_signal("pressed")
 	expect(not control.shop_overlay.visible,"AD-093 Close shop hides the shop overlay")
@@ -251,6 +291,21 @@ func _run() -> void:
 	expect(run.run.formulas.size()<3 and control.guide.current=="workshop_empty_slot"
 		and control.tip.text.contains(control.guide.tips["workshop_empty_slot"]),
 		"AD-084 workshop shows empty-slot hint")
+	# The smoke run uses the v1 config, which has no reroll tunables; give the merchant the v2 price.
+	control.flow.merchant.config["reroll_price"] = 15
+	control._redraw_panel()
+	expect(control.shop_reroll_button != null and control.shop_reroll_button.text.contains("15"),"AD-144 merchant shows a reroll button with its price")
+	var coins_start: int = run.run.currency
+	run.run.currency += 100
+	control._redraw_panel()
+	var reroll_price := 15
+	var coins_before: int = run.run.currency
+	expect(not control.shop_reroll_button.disabled,"AD-144 reroll enabled when affordable")
+	control.shop_reroll_button.emit_signal("pressed")
+	expect(run.run.currency == coins_before-reroll_price,"AD-144 reroll deducts exactly its price")
+	expect(control.shop_reroll_button.disabled,"AD-144 reroll button disabled after use")
+	run.run.currency = coins_start # keep later guide/telemetry checks on the original economy
+	control._redraw_panel()
 	control._open_editor(1)
 	expect(control.editor_open and control.editor_panel.visible,"structured editor panel opens")
 	expect(not (control.editor_panel.get_parent() is CenterContainer),"AD-093 editor is docked, not centred")
@@ -382,6 +437,7 @@ func _run() -> void:
 	# No visible door in the workshop: the continue button/F works from wherever the player stands.
 	control._exit()
 	expect(run.room.values["id"]=="s2_r1","workshop exit leads into next stage")
+	expect(not save.has_run(),"AD-146 leaving the workshop deletes the run save")
 	for enemy in run.session.enemies:
 		enemy.target.receive_damage(10000,"fire",1,100)
 	run.step()
@@ -421,11 +477,13 @@ func _run() -> void:
 	expect(run.state=="dead" and joined.contains("RUN SUMMARY") and joined.contains("DEFEATED"),
 		"death opens Run Summary: defeated")
 	expect(save.stats()["runs"]==2 and save.stats()["deaths"]==1,"AD-019 death recorded in stats")
+	expect(not save.has_run(),"AD-146 death deletes the run save")
 	control.summary_new_seed_button.emit_signal("pressed")
 	expect(run.run.seed != seed_before and run.room.values["id"]=="s1_r1" and run.run.currency==0
 		and run.run.unlocked==run.config["initial_unlocked"],"new seed differs and resets run-local state")
 	var runs_before: int = save.stats()["runs"]
 	control.open_pause()
+	expect(not control.pause_menu.save_quit_button.visible,"AD-146 Save & Quit hidden when pausing in combat")
 	control.pause_menu.request_quit()
 	expect(control.pause_menu.is_confirm_open(),"AD-068 quit asks for confirmation")
 	control.pause_menu.confirm_pending()
@@ -436,9 +494,8 @@ func _run() -> void:
 	var sources := ""
 	for path in ["res://ui/run_controller.gd","res://ui/main_menu.gd","res://ui/run_canvas.gd"]:
 		sources += FileAccess.get_file_as_string(path)
-	expect(not sources.contains("recover(") and not sources.contains(".restore("),"no UI path loads a saved run")
-	var menu_src := FileAccess.get_file_as_string("res://ui/main_menu.gd")
-	expect(not menu_src.contains("Continue") and not menu_src.contains("Resume"),"main menu has no Continue/Resume")
+	var ctrl_src := FileAccess.get_file_as_string("res://ui/run_controller.gd")
+	expect(ctrl_src.contains("flow.resume(") and not sources.contains("recover("),"AD-146 resume goes through flow.resume, never recover")
 	expect(current_scene != null and current_scene.scene_file_path=="res://scenes/main.tscn","Title returns to main menu")
 	var menu = load("res://scenes/main.tscn").instantiate()
 	root.add_child(menu)
@@ -459,5 +516,6 @@ func _run() -> void:
 		"AD-019 settings file written atomically")
 	expect(reborn.stats()["runs"]==3,"AD-019 stats survive restart")
 	reborn.free()
+	save.delete_run()
 	save.set_base_dir("user://")
 	quit(1 if failures>0 else 0)

@@ -14,6 +14,7 @@ class FakeRun:
 	var seed := 0
 	var unlocked: Array = []
 	var purchases: Array = []
+	var artifacts: Array = []
 
 func _config() -> Dictionary:
 	return JSON.parse_string(FileAccess.get_file_as_string("res://world/data/run_v2.json"))
@@ -57,10 +58,16 @@ func run(t) -> void:
 			t.check(false,"AD-135 reward not deterministic seed %d" % s)
 		var stock: Array = merchant.build(run_state,player_ids + builtin_ids)
 		var runes: Array = stock.filter(func(i): return i["kind"] == "rune")
-		if runes.size() != 1 or runes[0]["rune_id"] not in player_ids or runes[0]["rune_id"] in run_state.unlocked:
+		# AD-144: the merchant now stocks 1-2 runes (data: rune_count_min/max).
+		var stock_ok: bool = runes.size() >= 1 and runes.size() <= 2
+		for rune in runes:
+			if rune["rune_id"] not in player_ids or rune["rune_id"] in run_state.unlocked:
+				stock_ok = false
+		if not stock_ok:
 			t.check(false,"AD-135 bad merchant stock seed %d" % s)
 		else:
-			stocked[runes[0]["rune_id"]] = true
+			for rune in runes:
+				stocked[rune["rune_id"]] = true
 		if stock != merchant.build(run_state,player_ids + builtin_ids):
 			t.check(false,"AD-135 merchant not deterministic seed %d" % s)
 	t.equal(offered.size(),20,"AD-135 rewards offer every rune over %d seeds" % SEEDS)

@@ -3,14 +3,19 @@ extends Node
 ## versioned, atomic writes, corrupt files are quarantined and replaced by defaults.
 const Settings = preload("res://game/core/settings.gd")
 const ErrorLog = preload("res://game/core/error_log.gd")
-const SCHEMA_VERSION := 1
+const MetaProgress = preload("res://world/meta_progress.gd")
+const SCHEMA_VERSION := 2
 const SETTINGS_FILE := "settings.cfg"
 const PROFILE_FILE := "profile.json"
+const RUN_FILE := "run.json"
+const RUN_SCHEMA_VERSION := 1
 const DEFAULT_STATS := {"runs": 0, "wins": 0, "deaths": 0, "best_time_seconds": -1.0, "last_seed": -1}
 
 var base_dir := "user://"
 var settings = Settings.new()
 var profile: Dictionary = default_profile()
+## AD-146: set by the main menu Continue; the run scene reads and clears it.
+var resume_requested := false
 
 func _ready() -> void:
 	load_all()
@@ -18,7 +23,7 @@ func _ready() -> void:
 	settings.apply_bindings()
 
 static func default_profile() -> Dictionary:
-	return {"schema_version": SCHEMA_VERSION, "stats": DEFAULT_STATS.duplicate(true)}
+	return {"schema_version": SCHEMA_VERSION, "stats": DEFAULT_STATS.duplicate(true), "meta": MetaProgress.empty_meta()}
 
 func set_base_dir(dir: String) -> void:
 	base_dir = dir if dir.ends_with("/") else dir + "/"
@@ -65,6 +70,7 @@ static func migrate(data: Dictionary) -> Dictionary:
 	while version < SCHEMA_VERSION:
 		match version:
 			0: d = _migrate_v0_to_v1(d)
+			1: d = _migrate_v1_to_v2(d)
 			_: break
 		version = int(d.get("schema_version", version + 1))
 	return d
@@ -81,11 +87,19 @@ static func _migrate_v0_to_v1(d: Dictionary) -> Dictionary:
 			stats[key] = DEFAULT_STATS[key]
 	return {"schema_version": 1, "stats": stats}
 
+static func _migrate_v1_to_v2(d: Dictionary) -> Dictionary:
+	var out := d.duplicate(true)
+	out["meta"] = MetaProgress.empty_meta()
+	out["schema_version"] = 2
+	return out
+
 static func _is_num(v) -> bool:
 	return typeof(v) == TYPE_INT or typeof(v) == TYPE_FLOAT
 
 static func _valid_profile(p: Dictionary) -> bool:
 	if int(p.get("schema_version", -1)) != SCHEMA_VERSION or typeof(p.get("stats")) != TYPE_DICTIONARY:
+		return false
+	if not MetaProgress.valid_meta(p.get("meta")):
 		return false
 	var s: Dictionary = p["stats"]
 	for key in ["runs", "wins", "deaths"]:
@@ -105,6 +119,30 @@ func save_settings() -> Error:
 
 func save_profile() -> Error:
 	return _atomic_write(_path(PROFILE_FILE), JSON.stringify(profile, "\t"))
+
+## AD-146: workshop-only run save, a separate file from the profile.
+func save_run(payload: Dictionary) -> Error:
+	return _atomic_write(_path(RUN_FILE), JSON.stringify({"schema_version": RUN_SCHEMA_VERSION, "flow": payload}, "\t"))
+
+func has_run() -> bool:
+	return FileAccess.file_exists(_path(RUN_FILE))
+
+func load_run() -> Dictionary:
+	var path := _path(RUN_FILE)
+	if not FileAccess.file_exists(path):
+		return {}
+	var json := JSON.new()
+	var parsed = json.data if json.parse(FileAccess.get_file_as_string(path)) == OK else null
+	if typeof(parsed) != TYPE_DICTIONARY or not _is_num(parsed.get("schema_version")) \
+			or int(parsed["schema_version"]) != RUN_SCHEMA_VERSION or typeof(parsed.get("flow")) != TYPE_DICTIONARY:
+		_quarantine(path)
+		return {}
+	return parsed["flow"]
+
+func delete_run() -> void:
+	for path in [_path(RUN_FILE), _path(RUN_FILE) + ".tmp"]:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
 
 func _atomic_write(path: String, text: String) -> Error:
 	var tmp := path + ".tmp"
@@ -146,7 +184,25 @@ func record_run(summary: Dictionary) -> void:
 	elif summary.get("outcome", "") == "lost":
 		s["deaths"] += 1
 	s["last_seed"] = int(summary.get("seed", -1))
+	if typeof(summary.get("discovered")) == TYPE_DICTIONARY:
+		MetaProgress.merge(profile["meta"], summary["discovered"])
 	save_profile()
+
+## AD-145: merges discoveries, saves once; returns the new ids per category and newly met milestones.
+func record_discoveries(discoveries: Dictionary) -> Dictionary:
+	var before: Dictionary = profile["meta"].duplicate(true)
+	var added := MetaProgress.merge(profile["meta"], discoveries)
+	save_profile()
+	return {"new": added, "milestones": MetaProgress.newly_met(before, profile["meta"])}
+
+func meta() -> Dictionary:
+	return profile["meta"].duplicate(true)
+
+func locked_runes() -> Array:
+	return MetaProgress.locked_runes(profile["meta"])
+
+func locked_artifacts() -> Array:
+	return MetaProgress.locked_artifacts(profile["meta"])
 
 func stats() -> Dictionary:
 	return profile["stats"].duplicate()

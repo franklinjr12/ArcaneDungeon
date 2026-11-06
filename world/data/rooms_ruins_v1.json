@@ -94,6 +94,28 @@
     450
    ],
    "layout": {
+    "env_props": [
+     {
+      "id": "crate1",
+      "kind": "crate",
+      "rect": [
+       300,
+       300,
+       40,
+       40
+      ]
+     },
+     {
+      "id": "web1",
+      "kind": "cobweb",
+      "rect": [
+       250,
+       600,
+       48,
+       48
+      ]
+     }
+    ],
     "walls": [
      [
       380,
@@ -305,6 +327,24 @@
     450
    ],
    "layout": {
+    "env_props": [
+     {
+      "id": "urn1",
+      "kind": "urn",
+      "position": [
+       700,
+       250
+      ]
+     },
+     {
+      "id": "brazier1",
+      "kind": "brazier",
+      "position": [
+       600,
+       680
+      ]
+     }
+    ],
     "walls": [
      [
       1010,
@@ -533,6 +573,28 @@
     450
    ],
    "layout": {
+    "env_props": [
+     {
+      "id": "puddle1",
+      "kind": "puddle",
+      "rect": [
+       560,
+       600,
+       120,
+       60
+      ]
+     },
+     {
+      "id": "niche1",
+      "kind": "cracked_wall",
+      "rect": [
+       740,
+       60,
+       48,
+       48
+      ]
+     }
+    ],
     "walls": [
      [
       700,
@@ -930,7 +992,7 @@
     "reward_choices_bonus": 1,
     "extra_artifact_chance": 0.5
    },
-   "mini_boss_slot": null
+   "mini_boss_slot": {"id":"ruins_adept_elite","wave":1,"position":[1030,450]}
   }
  }
 }

@@ -1,6 +1,8 @@
 extends SceneTree
 const Profiler = preload("res://debug/stress_profiler.gd")
 const Flow = preload("res://world/run_flow.gd")
+const Settings = preload("res://game/core/settings.gd")
+const Lighting = preload("res://ui/lighting.gd")
 const SEED := 20261022
 const BOSS_INDEX := 3
 const SIM_TICKS := 600
@@ -15,8 +17,8 @@ func _run() -> void:
 	var stats: Dictionary = Profiler.benchmark(5151,300,40)
 	print("M4_STRESS:",JSON.stringify(stats))
 	var valid: bool = stats["targets"]>=30 and stats["ticks"]==300 and stats["cap_accepted"]<=stats["cap_per_cast"] and stats["pending_end"]==0
-	var probe_ok: bool = await _boss_probe()
-	quit(0 if valid and probe_ok else 1)
+	var probe: Dictionary = await _boss_probe()
+	quit(0 if valid and probe["lights_ok"] and probe["vfx_within_cap"] else 1)
 
 ## Highest-complexity legal Split+Pierce(+Homing) projectile with On Hit burst payload.
 func _worst_formula() -> Dictionary:
@@ -86,13 +88,13 @@ func _refill(session) -> void:
 	for e in session.enemies:
 		e.target.health.current = maxf(e.target.health.current,1e5)
 
-func _boss_probe() -> bool:
+func _boss_probe() -> Dictionary:
 	var s: Dictionary = _boss_flow()
 	var out := {"seed":SEED,"ticks":SIM_TICKS,"room_id":"s1_boss","complexity_cap":COMPLEXITY_CAP,
 		"boss_present":s.get("boss_present",false),"enemies_spawned":s.get("enemies_spawned",0)}
 	if not s["ok"]:
 		print("AD_PERF_PROBE:",JSON.stringify({"error":"boss-room setup failed","detail":str(s.get("equip_issues",[])),"partial":out}))
-		return false
+		return {"lights_ok":false,"vfx_within_cap":false}
 	var flow = s["flow"]
 	var session = flow.session
 	var boss = s["boss"]
@@ -136,9 +138,11 @@ func _boss_probe() -> bool:
 	if p95 > BUDGET_MS:
 		print("AD_PERF_PROBE: BUDGET EXCEEDED p95=%.3f ms > %.1f ms" % [p95,BUDGET_MS])
 	out["render"] = await _render_probe()
+	var lights_ok: bool = bool(out["render"].get("lights_within_cap",false))
+	var vfx_ok: bool = bool(out["render"].get("vfx_within_cap",false))
 	out["godot"] = Engine.get_version_info()["string"]
 	print("AD_PERF_PROBE:",JSON.stringify(out))
-	return true
+	return {"lights_ok":lights_ok,"vfx_within_cap":vfx_ok}
 
 func _count(node: Node, acc: Dictionary) -> void:
 	acc["nodes"] += 1
@@ -149,6 +153,11 @@ func _count(node: Node, acc: Dictionary) -> void:
 			acc["particles_amount"] += int(node.amount)
 	for c in node.get_children():
 		_count(c,acc)
+
+func _p95(v: Array) -> float:
+	var a := v.duplicate()
+	a.sort()
+	return snappedf(float(a[clampi(roundi(a.size()*.95),0,a.size()-1)]),0.001) if a.size() > 0 else 0.0
 
 func _render_probe() -> Dictionary:
 	var viewport := SubViewport.new()
@@ -176,6 +185,15 @@ func _render_probe() -> Dictionary:
 	var part_nodes_peak := 0
 	var part_amount_peak := 0
 	var fx_peak := 0
+	var lights_peak := 0
+	var lit_ms: Array = []
+	var vfx_peak := 0
+	var glow_peak := 0
+	var vfx_cap: int = scene.arena_canvas.get_node("Vfx").capacity()
+	var vfx_ms: Array = []
+	var cfg := Settings.new()
+	cfg.lighting = "high"
+	scene.arena_canvas.settings = cfg
 	for i in RENDER_TICKS:
 		_refill(session)
 		flow.step(_command(session,s["boss"]))
@@ -191,9 +209,37 @@ func _render_probe() -> Dictionary:
 		part_nodes_peak = maxi(part_nodes_peak,acc["particles_emitting"])
 		part_amount_peak = maxi(part_amount_peak,acc["particles_amount"])
 		fx_peak = maxi(fx_peak,session.sim.queue.active_effect_count()+session.enemy_shots.size())
+		lights_peak = maxi(lights_peak,scene.arena_canvas.get_node("Lighting").active_spell_lights())
+		lit_ms.append(Performance.get_monitor(Performance.TIME_PROCESS)*1000.0)
+		var vfx_node = scene.arena_canvas.get_node("Vfx")
+		vfx_peak = maxi(vfx_peak,vfx_node.active_count())
+		glow_peak = maxi(glow_peak,vfx_node.glow_count())
+		vfx_ms.append(Performance.get_monitor(Performance.TIME_PROCESS)*1000.0)
 	render.merge({"frames":frames,"node_count_peak":mon_peak,"node_count_mean":snappedf(float(mon_sum)/maxi(1,frames),0.1),
 		"scene_nodes_peak":scene_peak,"particles_nodes_peak":part_nodes_peak,"particles_amount_peak":part_amount_peak,
 		"effect_visuals_peak":fx_peak})
+	# AD-148: same loop again with lighting off (sim keeps running, so this is a rough overhead comparison only).
+	var lights_cap := int(Lighting.mode_config("high").get("spell_light_cap",0))
+	var pool_size: int = scene.arena_canvas.get_node("Lighting").pool_size()
+	cfg.lighting = "off"
+	var off_ms: Array = []
+	for i in RENDER_TICKS:
+		_refill(session)
+		flow.step(_command(session,s["boss"]))
+		scene.arena_canvas.queue_redraw()
+		await process_frame
+		off_ms.append(Performance.get_monitor(Performance.TIME_PROCESS)*1000.0)
+	var within: bool = lights_peak <= lights_cap and pool_size == lights_cap
+	var vfx_within: bool = vfx_peak <= vfx_cap and scene.arena_canvas.get_node("Vfx").capacity() == vfx_cap
+	render.merge({"lights_peak":lights_peak,"lights_cap":lights_cap,"lights_pool_size":pool_size,
+		"lights_within_cap":within,"lights_saturated":lights_peak >= lights_cap,
+		"process_ms_p95_lit":_p95(lit_ms),"process_ms_p95_off":_p95(off_ms),
+		"particles_peak":vfx_peak,"particles_cap":vfx_cap,"glow_peak":glow_peak,"vfx_within_cap":vfx_within,
+		"vfx_ms_p95_on":_p95(vfx_ms),"vfx_ms_p95_off":_p95(off_ms)})
+	if not within:
+		print("AD_PERF_PROBE: LIGHT CAP CHECK FAILED peak=%d cap=%d pool=%d" % [lights_peak,lights_cap,pool_size])
+	if not vfx_within:
+		print("AD_PERF_PROBE: VFX CAP CHECK FAILED peak=%d cap=%d" % [vfx_peak,vfx_cap])
 	viewport.queue_free()
 	await process_frame
 	return render

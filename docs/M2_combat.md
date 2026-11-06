@@ -107,6 +107,42 @@ Added to `enemies` in `combat/combat_tuning_v1.json` and to Ruins pool rooms p03
 
 Scripted counter scenarios live in `tests/test_ad_enemies_s1.gd`. `sfx.tele.<kind>` has no cue for these kinds yet; `AudioDirector` warns once and returns false for unknown cues (no crash).
 
+### Stage 2 enemies part 1 (AD-139, numbers PROPOSED)
+
+Components: `split_on_death` (`split_kind`, `count`, `split_radius`), `zone_cast` (`zone_radius`, `zone_duration_ticks`, `zone_interval_ticks`; drops a Wet zone), `water_lurk` (stays in water tiles, only acts from them) and `lunge` (`charge_speed`, `charge_ticks`, `contact_padding`). Enemies live in `combat/combat_tuning_v1.json`; tests in `tests/test_ad_enemies_s2.gd`.
+
+| enemy | behaviour | counter |
+| --- | --- | --- |
+| Cistern slime (`split_on_death` into 2 `cistern_slimelet`, which do not split) | melee chaser | kill it with room to handle the extra bodies |
+| Drowned acolyte (`zone_cast` Wet r80 for 240 ticks, telegraph 48) | keeps distance, casts where you stood | keep moving; use Wet for Lightning |
+| Deep eel (`water_lurk` + `lunge`, ripple telegraph 30 ticks = 0.5 s, >= 0.5 s) | lurks in water, lunges out, never attacks without water | leave the lunge line when the ripple shows, punish after |
+
+Cistern rooms (`world/data/rooms_cistern_v1.json`): slime from p02, acolyte from p03, eel from p05 (p05, p07, p09, p10, challenge; eel spawns are in shallow water the validator treats as walkable, since deep water is solid; slime/acolyte never in deep water). Placeholder sprites via `PLACEHOLDER_KIND`: slime/slimelet borrow bone_thrall, acolyte fallen_adept, eel grave_hound, tinted by `color`.
+
+### Stage 2 enemies part 2 (AD-140, numbers PROPOSED)
+
+Components: `charged_pulse` (`pulse_radius`, `pulse_channel`, `pulse_status`; telegraphed pulse around the enemy that damages and applies Charged) and `conductor` (tags the target `conductor`; `interaction_resolver` arcs Lightning from it once to the nearest other target within `combat.arc_radius`). Rust golem and Lantern wisp need no new code: they use `channel_resistances` and `support_buff` (multiplies `buff_damage_scale` into damage taken by other living non-boss enemies within `buff_radius`, recomputed each tick). Tests in `tests/test_ad_enemies_s2.gd`.
+
+| enemy | behaviour | counter |
+| --- | --- | --- |
+| Storm crystal (`turret` + `charged_pulse` + `conductor`) | static, pulses Charged around itself | stay outside the pulse ring; Lightning on it arcs to enemies beside it |
+| Rust golem (hp 220, resists neutral/fire/water/force 30%, Cold 50%, Lightning x1.5) | slow armoured melee bruiser | Lightning, especially Wet + Lightning; avoid Cold |
+| Lantern wisp (hp 45, `support_buff` r220 x0.3, no attack) | keeps away, allies within 220 take 30% damage | kill the wisp first; the shield ends the tick it dies |
+
+Cistern rooms: storm crystal from p06 (p06, p08, challenge), rust golem from p08 (p08, p10, challenge), lantern wisp from p09 (p09, p10, challenge; always with at least one other enemy). They replace generic entries at the same coordinates, so spawns stay valid and never land in deep water. Placeholder sprites via `PLACEHOLDER_KIND`: crystal borrows fallen_adept, golem bone_thrall, wisp grave_hound, tinted by `color`.
+
+### Stage 2 final boss: Drowned Archivist (AD-142, numbers [PROPOSED FOR PROTOTYPE])
+
+Config: `world/data/run_v2.json` `bosses.cistern_boss` (hp, `phases`, `min_telegraph_ticks` 36, per-pattern numbers, `flood_sets`, `wisp_*`, `storm_pulse_*`, `channel_resistances`; none fully resisted). Logic: `combat/boss_combat.gd` (phase = highest threshold crossed by hp, never decreases; each phase cycles its `patterns`). Flood toggles tagged water entries via `WaterTiles.add_entries/remove_tag` (`world/water_tiles.gd`). `combat_session.spawn_boss` applies optional `channel_resistances`.
+
+| phase (hp) | patterns | notes |
+| --- | --- | --- |
+| 1 (100%) | `water_bolt` fan, `wet_zone` puddle at the locked player position | windup 48 ticks (0.8 s) |
+| 2 (<= 66%) | `flood`, `water_bolt`, `wet_zone` | flood windup 44 ticks shows the rects, then shallow water appears for `flood_duration_ticks` and drains |
+| 3 (<= 33%) | `summon_wisps`, `storm_pulse`, `water_bolt` | wisps capped by `wisp_cap` alive+pending; pulse hits only inside `storm_pulse_radius` and applies Charged; windup 40 ticks |
+
+The boss room (`room_templates.cistern_boss.layout.water`) has static shallow water plus one small deep rect away from the entrance-boss route. Tests: `tests/test_ad_final_boss.gd` (phases, telegraph floor, arena validity, 2 scripted builds 0 and 2 plus a no-Water Fire+Lightning loadout each killing the boss in 5400-10800 ticks = 90-180 s with identical kill ticks on re-run, run summary `won` after the kill). Run one suite with a script that loads `tests/test_ad_final_boss.gd` and calls `run(context)`, or the whole suite: `godot --headless --path . --script res://tests/run_tests.gd`.
+
 ## Boundaries and owner decisions
 
 The arena is *not* M3 room progression, boss design, loot, a spell editor, a production sprite pipeline or gamepad integration. Player motion, dodge timings, enemy archetypes/HP and attack damage, Burst range/LOS, fixed arena obstacles, accessible flash treatment, two loadout slots, initial seed, and encounter recipes are **PROPOSED FOR PROTOTYPE**, not locked design. A later human playtest should verify warning legibility, pacing, actual 60-FPS rendering, camera comfort and combat feel before treating M2 as polished.

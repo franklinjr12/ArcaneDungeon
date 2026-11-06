@@ -6,15 +6,18 @@ const Room = preload("res://world/room_template.gd")
 const Encounter = preload("res://world/encounter_director.gd")
 const Reward = preload("res://world/reward_generator.gd")
 const Merchant = preload("res://world/merchant.gd")
+const Artifacts = preload("res://world/artifacts.gd")
 const Editor = preload("res://magic/editor/spell_editor.gd")
 const Session = preload("res://combat/combat_session.gd")
 const Runner = preload("res://magic/runtime/spell_runner.gd")
 const ExperimentLog = preload("res://debug/experiment_log.gd")
 const CONFIG := "res://world/data/vertical_slice_v1.json"
 const CONFIG_V2 := "res://world/data/run_v2.json"
+const SAVE_VERSION := 1
 const PRESET_SLOT_OFFSET := 1
 const SAMPLES := "res://magic/data/sandbox_samples_v1.json"
 var config: Dictionary = {}
+var config_path := ""
 ## Resolved room sequence for this run (v1: config["rooms"]; v2: seeded stage build).
 var rooms: Array = []
 var formulas: Dictionary = {}
@@ -24,6 +27,8 @@ var room
 var encounter
 var rewards
 var merchant
+## AD-144: base max mana of the current room before the merchant bonus.
+var _base_max_mana := 0.0
 var editor
 var range_sim
 var state := "uninitialized"
@@ -46,6 +51,11 @@ var _counted_kills: Dictionary = {}
 var logs: Array = []
 var experiment = ExperimentLog.new()
 var _prior_reactions := 0
+## AD-145: meta locks (opt-in, default empty) and per-run discovery tracking.
+var meta_locked_runes: Array = []
+var meta_locked_artifacts: Array = []
+var _seen_enemies: Dictionary = {}
+var _seen_reactions: Dictionary = {}
 ## AD-084: read-only UI signals. arcs banks arcs from replaced sims; use arc_total() for the live count.
 var wet_kills := 0
 var arcs := 0
@@ -57,6 +67,7 @@ var prelude_tested := false
 var audio_sink: Callable
 
 func _init(run_seed: int = -1, config_path: String = CONFIG) -> void:
+	self.config_path = config_path
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(config_path))
 	var formula_data = JSON.parse_string(FileAccess.get_file_as_string(SAMPLES))
 	if typeof(parsed) != TYPE_DICTIONARY or typeof(formula_data) != TYPE_DICTIONARY or int(parsed.get("schema_version",0)) != 1:
@@ -132,7 +143,33 @@ func _cue(id: String, at = null) -> void:
 	if audio_sink.is_valid():
 		audio_sink.call(id,at)
 
+func set_meta_locks(runes: Array, artifacts: Array) -> void:
+	meta_locked_runes = runes.duplicate()
+	meta_locked_artifacts = artifacts.duplicate()
+
+## AD-145: sorted unique ids seen this run, per Compendium category.
+func discoveries() -> Dictionary:
+	var seen_runes: Array = run.unlocked.duplicate() if run != null else []
+	var seen_artifacts: Array = run.artifacts.duplicate() if run != null else []
+	var out := {"runes":[],"reactions":_seen_reactions.keys(),"enemies":_seen_enemies.keys(),"artifacts":[]}
+	for id in seen_runes:
+		if str(id) not in out["runes"]:
+			out["runes"].append(str(id))
+	for id in seen_artifacts:
+		if str(id) not in out["artifacts"]:
+			out["artifacts"].append(str(id))
+	for key in out:
+		out[key].sort()
+	return out
+
+func _track_enemies() -> void:
+	for enemy in session.enemies:
+		if str(enemy.kind) != "":
+			_seen_enemies[str(enemy.kind)] = true
+
 func start_new(run_seed: int) -> void:
+	_seen_enemies.clear()
+	_seen_reactions.clear()
 	run = State.new()
 	run.initialize(run_seed,config,formulas)
 	rooms = build_sequence(config,run_seed)
@@ -149,6 +186,8 @@ func start_new(run_seed: int) -> void:
 	prelude_tested = false
 	edit_policy = str(config["edit_policy"])
 	logs.clear()
+	if session != null:
+		session.player.shield = 0
 	experiment.record("run_restart")
 	_enter_current()
 
@@ -177,6 +216,7 @@ func _build_room(entry: Dictionary) -> Dictionary:
 		return verdict
 	room = template
 	mode = "workshop" if room.values["type"] == "workshop" else "combat"
+	var carried_shield: int = session.player.shield if session != null else 0
 	session = Session.new(run.seed+run.sequence_index,"empty",0)
 	session.defer_clear = true
 	# AD-138: per-room layout walls and water join the shared arena (rooms without layout are untouched).
@@ -188,11 +228,16 @@ func _build_room(entry: Dictionary) -> Dictionary:
 			session.sim.collision_walls.append(wall)
 		if layout.has("water"):
 			session.set_water(layout["water"])
+		if layout.has("env_props"):
+			session.set_env_props(layout["env_props"])
 	session.audio_sink = _cue
 	session.sim.actor.position = room.marker("entrance")
 	session.sim.actor.health.maximum = run.max_hp
 	session.sim.actor.health.current = run.hp
 	# Owner request 2026-11-05: mana fully regenerates on every room change.
+	_base_max_mana = float(session.sim.settings["combat"]["player_max_mana"])
+	session.sim.settings["combat"]["player_max_mana"] = _base_max_mana+run.max_mana_bonus
+	session.player.set_dash_bonus(run.dash_charges_bonus)
 	run.mana = float(session.sim.settings["combat"]["player_max_mana"])
 	session.sim.mana = run.mana
 	session.sim.loadout.unlocked = run.unlocked.duplicate(true)
@@ -209,8 +254,20 @@ func _build_room(entry: Dictionary) -> Dictionary:
 	merchant = null
 	range_sim = null
 	encounter = null
-	rewards = Reward.new(config)
+	rewards = Reward.new(config,meta_locked_runes,meta_locked_artifacts)
+	_attach_artifacts()
+	session.player.shield = carried_shield
 	return {"ok":true}
+
+## AD-143: the room sim gets a holder built from the run, so newly gained artifacts apply at once.
+func _attach_artifacts() -> void:
+	if session == null:
+		return
+	if session.sim.artifacts == null:
+		session.sim.artifacts = Artifacts.new(run.artifacts)
+	else:
+		for id in run.artifacts:
+			session.sim.artifacts.add(str(id))
 
 func _enter_current() -> Dictionary:
 	_bank_arcs()
@@ -221,13 +278,14 @@ func _enter_current() -> Dictionary:
 		session.state = "cleared"
 		state = "workshop"
 		merchant = Merchant.new(config)
-		merchant.build(run,session.sim.registry.get_ids())
+		merchant.excluded_artifacts = meta_locked_artifacts.duplicate()
+		merchant.build(run,session.sim.registry.get_ids(),meta_locked_runes)
 		enter_test_range()
 	elif room.values["type"] == "treasure":
 		# Optional reward room: no enemies, the reward cards are available immediately.
 		session.state = "cleared"
 		state = "cleared"
-		reward_options = rewards.choices(run,str(room.values["id"]))
+		reward_options = rewards.choices(run,str(room.values["id"]),true)
 	elif room.values["type"] == "boss":
 		var p: Dictionary = config["bosses"][str(room.values["boss"])] if room.values.has("boss") and config.has("bosses") else config["boss"]
 		if session.spawn_boss(p,Vector2(float(p["position"][0]),float(p["position"][1]))) == null:
@@ -316,6 +374,11 @@ func step(command: Dictionary = {}) -> Dictionary:
 			wet_ids.append(enemy)
 	session.step()
 	ticks_elapsed += 1
+	# AD-150: coins released by broken props join the run purse (props exist only in rooms whose layout lists them).
+	if session.env_props != null and session.env_props.pending_coins > 0:
+		run.currency += session.env_props.pending_coins
+		session.env_props.pending_coins = 0
+		_cue("sfx.pickup.currency",session.sim.actor.position)
 	for enemy in wet_ids:
 		if not enemy.target.alive():
 			wet_kills += 1
@@ -324,7 +387,13 @@ func step(command: Dictionary = {}) -> Dictionary:
 			_counted_kills[enemy.target.id] = true
 			kills += 1
 	experiment.mark_tick(session.sim.clock.tick)
-	var reactions_now: int = session.sim.trace.filter_records(-1,"","reaction").size()
+	_track_enemies()
+	var reaction_records: Array = session.sim.trace.filter_records(-1,"","reaction")
+	var reactions_now: int = reaction_records.size()
+	for i in range(_prior_reactions,reactions_now):
+		var reason := str(reaction_records[i].get("reason",""))
+		if reason != "":
+			_seen_reactions[reason] = true
 	if reactions_now > _prior_reactions:
 		experiment.record("reaction",{"room_index":run.sequence_index,"reaction_count":reactions_now-_prior_reactions})
 	_prior_reactions = reactions_now
@@ -348,12 +417,16 @@ func _finish_combat() -> void:
 	session.player.recovery_left = 0
 	session.player.invulnerable_left = 0
 	session.player.dash_cooldown = 0
+	session.player.bonus_dashes_left = session.player.dash_charges_bonus
 	# Old projectiles remain only in this room and are discarded on transition.
 	state = "cleared"
 	rooms_cleared += 1
 	_cue("sfx.room.cleared",session.sim.actor.position)
 	run.hp = session.sim.actor.health.current
 	run.mana = session.sim.mana
+	var lantern = session.sim.artifacts
+	if lantern != null and lantern.has("warding_lantern"):
+		session.player.shield = int(lantern.param("warding_lantern","shield_hits",1))
 	if room.values["type"] == "boss":
 		boss_defeated_events += 1
 	if run.sequence_index >= rooms.size()-1:
@@ -400,6 +473,12 @@ func choose_reward(index: int) -> Dictionary:
 	var outcome: Dictionary
 	if option["kind"] == "rune":
 		outcome = run.unlock(str(option["id"]),Difficulty.scale_i(int(config["duplicate_reward_currency"]),"coin_rate",0))
+	elif option["kind"] == "artifact":
+		var added: Dictionary = run.add_artifact(str(option["id"]))
+		if not added["ok"]:
+			return added
+		outcome = {"ok":true,"kind":"artifact","id":str(option["id"])}
+		_attach_artifacts()
 	else:
 		run.currency += int(option["amount"])
 		outcome = {"ok":true,"kind":"currency","currency":int(option["amount"])}
@@ -555,9 +634,22 @@ func buy(index: int) -> Dictionary:
 			_cue("sfx.pickup.rune")
 		experiment.record("purchase",{"room_index":run.sequence_index,"price":int(merchant.stock[index]["price"])})
 		session.sim.loadout.unlocked = run.unlocked.duplicate(true)
+		_attach_artifacts()
 		if outcome["kind"] == "upgrade":
 			session.sim.actor.health.maximum = run.max_hp
 			session.sim.actor.health.current = run.hp
+			session.sim.settings["combat"]["player_max_mana"] = _base_max_mana+run.max_mana_bonus
+			session.sim.mana = run.mana
+			session.player.set_dash_bonus(run.dash_charges_bonus)
+	return outcome
+
+func reroll() -> Dictionary:
+	if mode != "workshop" or merchant == null:
+		return {"ok":false,"reason":"SHOP_ONLY_WORKSHOP"}
+	var outcome: Dictionary = merchant.reroll(run)
+	if outcome["ok"]:
+		_cue("ui.purchase")
+		experiment.record("merchant_reroll",{"room_index":run.sequence_index,"price":int(merchant.config.get("reroll_price",0))})
 	return outcome
 
 func change_edit_policy(value: String) -> bool:
@@ -581,3 +673,115 @@ func recover(saved: Variant) -> Dictionary:
 		return result
 	run = validated
 	return _enter_current()
+
+## AD-146: the run may only be saved while resting in the workshop (never mid-combat, prelude or editor).
+func can_save() -> bool:
+	return initialized and mode == "workshop" and state == "workshop" and not prelude \
+		and not (editor != null and editor.allowed)
+
+func save_payload() -> Dictionary:
+	if not can_save():
+		return {}
+	var enemies: Array = _seen_enemies.keys()
+	var reactions: Array = _seen_reactions.keys()
+	enemies.sort()
+	reactions.sort()
+	return {"version":SAVE_VERSION,"config_path":config_path,"run":run.snapshot(),
+		"counters":{"rooms_cleared":rooms_cleared,"kills":kills,"ticks_elapsed":ticks_elapsed,
+			"spells_used":spells_used,"wet_kills":wet_kills,"arcs":arc_total(),
+			"boss_defeated_events":boss_defeated_events,"transition_count":transition_count},
+		"seen_enemies":enemies,"seen_reactions":reactions,
+		"meta_locked_runes":meta_locked_runes.duplicate(),"meta_locked_artifacts":meta_locked_artifacts.duplicate(),
+		"merchant_stock":merchant.stock.duplicate(true),"edit_policy":edit_policy}
+
+static func _whole(v) -> bool:
+	return typeof(v) in [TYPE_INT,TYPE_FLOAT] and is_finite(float(v)) and float(v) == floorf(float(v))
+
+## JSON turns every number into a float; whole numbers go back to int so restored stock equals the original.
+static func _intify(v: Variant) -> Variant:
+	if typeof(v) == TYPE_FLOAT and is_finite(v) and v == floorf(v):
+		return int(v)
+	if typeof(v) == TYPE_DICTIONARY:
+		var d := {}
+		for k in v:
+			d[k] = _intify(v[k])
+		return d
+	if typeof(v) == TYPE_ARRAY:
+		return v.map(_intify)
+	return v
+
+func _valid_stock(stock: Variant, rune_ids: Array) -> bool:
+	if typeof(stock) != TYPE_ARRAY:
+		return false
+	for item in stock:
+		if typeof(item) != TYPE_DICTIONARY or str(item.get("kind","")) not in ["rune","upgrade","artifact"]:
+			return false
+		if not _whole(item.get("price")) or float(item["price"]) < 0.0 or typeof(item.get("id")) != TYPE_STRING:
+			return false
+		if item["kind"] == "rune" and (typeof(item.get("rune_id")) != TYPE_STRING or str(item["rune_id"]) not in rune_ids):
+			return false
+		if item["kind"] == "artifact" and (typeof(item.get("artifact_id")) != TYPE_STRING or not Artifacts.is_known(str(item["artifact_id"]))):
+			return false
+	return true
+
+## Restores a payload from save_payload(); only workshop saves are accepted, so there is no way into combat.
+func resume(payload: Variant) -> Dictionary:
+	if typeof(payload) != TYPE_DICTIONARY:
+		return {"ok":false,"reason":"RUN_SAVE_NOT_OBJECT"}
+	if not _whole(payload.get("version")) or int(payload["version"]) != SAVE_VERSION:
+		return {"ok":false,"reason":"RUN_SAVE_VERSION"}
+	if str(payload.get("config_path","")) != config_path:
+		return {"ok":false,"reason":"RUN_SAVE_CONFIG_MISMATCH"}
+	var counters = payload.get("counters")
+	if typeof(counters) != TYPE_DICTIONARY:
+		return {"ok":false,"reason":"RUN_SAVE_COUNTERS"}
+	for key in ["rooms_cleared","kills","ticks_elapsed","spells_used","wet_kills","arcs","boss_defeated_events","transition_count"]:
+		if not _whole(counters.get(key)) or float(counters[key]) < 0.0:
+			return {"ok":false,"reason":"RUN_SAVE_COUNTERS"}
+	for key in ["seen_enemies","seen_reactions","meta_locked_runes","meta_locked_artifacts"]:
+		if typeof(payload.get(key)) != TYPE_ARRAY:
+			return {"ok":false,"reason":"RUN_SAVE_LISTS"}
+	if str(payload.get("edit_policy","")) not in ["workshop_only","cleared_room"]:
+		return {"ok":false,"reason":"RUN_SAVE_EDIT_POLICY"}
+	var saved_run = payload.get("run")
+	if typeof(saved_run) != TYPE_DICTIONARY or not _whole(saved_run.get("seed")):
+		return {"ok":false,"reason":"RUN_NOT_OBJECT"}
+	var new_rooms: Array = build_sequence(config,int(saved_run["seed"]))
+	var validated = State.new()
+	var result: Dictionary = validated.restore(saved_run,session.sim.registry,new_rooms.size())
+	if not result["ok"]:
+		return result
+	if str(new_rooms[validated.sequence_index].get("type","")) != "workshop":
+		return {"ok":false,"reason":"RUN_SAVE_NOT_WORKSHOP"}
+	if not _valid_stock(payload.get("merchant_stock"),session.sim.registry.get_ids()):
+		return {"ok":false,"reason":"RUN_SAVE_STOCK"}
+	rooms = new_rooms
+	run = validated
+	set_meta_locks(payload["meta_locked_runes"],payload["meta_locked_artifacts"])
+	rooms_cleared = int(counters["rooms_cleared"])
+	kills = int(counters["kills"])
+	ticks_elapsed = int(counters["ticks_elapsed"])
+	spells_used = int(counters["spells_used"])
+	wet_kills = int(counters["wet_kills"])
+	boss_defeated_events = int(counters["boss_defeated_events"])
+	transition_count = int(counters["transition_count"])
+	_seen_enemies.clear()
+	for id in payload["seen_enemies"]:
+		_seen_enemies[str(id)] = true
+	_seen_reactions.clear()
+	for id in payload["seen_reactions"]:
+		_seen_reactions[str(id)] = true
+	edit_policy = str(payload["edit_policy"])
+	prelude = false
+	prelude_built = false
+	prelude_tested = false
+	outcome = ""
+	win_events = 0
+	arcs = 0
+	var entered: Dictionary = _enter_current()
+	if not entered.get("ok",false):
+		return entered
+	merchant.stock = _intify(payload["merchant_stock"])
+	arcs = 0
+	arcs = int(counters["arcs"]) - arc_total()
+	return {"ok":true}

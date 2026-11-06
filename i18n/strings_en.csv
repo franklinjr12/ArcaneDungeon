@@ -93,6 +93,12 @@ rune.trigger.timer.name,Timer
 rune.essence.neutral.name,Basic Bolt
 run.shop.rune_label,Rune: %s
 run.shop.hp_label,Max HP +%d
+run.shop.mana_label,Max mana +%d
+run.shop.dash_label,Dash charge +%d
+run.shop.max_mana,Increase max mana by %d (run-persistent)
+run.shop.dash_charge,Gain %d extra dash charge (run-persistent)
+run.shop.reroll,Reroll stock (%d coins)
+run.shop.reroll_used,Stock already rerolled
 run.shop.item_price,%s / %s coins
 run.shop.max_hp,Increase max HP by %d (run-persistent)
 run.shop.purchased,Purchased
@@ -152,6 +158,7 @@ run.notice.formula_cancelled,Formula cancelled
 run.notice.duration, / %.1f s
 menu.title,ARCANE DUNGEON
 menu.subtitle,SPELLFORGE  •  THE FIRST DESCENT
+menu.continue,Continue
 menu.new_run,New Run
 menu.settings,Settings
 menu.quit,Quit
@@ -177,12 +184,18 @@ Workshop: T resets the test range"
 pause.confirm,Confirm
 pause.cancel,Cancel
 pause.retry_prompt,Restart this run with the same seed? Current progress is lost.
+pause.save_quit,Save & Quit
+pause.save_quit_prompt,"Save the run here and return to the Title? Continue resumes in this workshop."
 pause.quit_prompt,"Quit to Title? This run ends, is recorded as abandoned and cannot be resumed."
 settings.title,Settings
 settings.flashes,Reduce flashes
 settings.shake,Reduce screen shake
 settings.telemetry,Local telemetry (opt-in)
 settings.window_mode,Window mode
+settings.lighting,Lighting
+settings.lighting.high,High
+settings.lighting.low,Low
+settings.lighting.off,Off
 settings.ui_scale,UI scale
 settings.back,Back
 settings.bus.master,Master volume
@@ -325,3 +338,75 @@ editor.issue.unknown_parameter,A parameter is not valid for these runes.
 editor.issue.parameter_type_invalid,A parameter has the wrong type.
 editor.issue.parameter_out_of_range,A parameter is outside its allowed range.
 editor.issue.generic,This spell cannot be built.
+run.shop.artifact_label,Artifact: %s
+artifact.rebound_sigil.name,Rebound Sigil
+artifact.rebound_sigil.desc,Projectiles that hit a wall bounce back once.
+artifact.residue_crystal.name,Residue Crystal
+artifact.residue_crystal.desc,Bursts leave a small Field of their essence that lingers for 2 seconds.
+artifact.shatterheart.name,Shatterheart
+artifact.shatterheart.desc,Frozen enemies burst into a Cold blast when they die.
+artifact.momentum_rune.name,Momentum Rune
+artifact.momentum_rune.desc,The first cast after a dash costs no mana.
+artifact.echo_chamber.name,Echo Chamber
+artifact.echo_chamber.desc,Every 5th cast from the same slot repeats once for free at half damage.
+artifact.stormglass.name,Stormglass
+artifact.stormglass.desc,Lightning arcs jump to one more target and may arc to non-Wet targets at half damage.
+artifact.tidewalkers_boots.name,Tidewalker's Boots
+artifact.tidewalkers_boots.desc,Your dash leaves a short trail that makes enemies Wet.
+artifact.ember_heart.name,Ember Heart
+artifact.ember_heart.desc,Enemies that die while Burning pass Burning to one nearby enemy.
+artifact.gravity_lens.name,Gravity Lens
+artifact.gravity_lens.desc,Orbiting Orbs drag the enemies they hit toward the orbit.
+artifact.split_prism.name,Split Prism
+artifact.split_prism.desc,Split makes one extra child projectile.
+artifact.archivists_quill.name,Archivist's Quill
+artifact.archivists_quill.desc,On Kill payloads also fire each time an elite or boss loses 25% of its HP.
+artifact.warding_lantern.name,Warding Lantern
+artifact.warding_lantern.desc,Clearing a room gives a shield that absorbs the next hit.
+menu.compendium,Compendium
+compendium.title,Compendium
+compendium.back,Back
+compendium.unknown,???
+compendium.section.runes,Runes
+compendium.section.reactions,Reactions
+compendium.section.enemies,Enemies
+compendium.section.artifacts,Artifacts
+compendium.milestones,Milestones
+compendium.progress,%d/%d
+compendium.met,[done]
+compendium.locked,[locked]
+compendium.reaction.wet_lightning_arc,Lightning Arc
+compendium.reaction.chill_freeze,Chill Freeze
+compendium.reaction.wet_cold_freeze,Wet Freeze
+compendium.reaction.frozen_force_shatter,Shatter
+compendium.reaction.fire_thaw_steam,Steam Thaw
+compendium.enemy.bone_thrall,Bone Thrall
+compendium.enemy.cistern_slime,Cistern Slime
+compendium.enemy.cistern_slimelet,Cistern Slimelet
+compendium.enemy.corpse_bloat,Corpse Bloat
+compendium.enemy.deep_eel,Deep Eel
+compendium.enemy.drowned_acolyte,Drowned Acolyte
+compendium.enemy.drowned_archivist,Drowned Archivist
+compendium.enemy.fallen_adept,Fallen Adept
+compendium.enemy.grave_hound,Grave Hound
+compendium.enemy.lantern_wisp,Lantern Wisp
+compendium.enemy.ossuary_shieldbearer,Ossuary Shieldbearer
+compendium.enemy.rust_golem,Rust Golem
+compendium.enemy.storm_crystal,Storm Crystal
+compendium.enemy.undead_warden,Undead Warden
+compendium.enemy.wailing_spirit,Wailing Spirit
+META_MILESTONE_RUNES_8,Discover 8 runes
+META_MILESTONE_REACTIONS_2,Discover 2 reactions
+META_MILESTONE_ENEMIES_6,Discover 6 enemies
+META_MILESTONE_ARTIFACTS_4,Discover 4 artifacts
+run.notice.resumed,Run resumed in the workshop.
+run.notice.resume_failed,The saved run could not be loaded; a new run has started.
+run.btn.loadout_view,Loadout (Tab)
+loadout_view.title,Loadout
+loadout_view.slot,Slot %d: %s
+loadout_view.locked, [LOCKED]
+loadout_view.cost,%d MP · %.1fs cooldown
+loadout_view.artifacts,Artifacts
+loadout_view.no_artifacts,No artifacts yet
+loadout_view.read_only,Read-only. Spells can only be edited at the workshop.
+loadout_view.close,Close (Tab)

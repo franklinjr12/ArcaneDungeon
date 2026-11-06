@@ -13,6 +13,7 @@ const Art = preload("res://ui/pixel_art_renderer.gd")
 const InputActions = preload("res://ui/input_actions.gd")
 var aim_source = InputActions.default_aim_source()
 const PauseMenu = preload("res://ui/pause_menu.gd")
+const LoadoutView = preload("res://ui/loadout_view.gd")
 const MerchantScript = preload("res://world/merchant.gd")
 var flow
 var config_path: String = Flow.CONFIG_V2
@@ -23,6 +24,8 @@ var notice_panel: PanelContainer
 var objective: Label
 var coins_label: Label
 var pause_button: Button
+var loadout_view
+var loadout_view_button: Button
 var workshop_holder: MarginContainer
 var workshop_column: VBoxContainer
 var reward_overlay: CenterContainer
@@ -36,6 +39,7 @@ var _shop_offered := false
 var shop_reopen_button: Button
 var desk_skip_button: Button
 var shop_close_button: Button
+var shop_reroll_button: Button
 var summary_panel: PanelContainer
 var dev_panel: PanelContainer
 var dev_label: Label
@@ -95,7 +99,22 @@ func _ready() -> void:
 	if show_dev_tools == null:
 		show_dev_tools = OS.is_debug_build()
 	flow = Flow.new(-1, config_path)
-	_begin_desk()
+	var resume_save = get_node_or_null("/root/SaveService")
+	var resumed := false
+	if resume_save != null:
+		var wanted: bool = resume_save.resume_requested
+		resume_save.resume_requested = false
+		if wanted:
+			resumed = flow.resume(resume_save.load_run())
+			if resumed:
+				current_notice = tr("run.notice.resumed")
+			else:
+				_drop_save()
+				current_notice = tr("run.notice.resume_failed")
+		else:
+			_drop_save()
+	if not resumed:
+		_begin_desk()
 	_director = get_node_or_null("/root/AudioDirector")
 	if _director != null:
 		flow.audio_sink = _director.play
@@ -194,6 +213,9 @@ func _build() -> void:
 	editor_controls.add_theme_constant_override("separation",9)
 	editor_scroll.add_child(editor_controls)
 	_build_dev_overlay()
+	loadout_view = LoadoutView.new()
+	add_child(loadout_view)
+	loadout_view.close_requested.connect(close_loadout_view)
 	pause_menu = PauseMenu.new()
 	pause_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	pause_menu.visible = false
@@ -201,6 +223,7 @@ func _build() -> void:
 	pause_menu.resume_requested.connect(close_pause)
 	pause_menu.retry_confirmed.connect(_pause_retry)
 	pause_menu.quit_confirmed.connect(_pause_quit)
+	pause_menu.save_quit_confirmed.connect(_save_and_quit)
 	pause_menu.tips_toggled.connect(_toggle_tips)
 	_fit_editor_panel()
 
@@ -283,6 +306,15 @@ func _build_top_bar() -> void:
 	pause_button.offset_right = -(SCREEN_MARGIN+4)
 	pause_button.offset_top = SCREEN_MARGIN+4
 	pause_button.offset_bottom = SCREEN_MARGIN+4+34
+	loadout_view_button = _button(bar,tr("run.btn.loadout_view"),func(): open_loadout_view())
+	loadout_view_button.name = "LoadoutViewButton"
+	loadout_view_button.focus_mode = Control.FOCUS_NONE
+	loadout_view_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	loadout_view_button.offset_left = -(SCREEN_MARGIN+4+120+8+150)
+	loadout_view_button.offset_right = -(SCREEN_MARGIN+4+120+8)
+	loadout_view_button.offset_top = SCREEN_MARGIN+4
+	loadout_view_button.offset_bottom = SCREEN_MARGIN+4+34
+	loadout_view_button.visible = false
 	var toasts := VBoxContainer.new()
 	toasts.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	toasts.custom_minimum_size.x = 460
@@ -403,13 +435,29 @@ func is_paused() -> bool:
 func can_pause() -> bool:
 	return not editor_open and flow.state in ["fighting","cleared","workshop"]
 
+func can_view_loadout() -> bool:
+	return flow != null and flow.state == "cleared" and not editor_open and not is_paused()
+
+func is_loadout_view_open() -> bool:
+	return loadout_view != null and loadout_view.visible
+
+func open_loadout_view() -> void:
+	if can_view_loadout():
+		loadout_view.show_for(flow)
+
+func close_loadout_view() -> void:
+	if loadout_view != null:
+		loadout_view.visible = false
+
 func open_pause() -> void:
 	if not can_pause() or is_paused():
 		return
+	close_loadout_view()
 	_set_clocks_paused(true)
 	_prev_mouse_mode = Input.mouse_mode
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	pause_menu.set_tips_visible(not guide.dismissed)
+	pause_menu.set_save_available(flow.can_save())
 	pause_menu.visible = true
 
 func close_pause() -> void:
@@ -439,11 +487,32 @@ func _pause_retry() -> void:
 	close_pause()
 	_retry_same_seed()
 
+func _autosave() -> void:
+	var save = get_node_or_null("/root/SaveService")
+	if save != null and flow.can_save():
+		save.save_run(flow.save_payload())
+
+func _drop_save() -> void:
+	var save = get_node_or_null("/root/SaveService")
+	if save != null:
+		save.delete_run()
+
+## AD-146: the run is not over, so nothing is recorded; Continue resumes in this workshop.
+func _save_and_quit() -> void:
+	if not flow.can_save():
+		return
+	_autosave()
+	_stats_recorded = true
+	close_pause()
+	_to_title()
+
 func _pause_quit() -> void:
+	_drop_save()
 	var save = get_node_or_null("/root/SaveService")
 	if save != null and not _stats_recorded:
 		var s: Dictionary = flow.summary()
 		s["outcome"] = "abandoned"
+		s["discovered"] = flow.discoveries()
 		save.record_run(s)
 		_stats_recorded = true
 	close_pause()
@@ -507,6 +576,11 @@ func _input(event: InputEvent) -> void:
 		return
 	if editor_open or not event.is_pressed() or event.is_echo():
 		return
+	if is_loadout_view_open():
+		if event.is_action_pressed("loadout_view") or event.is_action_pressed("pause"):
+			close_loadout_view()
+		get_viewport().set_input_as_handled()
+		return
 	var fighting: bool = flow.state == "fighting"
 	var slot := InputActions.cast_slot_for_event(event)
 	if slot >= 0 and not event is InputEventMouseButton and fighting:
@@ -517,6 +591,8 @@ func _input(event: InputEvent) -> void:
 	elif _reward_index(event) >= 0 and flow.state == "cleared" and not flow.reward_collected \
 			and _reward_index(event) < flow.reward_options.size():
 		_choose_reward(_reward_index(event))
+	elif event.is_action_pressed("loadout_view"):
+		open_loadout_view()
 	elif event.is_action_pressed("interact"):
 		_exit()
 	elif event.is_action_pressed("pause"):
@@ -642,12 +718,18 @@ func _redraw_panel() -> void:
 	scene_key = str(flow.run.sequence_index)+":"+flow.state+":"+str(flow.reward_collected)
 	arena_canvas.session = flow.session
 	arena_canvas.environment_id = 2 if int(flow.room.values.get("stage",0))>=1 else (1 if flow.room.values["type"]=="boss" else 0)
+	arena_canvas.lighting_stage = int(flow.room.values.get("stage",0))
+	arena_canvas.lighting_room_type = str(flow.room.values.get("type","combat"))
+	arena_canvas.lighting_props = flow.room.values.get("layout",{}).get("props",[])
 	portrait_hud.queue_redraw()
 	arena_canvas.visible = flow.mode != "workshop"
 	test_canvas.visible = flow.mode == "workshop"
 	test_canvas.runner = flow.range_sim
 	test_canvas.door_at = desk_door_position() if flow.prelude else Vector2.INF
 	test_canvas.door_open = flow.prelude and (not flow.prelude_required() or flow.prelude_ready())
+	loadout_view_button.visible = flow.state == "cleared"
+	if flow.state != "cleared":
+		close_loadout_view()
 	_rebuild_loadout()
 	_clear(context)
 	if scroll != null:
@@ -680,7 +762,7 @@ func _redraw_panel() -> void:
 		for i in flow.reward_options.size():
 			var item: Dictionary = flow.reward_options[i]
 			var caption := ""
-			if item["kind"] == "rune":
+			if item["kind"] in ["rune","artifact"]:
 				caption = tr(str(item["name_key"]))+"\n"+tr(str(item["behaviour_key"]))
 			else:
 				caption = tr("run.reward.currency") % int(item["amount"])
@@ -777,9 +859,11 @@ func _build_shop_panel() -> void:
 	greet.custom_minimum_size.x = 380
 	greet.text = tr(flow.merchant.greeting(flow.run.seed))
 	shop_list.add_child(greet)
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation",8)
+	# AD-144: up to 6 offers, so cards wrap into rows of three.
+	var row := GridContainer.new()
+	row.columns = 3
+	row.add_theme_constant_override("h_separation",8)
+	row.add_theme_constant_override("v_separation",8)
 	shop_list.add_child(row)
 	for i in flow.merchant.stock.size():
 		var item: Dictionary = flow.merchant.stock[i]
@@ -803,7 +887,12 @@ func _build_shop_panel() -> void:
 		card.add_child(col)
 		var b := _button(col,tr("run.shop.item_price") % [MerchantScript.item_label(item),str(item["price"])],_buy.bind(i))
 		b.disabled = flow.merchant.bought.has(item["id"]) or not affordable
-		b.icon = PortraitHUD.rune_icon_texture(str(item["rune_id"])) if item["kind"] == "rune" else PortraitHUD.ui_icon_texture("hp")
+		if item["kind"] == "rune":
+			b.icon = PortraitHUD.rune_icon_texture(str(item["rune_id"]))
+		elif item["kind"] == "artifact":
+			b.icon = PortraitHUD.ui_icon_texture("upgrade")
+		else:
+			b.icon = PortraitHUD.ui_icon_texture({"max_mana":"mana","dash_charge":"dash"}.get(str(item.get("stat","max_hp")),"hp"))
 		b.expand_icon = false
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -817,10 +906,16 @@ func _build_shop_panel() -> void:
 			explanation = str(item["rune_id"])
 			if rune != null:
 				explanation = tr(desc_key) if tr(desc_key) != desc_key else str(rune.snapshot()["description"])
+		elif item["kind"] == "artifact":
+			explanation = tr(str(item["desc_key"]))
 		else:
-			explanation = tr("run.shop.max_hp") % int(item["amount"])
+			explanation = tr("run.shop."+str(item.get("stat","max_hp"))) % int(item["amount"])
 		detail.text = explanation+" | "+(tr("run.shop.purchased") if flow.merchant.bought.has(item["id"]) else (tr("run.shop.affordable") if affordable else tr("run.shop.need") % (int(item["price"])-flow.run.currency)))
 		col.add_child(detail)
+	var reroll_price := int(flow.merchant.config.get("reroll_price",0))
+	var can_reroll: bool = flow.merchant.reroll_available(flow.run)
+	shop_reroll_button = _button(shop_list,tr("run.shop.reroll") % reroll_price if can_reroll else tr("run.shop.reroll_used"),_reroll)
+	shop_reroll_button.disabled = not can_reroll or flow.run.currency < reroll_price
 	shop_close_button = _button(shop_list,tr("run.btn.close_shop"),func(): _set_shop_open(false),"ui.cancel")
 
 func _hint(parent: Node, text: String) -> void:
@@ -968,13 +1063,23 @@ func _buy(i: int) -> void:
 	current_notice = tr("run.notice.merchant") % str(result.get("kind",result.get("reason","")))
 	if result.get("ok",false):
 		current_notice = tr(flow.merchant.purchase_line(flow.run.purchases.size()))
+		_autosave()
+	_redraw_panel()
+
+func _reroll() -> void:
+	var result: Dictionary = flow.reroll()
+	current_notice = tr("run.notice.merchant") % str(result.get("kind",result.get("reason","")))
+	if result.get("ok",false):
+		_autosave()
 	_redraw_panel()
 
 func _build_summary_panel() -> void:
 	var stats: Dictionary = flow.summary()
 	var save = get_node_or_null("/root/SaveService")
+	_drop_save()
 	if save != null and not _stats_recorded:
 		_stats_recorded = true
+		stats["discovered"] = flow.discoveries()
 		save.record_run(stats)
 	_heading(context,tr("run.summary.title") % (tr("run.summary.victory") if flow.state == "won" else tr("run.summary.defeated")),18)
 	var seconds := int(stats["seconds"])
@@ -1002,11 +1107,19 @@ func _build_summary_panel() -> void:
 		b.autowrap_mode = TextServer.AUTOWRAP_OFF # a wrapping button in a row shrinks to one character per line
 		b.custom_minimum_size.x = 110
 
+## AD-145: locks are recomputed from the profile before each run starts.
+func _apply_meta_locks() -> void:
+	var save = get_node_or_null("/root/SaveService")
+	if save != null:
+		flow.set_meta_locks(save.locked_runes(),save.locked_artifacts())
+
 func _retry_same_seed() -> void:
 	close_pause()
 	_close_visual_editor()
+	_drop_save()
 	_stats_recorded = false
 	_rift_shown = false
+	_apply_meta_locks()
 	flow.retry_same_seed()
 	_begin_desk()
 	current_notice = tr("run.notice.retry")
@@ -1015,8 +1128,10 @@ func _retry_same_seed() -> void:
 func _new_seed() -> void:
 	close_pause()
 	_close_visual_editor()
+	_drop_save()
 	_stats_recorded = false
 	_rift_shown = false
+	_apply_meta_locks()
 	flow.start_new_seed()
 	_begin_desk()
 	current_notice = tr("run.notice.new_seed")
@@ -1067,11 +1182,16 @@ func _exit(take_optional: bool = true) -> void:
 		return
 	var was_desk: bool = flow.prelude
 	var desk_skipped: bool = was_desk and not flow.prelude_ready()
+	var was_workshop: bool = flow.state == "workshop"
 	var result: Dictionary = flow.try_exit(flow.session.sim.actor.position, take_optional)
 	if was_desk and result["ok"]:
 		_after_desk(desk_skipped)
 	current_notice = tr("run.notice.door") % (str(result.get("reason","OPEN")) if result["ok"] == false else tr("run.notice.next_room"))
 	if result["ok"]:
+		if was_workshop:
+			_drop_save()
+		if flow.state == "workshop":
+			_autosave()
 		_flash_transition()
 	_redraw_panel()
 
@@ -1312,6 +1432,7 @@ func _close_editor(apply_changes: bool) -> void:
 		guide.note_valid_edit()
 	current_notice = (tr("run.notice.formula_applied") if apply_changes else tr("run.notice.formula_cancelled"))+tr("run.notice.duration") % duration
 	_close_visual_editor()
+	_autosave()
 	_redraw_panel()
 
 ## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.

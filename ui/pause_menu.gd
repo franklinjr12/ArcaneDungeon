@@ -9,6 +9,8 @@ const TEXT := {
 	"settings": "pause.settings",
 	"retry": "pause.retry",
 	"quit": "pause.quit",
+	"save_quit": "pause.save_quit",
+	"save_quit_prompt": "pause.save_quit_prompt",
 	"controls": "pause.controls",
 	"back": "pause.back",
 	"tips_hide": "pause.tips_hide",
@@ -22,6 +24,7 @@ const TEXT := {
 signal resume_requested
 signal retry_confirmed
 signal quit_confirmed
+signal save_quit_confirmed
 signal tips_toggled
 
 var panel: VBoxContainer
@@ -31,6 +34,7 @@ var resume_button: Button
 var settings_button: Button
 var retry_button: Button
 var quit_button: Button
+var save_quit_button: Button
 var controls_button: Button
 var tips_button: Button
 var controls_box: VBoxContainer
@@ -57,6 +61,8 @@ func _ready() -> void:
 	controls_button = _button(panel, "ControlsButton", tr(TEXT["controls"]), director, func(): open_controls())
 	tips_button = _button(panel, "TipsButton", tr(TEXT["tips_hide"]), director, func(): tips_toggled.emit())
 	retry_button = _button(panel, "RetryButton", tr(TEXT["retry"]), director, func(): request_retry())
+	save_quit_button = _button(panel, "SaveQuitButton", tr(TEXT["save_quit"]), director, func(): request_save_quit())
+	save_quit_button.visible = false
 	quit_button = _button(panel, "QuitButton", tr(TEXT["quit"]), director, func(): request_quit())
 	confirm_box = _column()
 	confirm_box.custom_minimum_size.x = 400
@@ -122,6 +128,13 @@ func request_retry() -> void:
 func request_quit() -> void:
 	_ask("quit", tr(TEXT["quit_prompt"]))
 
+func request_save_quit() -> void:
+	_ask("save_quit", tr(TEXT["save_quit_prompt"]))
+
+## AD-146: Save & Quit is offered only where the run may be saved (the workshop).
+func set_save_available(on: bool) -> void:
+	save_quit_button.visible = on
+
 func _ask(action: String, prompt: String) -> void:
 	_pending = action
 	confirm_label.text = prompt
@@ -136,13 +149,20 @@ func confirm_pending() -> void:
 		retry_confirmed.emit()
 	elif action == "quit":
 		quit_confirmed.emit()
+	elif action == "save_quit":
+		save_quit_confirmed.emit()
 
 func cancel_confirm() -> void:
 	var action := _pending
 	_pending = ""
 	confirm_box.visible = false
 	panel.visible = true
-	(retry_button if action == "retry" else quit_button).grab_focus()
+	if action == "retry":
+		retry_button.grab_focus()
+	elif action == "save_quit":
+		save_quit_button.grab_focus()
+	else:
+		quit_button.grab_focus()
 
 func open_settings() -> void:
 	if settings_screen == null:

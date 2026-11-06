@@ -6,12 +6,14 @@ const WINDOW_MODES := ["windowed", "fullscreen", "borderless"]
 const UI_SCALE_MIN := 0.9
 const UI_SCALE_MAX := 1.5
 const UI_SCALE_STEP := 0.1
+const LIGHTING_MODES := ["high", "low", "off"]
 const DEFAULTS := {
 	"volumes": {"Master": 1.0, "SFX": 1.0, "Ambience": 1.0, "UI": 1.0},
 	"reduce_flashes": false,
 	"screen_shake": true,
 	"telemetry_opt_in": false,
 	"window_mode": "windowed",
+	"lighting": "high",
 	"ui_scale": 1.0,
 	"schema_version": 1,
 }
@@ -21,6 +23,7 @@ var reduce_flashes: bool = false
 var screen_shake: bool = true
 var telemetry_opt_in: bool = false
 var window_mode: String = "windowed"
+var lighting: String = "high"
 var ui_scale: float = 1.0
 ## action -> Array of event dicts (InputActions.event_to_dict); empty means project defaults.
 var bindings: Dictionary = {}
@@ -38,6 +41,7 @@ func reset() -> void:
 	screen_shake = d["screen_shake"]
 	telemetry_opt_in = d["telemetry_opt_in"]
 	window_mode = d["window_mode"]
+	lighting = d["lighting"]
 	ui_scale = d["ui_scale"]
 	bindings = {}
 
@@ -49,6 +53,7 @@ func to_config(cfg: ConfigFile) -> void:
 	cfg.set_value("accessibility", "screen_shake", screen_shake)
 	cfg.set_value("privacy", "telemetry_opt_in", telemetry_opt_in)
 	cfg.set_value("display", "window_mode", window_mode)
+	cfg.set_value("display", "lighting", lighting)
 	cfg.set_value("display", "ui_scale", snap_ui_scale(ui_scale))
 	for action in bindings:
 		cfg.set_value("controls", str(action), bindings[action])
@@ -65,6 +70,9 @@ func from_config(cfg: ConfigFile) -> void:
 	var mode = cfg.get_value("display", "window_mode", "")
 	if typeof(mode) == TYPE_STRING and mode in WINDOW_MODES:
 		window_mode = mode
+	var light = cfg.get_value("display", "lighting", "")
+	if typeof(light) == TYPE_STRING and light in LIGHTING_MODES:
+		lighting = light
 	var scale = cfg.get_value("display", "ui_scale", "")
 	if typeof(scale) == TYPE_FLOAT or typeof(scale) == TYPE_INT:
 		ui_scale = snap_ui_scale(float(scale))
