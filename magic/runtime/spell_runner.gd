@@ -42,6 +42,8 @@ var last_rejection := ""
 var total_hit_count := 0
 var run_seed_value := 12345
 var initialized := false
+## AD-143: held artifacts (world/artifacts.gd instance) or null; null keeps behaviour unchanged.
+var artifacts = null
 
 func _init(run_seed: int = 12345, record_trace: bool = true) -> void:
 	var data := FileAccess.open(CONFIG,FileAccess.READ)

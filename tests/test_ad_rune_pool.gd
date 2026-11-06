@@ -14,6 +14,7 @@ class FakeRun:
 	var seed := 0
 	var unlocked: Array = []
 	var purchases: Array = []
+	var artifacts: Array = []
 
 func _config() -> Dictionary:
 	return JSON.parse_string(FileAccess.get_file_as_string("res://world/data/run_v2.json"))
