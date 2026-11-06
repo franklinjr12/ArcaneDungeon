@@ -357,6 +357,10 @@ func damage_player(source_id: int, amount: float, channel: String, attack_id: in
 		_cue("sfx.dash.iframe",sim.actor.position)
 		_notify("DASH_EVADE",sim.actor.position)
 		return {"accepted":false,"reason":"INVULNERABLE"}
+	if player.shield > 0:
+		player.shield -= 1
+		_notify("SHIELDED",sim.actor.position)
+		return {"accepted":false,"reason":"SHIELDED"}
 	var event = DamageEvent.new(source_id,source.team,sim.actor.id,amount,channel,attack_id,sim.clock.tick)
 	var dealt: float = sim.actor.receive_damage(amount,channel,source.team,float(sim.settings["combat"]["armor_scale"]))
 	if dealt > 0:

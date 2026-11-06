@@ -26,6 +26,12 @@ func run(t) -> void:
 	_gravity_lens(t)
 	_residue_crystal(t)
 	_no_artifacts_identical(t)
+	_shatterheart(t)
+	_ember_heart(t)
+	_archivists_quill(t)
+	_tidewalkers_boots(t)
+	_warding_lantern(t)
+	_all_artifacts_tested(t)
 
 func _csv_keys() -> Dictionary:
 	var keys := {}
@@ -391,3 +397,148 @@ func _no_artifacts_identical(t) -> void:
 		traces.append(r.trace_json()+burst.trace_json())
 	t.check(traces[0].length() > 500,"AD-143 empty holder: scenario trace is non-trivial")
 	t.equal(traces[1],traces[0],"AD-143 empty holder: trace identical to no holder")
+
+## --- AD-143 step 3: kill / HP-threshold / dash-trail / room-clear hooks -----------------------------
+
+## Two dummies side by side: `first` dies to the bolt, `second` is off the bolt's path but inside the artifact radius.
+func _kill_scene(ids, essence: String, first_status: String):
+	var r = _sim("form.projectile",essence,[],ids)
+	var first = r.add_target(Vector2(300,340),Vector2.ZERO,1.0)
+	var second = r.add_target(Vector2(300,390),Vector2.ZERO,100000.0)
+	if first_status != "":
+		first.status.apply(first_status,r.clock.tick,r.settings["statuses"][first_status],{})
+	_cast(r)
+	_step(r,40)
+	return [r,first,second]
+
+func _shatterheart(t) -> void:
+	t.check(Runner.new(143).registry.get_ids().has(Runner.ARTIFACT_COLD_ESSENCE),"AD-143 shatterheart: the cold essence exists in the rune data")
+	var held = _kill_scene(["shatterheart"],"essence.lightning","frozen")
+	var plain = _kill_scene(null,"essence.lightning","frozen")
+	t.check(not held[1].alive() and not plain[1].alive(),"AD-143 shatterheart: the frozen enemy dies in both scenes")
+	t.check(held[2].health.current < held[2].health.maximum,"AD-143 shatterheart: a frozen kill hurts the neighbour")
+	t.equal(plain[2].health.current,plain[2].health.maximum,"AD-143 shatterheart: no artifact, no blast")
+	var dealt: float = held[2].health.maximum-held[2].health.current
+	t.check(dealt <= float(held[0].artifacts.param("shatterheart","damage")),"AD-143 shatterheart: blast damage is capped by data")
+	var unfrozen = _kill_scene(["shatterheart"],"essence.lightning","")
+	t.equal(unfrozen[2].health.current,unfrozen[2].health.maximum,"AD-143 shatterheart: an unfrozen kill does not blast")
+	var chain = _sim("form.projectile","essence.lightning",[],["shatterheart"])
+	var a = chain.add_target(Vector2(300,340),Vector2.ZERO,1.0)
+	var b = chain.add_target(Vector2(300,390),Vector2.ZERO,1.0)
+	var c = chain.add_target(Vector2(300,440),Vector2.ZERO,100000.0)
+	for frozen in [a,b]:
+		frozen.status.apply("frozen",chain.clock.tick,chain.settings["statuses"]["frozen"],{})
+	_cast(chain)
+	_step(chain,40)
+	t.check(not a.alive() and not b.alive(),"AD-143 shatterheart: the blast can kill a frozen neighbour")
+	t.equal(chain._kill_seen.keys(),[a.id],"AD-143 shatterheart: only the bolt kill runs on-kill hooks, the blast kill does not")
+	t.equal(c.health.current,c.health.maximum,"AD-143 shatterheart: no recursive blast reaches the third enemy")
+
+func _ember_heart(t) -> void:
+	var held = _kill_scene(["ember_heart"],"essence.lightning","burning")
+	var plain = _kill_scene(null,"essence.lightning","burning")
+	t.check(not held[1].alive() and not plain[1].alive(),"AD-143 ember heart: the burning enemy dies in both scenes")
+	t.check(held[2].status.has("burning"),"AD-143 ember heart: the neighbour is Burning")
+	t.check(not plain[2].status.has("burning"),"AD-143 ember heart: no artifact, no spread")
+	t.check(held[0].trace.filter_records(-1,"","status").any(func(e): return e["reason"] == "burning:applied" and int(e["target_id"]) == held[2].id),"AD-143 ember heart: the spread is traced")
+	var far = _sim("form.projectile","essence.lightning",[],["ember_heart"])
+	var first = far.add_target(Vector2(300,340),Vector2.ZERO,1.0)
+	var out = far.add_target(Vector2(300,340+float(far.artifacts.param("ember_heart","radius"))+80.0),Vector2.ZERO,100000.0)
+	first.status.apply("burning",far.clock.tick,far.settings["statuses"]["burning"],{})
+	_cast(far)
+	_step(far,40)
+	t.check(not first.alive() and not out.status.has("burning"),"AD-143 ember heart: nothing outside the radius ignites")
+
+func _archivists_quill(t) -> void:
+	var counts: Array = []
+	for ids in [["archivists_quill"],null]:
+		var r = _sim("form.projectile","essence.fire",[],ids)
+		var boss = r.add_target(Vector2(300,340),Vector2.ZERO,100.0)
+		boss.tags = ["enemy","mini_boss"]
+		boss.health.current = 100.0-25.0+1.0
+		var formula := _formula("form.projectile")
+		formula["on_hit"] = {"trigger_id":"trigger.on_kill","payload":{"essence_id":"essence.water","manifestation_id":"form.burst","modifier_ids":[],"params":{}}}
+		t_equip(r,formula)
+		_cast(r)
+		_step(r,40)
+		var fired: Array = r.trace.filter_records(-1,"","trigger").filter(func(e): return e.get("reason","") == "trigger.on_kill")
+		t.check(boss.alive(),"AD-143 quill: the mini-boss survives the crossing hit")
+		counts.append(fired.size())
+		if ids != null:
+			t.equal(int(fired[0]["target_id"]) if not fired.is_empty() else -1,boss.id,"AD-143 quill: the trigger names the mini-boss")
+			boss.health.current = 100.0-26.0
+			_cast(r)
+			_step(r,40)
+			var again: Array = r.trace.filter_records(-1,"","trigger").filter(func(e): return e.get("reason","") == "trigger.on_kill")
+			t.equal(again.size(),1,"AD-143 quill: the same step does not fire twice")
+	t.equal(counts[0],1,"AD-143 quill: crossing 25% HP lost fires On Kill once")
+	t.equal(counts[1],0,"AD-143 quill: no artifact, no trigger")
+	var normal = _sim("form.projectile","essence.fire",[],["archivists_quill"])
+	var grunt = normal.add_target(Vector2(300,340),Vector2.ZERO,100.0)
+	grunt.health.current = 50.0
+	var formula := _formula("form.projectile")
+	formula["on_hit"] = {"trigger_id":"trigger.on_kill","payload":{"essence_id":"essence.water","manifestation_id":"form.burst","modifier_ids":[],"params":{}}}
+	t_equip(normal,formula)
+	_cast(normal)
+	_step(normal,40)
+	t.equal(normal.trace.filter_records(-1,"","trigger").size(),0,"AD-143 quill: ordinary enemies are not tracked")
+
+func _tidewalkers_boots(t) -> void:
+	var wet_state: Array = []
+	for ids in [["tidewalkers_boots"],null]:
+		var session = Session.new(143)
+		if ids != null:
+			session.sim.artifacts = Artifacts.new(ids)
+		var sim = session.sim
+		var start: Vector2 = sim.actor.position
+		var near = sim.add_target(start+Vector2(60,30),Vector2.ZERO,100000.0)
+		var far = sim.add_target(start+Vector2(60,200),Vector2.ZERO,100000.0)
+		t.check(session.issue({"dash":true,"move":Vector2.RIGHT})["accepted"],"AD-143 boots: dash accepted")
+		for i in 15:
+			session.issue({"move":Vector2.RIGHT})
+			session.step()
+		wet_state.append(near.status.has("wet",sim.clock.tick))
+		if ids != null:
+			t.check(not far.status.has("wet",sim.clock.tick),"AD-143 boots: an enemy away from the trail stays dry")
+			t.check(sim.visuals.any(func(v): return v["kind"] == "wet_trail") or sim.artifacts.state["trail"].size() > 0,"AD-143 boots: the trail has points and a visual")
+			var expiry: int = int(sim.artifacts.param("tidewalkers_boots","trail_ticks"))
+			for i in expiry+20:
+				session.step()
+			t.equal(sim.artifacts.state["trail"].size(),0,"AD-143 boots: trail points expire after trail_ticks")
+	t.check(wet_state[0],"AD-143 boots: a dash next to an enemy makes it Wet")
+	t.check(not wet_state[1],"AD-143 boots: no artifact, no Wet")
+
+func _warding_lantern(t) -> void:
+	var flow = Flow.new(SEED,Flow.CONFIG_V2)
+	flow.run.add_artifact("warding_lantern")
+	flow._attach_artifacts()
+	t.equal(flow.session.player.shield,0,"AD-143 lantern: no shield before the room is cleared")
+	_kill_all(flow)
+	t.equal(flow.state,"cleared","AD-143 lantern: first room cleared")
+	var hits := int(flow.session.sim.artifacts.param("warding_lantern","shield_hits"))
+	t.equal(flow.session.player.shield,hits,"AD-143 lantern: room clear grants shield_hits charges")
+	if flow.state != "cleared":
+		return
+	if not flow.reward_collected:
+		flow.choose_reward(0)
+	flow.session.sim.actor.position = flow.room.marker("exit")
+	flow.try_exit(flow.room.marker("exit"))
+	t.equal(flow.state,"fighting","AD-143 lantern: the next room is a fight")
+	t.equal(flow.session.player.shield,hits,"AD-143 lantern: the shield carries into the next room")
+	var foe = flow.session.enemies[0].target
+	var first: Dictionary = flow.session.damage_player(foe.id,5.0,"physical")
+	t.check(not first["accepted"] and first["reason"] == "SHIELDED","AD-143 lantern: the next damage is absorbed")
+	var hp: float = flow.session.sim.actor.health.current
+	var second: Dictionary = flow.session.damage_player(foe.id,5.0,"physical")
+	t.check(second["accepted"] and flow.session.sim.actor.health.current < hp,"AD-143 lantern: the one after hits")
+	var plain = Flow.new(SEED,Flow.CONFIG_V2)
+	_kill_all(plain)
+	t.equal(plain.session.player.shield,0,"AD-143 lantern: no artifact, no shield")
+
+## Every artifact in the data must have a test above; adding one to the data fails here until a test is written.
+func _all_artifacts_tested(t) -> void:
+	var from_data: Array = Artifacts.definitions().keys()
+	from_data.sort()
+	var tested: Array = IDS.duplicate()
+	tested.sort()
+	t.equal(tested,from_data,"AD-143 every artifact in the data has a test")

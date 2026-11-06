@@ -42,6 +42,9 @@ var last_rejection := ""
 var total_hit_count := 0
 var run_seed_value := 12345
 var initialized := false
+## AD-143: target ids whose death already ran the on-kill artifact hooks (once per target).
+var _kill_seen: Dictionary = {}
+const ARTIFACT_COLD_ESSENCE := "essence.cold"
 ## AD-143: held artifacts (world/artifacts.gd instance) or null; null keeps behaviour unchanged.
 var artifacts = null:
 	set(value):
@@ -96,6 +99,7 @@ func reset(run_seed: int = -1) -> void:
 	_deferred_burst_cleanup.clear()
 	_contexts.clear()
 	_chain_seen.clear()
+	_kill_seen.clear()
 	collision_walls.clear()
 	last_rejection = ""
 	total_hit_count = 0
@@ -192,6 +196,74 @@ func _art(id: String) -> bool:
 func artifact_dash() -> void:
 	if _art("momentum_rune"):
 		artifacts.state["momentum"] = int(artifacts.param("momentum_rune","free_casts",1))
+
+## AD-143 on-kill hooks (Shatterheart, Ember Heart); runs before the dead target's status is cleared.
+## `ctx` is the killing hit's context or the DOT's status source. Blasts it spawns carry `artifact_kill`, so they never recurse.
+func _on_target_died(target, ctx: Dictionary) -> void:
+	if artifacts == null or artifacts.is_empty() or _kill_seen.has(target.id) or bool(ctx.get("artifact_kill",false)):
+		return
+	_kill_seen[target.id] = true
+	var base := {"cast_id":int(ctx.get("cast_id",0)),"root_cast_id":int(ctx.get("root_cast_id",0)),"formula_id":str(ctx.get("formula_id","")),
+		"caster_id":actor.id,"team":actor.team,"parent_effect_id":0,"depth":1,"artifact_kill":true}
+	if int(base["cast_id"]) == 0:
+		base["cast_id"] = clock.next_id("cast")
+		base["root_cast_id"] = base["cast_id"]
+	if _art("shatterheart") and target.status.has("frozen",clock.tick):
+		trace.record("artifact",{"cast_id":base["cast_id"],"root_cast_id":base["root_cast_id"],"formula_id":base["formula_id"],
+			"target_id":target.id,"reason":"artifact.shatterheart","tick":clock.tick})
+		var blast := {"essence":{"id":ARTIFACT_COLD_ESSENCE},"modifiers":[],"params":{
+			"burst_radius":float(artifacts.param("shatterheart","radius",70)),
+			"base_damage":float(artifacts.param("shatterheart","damage",12))}}
+		_spawn_burst(blast,target.position,base)
+	if _art("ember_heart") and target.status.has("burning",clock.tick):
+		var near: Array = targets.query(target.position,float(artifacts.param("ember_heart","radius",110)),actor.team,[target.id],"",clock.tick)
+		if not near.is_empty():
+			var neighbour = near[0]
+			neighbour.status.apply("burning",clock.tick,settings["statuses"]["burning"],
+				{"cast_id":base["cast_id"],"root_cast_id":base["root_cast_id"],"formula_id":base["formula_id"],"team":actor.team})
+			trace.record("status",{"cast_id":base["cast_id"],"root_cast_id":base["root_cast_id"],"formula_id":base["formula_id"],
+				"target_id":neighbour.id,"reason":"burning:applied","tick":clock.tick})
+
+## AD-143 Archivist's Quill: counts the `threshold` fractions of max HP a boss/mini-boss has lost; true when a new step was crossed.
+func _quill_crossed(target) -> bool:
+	if not _art("archivists_quill") or not ("boss" in target.tags or "mini_boss" in target.tags):
+		return false
+	var step_size: float = float(target.health.maximum)*float(artifacts.param("archivists_quill","threshold",0.25))
+	if step_size <= 0.0:
+		return false
+	var steps: int = floori((float(target.health.maximum)-float(target.health.current))/step_size+0.000001)
+	var seen: Dictionary = artifacts.state.get("quill",{})
+	artifacts.state["quill"] = seen
+	if steps <= int(seen.get(target.id,0)):
+		return false
+	seen[target.id] = steps
+	return true
+
+## AD-143 Tidewalker's Boots: called each dash tick (after the move) to drop a trail point at the caster.
+func artifact_dash_step() -> void:
+	if not _art("tidewalkers_boots"):
+		return
+	var trail: Array = artifacts.state.get("trail",[])
+	artifacts.state["trail"] = trail
+	var life := int(artifacts.param("tidewalkers_boots","trail_ticks",90))
+	trail.append({"position":actor.position,"expires":clock.tick+life,"wet":{}})
+	visuals.append({"kind":"wet_trail","position":actor.position,"radius":float(artifacts.param("tidewalkers_boots","trail_radius",28)),
+		"essence":"essence.water","until":clock.tick+life})
+
+## Live trail points make eligible enemies Wet, at most once per target per point. Expired points drop out.
+func _advance_trail() -> void:
+	var trail: Array = artifacts.state.get("trail",[])
+	var radius := float(artifacts.param("tidewalkers_boots","trail_radius",28))
+	var wet: Dictionary = settings["statuses"]["wet"].duplicate()
+	wet["duration_ticks"] = int(artifacts.param("tidewalkers_boots","wet_duration_ticks",180))
+	for point in trail.duplicate():
+		if int(point["expires"]) <= clock.tick:
+			trail.erase(point)
+			continue
+		for target in targets.query(point["position"],radius,actor.team,point["wet"].keys(),"",clock.tick):
+			point["wet"][target.id] = true
+			target.status.apply("wet",clock.tick,wet,{"team":actor.team})
+			trace.record("status",{"target_id":target.id,"reason":"wet:applied","tick":clock.tick})
 
 ## AD-143 Echo Chamber: every `every`-th accepted cast per slot repeats once, free, at damage_scale.
 ## The echo is a new cast (own cast_id and reservation) spawned after the original, never from a callback.
@@ -383,6 +455,8 @@ func advance_one_tick() -> void:
 	mana = minf(float(settings["combat"]["player_max_mana"]),mana+float(settings["combat"]["regen_mana_per_tick"]))
 	targets.advance_movers(1.0/float(clock.tick_rate),bounds)
 	_advance_knockback()
+	if _art("tidewalkers_boots"):
+		_advance_trail()
 	# Every source effect is moved once; callback work stays queued until the movement pass is complete.
 	for entry in active.duplicate():
 		var effect = entry["effect"]
@@ -537,6 +611,9 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 	var result: Dictionary = resolver.resolve(hit,target,targets,clock.tick)
 	if not result["accepted"]:
 		return
+	if was_alive and not target.alive():
+		_on_target_died(target,ctx)
+	var quill_step: bool = target.alive() and _quill_crossed(target)
 	total_hit_count += 1
 	_track_damage(float(result["damage"]))
 	if result.has("knockback"):
@@ -575,7 +652,11 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 	if trigger.is_empty() or int(ctx["depth"]) != 0:
 		return
 	var trigger_id := _trigger_id(trigger)
-	if trigger_id == "trigger.on_hit":
+	if trigger_id == "trigger.on_kill" and quill_step and not bool(detail.get("chained",false)):
+		trace.record("artifact",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],"formula_id":ctx["formula_id"],
+			"target_id":target.id,"reason":"artifact.archivists_quill","tick":clock.tick})
+		_fire_trigger(trigger,ctx,int(detail["effect_id"]),target.id,target.position)
+	elif trigger_id == "trigger.on_hit":
 		_fire_trigger(trigger,ctx,int(detail["effect_id"]),target.id,detail["location"])
 	# PROPOSED limits: kills from Burning DOT, lightning arcs and chain jumps do not fire On Kill.
 	elif trigger_id == "trigger.on_kill" and was_alive and not target.alive() and not bool(detail.get("chained",false)):
@@ -636,9 +717,12 @@ func _react(event: Dictionary, detail: Dictionary) -> void:
 	var source = targets.get_target(int(arc["source_id"]))
 	if selected == null or source == null:
 		return
+	var arc_was_alive: bool = selected.alive()
 	var dealt: float = resolver.resolve_arc(arc,selected)
 	if dealt <= 0:
 		return
+	if arc_was_alive and not selected.alive():
+		_on_target_died(selected,detail["context"])
 	total_hit_count += 1
 	_track_damage(dealt)
 	trace.record("reaction",{"cast_id":event["cast_id"],"root_cast_id":event["root_cast_id"],
@@ -713,7 +797,10 @@ func _tick_statuses() -> void:
 					trace.record("status",{"cast_id":source.get("cast_id",0),"root_cast_id":source.get("root_cast_id",0),
 						"formula_id":source.get("formula_id",""),"target_id":t.id,
 						"reason":due["state_id"]+":dot","amount":roundi(dealt),"tick":clock.tick})
+				if _art("archivists_quill"):
+					_quill_crossed(t)
 				if not t.alive():
+					_on_target_died(t,source)
 					t.status.clear()
 					break
 
