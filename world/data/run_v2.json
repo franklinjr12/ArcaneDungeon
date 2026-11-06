@@ -191,7 +191,16 @@
     "max_hp_upgrade_price": 35,
     "max_hp_upgrade_amount": 25,
     "stock_numeric_upgrade": "max_hp",
-    "seed_salt": 47017
+    "seed_salt": 47017,
+    "rune_count_min": 1,
+    "rune_count_max": 2,
+    "rune_count_salt": 52361,
+    "max_mana_upgrade_price": 35,
+    "max_mana_upgrade_amount": 20,
+    "dash_charge_upgrade_price": 60,
+    "dash_charge_upgrade_amount": 1,
+    "reroll_price": 15,
+    "reroll_salt": 91433
   },
   "bosses": {
     "ruins_warden": {

@@ -5,6 +5,9 @@ var sim
 var world
 var dash_left := 0
 var dash_cooldown := 0
+## AD-144 merchant dash charges: extra dashes usable while the cooldown runs.
+var dash_charges_bonus := 0
+var bonus_dashes_left := 0
 var recovery_left := 0
 var invulnerable_left := 0
 var dash_heading := Vector2.RIGHT
@@ -25,6 +28,7 @@ func _init(runtime, geometry, parameters: Dictionary) -> void:
 func reset() -> void:
 	dash_left = 0
 	dash_cooldown = 0
+	bonus_dashes_left = dash_charges_bonus
 	recovery_left = 0
 	invulnerable_left = 0
 	facing = Vector2.RIGHT
@@ -51,11 +55,14 @@ func process_command(command: Dictionary) -> Dictionary:
 	if not aim.is_zero_approx():
 		facing = aim.normalized()
 	var dash_request: bool = bool(command.get("dash",false))
-	if dash_request and dash_cooldown == 0 and dash_left == 0 and recovery_left == 0:
+	if dash_request and (dash_cooldown == 0 or bonus_dashes_left > 0) and dash_left == 0 and recovery_left == 0:
 		dash_heading = delta.normalized() if not delta.is_zero_approx() else facing
 		dash_left = int(tuning["dash_duration_ticks"])
 		invulnerable_left = int(tuning["dash_invulnerable_ticks"])
-		dash_cooldown = int(tuning["dash_cooldown_ticks"])
+		if dash_cooldown == 0:
+			dash_cooldown = int(tuning["dash_cooldown_ticks"])
+		else:
+			bonus_dashes_left -= 1
 		dashes += 1
 		sim.artifact_dash()
 	var wanted: Vector2 = delta*float(tuning["move_speed"])/float(sim.clock.tick_rate)
@@ -91,6 +98,10 @@ func process_command(command: Dictionary) -> Dictionary:
 		return result
 	return {"accepted":true,"reason":"MOVE"}
 
+func set_dash_bonus(n: int) -> void:
+	dash_charges_bonus = n
+	bonus_dashes_left = n
+
 func step_timers() -> void:
 	if sim.clock.paused:
 		return
@@ -100,6 +111,9 @@ func step_timers() -> void:
 			recovery_left = int(tuning["dash_recovery_ticks"])
 	elif recovery_left > 0:
 		recovery_left -= 1
-	dash_cooldown = maxi(0,dash_cooldown-1)
+	if dash_cooldown > 0:
+		dash_cooldown -= 1
+		if dash_cooldown == 0:
+			bonus_dashes_left = dash_charges_bonus
 	invulnerable_left = maxi(0,invulnerable_left-1)
 	hit_flash = maxi(0,hit_flash-1)

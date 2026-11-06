@@ -239,7 +239,7 @@ func _run() -> void:
 		if label.text.contains("Affordable") or label.text.contains("Need "):
 			previews = true
 	expect(previews,"merchant displays effect preview and affordability")
-	var stock_buttons: Array = control.shop_list.find_children("*","Button",true,false).filter(func(b): return b.text.contains(" coins"))
+	var stock_buttons: Array = control.shop_list.find_children("*","Button",true,false).filter(func(b): return b.text.contains(" coins") and b != control.shop_reroll_button)
 	expect(not stock_buttons.is_empty() and stock_buttons.all(func(b): return b.icon != null),"AD-040 merchant stock buttons have icons")
 	control.shop_close_button.emit_signal("pressed")
 	expect(not control.shop_overlay.visible,"AD-093 Close shop hides the shop overlay")
@@ -251,6 +251,21 @@ func _run() -> void:
 	expect(run.run.formulas.size()<3 and control.guide.current=="workshop_empty_slot"
 		and control.tip.text.contains(control.guide.tips["workshop_empty_slot"]),
 		"AD-084 workshop shows empty-slot hint")
+	# The smoke run uses the v1 config, which has no reroll tunables; give the merchant the v2 price.
+	control.flow.merchant.config["reroll_price"] = 15
+	control._redraw_panel()
+	expect(control.shop_reroll_button != null and control.shop_reroll_button.text.contains("15"),"AD-144 merchant shows a reroll button with its price")
+	var coins_start: int = run.run.currency
+	run.run.currency += 100
+	control._redraw_panel()
+	var reroll_price := 15
+	var coins_before: int = run.run.currency
+	expect(not control.shop_reroll_button.disabled,"AD-144 reroll enabled when affordable")
+	control.shop_reroll_button.emit_signal("pressed")
+	expect(run.run.currency == coins_before-reroll_price,"AD-144 reroll deducts exactly its price")
+	expect(control.shop_reroll_button.disabled,"AD-144 reroll button disabled after use")
+	run.run.currency = coins_start # keep later guide/telemetry checks on the original economy
+	control._redraw_panel()
 	control._open_editor(1)
 	expect(control.editor_open and control.editor_panel.visible,"structured editor panel opens")
 	expect(not (control.editor_panel.get_parent() is CenterContainer),"AD-093 editor is docked, not centred")

@@ -27,3 +27,9 @@ Held artifacts are never offered again; nothing is offered once `max_held` is re
 
 ## Tests
 `tests/test_ad_artifacts.gd` has at least one test per artifact and a check that its hard-coded id list matches the data keys, so a new artifact fails the suite until it gets a test.
+
+## AD-144 merchant v2
+- Stock order: 1-2 runes (`rune_count_min/max`), upgrades `upgrade.hp`, `upgrade.mana`, `upgrade.dash` (stat `max_hp` / `max_mana` / `dash_charge`), then one artifact.
+- Data (`world/data/run_v2.json` `merchant`): `rune_price`, `max_hp_upgrade_price/amount`, `max_mana_upgrade_price/amount`, `dash_charge_upgrade_price/amount`, `merchant_artifact_price`, `rune_count_min/max`, `rune_count_salt`, `seed_salt`, `reroll_price`, `reroll_salt`.
+- Reroll: once per visit; the marker `reroll@<sequence_index>` is stored in `RunState.purchases`, so a restore rebuilds the same rerolled stock.
+- All prices and amounts are proposed placeholders pending playtesting.
