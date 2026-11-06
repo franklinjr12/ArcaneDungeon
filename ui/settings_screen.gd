@@ -5,7 +5,7 @@ extends Control
 ##  audio: mute-when-unfocused, spell-sounds-top-priority.  video: frame limit, vsync, particles, glow, show FPS;
 ##  the mock resolution dropdown slot hosts the UI scale slider instead (no free row under the Display header).
 ##  access: colour-blind mode, text size (UI scale lives in the video tab), strong telegraphs, hold to cast, aim assist,
-##  visual sound cues.  The Music slider is disabled while no Music audio bus exists; Pause stays fixed to Esc.
+##  visual sound cues.  The Music slider is disabled only if no Music audio bus exists; Pause stays fixed to Esc.
 const VisualTheme = preload("res://ui/pixel_theme.gd")
 const SkinA = preload("res://ui/skin_a.gd")
 const Settings = preload("res://game/core/settings.gd")
@@ -553,8 +553,7 @@ func _build_audio(page: Control) -> void:
 			if _read_only == false and not enabled:
 				disabled_widgets.append(s)
 				s.tooltip_text = tr("settings.disabled_hint")
-		else:
-			volume_sliders[bus] = s
+		volume_sliders[bus] = s
 		_sync_hooks.append(func():
 			s.set_value_no_signal(float(_settings.volumes.get(bus, 1.0)))
 			s.get_meta("value_label").text = "%d%%" % roundi(s.value * 100.0))
