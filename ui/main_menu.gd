@@ -7,6 +7,7 @@ const CompendiumScreen = preload("res://ui/compendium_screen.gd")
 const TEXT := {
 	"title": "menu.title",
 	"subtitle": "menu.subtitle",
+	"continue": "menu.continue",
 	"new_run": "menu.new_run",
 	"compendium": "menu.compendium",
 	"settings": "menu.settings",
@@ -53,6 +54,12 @@ func _ready() -> void:
 	subheading.text = tr(TEXT["subtitle"])
 	subheading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	panel.add_child(subheading)
+	var continue_button: Button = null
+	if save_service != null and save_service.has_run():
+		continue_button = _button(panel, "ContinueButton", tr(TEXT["continue"]))
+		continue_button.pressed.connect(func():
+			save_service.resume_requested = true
+			_switch_scene("res://scenes/run.tscn"))
 	var new_run := _button(panel, "NewRunButton", tr(TEXT["new_run"]))
 	new_run.pressed.connect(_switch_scene.bind("res://scenes/run.tscn"))
 	_button(panel, "CompendiumButton", tr(TEXT["compendium"])).pressed.connect(open_compendium)
@@ -65,7 +72,7 @@ func _ready() -> void:
 		panel.add_child(debug_label)
 		_button(panel, "SandboxButton", tr(TEXT["sandbox"])).pressed.connect(_switch_scene.bind("res://scenes/sandbox.tscn"))
 		_button(panel, "ArenaButton", tr(TEXT["arena"])).pressed.connect(_switch_scene.bind("res://scenes/arena.tscn"))
-	new_run.grab_focus()
+	(continue_button if continue_button != null else new_run).grab_focus()
 	_debug_shot_entry()
 
 func _button(parent: Control, node_name: String, text: String) -> Button:

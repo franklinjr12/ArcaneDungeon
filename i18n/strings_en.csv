@@ -158,6 +158,7 @@ run.notice.formula_cancelled,Formula cancelled
 run.notice.duration, / %.1f s
 menu.title,ARCANE DUNGEON
 menu.subtitle,SPELLFORGE  •  THE FIRST DESCENT
+menu.continue,Continue
 menu.new_run,New Run
 menu.settings,Settings
 menu.quit,Quit
@@ -183,6 +184,8 @@ Workshop: T resets the test range"
 pause.confirm,Confirm
 pause.cancel,Cancel
 pause.retry_prompt,Restart this run with the same seed? Current progress is lost.
+pause.save_quit,Save & Quit
+pause.save_quit_prompt,"Save the run here and return to the Title? Continue resumes in this workshop."
 pause.quit_prompt,"Quit to Title? This run ends, is recorded as abandoned and cannot be resumed."
 settings.title,Settings
 settings.flashes,Reduce flashes
@@ -392,3 +395,5 @@ META_MILESTONE_RUNES_8,Discover 8 runes
 META_MILESTONE_REACTIONS_2,Discover 2 reactions
 META_MILESTONE_ENEMIES_6,Discover 6 enemies
 META_MILESTONE_ARTIFACTS_4,Discover 4 artifacts
+run.notice.resumed,Run resumed in the workshop.
+run.notice.resume_failed,The saved run could not be loaded; a new run has started.
