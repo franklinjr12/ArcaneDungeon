@@ -1,0 +1,686 @@
+{
+ "screen": "compendium_reactions",
+ "canvas": [
+  640,
+  360
+ ],
+ "safe_area": {
+  "x": 16,
+  "y": 9,
+  "w": 608,
+  "h": 342
+ },
+ "status": "CANDIDATE",
+ "skin": "AD-095 kit (skin A, Franklin 2026-11-04)",
+ "coordinate_origin": "top-left, px at 640x360 (engine scales x2 = 1280x720 exactly)",
+ "note": "rects are the final sprite/text bounds; 9-slice sprites are stretched with the margins in ad_ui_kit.json; labels are engine text (m5x7) positioned at x,y (top-left of the glyph box)",
+ "fonts": {
+  "label": "arc_fnt_m5x7",
+  "small": "arc_fnt_silkscreen"
+ },
+ "focus_order": [
+  "tab_runes",
+  "tab_reactions",
+  "tab_enemies",
+  "tab_artifacts",
+  "btn_back"
+ ],
+ "widgets": [
+  {
+   "id": "modal_backdrop",
+   "type": "backdrop",
+   "x": 0,
+   "y": 0,
+   "w": 640,
+   "h": 360,
+   "sprite": "ad_ui_modal_backdrop_75",
+   "tiled": true
+  },
+  {
+   "id": "panel",
+   "type": "panel",
+   "x": 16,
+   "y": 18,
+   "w": 608,
+   "h": 332,
+   "sprite": "ad_ui_panel_large"
+  },
+  {
+   "id": "title_header",
+   "type": "header",
+   "x": 220,
+   "y": 10,
+   "w": 200,
+   "h": 16,
+   "sprite": "ad_ui_header"
+  },
+  {
+   "id": "title",
+   "type": "label",
+   "x": 286,
+   "y": 15,
+   "w": 68,
+   "h": 7,
+   "text": "COMPENDIUM"
+  },
+  {
+   "id": "tab_runes",
+   "type": "tab",
+   "x": 32,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "RUNES",
+   "tab": "runes"
+  },
+  {
+   "id": "tab_runes_label",
+   "type": "label",
+   "x": 64,
+   "y": 39,
+   "w": 34,
+   "h": 7,
+   "text": "RUNES"
+  },
+  {
+   "id": "tab_reactions",
+   "type": "tab",
+   "x": 132,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_active",
+   "state": "active",
+   "text": "REACTIONS",
+   "tab": "reactions"
+  },
+  {
+   "id": "tab_reactions_label",
+   "type": "label",
+   "x": 150,
+   "y": 39,
+   "w": 61,
+   "h": 7,
+   "text": "REACTIONS"
+  },
+  {
+   "id": "tab_enemies",
+   "type": "tab",
+   "x": 232,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "ENEMIES",
+   "tab": "enemies"
+  },
+  {
+   "id": "tab_enemies_label",
+   "type": "label",
+   "x": 257,
+   "y": 39,
+   "w": 47,
+   "h": 7,
+   "text": "ENEMIES"
+  },
+  {
+   "id": "tab_artifacts",
+   "type": "tab",
+   "x": 332,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "ARTIFACTS",
+   "tab": "artifacts"
+  },
+  {
+   "id": "tab_artifacts_label",
+   "type": "label",
+   "x": 350,
+   "y": 39,
+   "w": 61,
+   "h": 7,
+   "text": "ARTIFACTS"
+  },
+  {
+   "id": "content",
+   "type": "panel",
+   "x": 28,
+   "y": 50,
+   "w": 584,
+   "h": 252,
+   "sprite": "ad_ui_panel_inset"
+  },
+  {
+   "id": "btn_back",
+   "type": "button",
+   "x": 40,
+   "y": 314,
+   "w": 96,
+   "h": 24,
+   "sprite": "ad_ui_btn_focus",
+   "state": "focus",
+   "text": "BACK",
+   "action": "close"
+  },
+  {
+   "id": "btn_back_label",
+   "type": "label",
+   "x": 74,
+   "y": 322,
+   "w": 27,
+   "h": 7,
+   "text": "BACK"
+  },
+  {
+   "id": "progress_txt",
+   "type": "label",
+   "x": 150,
+   "y": 313,
+   "w": 101,
+   "h": 7,
+   "text": "DISCOVERED 4 / 6"
+  },
+  {
+   "id": "progress_bar",
+   "type": "bar",
+   "x": 150,
+   "y": 324,
+   "w": 180,
+   "h": 9,
+   "sprite": "ad_ui_bar_frame_thin"
+  },
+  {
+   "id": "note1",
+   "type": "label",
+   "x": 346,
+   "y": 313,
+   "w": 151,
+   "h": 7,
+   "text": "NO PERMANENT STAT POWER"
+  },
+  {
+   "id": "note2",
+   "type": "label",
+   "x": 346,
+   "y": 323,
+   "w": 178,
+   "h": 7,
+   "text": "MILESTONES UNLOCK NEW RUNES"
+  },
+  {
+   "id": "reaction_1",
+   "type": "row",
+   "x": 36,
+   "y": 56,
+   "w": 300,
+   "h": 36,
+   "sprite": "ad_ui_panel_inset",
+   "state": "hover",
+   "discovered": true
+  },
+  {
+   "id": "r1_op0",
+   "type": "label",
+   "x": 61,
+   "y": 70,
+   "w": 6,
+   "h": 7,
+   "text": "+"
+  },
+  {
+   "id": "r1_op1",
+   "type": "label",
+   "x": 91,
+   "y": 70,
+   "w": 6,
+   "h": 7,
+   "text": "="
+  },
+  {
+   "id": "r1_name",
+   "type": "label",
+   "x": 142,
+   "y": 64,
+   "w": 41,
+   "h": 7,
+   "text": "FROZEN"
+  },
+  {
+   "id": "r1_rec",
+   "type": "label",
+   "x": 142,
+   "y": 76,
+   "w": 63,
+   "h": 7,
+   "text": "WET + COLD"
+  },
+  {
+   "id": "reaction_2",
+   "type": "row",
+   "x": 36,
+   "y": 95,
+   "w": 300,
+   "h": 36,
+   "sprite": "ad_ui_panel_inset",
+   "state": "normal",
+   "discovered": true
+  },
+  {
+   "id": "r2_op0",
+   "type": "label",
+   "x": 61,
+   "y": 109,
+   "w": 6,
+   "h": 7,
+   "text": "+"
+  },
+  {
+   "id": "r2_op1",
+   "type": "label",
+   "x": 91,
+   "y": 109,
+   "w": 6,
+   "h": 7,
+   "text": "="
+  },
+  {
+   "id": "r2_name",
+   "type": "label",
+   "x": 142,
+   "y": 103,
+   "w": 48,
+   "h": 7,
+   "text": "SHATTER"
+  },
+  {
+   "id": "r2_rec",
+   "type": "label",
+   "x": 142,
+   "y": 115,
+   "w": 91,
+   "h": 7,
+   "text": "FROZEN + FORCE"
+  },
+  {
+   "id": "reaction_3",
+   "type": "row",
+   "x": 36,
+   "y": 134,
+   "w": 300,
+   "h": 36,
+   "sprite": "ad_ui_panel_inset",
+   "state": "selected",
+   "discovered": true
+  },
+  {
+   "id": "r3_op0",
+   "type": "label",
+   "x": 61,
+   "y": 148,
+   "w": 6,
+   "h": 7,
+   "text": "+"
+  },
+  {
+   "id": "r3_op1",
+   "type": "label",
+   "x": 91,
+   "y": 148,
+   "w": 6,
+   "h": 7,
+   "text": "="
+  },
+  {
+   "id": "r3_name",
+   "type": "label",
+   "x": 142,
+   "y": 142,
+   "w": 34,
+   "h": 7,
+   "text": "STEAM"
+  },
+  {
+   "id": "r3_rec",
+   "type": "label",
+   "x": 142,
+   "y": 154,
+   "w": 89,
+   "h": 7,
+   "text": "FIRE + CHILLED"
+  },
+  {
+   "id": "reaction_4",
+   "type": "row",
+   "x": 36,
+   "y": 173,
+   "w": 300,
+   "h": 36,
+   "sprite": "ad_ui_panel_inset",
+   "state": "normal",
+   "discovered": true
+  },
+  {
+   "id": "r4_op0",
+   "type": "label",
+   "x": 61,
+   "y": 187,
+   "w": 6,
+   "h": 7,
+   "text": "+"
+  },
+  {
+   "id": "r4_op1",
+   "type": "label",
+   "x": 91,
+   "y": 187,
+   "w": 6,
+   "h": 7,
+   "text": "="
+  },
+  {
+   "id": "r4_name",
+   "type": "label",
+   "x": 142,
+   "y": 181,
+   "w": 20,
+   "h": 7,
+   "text": "ARC"
+  },
+  {
+   "id": "r4_rec",
+   "type": "label",
+   "x": 142,
+   "y": 193,
+   "w": 96,
+   "h": 7,
+   "text": "LIGHTNING + WET"
+  },
+  {
+   "id": "reaction_5",
+   "type": "row",
+   "x": 36,
+   "y": 212,
+   "w": 300,
+   "h": 36,
+   "sprite": "ad_ui_panel_inset",
+   "state": "locked",
+   "discovered": false
+  },
+  {
+   "id": "r5_op0",
+   "type": "label",
+   "x": 61,
+   "y": 226,
+   "w": 6,
+   "h": 7,
+   "text": "+"
+  },
+  {
+   "id": "r5_op1",
+   "type": "label",
+   "x": 91,
+   "y": 226,
+   "w": 6,
+   "h": 7,
+   "text": "="
+  },
+  {
+   "id": "r5_name",
+   "type": "label",
+   "x": 142,
+   "y": 220,
+   "w": 20,
+   "h": 7,
+   "text": "???"
+  },
+  {
+   "id": "r5_rec",
+   "type": "label",
+   "x": 142,
+   "y": 232,
+   "w": 93,
+   "h": 7,
+   "text": "NOT DISCOVERED"
+  },
+  {
+   "id": "reaction_6",
+   "type": "row",
+   "x": 36,
+   "y": 251,
+   "w": 300,
+   "h": 36,
+   "sprite": "ad_ui_panel_inset",
+   "state": "locked",
+   "discovered": false
+  },
+  {
+   "id": "r6_op0",
+   "type": "label",
+   "x": 61,
+   "y": 265,
+   "w": 6,
+   "h": 7,
+   "text": "+"
+  },
+  {
+   "id": "r6_op1",
+   "type": "label",
+   "x": 91,
+   "y": 265,
+   "w": 6,
+   "h": 7,
+   "text": "="
+  },
+  {
+   "id": "r6_name",
+   "type": "label",
+   "x": 142,
+   "y": 259,
+   "w": 20,
+   "h": 7,
+   "text": "???"
+  },
+  {
+   "id": "r6_rec",
+   "type": "label",
+   "x": 142,
+   "y": 271,
+   "w": 93,
+   "h": 7,
+   "text": "NOT DISCOVERED"
+  },
+  {
+   "id": "detail",
+   "type": "tooltip",
+   "x": 348,
+   "y": 56,
+   "w": 256,
+   "h": 238,
+   "sprite": "ad_ui_panel_tooltip"
+  },
+  {
+   "id": "d_name",
+   "type": "label",
+   "x": 356,
+   "y": 64,
+   "w": 34,
+   "h": 7,
+   "text": "STEAM"
+  },
+  {
+   "id": "d_tag",
+   "type": "label",
+   "x": 542,
+   "y": 64,
+   "w": 54,
+   "h": 7,
+   "text": "REACTION"
+  },
+  {
+   "id": "divider_53",
+   "type": "divider",
+   "x": 356,
+   "y": 76,
+   "w": 240,
+   "h": 3,
+   "sprite": "ad_ui_divider_plain",
+   "tiled": true
+  },
+  {
+   "id": "d_slot",
+   "type": "slot",
+   "x": 356,
+   "y": 86,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_selected",
+   "state": "selected"
+  },
+  {
+   "id": "d_rec",
+   "type": "label",
+   "x": 406,
+   "y": 90,
+   "w": 89,
+   "h": 7,
+   "text": "FIRE + CHILLED"
+  },
+  {
+   "id": "d_desc_0",
+   "type": "label",
+   "x": 406,
+   "y": 102,
+   "w": 175,
+   "h": 7,
+   "text": "THAWS THE TARGET AND BLINDS"
+  },
+  {
+   "id": "d_desc_1",
+   "type": "label",
+   "x": 406,
+   "y": 111,
+   "w": 150,
+   "h": 7,
+   "text": "RANGED ENEMIES BRIEFLY."
+  },
+  {
+   "id": "hdr_how",
+   "type": "header",
+   "x": 356,
+   "y": 140,
+   "w": 240,
+   "h": 12,
+   "sprite": "ad_ui_header_small"
+  },
+  {
+   "id": "label_59",
+   "type": "label",
+   "x": 432,
+   "y": 143,
+   "w": 87,
+   "h": 7,
+   "text": "HOW TO MAKE IT"
+  },
+  {
+   "id": "how_0",
+   "type": "slot",
+   "x": 364,
+   "y": 160,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    368,
+    164,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "how_1",
+   "type": "slot",
+   "x": 404,
+   "y": 160,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    408,
+    164,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "how_plus",
+   "type": "label",
+   "x": 392,
+   "y": 168,
+   "w": 6,
+   "h": 7,
+   "text": "+"
+  },
+  {
+   "id": "how1",
+   "type": "label",
+   "x": 460,
+   "y": 164,
+   "w": 125,
+   "h": 7,
+   "text": "FIRE ON A CHILLED OR"
+  },
+  {
+   "id": "how2",
+   "type": "label",
+   "x": 460,
+   "y": 174,
+   "w": 85,
+   "h": 7,
+   "text": "FROZEN ENEMY."
+  },
+  {
+   "id": "seen",
+   "type": "label",
+   "x": 360,
+   "y": 206,
+   "w": 76,
+   "h": 7,
+   "text": "SEEN 7 TIMES"
+  },
+  {
+   "id": "locked_note",
+   "type": "label",
+   "x": 360,
+   "y": 222,
+   "w": 195,
+   "h": 7,
+   "text": "2 REACTIONS NOT YET DISCOVERED"
+  },
+  {
+   "id": "n1",
+   "type": "label",
+   "x": 360,
+   "y": 242,
+   "w": 135,
+   "h": 7,
+   "text": "TRIGGER DEPTH STAYS 1"
+  },
+  {
+   "id": "n2",
+   "type": "label",
+   "x": 360,
+   "y": 252,
+   "w": 178,
+   "h": 7,
+   "text": "REACTIONS ARE DETERMINISTIC"
+  }
+ ]
+}

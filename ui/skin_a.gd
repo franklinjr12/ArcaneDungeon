@@ -4,12 +4,16 @@ const KIT_PATH := "res://assets/ui/ad_ui_kit.json"
 const ATLAS := preload("res://assets/ui/ad_ui_kit_atlas.png")
 const ATLAS_GLOW := preload("res://assets/ui/ad_ui_kit_atlas_glow.png")
 const LAYOUT_DIR := "res://assets/ui/layouts/"
+const ICON_ATLAS := preload("res://assets/ui/icons/ad_ico_atlas_demo.png")
+const ICON_INDEX_PATH := "res://assets/ui/icons/ad_ico_atlas_demo_index.json"
+const PixelHud = preload("res://ui/pixel_hud.gd")
 const CANVAS := Vector2(640, 360)
 ## Game-art note: the pause layout names the busy 25% dither; code uses the 50% dim.
 const SPRITE_REMAP := {"ad_ui_modal_backdrop_25": "ad_ui_modal_backdrop_50"}
 
 static var _kit: Dictionary = {}
 static var _layouts: Dictionary = {}
+static var _icons: Dictionary = {}
 
 static func _read_json(path: String) -> Dictionary:
 	var f := FileAccess.open(path, FileAccess.READ)
@@ -72,3 +76,40 @@ static func place(control: Control, widget: Dictionary, scale: float, origin: Ve
 static func label_color(state: String) -> Color:
 	var c: Array = kit().get("label_colors", {}).get(state, kit().get("label_colors", {}).get("normal", [255, 255, 255]))
 	return Color8(int(c[0]), int(c[1]), int(c[2]))
+
+static func _icon_key(name: String) -> String:
+	var icons: Dictionary = icon_index()
+	if icons.has(name):
+		return name
+	return "ad_ico_" + name if icons.has("ad_ico_" + name) else ""
+
+static func icon_index() -> Dictionary:
+	if _icons.is_empty():
+		_icons = _read_json(ICON_INDEX_PATH).get("icons", {})
+	return _icons
+
+static func has_icon(name: String) -> bool:
+	return _icon_key(name) != ""
+
+## Demo atlas icon by name (with or without `ad_ico_`); empty region when missing.
+## Callers may fall back to PixelHud.ui_icon_texture when has_icon is false.
+static func icon(name: String) -> AtlasTexture:
+	var t := AtlasTexture.new()
+	t.atlas = ICON_ATLAS
+	var k := _icon_key(name)
+	if k != "":
+		var s: Dictionary = icon_index()[k]
+		t.region = Rect2(s.x, s.y, s.w, s.h)
+	return t
+
+## Demo atlas first, then the MVP atlas lookup.
+static func icon_or_mvp(name: String) -> AtlasTexture:
+	if has_icon(name):
+		return icon(name)
+	return PixelHud.ui_icon_texture(name)
+
+static func widgets_by_id(screen: String) -> Dictionary:
+	var out := {}
+	for w in layout(screen).get("widgets", []):
+		out[str(w.get("id", ""))] = w
+	return out
