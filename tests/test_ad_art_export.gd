@@ -23,13 +23,22 @@ func run(t) -> void:
 		t.check(tex is Texture2D, "AD-030 png loads: " + stem)
 		if not tex is Texture2D or not j is Dictionary:
 			continue
-		if e.get("kind", "") == "glyph_atlas":
+		if e.get("kind", "") in ["glyph_atlas", "icon_atlas"]:
 			continue
 		var tsize: Vector2i = Vector2i(tex.get_size())
 		if e.get("glow") != null:
 			var gt = load(e["glow"])
 			t.check(gt is Texture2D, "AD-154 glow png loads: " + stem)
-			if gt is Texture2D:
+			var gj_path: String = str(e["glow"]).get_basename() + ".json"
+			if gt is Texture2D and FileAccess.file_exists(gj_path):
+				# AD-155: AD-119/AD-110 glows are packed/padded separately; their own json is authoritative
+				var gj = JSON.parse_string(FileAccess.get_file_as_string(gj_path))
+				t.check(gj is Dictionary and gj.has("frames"), "AD-155 glow json parses: " + stem)
+				if gj is Dictionary and gj.has("frames"):
+					for gf in gj["frames"]:
+						var gr: Dictionary = gf["frame"]
+						t.check(gr["x"] >= 0 and gr["y"] >= 0 and gr["x"] + gr["w"] <= gt.get_width() and gr["y"] + gr["h"] <= gt.get_height(), "AD-155 glow rect inside glow texture: %s/%s" % [stem, gf["filename"]])
+			elif gt is Texture2D:
 				t.equal(Vector2i(gt.get_size()), tsize, "AD-154 glow size matches base: " + stem)
 		var frames: Array = j["frames"]
 		var tags: Array = j["meta"]["frameTags"]
@@ -71,6 +80,7 @@ func run(t) -> void:
 			t.equal(e["pivot"], pivot, "AD-030 manifest pivot: " + stem)
 	t.check(sprites >= 30, "AD-030 sprite entries >= 30")
 	_cistern(t, m, assets)
+	_demo_x2(t, m, assets)
 	_engine_map(t, assets)
 	_actors(t)
 	_renderer(t)
@@ -102,6 +112,74 @@ func _cistern(t, m: Dictionary, assets: Dictionary) -> void:
 	for lv in ["high", "mid", "low"]:
 		for suf in ["", "_glow"]:
 			t.check(FileAccess.file_exists("res://art/export/til/ad_til_archivist_arena_lvl_%s%s.png" % [lv, suf]), "AD-154 arena level %s%s" % [lv, suf])
+
+const BEAM_ELEMENTS := ["fire", "water", "lightning", "ice", "force", "neutral"]
+const DEMO_ICONS := ["ad_ico_cold", "ad_ico_force", "ad_ico_beam", "ad_ico_field", "ad_ico_chain", "ad_ico_expand", "ad_ico_rapid", "ad_ico_on_kill", "ad_ico_on_expire", "ad_ico_timer", "ad_ico_chilled", "ad_ico_frozen", "ad_ico_brittle", "ad_ico_hp_up", "ad_ico_mana_up", "ad_ico_dash_up", "ad_ico_reroll", "ad_ico_undiscovered"]
+const AD114_STEMS := ["ad_vfx_mod_chain", "ad_vfx_mod_rapid", "ad_vfx_trig_on_kill_glyph", "ad_vfx_trig_on_expire_glyph", "ad_vfx_trig_timer_glyph", "ad_vfx_status_chilled", "ad_vfx_status_frozen", "ad_vfx_status_brittle", "ad_vfx_shatter", "ad_vfx_reaction_steam", "ad_vfx_reaction_flash_freeze"]
+const COOKIES := ["boss_key", "brazier", "grate_shaft", "radial_soft", "rune_circle", "spell_cold", "spell_fire", "spell_force", "spell_lightning", "spell_nature", "spell_water", "torch_flicker", "window_shaft"]
+const PARTICLES := ["droplet", "dust", "ember", "frost", "glyph", "mote", "smoke", "spark", "wisp"]
+
+func _json(path: String):
+	return JSON.parse_string(FileAccess.get_file_as_string(path))
+
+## AD-155: rune/status/artifact icons, Cold/Force/Beam/Field VFX (AD-119 glow cleanup), AD-114 VFX, AD-117 cookies/particles.
+func _demo_x2(t, m: Dictionary, assets: Dictionary) -> void:
+	for row in ["AD-110", "AD-111", "AD-112", "AD-113", "AD-114", "AD-115", "AD-116", "AD-117", "AD-119", "AD-123"]:
+		t.check(row in m["source_rows"], "AD-155 source row " + row)
+	# AD-111/112/113 stems are all re-exported by AD-119 (row AD-119 wins), so only AD-114/117 own assets
+	for row in ["AD-114", "AD-117", "AD-119"]:
+		var n := 0
+		for stem in assets:
+			if assets[stem]["row"] == row:
+				n += 1
+		t.check(n > 0, "AD-155 assets from " + row)
+	var glow_stems := []
+	for el in ["ice", "force"]:
+		for kind in ["projectile", "impact", "burst", "orb"]:
+			glow_stems.append("ad_vfx_%s_%s" % [el, kind])
+	for el in BEAM_ELEMENTS:
+		for part in ["start", "segment", "end"]:
+			glow_stems.append("ad_vfx_beam_%s_%s" % [el, part])
+	for el in ["fire", "water", "lightning", "ice", "force"]:
+		glow_stems.append("ad_vfx_%s_field" % el)
+	t.equal(glow_stems.size(), 31, "AD-155 AD-119 stem count")
+	for stem in glow_stems:
+		var e: Dictionary = assets.get(stem, {})
+		t.equal(e.get("row", ""), "AD-119", "AD-155 AD-119 row: " + stem)
+		t.equal(e.get("category", ""), "vfx", "AD-155 vfx: " + stem)
+		t.check(e.get("glow") != null and load(e["glow"]) is Texture2D, "AD-155 glow png: " + stem)
+	for stem in AD114_STEMS:
+		t.equal(assets.get(stem, {}).get("row", ""), "AD-114", "AD-155 AD-114 stem " + stem)
+	var atlas: Dictionary = assets.get("ad_ico_atlas_demo", {})
+	t.equal(atlas.get("row", ""), "AD-123", "AD-155 demo atlas is the AD-123 extension")
+	var idx = _json("res://art/export/ico/ad_ico_atlas_demo_index.json")
+	t.check(idx is Dictionary and idx.has("icons"), "AD-155 demo atlas index parses")
+	if idx is Dictionary and idx.has("icons"):
+		for icon in DEMO_ICONS:
+			t.check(idx["icons"].has(icon), "AD-155 demo atlas icon " + icon)
+	for stem in ["ad_ico_status8_demo", "ad_ico_merchant8"]:
+		t.check(assets.has(stem) and load(assets[stem]["png"]) is Texture2D and load(assets[stem]["glow"]) is Texture2D, "AD-155 8 px icons: " + stem)
+	var art: Dictionary = assets.get("ad_ico_artifacts", {})
+	t.equal(art.get("kind", ""), "icon_atlas", "AD-155 artifact atlas kind")
+	t.equal(art.get("row", ""), "AD-115", "AD-155 artifact atlas row")
+	for key in ["png", "glow", "png_32", "glow_32"]:
+		t.check(art.has(key) and load(art[key]) is Texture2D, "AD-155 artifact atlas " + key)
+	var aidx = _json(str(art.get("json", "")))
+	var defs = _json("res://world/data/artifacts_v1.json")
+	if aidx is Dictionary and defs is Dictionary:
+		for id in defs["artifacts"]:
+			t.check(aidx["artifacts"].has(id), "AD-155 artifact icon " + id)
+		t.equal(aidx["artifacts"].size(), defs["artifacts"].size(), "AD-155 artifact icon count")
+	else:
+		t.check(false, "AD-155 artifact index parses")
+	for c in COOKIES:
+		var k: String = "ad_fx_cookie_" + c
+		t.check(assets.has(k) and assets[k]["category"] == "vfx" and assets[k]["row"] == "AD-117", "AD-155 cookie " + k)
+	for p in PARTICLES:
+		for sz in [8, 16]:
+			var k: String = "ad_fx_ptc_%s_%d" % [p, sz]
+			t.check(assets.has(k) and assets[k]["category"] == "vfx" and assets[k]["row"] == "AD-117", "AD-155 particle " + k)
+			t.check(assets.get(k, {}).get("mask") != null, "AD-155 particle mask " + k)
 
 func _engine_map(t, assets: Dictionary) -> void:
 	t.check(not ART.use_art_export, "AD-030 art export off by default")

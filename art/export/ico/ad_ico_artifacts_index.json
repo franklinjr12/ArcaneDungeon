@@ -1,0 +1,145 @@
+{
+ "atlas_16": "ad_ico_artifacts_atlas_16.png (+_glow)",
+ "atlas_32_card": "ad_ico_artifacts_atlas_32_card.png (frame+icon, glow in ad_ico_artifacts_atlas_32_icon_glow.png)",
+ "grid": {
+  "cols": 4,
+  "rows": 3,
+  "cell16": 16,
+  "cell32": 32,
+  "padding": 0
+ },
+ "artifacts": {
+  "rebound_sigil": {
+   "name": "Rebound Sigil",
+   "cell": 0,
+   "col": 0,
+   "row": 0,
+   "x16": 0,
+   "y16": 0,
+   "x32": 0,
+   "y32": 0,
+   "rarity_frame": "uncommon"
+  },
+  "residue_crystal": {
+   "name": "Residue Crystal",
+   "cell": 1,
+   "col": 1,
+   "row": 0,
+   "x16": 16,
+   "y16": 0,
+   "x32": 32,
+   "y32": 0,
+   "rarity_frame": "uncommon"
+  },
+  "shatterheart": {
+   "name": "Shatterheart",
+   "cell": 2,
+   "col": 2,
+   "row": 0,
+   "x16": 32,
+   "y16": 0,
+   "x32": 64,
+   "y32": 0,
+   "rarity_frame": "rare"
+  },
+  "momentum_rune": {
+   "name": "Momentum Rune",
+   "cell": 3,
+   "col": 3,
+   "row": 0,
+   "x16": 48,
+   "y16": 0,
+   "x32": 96,
+   "y32": 0,
+   "rarity_frame": "uncommon"
+  },
+  "echo_chamber": {
+   "name": "Echo Chamber",
+   "cell": 4,
+   "col": 0,
+   "row": 1,
+   "x16": 0,
+   "y16": 16,
+   "x32": 0,
+   "y32": 32,
+   "rarity_frame": "rare"
+  },
+  "stormglass": {
+   "name": "Stormglass",
+   "cell": 5,
+   "col": 1,
+   "row": 1,
+   "x16": 16,
+   "y16": 16,
+   "x32": 32,
+   "y32": 32,
+   "rarity_frame": "rare"
+  },
+  "tidewalkers_boots": {
+   "name": "Tidewalker's Boots",
+   "cell": 6,
+   "col": 2,
+   "row": 1,
+   "x16": 32,
+   "y16": 16,
+   "x32": 64,
+   "y32": 32,
+   "rarity_frame": "common"
+  },
+  "ember_heart": {
+   "name": "Ember Heart",
+   "cell": 7,
+   "col": 3,
+   "row": 1,
+   "x16": 48,
+   "y16": 16,
+   "x32": 96,
+   "y32": 32,
+   "rarity_frame": "rare"
+  },
+  "gravity_lens": {
+   "name": "Gravity Lens",
+   "cell": 8,
+   "col": 0,
+   "row": 2,
+   "x16": 0,
+   "y16": 32,
+   "x32": 0,
+   "y32": 64,
+   "rarity_frame": "epic"
+  },
+  "split_prism": {
+   "name": "Split Prism",
+   "cell": 9,
+   "col": 1,
+   "row": 2,
+   "x16": 16,
+   "y16": 32,
+   "x32": 32,
+   "y32": 64,
+   "rarity_frame": "uncommon"
+  },
+  "archivists_quill": {
+   "name": "Archivist's Quill",
+   "cell": 10,
+   "col": 2,
+   "row": 2,
+   "x16": 32,
+   "y16": 32,
+   "x32": 64,
+   "y32": 64,
+   "rarity_frame": "epic"
+  },
+  "warding_lantern": {
+   "name": "Warding Lantern",
+   "cell": 11,
+   "col": 3,
+   "row": 2,
+   "x16": 48,
+   "y16": 32,
+   "x32": 96,
+   "y32": 64,
+   "rarity_frame": "common"
+  }
+ }
+}

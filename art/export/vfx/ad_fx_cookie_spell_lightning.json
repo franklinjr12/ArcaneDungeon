@@ -1,0 +1,50 @@
+{ "frames": [
+   {
+    "filename": "ad_fx_cookie_spell_lightning_loop_00",
+    "frame": { "x": 0, "y": 0, "w": 64, "h": 64 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
+    "sourceSize": { "w": 64, "h": 64 },
+    "duration": 80
+   },
+   {
+    "filename": "ad_fx_cookie_spell_lightning_loop_01",
+    "frame": { "x": 64, "y": 0, "w": 64, "h": 64 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
+    "sourceSize": { "w": 64, "h": 64 },
+    "duration": 80
+   },
+   {
+    "filename": "ad_fx_cookie_spell_lightning_loop_02",
+    "frame": { "x": 128, "y": 0, "w": 64, "h": 64 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
+    "sourceSize": { "w": 64, "h": 64 },
+    "duration": 80
+   },
+   {
+    "filename": "ad_fx_cookie_spell_lightning_loop_03",
+    "frame": { "x": 192, "y": 0, "w": 64, "h": 64 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
+    "sourceSize": { "w": 64, "h": 64 },
+    "duration": 80
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_fx_cookie_spell_lightning.png",
+  "format": "RGBA8888",
+  "size": { "w": 256, "h": 64 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "loop", "from": 0, "to": 3, "direction": "forward", "color": "#000000ff" }
+  ]
+ }
+}
