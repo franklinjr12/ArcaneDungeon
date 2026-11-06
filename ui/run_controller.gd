@@ -1473,7 +1473,7 @@ func _close_editor(apply_changes: bool) -> void:
 
 ## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.
 func apply_debug_shot_state(state: String) -> bool:
-	if not OS.is_debug_build() or not state in ["combat","reward","loadout","workshop_editor","merchant","pause","summary","sigil_desk"]:
+	if not OS.is_debug_build() or not state in ["combat","reward","loadout","workshop_editor","merchant","pause","summary","summary_win","sigil_desk"]:
 		return false
 	if state == "sigil_desk":
 		if not flow.prelude and not (flow.prelude_available() and flow.enter_prelude()["ok"]):
@@ -1498,6 +1498,12 @@ func apply_debug_shot_state(state: String) -> bool:
 				flow.run.sequence_index = i
 				break
 		flow._enter_current()
+	elif state == "summary_win":
+		for i in 400:
+			if flow.state == "won" or not _dev_advance():
+				break
+		if flow.state != "won":
+			return false
 	elif state == "summary":
 		flow.session.sim.actor.receive_damage(100000,"fire",2,100)
 		flow.step({"cast":0})

@@ -124,6 +124,7 @@ func _text(parent: Node, text: String, rect: Dictionary, align: int = HORIZONTAL
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if wrap:
 		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.clip_text = true # keep the wrapped height from growing the label past its layout rect
 	return _reg(l, parent, rect) as Label
 
 func _pic(parent: Node, tex: Texture2D, rect: Dictionary) -> TextureRect:
@@ -211,6 +212,7 @@ func _build_page(tab: String, page: Control) -> void:
 	_box(page, "ad_ui_slot40_selected" if tab != "enemies" else "ad_ui_panel_inset", slot)
 	var pic_rect := {"x": slot["x"] + (slot["w"] - 16) / 2, "y": slot["y"] + (slot["h"] - 16) / 2, "w": 16, "h": 16}
 	d["slot"] = _pic(page, null, pic_rect)
+	d["slot"].visible = slot.get("w", 0) > 0 # artifacts layout has no detail slot
 	_detail[tab] = d
 	if layout_by_tab[tab].has("scroll_track"):
 		_box(page, "ad_ui_scroll_track_v", _w(tab, "scroll_track"))
