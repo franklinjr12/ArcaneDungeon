@@ -2,7 +2,7 @@
  "version": 1,
  "note": "[PROPOSED FOR PROTOTYPE] AD-148/AD-165 presentation only. Render-only 2D lighting; never read by the sim. Per stage: ambient colour*energy multiplies the arena (factor = 1 - energy*(1-colour)); torch = brazier prop light; 'at' values are fractions of session.world.bounds; player_light is a soft always-on glow around the mage; spell_lights unchanged from AD-148. readability.min_fraction = minimum lit/unlit brightness of floor and enemies.",
  "arena_light_mask": 2,
- "cookie_texture": "",
+ "cookie_texture": "res://art/export/vfx/ad_fx_cookie_radial_soft.png",
  "fallback_cookie_px": 128,
  "readability": {
   "min_fraction": 0.35,

@@ -45,6 +45,24 @@ static func export_map() -> Dictionary:
 	_export_data()
 	return _map
 
+const ARTIFACT_INDEX := "res://art/export/ico/ad_ico_artifacts_index.json"
+const ARTIFACT_ATLAS := {16: "res://art/export/ico/ad_ico_artifacts_atlas_16.png", 32: "res://art/export/ico/ad_ico_artifacts_atlas_32_icon.png"}
+static var _artifact_index: Dictionary = {}
+
+## AD-115 per-artifact icon (16 px or 32 px icon atlas, never the placeholder card frames); unknown id -> generic upgrade icon.
+static func artifact_icon(id: String, px: int = 16) -> AtlasTexture:
+	if _artifact_index.is_empty():
+		var parsed = JSON.parse_string(FileAccess.get_file_as_string(ARTIFACT_INDEX))
+		_artifact_index = parsed.get("artifacts", {}) if parsed is Dictionary else {}
+	if not _artifact_index.has(id):
+		return load("res://ui/skin_a.gd").icon_or_mvp("upgrade")
+	px = 32 if px >= 32 else 16
+	var e: Dictionary = _artifact_index[id]
+	var t := AtlasTexture.new()
+	t.atlas = load(ARTIFACT_ATLAS[px])
+	t.region = Rect2(float(e["x%d" % px]), float(e["y%d" % px]), px, px)
+	return t
+
 static func export_manifest() -> Dictionary:
 	_export_data()
 	return _manifest

@@ -83,6 +83,7 @@ func run(t) -> void:
 	_demo_x2(t, m, assets)
 	_demo_fx(t)
 	_demo_forms(t)
+	_demo_icons_light(t)
 	_engine_map(t, assets)
 	_actors(t)
 	_renderer(t)
@@ -253,6 +254,30 @@ func _demo_fx(t) -> void:
 		t.check(map["rune_icons"][id] != OLD_RUNE_ICONS[id], "AD-155 no placeholder icon for " + id)
 	for k in ["hp_up", "mana_up", "dash_up", "reroll", "undiscovered"]:
 		t.check(map["ui_icons"].has(k) and idx["icons"].has(map["ui_icons"][k]), "AD-155 ui icon " + k)
+
+## AD-155 step 4: per-artifact icons, AD-117 cookie and particle textures are wired.
+func _demo_icons_light(t) -> void:
+	var defs = _json("res://world/data/artifacts_v1.json")
+	var atlas_sizes := {}
+	for px in [16, 32]:
+		atlas_sizes[px] = (load(ART.ARTIFACT_ATLAS[px]) as Texture2D).get_size()
+	for id in defs["artifacts"]:
+		for px in [16, 32]:
+			var ic: AtlasTexture = ART.artifact_icon(id, px)
+			t.check(ic.region.size.x > 0 and ic.region.size.y > 0 and Rect2(Vector2.ZERO, atlas_sizes[px]).encloses(ic.region), "AD-155 artifact_icon %s @%d" % [id, px])
+	t.check(ART.artifact_icon("no_such_artifact").region.size.x > 0, "AD-155 unknown artifact falls back to upgrade icon")
+	for p in ["res://ui/pixel_hud.gd", "res://ui/compendium_screen.gd", "res://ui/loadout_view.gd"]:
+		t.check(not FileAccess.get_file_as_string(p).contains("ARTIFACT_ICON"), "AD-155 no generic ARTIFACT_ICON in " + p)
+	var light = _json("res://world/data/lighting_v1.json")
+	t.check(str(light["cookie_texture"]) != "" and load(light["cookie_texture"]) is Texture2D, "AD-155 lighting cookie loads")
+	var vfx = _json("res://world/data/vfx_v1.json")
+	for k in ["particle_texture", "glow_texture"]:
+		if str(vfx[k]) != "":
+			t.check(load(vfx[k]) is Texture2D, "AD-155 vfx " + k)
+	t.check(str(vfx["particle_texture"]) != "", "AD-155 vfx particle_texture set")
+	for el in ["fire", "water", "lightning", "cold", "force", "neutral"]:
+		var path := str(vfx["elements"][el]["glow"]["texture"])
+		t.check(path != "" and load(path) is Texture2D, "AD-155 vfx element texture " + el)
 
 func _engine_map(t, assets: Dictionary) -> void:
 	t.check(not ART.use_art_export, "AD-030 art export off by default")

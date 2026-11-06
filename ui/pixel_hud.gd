@@ -9,7 +9,6 @@ const TICKS_PER_SECOND := 60.0
 const MIN_FONT_SIZE := 14 # smallest legible text at 1280x720
 const STATUS_SLOTS := 3
 const ARTIFACT_SLOTS := 4
-const ARTIFACT_ICON := "upgrade" # no per-artifact icons exist yet; every artifact shows the generic upgrade glyph
 const SLOT_SPRITES := {"selected":"ad_ui_slot24_selected","ready":"ad_ui_slot24_ready","cooldown":"ad_ui_slot24_cooldown",
 	"no_mana":"ad_ui_slot24_no_mana","empty":"ad_ui_slot24_empty"}
 const ANCHOR_LEFT := ["ico_hp","bar_hp","txt_hp","ico_mana","bar_mp","txt_mp","status_"]
@@ -274,7 +273,7 @@ func _draw_run_info(running, sc: float) -> void:
 	_label("txt_coins","%d" % running.run.currency,SkinA.label_color("selected"),sc,false)
 	var held := artifact_ids()
 	for i in held.size():
-		_slot("artifact_%d" % i,"ready",SkinA.icon_or_mvp(ARTIFACT_ICON),sc)
+		_slot("artifact_%d" % i,"ready",Art.artifact_icon(str(held[i])),sc)
 
 func _draw_slots(live, sc: float) -> void:
 	var white := SkinA.label_color("normal")

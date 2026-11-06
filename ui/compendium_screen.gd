@@ -12,10 +12,10 @@ const SkinA = preload("res://ui/skin_a.gd")
 const SettingsScreen = preload("res://ui/settings_screen.gd")
 const MetaProgress = preload("res://world/meta_progress.gd")
 const Artifacts = preload("res://world/artifacts.gd")
+const Art = preload("res://ui/pixel_art_renderer.gd")
 const RUN_PATH := "res://world/data/run_v2.json"
 const TABS := ["runes", "reactions", "enemies", "artifacts"]
 const CHROME_LAYOUT := "compendium_runes"
-const ARTIFACT_ICON := "upgrade"
 ## Operand icon names + result icon per reaction id (display only; the rules live in the simulation data).
 const REACTION_ICONS := {
 	"wet_lightning_arc": ["wet", "lightning", "charged"],
@@ -324,7 +324,7 @@ func _style_cell(tab: String, c: Cell, extras: Array) -> void:
 		"runes":
 			extras[0].texture = SkinA.rune_icon(id) if known else SkinA.icon("undiscovered")
 		"artifacts":
-			extras[0].texture = SkinA.icon_or_mvp(ARTIFACT_ICON) if known else SkinA.icon("undiscovered")
+			extras[0].texture = Art.artifact_icon(id) if known else SkinA.icon("undiscovered")
 		"enemies":
 			extras[0].texture = SkinA.icon("undiscovered") if not known else null
 			extras[1].text = entry_name(tab, id) if known else "?"
@@ -372,7 +372,7 @@ func _select(tab: String, idx: int) -> void:
 	if known:
 		match tab:
 			"runes": tex = SkinA.rune_icon(id)
-			"artifacts": tex = SkinA.icon_or_mvp(ARTIFACT_ICON)
+			"artifacts": tex = Art.artifact_icon(id, 32)
 			"reactions": tex = SkinA.icon_or_mvp(REACTION_ICONS.get(id, ["undiscovered", "", "undiscovered"])[2])
 			_: tex = null
 	d["slot"].texture = tex
