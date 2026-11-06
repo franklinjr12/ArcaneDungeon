@@ -258,9 +258,9 @@ func _check_release_run(t, viewport: Node, scene: Node, window: Vector2i, state:
 	if state in ["combat","reward","merchant","pause"]:
 		var guarded: Array = [scene.arena_canvas.slot_hud, scene.objective, scene.coins_label, scene.pause_button]
 		if state == "reward":
-			guarded.append(scene.context)
+			guarded.append(scene.reward_overlay)
 		elif state == "merchant":
-			guarded.append(scene.shop_panel)
+			guarded.append(scene.shop_overlay)
 		for c in guarded:
 			t.check(not _has_scroll_ancestor(c), "AD-092 %s not inside a ScrollContainer at %s" % [c.name, tag])
 	if state == "combat":

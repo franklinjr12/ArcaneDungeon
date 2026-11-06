@@ -1,4 +1,5 @@
 extends SceneTree
+const SkinA = preload("res://ui/skin_a.gd")
 var failures := 0
 func _initialize() -> void:
 	call_deferred("_run")
@@ -166,27 +167,21 @@ func _run() -> void:
 	run.step()
 	control._redraw_panel()
 	expect(run.state=="cleared","first room advances to clear state")
-	expect(control.context.get_child_count()>2,"reward choice panel created")
+	expect(control.reward_overlay.visible and control.reward_overlay.get_child_count()>1,"reward choice panel created")
 	expect(control.tip.text.contains("3 cards"),"AD-042 first_reward tip at first clear")
 	var view_h: float = control.get_viewport_rect().size.y
-	var reward_buttons: Array = control.context.find_children("*","Button",true,false)
+	var reward_buttons: Array = control.reward_overlay.find_children("*","Button",true,false)
 	expect(not reward_buttons.is_empty() and reward_buttons.all(func(b): return b.get_global_rect().end.y <= view_h),
 		"reward buttons on screen at first clear")
-	var cards: Array = reward_buttons.filter(func(b): return b.text.substr(1,2)==") ")
-	expect(cards.size()==3 and cards.all(func(b): return b.get_theme_stylebox("normal") is StyleBoxTexture and b.icon != null),
-		"AD-040 3 reward cards have texture skin and icon")
-	expect(control.reward_overlay.visible and control.context.is_visible_in_tree() and control.reward_panel.is_ancestor_of(control.context),
-		"AD-092 reward cards sit in the centred overlay")
-	var card_row: Node = cards[0].get_parent() if not cards.is_empty() else null
-	expect(card_row is HBoxContainer and cards.all(func(b): return b.get_parent()==card_row)
-		and cards.all(func(b): return b.get_global_rect().end.x <= control.get_viewport_rect().size.x and b.get_global_rect().position.x >= 0.0),
-		"AD-093 3 reward cards share one on-screen HBoxContainer row")
-	var in_scroll := false
-	var walker: Node = control.context
-	while walker != null:
-		if walker is ScrollContainer: in_scroll = true
-		walker = walker.get_parent()
-	expect(not in_scroll,"AD-093 reward cards not inside a ScrollContainer")
+	var takes: Array = control.reward_take_buttons
+	expect(takes.size()==run.reward_options.size() and takes.size()==control.reward_cards.size() and takes.size()>=3
+		and takes.all(func(b): return b.is_visible_in_tree()),
+		"AD-153 one TAKE button and one kit card per reward option")
+	expect(control.reward_cards.all(func(c): return c.texture != null and SkinA.has_sprite(str(c.get_meta("sprite")))),
+		"AD-153 every reward card uses a kit sprite")
+	expect(takes.all(func(b): return b.get_global_rect().end.x <= control.get_viewport_rect().size.x and b.get_global_rect().position.x >= 0.0),
+		"AD-093 reward cards stay on screen")
+	expect(control.reward_overlay.find_children("*","ScrollContainer",true,false).is_empty(),"AD-093 reward cards not inside a ScrollContainer")
 	var key_one := InputEventKey.new()
 	key_one.keycode = KEY_1
 	key_one.pressed = true
@@ -270,14 +265,22 @@ func _run() -> void:
 	expect(not control.arena_canvas.visible,"combat canvas hidden during workshop")
 	expect(control.tip.text.contains("slot 4"),"AD-042 first_workshop tip on entering workshop")
 	expect(control.context.get_child_count()>3,"workshop test tools visible")
-	expect(control.shop_overlay.visible and control.arena_area.is_ancestor_of(control.shop_panel),"AD-093 shop overlay opens on workshop entry")
+	expect(control.shop_overlay.visible and control.is_ancestor_of(control.shop_overlay),"AD-153 shop overlay opens on workshop entry")
 	var previews := false
-	for label in control.shop_list.find_children("*","Label",true,false):
-		if label.text.contains("Affordable") or label.text.contains("Need "):
+	for b in control.shop_buy_buttons:
+		if b.text == control.tr("run.shop.buy") or b.text.begins_with(control.tr("run.shop.need_short").get_slice("%",0)) or b.text == control.tr("run.shop.sold"):
 			previews = true
-	expect(previews,"merchant displays effect preview and affordability")
-	var stock_buttons: Array = control.shop_list.find_children("*","Button",true,false).filter(func(b): return b.text.contains(" coins") and b != control.shop_reroll_button)
-	expect(not stock_buttons.is_empty() and stock_buttons.all(func(b): return b.icon != null),"AD-040 merchant stock buttons have icons")
+	expect(previews,"merchant displays affordability on each BUY button")
+	var stock: Array = control.flow.merchant.stock
+	expect(control.shop_cards.size()==stock.size() and control.shop_buy_buttons.size()==stock.size() and stock.size()>=3,
+		"AD-153 one offer card and BUY button per stock item")
+	expect(control.shop_cards.all(func(c): return SkinA.has_sprite(str(c.get_meta("sprite")))),"AD-153 every merchant offer uses a kit sprite")
+	var priced: Array = control.shop_overlay.find_children("price_*","Label",true,false)
+	expect(priced.size()==stock.size() and control.shop_overlay.find_children("price_ico_*","TextureRect",true,false).size()==stock.size(),
+		"AD-153 merchant offers show price plates with the coin icon")
+	for i in stock.size():
+		var affordable: bool = int(stock[i]["price"]) <= control.flow.run.currency and not control.flow.merchant.bought.has(stock[i]["id"])
+		expect(control.shop_buy_buttons[i].disabled == not affordable,"AD-153 BUY button %d disabled exactly when unaffordable or sold" % i)
 	control.shop_close_button.emit_signal("pressed")
 	expect(not control.shop_overlay.visible,"AD-093 Close shop hides the shop overlay")
 	control.shop_reopen_button.emit_signal("pressed")
@@ -303,6 +306,7 @@ func _run() -> void:
 	expect(control.shop_reroll_button.disabled,"AD-144 reroll button disabled after use")
 	run.run.currency = coins_start # keep later guide/telemetry checks on the original economy
 	control._redraw_panel()
+	control.shop_close_button.emit_signal("pressed") # AD-153: the merchant is a modal; the player leaves it before editing
 	control._open_editor(1)
 	expect(control.editor_open and control.editor_panel.visible,"structured editor panel opens")
 	expect(not (control.editor_panel.get_parent() is CenterContainer),"AD-093 editor is docked, not centred")
@@ -441,11 +445,11 @@ func _run() -> void:
 	control._redraw_panel()
 	expect(run.state=="won","clearing the first stage-2 room wins the slice")
 	var texts: Array = []
-	for item in control.context.find_children("*","Label",true,false):
+	for item in control.summary_overlay.find_children("*","Label",true,false):
 		texts.append(item.text)
 	var joined := "\n".join(texts)
-	expect(joined.contains("RUN SUMMARY") and joined.contains("VICTORY"),"win opens Run Summary: victory")
-	expect(joined.contains("Kills") and joined.contains("Spells used"),"summary shows kills and spells used")
+	expect(joined.contains(control.tr("run.summary.title_win")) and joined.contains(control.tr("run.summary.victory")),"win opens Run Summary: victory")
+	expect(joined.contains(control.tr("run.summary.l_kills")) and joined.contains(control.tr("run.summary.l_spells")),"summary shows kills and spells used")
 	expect(control.summary_retry_button != null and control.summary_retry_button.is_visible_in_tree()
 		and control.summary_new_seed_button != null and control.summary_new_seed_button.is_visible_in_tree()
 		and control.summary_title_button != null and control.summary_title_button.is_visible_in_tree(),
@@ -468,10 +472,10 @@ func _run() -> void:
 	run.step({"cast":0})
 	control._redraw_panel()
 	texts.clear()
-	for item in control.context.find_children("*","Label",true,false):
+	for item in control.summary_overlay.find_children("*","Label",true,false):
 		texts.append(item.text)
 	joined = "\n".join(texts)
-	expect(run.state=="dead" and joined.contains("RUN SUMMARY") and joined.contains("DEFEATED"),
+	expect(run.state=="dead" and joined.contains(control.tr("run.summary.title_lose")) and joined.contains(control.tr("run.summary.defeated")),
 		"death opens Run Summary: defeated")
 	expect(save.stats()["runs"]==2 and save.stats()["deaths"]==1,"AD-019 death recorded in stats")
 	expect(not save.has_run(),"AD-146 death deletes the run save")

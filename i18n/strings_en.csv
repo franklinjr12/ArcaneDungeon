@@ -489,3 +489,38 @@ settings.help.hold_cast,Hold the cast button instead of clicking repeatedly.
 settings.help.aim_assist,Nudges spells toward the nearest enemy.
 settings.help.visual_cues,Shows an icon on screen for important sounds.
 settings.help.telemetry,Writes anonymous play stats to a local file only. Nothing is sent anywhere.
+run.reward.title,CHOOSE A REWARD
+run.reward.subtitle,ROOM %d CLEARED   TAKE ONE
+run.reward.take,TAKE
+run.reward.coins,COINS %d
+run.reward.coins_name,+%d COINS
+run.reward.coins_desc,Coins for the merchant. Added to your purse right away.
+run.reward.tag_rune,%s RUNE
+run.reward.tag_artifact,%s ARTIFACT
+run.reward.tag_upgrade,%s UPGRADE
+run.reward.tag_currency,%s REWARD
+run.rarity.common,COMMON
+run.rarity.uncommon,UNCOMMON
+run.rarity.rare,RARE
+run.rarity.epic,EPIC
+run.shop.price_coins,%d COINS
+run.shop.sold,SOLD
+run.shop.buy,BUY
+run.shop.need_short,NEED %d
+run.shop.coins,%d COINS
+run.shop.reroll_btn,REROLL   %d
+run.shop.reroll_spent,REROLLED
+run.shop.reroll_note,ONE PAID REROLL PER VISIT
+run.shop.leave,LEAVE
+run.shop.hint,ARROWS BROWSE   ENTER BUY   ESC LEAVE
+run.summary.title_win,RUN COMPLETE
+run.summary.title_lose,RUN OVER
+run.summary.sub_win,THE BOSS FALLS.
+run.summary.sub_lose,FELL IN STAGE %d.
+run.summary.l_stage,STAGE REACHED
+run.summary.l_rooms,ROOMS CLEARED
+run.summary.l_time,TIME
+run.summary.l_kills,ENEMIES DEFEATED
+run.summary.l_spells,SPELLS USED
+run.summary.l_coins,COINS HELD
+run.summary.loadout,FINAL LOADOUT
