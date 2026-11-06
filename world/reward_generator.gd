@@ -4,9 +4,11 @@ const Difficulty = preload("res://game/core/difficulty.gd")
 const Artifacts = preload("res://world/artifacts.gd")
 var config: Dictionary = {}
 var excluded: Array = []
-func _init(tuning: Dictionary, excluded_ids: Array = []) -> void:
+var excluded_artifacts: Array = []
+func _init(tuning: Dictionary, excluded_ids: Array = [], excluded_artifact_ids: Array = []) -> void:
 	config = tuning.duplicate(true)
 	excluded = excluded_ids.duplicate()
+	excluded_artifacts = excluded_artifact_ids.duplicate()
 
 func choices(run, room_id: String, force_artifact: bool = false) -> Array:
 	var possible: Array = []
@@ -28,17 +30,17 @@ func choices(run, room_id: String, force_artifact: bool = false) -> Array:
 	if options.size() < wanted:
 		options.append({"kind":"currency","amount":Difficulty.scale_i(int(config["room_reward_currency"]),"coin_rate",0)})
 	# AD-143: artifact card appended last, own RNG so the rune picks above never shift.
-	var artifact_card := artifact_choice(run,hash_value,force_artifact)
+	var artifact_card := artifact_choice(run,hash_value,force_artifact,excluded_artifacts)
 	if not artifact_card.is_empty():
 		options.append(artifact_card)
 	return options
 
-static func artifact_choice(run, hash_value: int, force_artifact: bool) -> Dictionary:
+static func artifact_choice(run, hash_value: int, force_artifact: bool, excluded_ids: Array = []) -> Dictionary:
 	var settings: Dictionary = Artifacts.config()
 	var held: Array = run.artifacts
 	if held.size() >= Artifacts.max_held():
 		return {}
-	var candidates: Array = Artifacts.definitions().keys().filter(func(id): return id not in held)
+	var candidates: Array = Artifacts.definitions().keys().filter(func(id): return id not in held and id not in excluded_ids)
 	candidates.sort()
 	if candidates.is_empty():
 		return {}

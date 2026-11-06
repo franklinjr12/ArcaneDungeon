@@ -1,0 +1,15 @@
+{
+	"_note": "AD-145 PROPOSED numbers (Demo Plan section 5 Meta, MVP C1). Milestone counts and unlock lists are tunable; unlocks only widen the rune/artifact pools, never grant permanent stat power.",
+	"schema_version": 1,
+	"categories": ["runes", "reactions", "enemies", "artifacts"],
+	"compendium": {
+		"reactions": ["wet_lightning_arc", "chill_freeze", "wet_cold_freeze", "frozen_force_shatter", "fire_thaw_steam"],
+		"enemies": ["bone_thrall", "cistern_slime", "cistern_slimelet", "corpse_bloat", "deep_eel", "drowned_acolyte", "drowned_archivist", "fallen_adept", "grave_hound", "lantern_wisp", "ossuary_shieldbearer", "rust_golem", "storm_crystal", "undead_warden", "wailing_spirit"]
+	},
+	"milestones": [
+		{"id": "runes_8", "category": "runes", "count": 8, "name_key": "META_MILESTONE_RUNES_8", "unlocks": {"runes": ["trigger.on_expire"], "artifacts": ["echo_chamber"]}},
+		{"id": "reactions_2", "category": "reactions", "count": 2, "name_key": "META_MILESTONE_REACTIONS_2", "unlocks": {"runes": ["trigger.timer"], "artifacts": ["stormglass"]}},
+		{"id": "enemies_6", "category": "enemies", "count": 6, "name_key": "META_MILESTONE_ENEMIES_6", "unlocks": {"runes": [], "artifacts": ["shatterheart", "gravity_lens"]}},
+		{"id": "artifacts_4", "category": "artifacts", "count": 4, "name_key": "META_MILESTONE_ARTIFACTS_4", "unlocks": {"runes": [], "artifacts": ["archivists_quill"]}}
+	]
+}

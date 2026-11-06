@@ -9,6 +9,8 @@ var bought: Dictionary = {}
 var flavour: Dictionary = {}
 var _all_ids: Array = []
 var _excluded_ids: Array = []
+## AD-145: meta-locked artifacts never enter the offer.
+var excluded_artifacts: Array = []
 const FLAVOUR_PATH := "res://world/data/flavour_v1.json"
 
 static func load_flavour() -> Dictionary:
@@ -100,7 +102,7 @@ func reroll(run) -> Dictionary:
 func _artifact_pick(run, salt: int = 0) -> String:
 	if run.artifacts.size() >= Artifacts.max_held():
 		return ""
-	var candidates: Array = Artifacts.definitions().keys().filter(func(id): return id not in run.artifacts)
+	var candidates: Array = Artifacts.definitions().keys().filter(func(id): return id not in run.artifacts and id not in excluded_artifacts)
 	candidates.sort()
 	if candidates.is_empty():
 		return ""

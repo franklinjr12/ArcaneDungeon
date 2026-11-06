@@ -356,3 +356,39 @@ artifact.archivists_quill.name,Archivist's Quill
 artifact.archivists_quill.desc,On Kill payloads also fire each time an elite or boss loses 25% of its HP.
 artifact.warding_lantern.name,Warding Lantern
 artifact.warding_lantern.desc,Clearing a room gives a shield that absorbs the next hit.
+menu.compendium,Compendium
+compendium.title,Compendium
+compendium.back,Back
+compendium.unknown,???
+compendium.section.runes,Runes
+compendium.section.reactions,Reactions
+compendium.section.enemies,Enemies
+compendium.section.artifacts,Artifacts
+compendium.milestones,Milestones
+compendium.progress,%d/%d
+compendium.met,[done]
+compendium.locked,[locked]
+compendium.reaction.wet_lightning_arc,Lightning Arc
+compendium.reaction.chill_freeze,Chill Freeze
+compendium.reaction.wet_cold_freeze,Wet Freeze
+compendium.reaction.frozen_force_shatter,Shatter
+compendium.reaction.fire_thaw_steam,Steam Thaw
+compendium.enemy.bone_thrall,Bone Thrall
+compendium.enemy.cistern_slime,Cistern Slime
+compendium.enemy.cistern_slimelet,Cistern Slimelet
+compendium.enemy.corpse_bloat,Corpse Bloat
+compendium.enemy.deep_eel,Deep Eel
+compendium.enemy.drowned_acolyte,Drowned Acolyte
+compendium.enemy.drowned_archivist,Drowned Archivist
+compendium.enemy.fallen_adept,Fallen Adept
+compendium.enemy.grave_hound,Grave Hound
+compendium.enemy.lantern_wisp,Lantern Wisp
+compendium.enemy.ossuary_shieldbearer,Ossuary Shieldbearer
+compendium.enemy.rust_golem,Rust Golem
+compendium.enemy.storm_crystal,Storm Crystal
+compendium.enemy.undead_warden,Undead Warden
+compendium.enemy.wailing_spirit,Wailing Spirit
+META_MILESTONE_RUNES_8,Discover 8 runes
+META_MILESTONE_REACTIONS_2,Discover 2 reactions
+META_MILESTONE_ENEMIES_6,Discover 6 enemies
+META_MILESTONE_ARTIFACTS_4,Discover 4 artifacts
