@@ -1,0 +1,83 @@
+{ "frames": [
+   {
+    "filename": "ad_prp_ice_patch_forming_00",
+    "frame": { "x": 0, "y": 0, "w": 32, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
+    "sourceSize": { "w": 32, "h": 32 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_prp_ice_patch_forming_01",
+    "frame": { "x": 32, "y": 0, "w": 32, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
+    "sourceSize": { "w": 32, "h": 32 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_prp_ice_patch_forming_02",
+    "frame": { "x": 64, "y": 0, "w": 32, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
+    "sourceSize": { "w": 32, "h": 32 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_prp_ice_patch_idle_00",
+    "frame": { "x": 96, "y": 0, "w": 32, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
+    "sourceSize": { "w": 32, "h": 32 },
+    "duration": 200
+   },
+   {
+    "filename": "ad_prp_ice_patch_melting_00",
+    "frame": { "x": 0, "y": 32, "w": 32, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
+    "sourceSize": { "w": 32, "h": 32 },
+    "duration": 130
+   },
+   {
+    "filename": "ad_prp_ice_patch_melting_01",
+    "frame": { "x": 32, "y": 32, "w": 32, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
+    "sourceSize": { "w": 32, "h": 32 },
+    "duration": 130
+   },
+   {
+    "filename": "ad_prp_ice_patch_melting_02",
+    "frame": { "x": 64, "y": 32, "w": 32, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
+    "sourceSize": { "w": 32, "h": 32 },
+    "duration": 130
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_prp_ice_patch.png",
+  "format": "I8",
+  "size": { "w": 128, "h": 64 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "forming", "from": 0, "to": 2, "direction": "forward", "color": "#000000ff" },
+   { "name": "idle", "from": 3, "to": 3, "direction": "forward", "color": "#000000ff" },
+   { "name": "melting", "from": 4, "to": 6, "direction": "forward", "color": "#000000ff" }
+  ],
+  "slices": [
+   { "name": "pivot", "keys": [{ "frame": 0, "bounds": {"x": 16, "y": 30, "w": 1, "h": 1 } }] },
+   { "name": "hurtbox", "keys": [{ "frame": 0, "bounds": {"x": 2, "y": 14, "w": 30, "h": 17 } }] }
+  ]
+ }
+}

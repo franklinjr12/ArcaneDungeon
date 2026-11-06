@@ -26,6 +26,11 @@ func run(t) -> void:
 		if e.get("kind", "") == "glyph_atlas":
 			continue
 		var tsize: Vector2i = Vector2i(tex.get_size())
+		if e.get("glow") != null:
+			var gt = load(e["glow"])
+			t.check(gt is Texture2D, "AD-154 glow png loads: " + stem)
+			if gt is Texture2D:
+				t.equal(Vector2i(gt.get_size()), tsize, "AD-154 glow size matches base: " + stem)
 		var frames: Array = j["frames"]
 		var tags: Array = j["meta"]["frameTags"]
 		var sf: SpriteFrames = ART.build_sprite_frames(stem)
@@ -65,8 +70,36 @@ func run(t) -> void:
 		if pivot != null:
 			t.equal(e["pivot"], pivot, "AD-030 manifest pivot: " + stem)
 	t.check(sprites >= 30, "AD-030 sprite entries >= 30")
+	_cistern(t, m, assets)
 	_engine_map(t, assets)
 	_actors(t)
+
+## AD-154: Cistern tileset, arena, AD-120 props and AD-122 chest/altar are in the manifest.
+func _cistern(t, m: Dictionary, assets: Dictionary) -> void:
+	for row in ["AD-099", "AD-100", "AD-120", "AD-122"]:
+		t.check(row in m["source_rows"], "AD-154 source row " + row)
+		var n := 0
+		for stem in assets:
+			if assets[stem]["row"] == row:
+				n += 1
+		t.check(n > 0, "AD-154 assets from " + row)
+	t.check(assets.has("ad_til_flooded_cistern"), "AD-154 flooded cistern tiles")
+	if assets.has("ad_til_flooded_cistern"):
+		var tg: Array = assets["ad_til_flooded_cistern"]["tags"].keys()
+		tg.sort()
+		for n in ["floor", "shore", "deep", "water_loop", "deep_loop"]:
+			t.check(n in tg, "AD-154 flooded cistern tag " + n)
+	t.equal(assets.get("ad_fx_cistern_motes", {}).get("category", ""), "vfx", "AD-154 motes are vfx")
+	t.equal(assets.get("ad_fx_cistern_motes", {}).get("id", ""), "AD-TIL-010-motes", "AD-154 motes id")
+	for s in ["brazier_cistern", "brazier_ruins", "breakable_urn", "breakable_urn_cistern", "burnable_crate_cistern", "burnable_crate_ruins", "cobweb_cistern", "cobweb_ruins", "cracked_wall_cistern", "cracked_wall_ruins", "ice_patch", "puddle_cistern", "puddle_ruins"]:
+		t.check(assets.has("ad_prp_" + s) and assets["ad_prp_" + s]["row"] == "AD-120", "AD-154 AD-120 prop " + s)
+	for s in ["treasure_chest", "challenge_altar"]:
+		for v in ["ruins", "cistern"]:
+			var k := "ad_prp_%s_%s" % [s, v]
+			t.check(assets.has(k) and assets[k]["row"] == "AD-122", "AD-154 AD-122 " + k)
+	for lv in ["high", "mid", "low"]:
+		for suf in ["", "_glow"]:
+			t.check(FileAccess.file_exists("res://art/export/til/ad_til_archivist_arena_lvl_%s%s.png" % [lv, suf]), "AD-154 arena level %s%s" % [lv, suf])
 
 func _engine_map(t, assets: Dictionary) -> void:
 	t.check(not ART.use_art_export, "AD-030 art export off by default")

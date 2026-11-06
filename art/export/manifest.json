@@ -705,6 +705,35 @@
     }
    }
   },
+  "ad_fx_cistern_motes": {
+   "canvas": [
+    8,
+    8
+   ],
+   "category": "vfx",
+   "id": "AD-TIL-010-motes",
+   "json": "res://art/export/vfx/ad_fx_cistern_motes.json",
+   "pivot": [
+    4.0,
+    4.0
+   ],
+   "png": "res://art/export/vfx/ad_fx_cistern_motes.png",
+   "row": "AD-099",
+   "slices": {},
+   "tags": {
+    "mote": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    }
+   }
+  },
   "ad_ico_atlas_mvp": {
    "canvas": [
     16,
@@ -943,6 +972,763 @@
     }
    }
   },
+  "ad_prp_archivist_ruins": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_archivist_ruins_glow.png",
+   "id": "AD-PRP-005",
+   "json": "res://art/export/prp/ad_prp_archivist_ruins.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_archivist_ruins.png",
+   "row": "AD-100",
+   "slices": {
+    "hurtbox": {
+     "h": 30,
+     "w": 28,
+     "x": 2,
+     "y": 1
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "book_pile_tome": {
+     "frames": 1,
+     "from": 4,
+     "ms": [
+      1000
+     ],
+     "to": 4
+    },
+    "pages_float": {
+     "frames": 6,
+     "from": 5,
+     "ms": [
+      150,
+      150,
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 10
+    },
+    "shelf_standing": {
+     "frames": 2,
+     "from": 0,
+     "ms": [
+      1000,
+      1000
+     ],
+     "to": 1
+    },
+    "shelf_stub": {
+     "frames": 1,
+     "from": 3,
+     "ms": [
+      1000
+     ],
+     "to": 3
+    },
+    "shelf_toppled": {
+     "frames": 1,
+     "from": 2,
+     "ms": [
+      1000
+     ],
+     "to": 2
+    }
+   }
+  },
+  "ad_prp_brazier_cistern": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_brazier_cistern_glow.png",
+   "id": "AD-PRP-116e-C",
+   "json": "res://art/export/prp/ad_prp_brazier_cistern.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_brazier_cistern.png",
+   "row": "AD-120",
+   "slices": {
+    "hurtbox": {
+     "h": 31,
+     "w": 24,
+     "x": 4,
+     "y": 0
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "ignite": {
+     "frames": 2,
+     "from": 5,
+     "ms": [
+      60,
+      110
+     ],
+     "to": 6
+    },
+    "lit": {
+     "frames": 4,
+     "from": 1,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 4
+    },
+    "unlit": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_brazier_ruins": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_brazier_ruins_glow.png",
+   "id": "AD-PRP-116e",
+   "json": "res://art/export/prp/ad_prp_brazier_ruins.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_brazier_ruins.png",
+   "row": "AD-120",
+   "slices": {
+    "hurtbox": {
+     "h": 31,
+     "w": 24,
+     "x": 4,
+     "y": 0
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "ignite": {
+     "frames": 2,
+     "from": 5,
+     "ms": [
+      60,
+      110
+     ],
+     "to": 6
+    },
+    "lit": {
+     "frames": 4,
+     "from": 1,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 4
+    },
+    "unlit": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_breakable_urn": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_breakable_urn_glow.png",
+   "id": "AD-PRP-010",
+   "json": "res://art/export/prp/ad_prp_breakable_urn.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_breakable_urn.png",
+   "row": "AD-120",
+   "slices": {
+    "hurtbox": {
+     "h": 31,
+     "w": 32,
+     "x": 0,
+     "y": 0
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "break": {
+     "frames": 4,
+     "from": 1,
+     "ms": [
+      60,
+      80,
+      80,
+      200
+     ],
+     "to": 4
+    },
+    "idle": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_breakable_urn_cistern": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_breakable_urn_cistern_glow.png",
+   "id": "AD-PRP-010-C",
+   "json": "res://art/export/prp/ad_prp_breakable_urn_cistern.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_breakable_urn_cistern.png",
+   "row": "AD-120",
+   "slices": {
+    "hurtbox": {
+     "h": 31,
+     "w": 32,
+     "x": 0,
+     "y": 0
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "break": {
+     "frames": 4,
+     "from": 1,
+     "ms": [
+      60,
+      80,
+      80,
+      200
+     ],
+     "to": 4
+    },
+    "idle": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_burnable_crate_cistern": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_burnable_crate_cistern_glow.png",
+   "id": "AD-PRP-116a-C",
+   "json": "res://art/export/prp/ad_prp_burnable_crate_cistern.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_burnable_crate_cistern.png",
+   "row": "AD-120",
+   "slices": {
+    "hurtbox": {
+     "h": 29,
+     "w": 25,
+     "x": 5,
+     "y": 2
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "ash": {
+     "frames": 1,
+     "from": 5,
+     "ms": [
+      200
+     ],
+     "to": 5
+    },
+    "burning": {
+     "frames": 4,
+     "from": 1,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 4
+    },
+    "idle": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_burnable_crate_ruins": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_burnable_crate_ruins_glow.png",
+   "id": "AD-PRP-116a",
+   "json": "res://art/export/prp/ad_prp_burnable_crate_ruins.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_burnable_crate_ruins.png",
+   "row": "AD-120",
+   "slices": {
+    "hurtbox": {
+     "h": 29,
+     "w": 23,
+     "x": 5,
+     "y": 2
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "ash": {
+     "frames": 1,
+     "from": 5,
+     "ms": [
+      200
+     ],
+     "to": 5
+    },
+    "burning": {
+     "frames": 4,
+     "from": 1,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 4
+    },
+    "idle": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_challenge_altar_cistern": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_challenge_altar_cistern_glow.png",
+   "id": "AD-PRP-014-cistern",
+   "json": "res://art/export/prp/ad_prp_challenge_altar_cistern.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_challenge_altar_cistern.png",
+   "row": "AD-122",
+   "slices": {
+    "hurtbox": {
+     "h": 28,
+     "w": 28,
+     "x": 2,
+     "y": 3
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "activated": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 7
+    },
+    "idle": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_prp_challenge_altar_ruins": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_challenge_altar_ruins_glow.png",
+   "id": "AD-PRP-014-ruins",
+   "json": "res://art/export/prp/ad_prp_challenge_altar_ruins.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_challenge_altar_ruins.png",
+   "row": "AD-122",
+   "slices": {
+    "hurtbox": {
+     "h": 28,
+     "w": 28,
+     "x": 2,
+     "y": 3
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "activated": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 7
+    },
+    "idle": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_prp_cistern_exit_portal": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_cistern_exit_portal_glow.png",
+   "id": "AD-PRP-002C",
+   "json": "res://art/export/prp/ad_prp_cistern_exit_portal.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_cistern_exit_portal.png",
+   "row": "AD-100",
+   "slices": {
+    "hurtbox": {
+     "h": 30,
+     "w": 28,
+     "x": 2,
+     "y": 1
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "loop": {
+     "frames": 6,
+     "from": 0,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 5
+    }
+   }
+  },
+  "ad_prp_cistern_room_gate": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_cistern_room_gate_glow.png",
+   "id": "AD-PRP-001C",
+   "json": "res://art/export/prp/ad_prp_cistern_room_gate.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_cistern_room_gate.png",
+   "row": "AD-100",
+   "slices": {
+    "hurtbox": {
+     "h": 30,
+     "w": 32,
+     "x": 0,
+     "y": 1
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "lock": {
+     "frames": 4,
+     "from": 6,
+     "ms": [
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 9
+    },
+    "locked": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      1000
+     ],
+     "to": 0
+    },
+    "open": {
+     "frames": 1,
+     "from": 5,
+     "ms": [
+      1000
+     ],
+     "to": 5
+    },
+    "unlock": {
+     "frames": 4,
+     "from": 1,
+     "ms": [
+      80,
+      80,
+      80,
+      80
+     ],
+     "to": 4
+    }
+   }
+  },
+  "ad_prp_cobweb_cistern": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_cobweb_cistern_glow.png",
+   "id": "AD-PRP-116b-C",
+   "json": "res://art/export/prp/ad_prp_cobweb_cistern.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_cobweb_cistern.png",
+   "row": "AD-120",
+   "slices": {
+    "hurtbox": {
+     "h": 31,
+     "w": 32,
+     "x": 0,
+     "y": 0
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "burning": {
+     "frames": 3,
+     "from": 1,
+     "ms": [
+      110,
+      110,
+      110
+     ],
+     "to": 3
+    },
+    "gone": {
+     "frames": 1,
+     "from": 4,
+     "ms": [
+      200
+     ],
+     "to": 4
+    },
+    "idle": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_cobweb_ruins": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_cobweb_ruins_glow.png",
+   "id": "AD-PRP-116b",
+   "json": "res://art/export/prp/ad_prp_cobweb_ruins.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_cobweb_ruins.png",
+   "row": "AD-120",
+   "slices": {
+    "hurtbox": {
+     "h": 27,
+     "w": 26,
+     "x": 2,
+     "y": 4
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "burning": {
+     "frames": 3,
+     "from": 1,
+     "ms": [
+      110,
+      110,
+      110
+     ],
+     "to": 3
+    },
+    "gone": {
+     "frames": 1,
+     "from": 4,
+     "ms": [
+      200
+     ],
+     "to": 4
+    },
+    "idle": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
   "ad_prp_coin_pickup": {
    "canvas": [
     16,
@@ -982,6 +1768,126 @@
       100
      ],
      "to": 3
+    }
+   }
+  },
+  "ad_prp_cracked_wall_cistern": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_cracked_wall_cistern_glow.png",
+   "id": "AD-PRP-116g-C",
+   "json": "res://art/export/prp/ad_prp_cracked_wall_cistern.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_cracked_wall_cistern.png",
+   "row": "AD-120",
+   "slices": {
+    "hurtbox": {
+     "h": 29,
+     "w": 32,
+     "x": 0,
+     "y": 2
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "break": {
+     "frames": 5,
+     "from": 1,
+     "ms": [
+      70,
+      70,
+      90,
+      90,
+      110
+     ],
+     "to": 5
+    },
+    "idle": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    },
+    "opening": {
+     "frames": 1,
+     "from": 6,
+     "ms": [
+      200
+     ],
+     "to": 6
+    }
+   }
+  },
+  "ad_prp_cracked_wall_ruins": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_cracked_wall_ruins_glow.png",
+   "id": "AD-PRP-116g",
+   "json": "res://art/export/prp/ad_prp_cracked_wall_ruins.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_cracked_wall_ruins.png",
+   "row": "AD-120",
+   "slices": {
+    "hurtbox": {
+     "h": 29,
+     "w": 32,
+     "x": 0,
+     "y": 2
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "break": {
+     "frames": 5,
+     "from": 1,
+     "ms": [
+      70,
+      70,
+      90,
+      90,
+      110
+     ],
+     "to": 5
+    },
+    "idle": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    },
+    "opening": {
+     "frames": 1,
+     "from": 6,
+     "ms": [
+      200
+     ],
+     "to": 6
     }
    }
   },
@@ -1065,6 +1971,174 @@
       1000
      ],
      "to": 0
+    }
+   }
+  },
+  "ad_prp_ice_patch": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_ice_patch_glow.png",
+   "id": "AD-PRP-116d",
+   "json": "res://art/export/prp/ad_prp_ice_patch.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_ice_patch.png",
+   "row": "AD-120",
+   "slices": {
+    "hurtbox": {
+     "h": 17,
+     "w": 30,
+     "x": 2,
+     "y": 14
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "forming": {
+     "frames": 3,
+     "from": 0,
+     "ms": [
+      110,
+      110,
+      110
+     ],
+     "to": 2
+    },
+    "idle": {
+     "frames": 1,
+     "from": 3,
+     "ms": [
+      200
+     ],
+     "to": 3
+    },
+    "melting": {
+     "frames": 3,
+     "from": 4,
+     "ms": [
+      130,
+      130,
+      130
+     ],
+     "to": 6
+    }
+   }
+  },
+  "ad_prp_puddle_cistern": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_puddle_cistern_glow.png",
+   "id": "AD-PRP-116c-C",
+   "json": "res://art/export/prp/ad_prp_puddle_cistern.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_puddle_cistern.png",
+   "row": "AD-120",
+   "slices": {
+    "hurtbox": {
+     "h": 16,
+     "w": 31,
+     "x": 1,
+     "y": 15
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "electrified": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      70,
+      70,
+      70,
+      70
+     ],
+     "to": 7
+    },
+    "idle": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_prp_puddle_ruins": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_puddle_ruins_glow.png",
+   "id": "AD-PRP-116c",
+   "json": "res://art/export/prp/ad_prp_puddle_ruins.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_puddle_ruins.png",
+   "row": "AD-120",
+   "slices": {
+    "hurtbox": {
+     "h": 16,
+     "w": 31,
+     "x": 1,
+     "y": 15
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "electrified": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      70,
+      70,
+      70,
+      70
+     ],
+     "to": 7
+    },
+    "idle": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
     }
    }
   },
@@ -1403,6 +2477,110 @@
     }
    }
   },
+  "ad_prp_treasure_chest_cistern": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_treasure_chest_cistern_glow.png",
+   "id": "AD-PRP-013-cistern",
+   "json": "res://art/export/prp/ad_prp_treasure_chest_cistern.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_treasure_chest_cistern.png",
+   "row": "AD-122",
+   "slices": {
+    "hurtbox": {
+     "h": 21,
+     "w": 24,
+     "x": 4,
+     "y": 10
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "closed": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      1000
+     ],
+     "to": 0
+    },
+    "open": {
+     "frames": 5,
+     "from": 1,
+     "ms": [
+      80,
+      80,
+      80,
+      100,
+      200
+     ],
+     "to": 5
+    }
+   }
+  },
+  "ad_prp_treasure_chest_ruins": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_treasure_chest_ruins_glow.png",
+   "id": "AD-PRP-013-ruins",
+   "json": "res://art/export/prp/ad_prp_treasure_chest_ruins.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_treasure_chest_ruins.png",
+   "row": "AD-122",
+   "slices": {
+    "hurtbox": {
+     "h": 20,
+     "w": 24,
+     "x": 4,
+     "y": 11
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "closed": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      1000
+     ],
+     "to": 0
+    },
+    "open": {
+     "frames": 5,
+     "from": 1,
+     "ms": [
+      80,
+      80,
+      80,
+      100,
+      200
+     ],
+     "to": 5
+    }
+   }
+  },
   "ad_prp_workshop_exit": {
    "canvas": [
     32,
@@ -1442,6 +2620,532 @@
       150
      ],
      "to": 3
+    }
+   }
+  },
+  "ad_til_archivist_arena": {
+   "canvas": [
+    384,
+    256
+   ],
+   "category": "til",
+   "glow": "res://art/export/til/ad_til_archivist_arena_glow.png",
+   "id": "AD-TIL-013",
+   "json": "res://art/export/til/ad_til_archivist_arena.json",
+   "pivot": [
+    0,
+    255
+   ],
+   "png": "res://art/export/til/ad_til_archivist_arena.png",
+   "row": "AD-100",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 255
+    }
+   },
+   "tags": {
+    "lvl_high": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      200,
+      200,
+      200,
+      200
+     ],
+     "to": 3
+    },
+    "lvl_low": {
+     "frames": 4,
+     "from": 8,
+     "ms": [
+      200,
+      200,
+      200,
+      200
+     ],
+     "to": 11
+    },
+    "lvl_mid": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      200,
+      200,
+      200,
+      200
+     ],
+     "to": 7
+    }
+   }
+  },
+  "ad_til_cistern_accents": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "til",
+   "glow": "res://art/export/til/ad_til_cistern_accents_glow.png",
+   "id": "AD-TIL-011",
+   "json": "res://art/export/til/ad_til_cistern_accents.json",
+   "pivot": [
+    0,
+    15
+   ],
+   "png": "res://art/export/til/ad_til_cistern_accents.png",
+   "row": "AD-100",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 15
+    }
+   },
+   "tags": {
+    "candle_cluster": {
+     "frames": 4,
+     "from": 35,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 38
+    },
+    "candle_float": {
+     "frames": 4,
+     "from": 39,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 42
+    },
+    "candle_single": {
+     "frames": 4,
+     "from": 31,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 34
+    },
+    "drain": {
+     "frames": 16,
+     "from": 2,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 17
+    },
+    "grate": {
+     "frames": 2,
+     "from": 0,
+     "ms": [
+      1000,
+      1000
+     ],
+     "to": 1
+    },
+    "moss": {
+     "frames": 9,
+     "from": 22,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 30
+    },
+    "pillar": {
+     "frames": 4,
+     "from": 18,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 21
+    }
+   }
+  },
+  "ad_til_cistern_challenge": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "til",
+   "glow": "res://art/export/til/ad_til_cistern_challenge_glow.png",
+   "id": "AD-TIL-012",
+   "json": "res://art/export/til/ad_til_cistern_challenge.json",
+   "pivot": [
+    0,
+    15
+   ],
+   "png": "res://art/export/til/ad_til_cistern_challenge.png",
+   "row": "AD-100",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 15
+    }
+   },
+   "tags": {
+    "banner": {
+     "frames": 1,
+     "from": 28,
+     "ms": [
+      1000
+     ],
+     "to": 28
+    },
+    "bone_pile": {
+     "frames": 1,
+     "from": 25,
+     "ms": [
+      1000
+     ],
+     "to": 25
+    },
+    "brazier": {
+     "frames": 4,
+     "from": 17,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 20
+    },
+    "chains": {
+     "frames": 2,
+     "from": 26,
+     "ms": [
+      1000,
+      1000
+     ],
+     "to": 27
+    },
+    "challenge_seal": {
+     "frames": 4,
+     "from": 13,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 16
+    },
+    "chest": {
+     "frames": 2,
+     "from": 0,
+     "ms": [
+      1000,
+      1000
+     ],
+     "to": 1
+    },
+    "pedestal_orb": {
+     "frames": 4,
+     "from": 5,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 8
+    },
+    "skull_candle": {
+     "frames": 4,
+     "from": 21,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 24
+    },
+    "treasure": {
+     "frames": 3,
+     "from": 2,
+     "ms": [
+      1000,
+      1000,
+      1000
+     ],
+     "to": 4
+    },
+    "treasure_ring": {
+     "frames": 4,
+     "from": 9,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 12
+    }
+   }
+  },
+  "ad_til_flooded_cistern": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "til",
+   "glow": "res://art/export/til/ad_til_flooded_cistern_glow.png",
+   "id": "AD-TIL-010",
+   "json": "res://art/export/til/ad_til_flooded_cistern.json",
+   "pivot": [
+    0,
+    15
+   ],
+   "png": "res://art/export/til/ad_til_flooded_cistern.png",
+   "row": "AD-099",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 15
+    }
+   },
+   "tags": {
+    "deep": {
+     "frames": 47,
+     "from": 80,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 126
+    },
+    "deep_loop": {
+     "frames": 4,
+     "from": 131,
+     "ms": [
+      250,
+      250,
+      250,
+      250
+     ],
+     "to": 134
+    },
+    "floor": {
+     "frames": 8,
+     "from": 0,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 7
+    },
+    "floor_accent": {
+     "frames": 5,
+     "from": 10,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 14
+    },
+    "floor_wall": {
+     "frames": 2,
+     "from": 8,
+     "ms": [
+      1000,
+      1000
+     ],
+     "to": 9
+    },
+    "shore": {
+     "frames": 47,
+     "from": 33,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 79
+    },
+    "wall_cap": {
+     "frames": 2,
+     "from": 15,
+     "ms": [
+      1000,
+      1000
+     ],
+     "to": 16
+    },
+    "wall_face": {
+     "frames": 16,
+     "from": 17,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 32
+    },
+    "water_loop": {
+     "frames": 4,
+     "from": 127,
+     "ms": [
+      200,
+      200,
+      200,
+      200
+     ],
+     "to": 130
     }
    }
   },
@@ -3805,7 +5509,11 @@
   "AD-035",
   "AD-036",
   "AD-037",
-  "AD-038"
+  "AD-038",
+  "AD-099",
+  "AD-100",
+  "AD-120",
+  "AD-122"
  ],
  "version": 1
 }

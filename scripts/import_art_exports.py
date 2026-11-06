@@ -9,6 +9,12 @@ card and no png (ad_ui_9slice_margins) is a side file; a card json without 'fram
 AD-045 status_* / extinguish_puff replace the AD-034 ones (--supersede). vfx/ico stems have no
 pivot slice requirement (pivot = canvas centre); the AD-036 glyph atlas is kind 'glyph_atlas'.
 
+Cistern (AD-154): python3 scripts/import_art_exports.py --source /workspace/art/arcane_dungeon \\
+    --row-dir AD-099=AD-099/r3 --rows AD-024 AD-025 AD-029 AD-032 AD-033 AD-034 AD-045 AD-035 AD-036 AD-037 AD-038 \\
+    AD-099 AD-100 AD-120 AD-122 --supersede AD-045
+Adds <stem>_glow.png side files (entry["glow"], same layout as the base), the AD-099 motes as vfx, and the
+AD-100 arena level variants (copied from AD-099/r3/arena, where the arena is re-rendered with the r3 tiles).
+
 Actors (AD-065): python3 scripts/import_art_exports.py --actors  copies the mage/enemy/warden animation sheets
 (no cards, AD-063 nested) to art/export/actors/ and writes actors/actors_manifest.json only.
 """
@@ -24,7 +30,15 @@ FALLBACK = Path("/workspace/art/arcane_dungeon")
 CATS = {"chr", "enm", "bos", "npc", "por", "til", "prp", "ui", "fnt", "vfx", "ico"}
 
 
+# stems whose prefix is not a category and that have no card: {stem: {id, category}}
+EXTRA_CARDS = {"ad_fx_cistern_motes": {"id": "AD-TIL-010-motes", "category": "vfx"}}
+# AD-100 arena level variants are pngs only; the r3 copies in AD-099 are authoritative
+SIDE_PNGS = [("AD-100", "AD-099", "arena", "ad_til_archivist_arena_lvl_")]
+
+
 def category(stem):
+    if stem in EXTRA_CARDS:
+        return EXTRA_CARDS[stem]["category"]
     parts = stem.split("_")
     cat = parts[1] if len(parts) > 1 else ""
     if parts[0] == "arc" and cat == "fnt":
@@ -34,10 +48,11 @@ def category(stem):
     return cat if cat in CATS else ""
 
 
-def find_row(sources, row):
+def find_row(sources, row, row_dirs=None):
+    rel = (row_dirs or {}).get(row, row)
     for s in sources:
-        if (s / row / "export").is_dir():
-            return s / row
+        if (s / rel / "export").is_dir():
+            return s / rel
     return None
 
 
@@ -45,12 +60,15 @@ def load_cards(rowdir):
     cards = {}
     for c in sorted((rowdir / "cards").glob("*.json")):
         cd = json.loads(c.read_text())
-        cards[cd.get("name")] = cd
+        if "name" in cd:
+            cards[cd["name"]] = cd
+        else:
+            cards.update({v["name"]: v for v in cd.values() if isinstance(v, dict) and "name" in v})
     return cards
 
 
 def is_side_file(stem, cards, rowdir):
-    if stem in cards:
+    if stem in cards or stem in EXTRA_CARDS:
         return False
     return any(stem.startswith(n + "_") for n in cards if n) or not (rowdir / "export" / (stem + ".png")).is_file()
 
@@ -59,7 +77,7 @@ def build_entry(stem, row, rowdir, cards, errors):
     jpath = rowdir / "export" / (stem + ".json")
     ppath = rowdir / "export" / (stem + ".png")
     data = json.loads(jpath.read_text())
-    card = cards.get(stem)
+    card = cards.get(stem) or EXTRA_CARDS.get(stem)
     if card is None:
         errors.append(f"{stem}: no card with name == stem in {row}/cards")
         return None
@@ -294,15 +312,18 @@ def main():
     ap.add_argument("--dest", type=Path, default=REPO / "art/export")
     ap.add_argument("--supersede", action="append", default=[], metavar="ROW",
                     help="on a duplicate stem the entry from this row replaces the earlier one")
+    ap.add_argument("--row-dir", action="append", default=[], metavar="ROW=RELPATH",
+                    help="use <source>/RELPATH instead of <source>/ROW for this row")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--actors", action="store_true", help="import actor animation sheets only (AD-065)")
     a = ap.parse_args()
     if a.actors:
         return import_actors(a)
     sources = a.source or [DRIVE if DRIVE.is_dir() else FALLBACK]
+    row_dirs = dict(r.split("=", 1) for r in a.row_dir)
     errors, assets, copies = [], {}, []
     for row in a.rows:
-        rowdir = find_row(sources, row)
+        rowdir = find_row(sources, row, row_dirs)
         if rowdir is None:
             errors.append(f"{row}: export dir not found in {[str(s) for s in sources]}")
             continue
@@ -325,6 +346,17 @@ def main():
             copies.append((j, a.dest / e["category"] / j.name))
             if e["png"]:
                 copies.append((j.with_suffix(".png"), a.dest / e["category"] / (j.stem + ".png")))
+            gp = j.with_name(j.stem + "_glow.png")
+            if e["png"] and gp.is_file():
+                e["glow"] = f"res://art/export/{e['category']}/{gp.name}"
+                copies.append((gp, a.dest / e["category"] / gp.name))
+        for srow, orow, sub, prefix in SIDE_PNGS:
+            if row == srow:
+                od = find_row(sources, orow, row_dirs)
+                files = sorted((od / sub).glob(prefix + "*.png")) if od else []
+                if not files:
+                    errors.append(f"{row}: no {prefix}*.png in {orow}/{sub}")
+                copies += [(f, a.dest / category(f.stem) / f.name) for f in files]
     if errors:
         print("import_art_exports: FAILED\n  " + "\n  ".join(errors), file=sys.stderr)
         return 1
