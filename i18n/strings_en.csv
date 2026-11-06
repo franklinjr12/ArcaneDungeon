@@ -397,6 +397,19 @@ compendium.section.artifacts,Artifacts
 compendium.milestones,Milestones
 compendium.progress,%d/%d
 compendium.met,[done]
+compendium.discovered,DISCOVERED %d / %d
+compendium.tag.rune,RUNE
+compendium.tag.reaction,REACTION
+compendium.tag.enemy,ENEMY
+compendium.tag.artifact,ARTIFACT
+compendium.note1,NO PERMANENT STAT POWER
+compendium.note2,MILESTONES UNLOCK NEW RUNES
+compendium.undiscovered,NOT DISCOVERED
+compendium.recipe.wet_lightning_arc,LIGHTNING + WET
+compendium.recipe.chill_freeze,3 CHILLED = FROZEN
+compendium.recipe.wet_cold_freeze,WET + COLD
+compendium.recipe.frozen_force_shatter,FROZEN + FORCE
+compendium.recipe.fire_thaw_steam,FIRE + CHILLED
 compendium.locked,[locked]
 compendium.reaction.wet_lightning_arc,Lightning Arc
 compendium.reaction.chill_freeze,Chill Freeze
