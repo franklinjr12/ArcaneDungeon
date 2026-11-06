@@ -74,6 +74,7 @@ func run(t) -> void:
 	_engine_map(t, assets)
 	_actors(t)
 	_renderer(t)
+	_env_props(t)
 
 ## AD-154: Cistern tileset, arena, AD-120 props and AD-122 chest/altar are in the manifest.
 func _cistern(t, m: Dictionary, assets: Dictionary) -> void:
@@ -229,3 +230,20 @@ func _renderer(t) -> void:
 		if not g.is_empty():
 			var r: Rect2 = g["region"]
 			t.check(r.size.x > 0 and r.size.y > 0 and r.position.x >= 0 and r.position.y >= 0 and r.end.x <= g["tex"].get_width() and r.end.y <= g["tex"].get_height(), "AD-154 glow region inside texture: " + c[0])
+
+## AD-154: env prop kinds map to imported AD-120 stems/tags for ruins and cistern.
+func _env_props(t) -> void:
+	var kinds: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://world/data/env_props_v1.json"))["kinds"]
+	var man: Dictionary = ART.export_manifest()
+	for kind in kinds:
+		if kind == "ice":
+			continue
+		for stage in [0, 2]:
+			var fr := ART.env_prop_frame(kind, "intact", true, stage, 0)
+			var label := "%s stage %d" % [kind, stage]
+			t.check(not fr.is_empty() and man.has(fr["stem"]) and man[fr["stem"]]["tags"].has(fr["tag"]), "AD-154 env prop maps: " + label)
+	t.equal(ART.env_prop_frame("puddle", "frozen", false, 2, 0)["stem"], "ad_prp_ice_patch", "AD-154 frozen puddle is ice patch")
+	t.equal(ART.env_prop_frame("urn", "intact", false, 0, 0)["stem"], "ad_prp_breakable_urn", "AD-154 ruins urn has no suffix")
+	t.equal(ART.env_prop_frame("brazier", "intact", false, 2, 0)["tag"], "unlit", "AD-154 unlit brazier")
+	t.equal(ART.env_prop_frame("crate", "burning", false, 0, 7)["tag"], "burning", "AD-154 burning crate")
+	t.check(ART.env_prop_frame("crate", "destroyed", false, 0, 0).is_empty(), "AD-154 destroyed crate skipped")
