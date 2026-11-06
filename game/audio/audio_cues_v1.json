@@ -184,7 +184,416 @@
    "priority": 1,
    "max_voices": 1,
    "loop": true
+  },
+  "sfx.cast.cold": {
+   "stream": "res://assets/audio/sfx/sfx_cast_cold.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_cast_neutral.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.cast.force": {
+   "stream": "res://assets/audio/sfx/sfx_cast_force.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_cast_neutral.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.form.beam": {
+   "stream": "res://assets/audio/sfx/sfx_form_beam.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_cast_neutral.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.form.field": {
+   "stream": "res://assets/audio/sfx/sfx_form_field.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_cast_neutral.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.trigger.on_hit": {
+   "stream": "res://assets/audio/sfx/sfx_trigger_on_hit.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.trigger.on_kill": {
+   "stream": "res://assets/audio/sfx/sfx_trigger_on_kill.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.trigger.on_expire": {
+   "stream": "res://assets/audio/sfx/sfx_trigger_on_expire.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.trigger.timer": {
+   "stream": "res://assets/audio/sfx/sfx_trigger_timer.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.mod.chain": {
+   "stream": "res://assets/audio/sfx/sfx_mod_chain.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_react_arc.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.mod.generic": {
+   "stream": "res://assets/audio/sfx/sfx_mod_generic.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_cast_neutral.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.react.freeze": {
+   "stream": "res://assets/audio/sfx/sfx_react_freeze.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_react_extinguish.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.react.shatter": {
+   "stream": "res://assets/audio/sfx/sfx_react_shatter.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_react_arc.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.react.steam": {
+   "stream": "res://assets/audio/sfx/sfx_react_steam.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_react_extinguish.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.tele.ossuary_shieldbearer": {
+   "stream": "res://assets/audio/sfx/sfx_tele_ossuary_shieldbearer.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4,
+   "provided": true
+  },
+  "sfx.tele.wailing_spirit": {
+   "stream": "res://assets/audio/sfx/sfx_tele_wailing_spirit.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4,
+   "provided": true
+  },
+  "sfx.tele.corpse_bloat": {
+   "stream": "res://assets/audio/sfx/sfx_tele_corpse_bloat.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4,
+   "provided": true
+  },
+  "sfx.tele.cistern_slime": {
+   "stream": "res://assets/audio/sfx/sfx_tele_cistern_slime.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4,
+   "provided": true
+  },
+  "sfx.tele.cistern_slimelet": {
+   "stream": "res://assets/audio/sfx/sfx_tele_cistern_slimelet.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4,
+   "provided": true
+  },
+  "sfx.tele.drowned_acolyte": {
+   "stream": "res://assets/audio/sfx/sfx_tele_drowned_acolyte.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4,
+   "provided": true
+  },
+  "sfx.tele.deep_eel": {
+   "stream": "res://assets/audio/sfx/sfx_tele_deep_eel.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4,
+   "provided": true
+  },
+  "sfx.tele.rust_golem": {
+   "stream": "res://assets/audio/sfx/sfx_tele_rust_golem.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4,
+   "provided": true
+  },
+  "sfx.tele.lantern_wisp": {
+   "stream": "res://assets/audio/sfx/sfx_tele_lantern_wisp.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4,
+   "provided": true
+  },
+  "sfx.tele.storm_crystal": {
+   "stream": "res://assets/audio/sfx/sfx_tele_storm_crystal.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4,
+   "provided": true
+  },
+  "sfx.boss.drowned_archivist.tele_a": {
+   "stream": "res://assets/audio/sfx/sfx_boss_drowned_archivist_tele_a.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_boss_tele_a.wav",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4,
+   "provided": true
+  },
+  "sfx.boss.drowned_archivist.tele_b": {
+   "stream": "res://assets/audio/sfx/sfx_boss_drowned_archivist_tele_b.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_boss_tele_b.wav",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 4,
+   "provided": true
+  },
+  "sfx.boss.drowned_archivist.phase": {
+   "stream": "res://assets/audio/sfx/sfx_boss_drowned_archivist_phase.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_boss_phase.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.artifact.rebound_sigil": {
+   "stream": "res://assets/audio/sfx/sfx_artifact_rebound_sigil.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.artifact.residue_crystal": {
+   "stream": "res://assets/audio/sfx/sfx_artifact_residue_crystal.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.artifact.shatterheart": {
+   "stream": "res://assets/audio/sfx/sfx_artifact_shatterheart.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.artifact.momentum_rune": {
+   "stream": "res://assets/audio/sfx/sfx_artifact_momentum_rune.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.artifact.echo_chamber": {
+   "stream": "res://assets/audio/sfx/sfx_artifact_echo_chamber.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.artifact.stormglass": {
+   "stream": "res://assets/audio/sfx/sfx_artifact_stormglass.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.artifact.tidewalkers_boots": {
+   "stream": "res://assets/audio/sfx/sfx_artifact_tidewalkers_boots.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.artifact.ember_heart": {
+   "stream": "res://assets/audio/sfx/sfx_artifact_ember_heart.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.artifact.gravity_lens": {
+   "stream": "res://assets/audio/sfx/sfx_artifact_gravity_lens.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.artifact.split_prism": {
+   "stream": "res://assets/audio/sfx/sfx_artifact_split_prism.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.artifact.archivists_quill": {
+   "stream": "res://assets/audio/sfx/sfx_artifact_archivists_quill.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.artifact.warding_lantern": {
+   "stream": "res://assets/audio/sfx/sfx_artifact_warding_lantern.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.env.ignite": {
+   "stream": "res://assets/audio/sfx/sfx_env_ignite.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.env.freeze": {
+   "stream": "res://assets/audio/sfx/sfx_env_freeze.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.env.thaw": {
+   "stream": "res://assets/audio/sfx/sfx_env_thaw.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.env.break": {
+   "stream": "res://assets/audio/sfx/sfx_env_break.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
+  },
+  "sfx.env.burn_out": {
+   "stream": "res://assets/audio/sfx/sfx_env_burn_out.ogg",
+   "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
+   "bus": "SFX",
+   "priority": 1,
+   "max_voices": 3,
+   "provided": true
   }
+ },
+ "events": {
+  "cast:fire": "sfx.cast.fire",
+  "cast:water": "sfx.cast.water",
+  "cast:lightning": "sfx.cast.lightning",
+  "cast:neutral": "sfx.cast.neutral",
+  "cast:cold": "sfx.cast.cold",
+  "cast:force": "sfx.cast.force",
+  "form:form.beam": "sfx.form.beam",
+  "form:form.field": "sfx.form.field",
+  "trigger:trigger.on_hit": "sfx.trigger.on_hit",
+  "trigger:trigger.on_kill": "sfx.trigger.on_kill",
+  "trigger:trigger.on_expire": "sfx.trigger.on_expire",
+  "trigger:trigger.timer": "sfx.trigger.timer",
+  "mod:mod.chain": "sfx.mod.chain",
+  "mod:mod.expand": "sfx.mod.generic",
+  "mod:mod.rapid": "sfx.mod.generic",
+  "reaction:wet_lightning_arc": "sfx.react.arc",
+  "reaction:wet_cold_freeze": "sfx.react.freeze",
+  "reaction:frozen_force_shatter": "sfx.react.shatter",
+  "reaction:fire_thaw_steam": "sfx.react.steam",
+  "status:burning:removed": "sfx.react.extinguish",
+  "telegraph:bone_thrall": "sfx.tele.bone_thrall",
+  "telegraph:fallen_adept": "sfx.tele.fallen_adept",
+  "telegraph:grave_hound": "sfx.tele.grave_hound",
+  "telegraph:ossuary_shieldbearer": "sfx.tele.ossuary_shieldbearer",
+  "telegraph:wailing_spirit": "sfx.tele.wailing_spirit",
+  "telegraph:corpse_bloat": "sfx.tele.corpse_bloat",
+  "telegraph:cistern_slime": "sfx.tele.cistern_slime",
+  "telegraph:cistern_slimelet": "sfx.tele.cistern_slimelet",
+  "telegraph:drowned_acolyte": "sfx.tele.drowned_acolyte",
+  "telegraph:deep_eel": "sfx.tele.deep_eel",
+  "telegraph:rust_golem": "sfx.tele.rust_golem",
+  "telegraph:lantern_wisp": "sfx.tele.lantern_wisp",
+  "telegraph:storm_crystal": "sfx.tele.storm_crystal",
+  "telegraph:fallen_adept:a": "sfx.boss.tele_a",
+  "telegraph:fallen_adept:b": "sfx.boss.tele_b",
+  "telegraph:storm_crystal:a": "sfx.boss.tele_a",
+  "telegraph:storm_crystal:b": "sfx.boss.tele_b",
+  "telegraph:undead_warden:a": "sfx.boss.tele_a",
+  "telegraph:undead_warden:b": "sfx.boss.tele_b",
+  "phase:undead_warden": "sfx.boss.phase",
+  "telegraph:drowned_archivist:a": "sfx.boss.drowned_archivist.tele_a",
+  "telegraph:drowned_archivist:b": "sfx.boss.drowned_archivist.tele_b",
+  "phase:drowned_archivist": "sfx.boss.drowned_archivist.phase",
+  "artifact:rebound_sigil": "sfx.artifact.rebound_sigil",
+  "artifact:residue_crystal": "sfx.artifact.residue_crystal",
+  "artifact:shatterheart": "sfx.artifact.shatterheart",
+  "artifact:momentum_rune": "sfx.artifact.momentum_rune",
+  "artifact:echo_chamber": "sfx.artifact.echo_chamber",
+  "artifact:stormglass": "sfx.artifact.stormglass",
+  "artifact:tidewalkers_boots": "sfx.artifact.tidewalkers_boots",
+  "artifact:ember_heart": "sfx.artifact.ember_heart",
+  "artifact:gravity_lens": "sfx.artifact.gravity_lens",
+  "artifact:split_prism": "sfx.artifact.split_prism",
+  "artifact:archivists_quill": "sfx.artifact.archivists_quill",
+  "artifact:warding_lantern": "sfx.artifact.warding_lantern",
+  "env:crate:ignite": "sfx.env.ignite",
+  "env:crate:burn_out": "sfx.env.burn_out",
+  "env:cobweb:ignite": "sfx.env.ignite",
+  "env:cobweb:burn_out": "sfx.env.burn_out",
+  "env:puddle:freeze": "sfx.env.freeze",
+  "env:puddle:thaw": "sfx.env.thaw",
+  "env:urn:break": "sfx.env.break",
+  "env:cracked_wall:break": "sfx.env.break"
  },
  "music": {
   "bus": "Music",

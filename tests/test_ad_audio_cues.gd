@@ -40,7 +40,10 @@ func run(t) -> void:
 	var floor_p: int = int(d.table.get("unstealable_priority", 3))
 	var readme := FileAccess.get_file_as_string("res://assets/audio/README.md")
 	t.check(FileAccess.file_exists("res://assets/audio/README.md"), "AD-082 audio README exists")
-	t.equal(cues.size(), GDD_CUES.size(), "AD-082 table has no cues outside GDD list")
+	var gdd_ids: Array = GDD_CUES.map(func(e): return e["id"])
+	for id in cues:
+		if not bool(cues[id].get("provided", false)):
+			t.check(id in gdd_ids, "AD-082 non-provided cue is in GDD list: " + id)
 	for e in GDD_CUES:
 		var id: String = e["id"]
 		t.check(cues.has(id), "AD-082 cue present: " + id)
@@ -74,6 +77,7 @@ func _ducking(t) -> void:
 	var d = Director.new()
 	var cues: Dictionary = d.table["cues"]
 	var teles: Array = []
+	var gdd_ids: Array = GDD_CUES.map(func(e): return e["id"])
 	d._apply_duck(0.0) # earlier suites may have left the shared bus ducked
 	t.equal(d.duck_db("Ambience"), 0.0, "AD-082 Ambience unducked at start")
 	t.equal(d.duck_db("SFXBed"), 0.0, "AD-082 SFXBed unducked at start")
@@ -82,7 +86,8 @@ func _ducking(t) -> void:
 		var want: String = c["bus"]
 		if want == "SFX":
 			if d.is_telegraph(c):
-				teles.append(id)
+				if id in gdd_ids:
+					teles.append(id)
 			else:
 				want = "SFXBed"
 		t.equal(d.route_bus(c), want, "AD-082 route_bus: " + id)

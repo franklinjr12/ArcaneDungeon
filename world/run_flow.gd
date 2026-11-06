@@ -7,6 +7,7 @@ const Encounter = preload("res://world/encounter_director.gd")
 const Reward = preload("res://world/reward_generator.gd")
 const Merchant = preload("res://world/merchant.gd")
 const Artifacts = preload("res://world/artifacts.gd")
+const AudioDirector = preload("res://game/audio/audio_director.gd")
 const Editor = preload("res://magic/editor/spell_editor.gd")
 const Session = preload("res://combat/combat_session.gd")
 const Runner = preload("res://magic/runtime/spell_runner.gd")
@@ -142,6 +143,12 @@ static func build_sequence(cfg: Dictionary, run_seed: int) -> Array:
 func _cue(id: String, at = null) -> void:
 	if audio_sink.is_valid():
 		audio_sink.call(id,at)
+
+## AD-151: artifact pickup/purchase cue via the data-driven event map; output-only.
+func _artifact_cue(id: String) -> void:
+	var cue := str(AudioDirector.load_events().get("artifact:" + id,""))
+	if cue != "":
+		_cue(cue)
 
 func set_meta_locks(runes: Array, artifacts: Array) -> void:
 	meta_locked_runes = runes.duplicate()
@@ -494,6 +501,7 @@ func choose_reward(index: int) -> Dictionary:
 		if not added["ok"]:
 			return added
 		outcome = {"ok":true,"kind":"artifact","id":str(option["id"])}
+		_artifact_cue(str(option["id"]))
 		_attach_artifacts()
 	else:
 		run.currency += int(option["amount"])
@@ -648,6 +656,8 @@ func buy(index: int) -> Dictionary:
 		_cue("ui.purchase")
 		if outcome["kind"] == "rune":
 			_cue("sfx.pickup.rune")
+		elif outcome["kind"] == "artifact":
+			_artifact_cue(str(merchant.stock[index].get("artifact_id","")))
 		experiment.record("purchase",{"room_index":run.sequence_index,"price":int(merchant.stock[index]["price"])})
 		session.sim.loadout.unlocked = run.unlocked.duplicate(true)
 		_attach_artifacts()

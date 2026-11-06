@@ -45,6 +45,31 @@ func load_table(data: Dictionary) -> void:
 	table = data if typeof(data.get("cues")) == TYPE_DICTIONARY else {}
 	if typeof(data.get("music")) == TYPE_DICTIONARY:
 		table["music"] = data["music"]
+	if typeof(data.get("events")) == TYPE_DICTIONARY:
+		table["events"] = data["events"]
+
+## AD-151: event key -> cue id map from the data file; no Node instance needed (cached).
+static var _events_cache: Dictionary = {}
+static func load_events() -> Dictionary:
+	if _events_cache.is_empty():
+		var f := FileAccess.open(CUES_FILE, FileAccess.READ)
+		if f != null:
+			var json := JSON.new()
+			if json.parse(f.get_as_text()) == OK and typeof(json.data) == TYPE_DICTIONARY \
+					and typeof(json.data.get("events")) == TYPE_DICTIONARY:
+				_events_cache = json.data["events"]
+	return _events_cache
+
+func event_keys() -> Array:
+	return (table.get("events", {}) as Dictionary).keys()
+
+## Cue id for a gameplay event key ("reaction:wet_cold_freeze"), or "" (warned once) when unmapped.
+func cue_for_event(key: String) -> String:
+	var events: Dictionary = table.get("events", {})
+	if events.has(key):
+		return str(events[key])
+	_warn_once("event:" + key, "no cue for event")
+	return ""
 
 func register_stream(cue_id: String, stream: AudioStream) -> void:
 	_overrides[cue_id] = stream
