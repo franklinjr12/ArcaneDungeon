@@ -49,6 +49,11 @@ var _counted_kills: Dictionary = {}
 var logs: Array = []
 var experiment = ExperimentLog.new()
 var _prior_reactions := 0
+## AD-145: meta locks (opt-in, default empty) and per-run discovery tracking.
+var meta_locked_runes: Array = []
+var meta_locked_artifacts: Array = []
+var _seen_enemies: Dictionary = {}
+var _seen_reactions: Dictionary = {}
 ## AD-084: read-only UI signals. arcs banks arcs from replaced sims; use arc_total() for the live count.
 var wet_kills := 0
 var arcs := 0
@@ -135,7 +140,33 @@ func _cue(id: String, at = null) -> void:
 	if audio_sink.is_valid():
 		audio_sink.call(id,at)
 
+func set_meta_locks(runes: Array, artifacts: Array) -> void:
+	meta_locked_runes = runes.duplicate()
+	meta_locked_artifacts = artifacts.duplicate()
+
+## AD-145: sorted unique ids seen this run, per Compendium category.
+func discoveries() -> Dictionary:
+	var seen_runes: Array = run.unlocked.duplicate() if run != null else []
+	var seen_artifacts: Array = run.artifacts.duplicate() if run != null else []
+	var out := {"runes":[],"reactions":_seen_reactions.keys(),"enemies":_seen_enemies.keys(),"artifacts":[]}
+	for id in seen_runes:
+		if str(id) not in out["runes"]:
+			out["runes"].append(str(id))
+	for id in seen_artifacts:
+		if str(id) not in out["artifacts"]:
+			out["artifacts"].append(str(id))
+	for key in out:
+		out[key].sort()
+	return out
+
+func _track_enemies() -> void:
+	for enemy in session.enemies:
+		if str(enemy.kind) != "":
+			_seen_enemies[str(enemy.kind)] = true
+
 func start_new(run_seed: int) -> void:
+	_seen_enemies.clear()
+	_seen_reactions.clear()
 	run = State.new()
 	run.initialize(run_seed,config,formulas)
 	rooms = build_sequence(config,run_seed)
@@ -218,7 +249,7 @@ func _build_room(entry: Dictionary) -> Dictionary:
 	merchant = null
 	range_sim = null
 	encounter = null
-	rewards = Reward.new(config)
+	rewards = Reward.new(config,meta_locked_runes,meta_locked_artifacts)
 	_attach_artifacts()
 	session.player.shield = carried_shield
 	return {"ok":true}
@@ -242,7 +273,8 @@ func _enter_current() -> Dictionary:
 		session.state = "cleared"
 		state = "workshop"
 		merchant = Merchant.new(config)
-		merchant.build(run,session.sim.registry.get_ids())
+		merchant.excluded_artifacts = meta_locked_artifacts.duplicate()
+		merchant.build(run,session.sim.registry.get_ids(),meta_locked_runes)
 		enter_test_range()
 	elif room.values["type"] == "treasure":
 		# Optional reward room: no enemies, the reward cards are available immediately.
@@ -345,7 +377,13 @@ func step(command: Dictionary = {}) -> Dictionary:
 			_counted_kills[enemy.target.id] = true
 			kills += 1
 	experiment.mark_tick(session.sim.clock.tick)
-	var reactions_now: int = session.sim.trace.filter_records(-1,"","reaction").size()
+	_track_enemies()
+	var reaction_records: Array = session.sim.trace.filter_records(-1,"","reaction")
+	var reactions_now: int = reaction_records.size()
+	for i in range(_prior_reactions,reactions_now):
+		var reason := str(reaction_records[i].get("reason",""))
+		if reason != "":
+			_seen_reactions[reason] = true
 	if reactions_now > _prior_reactions:
 		experiment.record("reaction",{"room_index":run.sequence_index,"reaction_count":reactions_now-_prior_reactions})
 	_prior_reactions = reactions_now

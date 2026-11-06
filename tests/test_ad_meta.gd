@@ -3,6 +3,10 @@ extends RefCounted
 const Service = preload("res://game/core/save_service.gd")
 const Meta = preload("res://world/meta_progress.gd")
 const DIR := "user://ad145_test/"
+const Reward = preload("res://world/reward_generator.gd")
+const Merchant = preload("res://world/merchant.gd")
+const Flow = preload("res://world/run_flow.gd")
+const State = preload("res://world/run_state.gd")
 
 func _clean() -> void:
 	DirAccess.make_dir_recursive_absolute(DIR)
@@ -28,6 +32,98 @@ func _ids(prefix: String, n: int) -> Array:
 	return out
 
 func run(t) -> void:
+	_pools(t)
+	_discoveries(t)
+	_profile(t)
+
+func _fresh(cfg: Dictionary, run_seed: int):
+	var st = State.new()
+	var formulas := {}
+	for id in cfg["initial_formulas"]:
+		formulas[id] = {"id": id}
+	st.initialize(run_seed, cfg, formulas)
+	return st
+
+func _pools(t) -> void:
+	var cfg: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(Flow.CONFIG_V2))
+	var empty := Meta.empty_meta()
+	var lr: Array = Meta.locked_runes(empty)
+	var la: Array = Meta.locked_artifacts(empty)
+	var seen_a := {}
+	var seen_r := {}
+	var seen_m := {}
+	var same := true
+	var clean := true
+	var open_rune := false
+	var open_art := false
+	var open_shop := false
+	var met := Meta.empty_meta()
+	Meta.merge(met, {"runes": _ids("r", 8), "reactions": _ids("x", 2), "enemies": _ids("e", 6), "artifacts": _ids("a", 4)})
+	t.equal(Meta.locked_runes(met), [], "AD-145 milestones met -> no locked runes")
+	t.equal(Meta.locked_artifacts(met), [], "AD-145 milestones met -> no locked artifacts")
+	for n in 120:
+		var st = _fresh(cfg, 7000 + n)
+		var room_id := "room_%d" % (n % 7)
+		var base = Reward.new(cfg)
+		var plain = Reward.new(cfg, [], [])
+		if base.choices(st, room_id, true) != plain.choices(st, room_id, true):
+			same = false
+		var locked = Reward.new(cfg, lr, la)
+		for card in locked.choices(st, room_id, true):
+			if card["kind"] == "artifact":
+				seen_a[card["id"]] = true
+			elif card["kind"] == "rune":
+				seen_r[card["id"]] = true
+		for card in base.choices(st, room_id, true):
+			if card["kind"] == "artifact" and card["id"] in la:
+				open_art = true
+			elif card["kind"] == "rune" and card["id"] in lr:
+				open_rune = true
+		var shop = Merchant.new(cfg)
+		shop.excluded_artifacts = la
+		var ids: Array = cfg["reward_pool"] + lr
+		var stock: Array = shop.build(st, ids, lr)
+		st.currency = 999
+		stock += shop.reroll(st).get("stock", [])
+		for item in stock:
+			if item["kind"] == "artifact":
+				seen_m[item["artifact_id"]] = true
+			elif item["kind"] == "rune":
+				seen_m[item["rune_id"]] = true
+		var open_shop_m = Merchant.new(cfg)
+		for item in open_shop_m.build(_fresh(cfg, 7000 + n), ids, []):
+			if (item["kind"] == "artifact" and item["artifact_id"] in la) or (item["kind"] == "rune" and item["rune_id"] in lr):
+				open_shop = true
+	t.equal(same, true, "AD-145 empty locks leave reward choices unchanged")
+	for id in la:
+		clean = clean and not seen_a.has(id) and not seen_m.has(id)
+	for id in lr:
+		clean = clean and not seen_r.has(id) and not seen_m.has(id)
+	t.equal(clean, true, "AD-145 locked ids never appear in reward/merchant pools")
+	t.equal(open_art, true, "AD-145 unlocked artifacts can appear for some seed")
+	t.equal(open_rune or open_shop, true, "AD-145 unlocked runes can appear for some seed")
+
+func _discoveries(t) -> void:
+	var cfg: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(Flow.CONFIG_V2))
+	var a = Flow.new(4242, Flow.CONFIG_V2)
+	var b = Flow.new(4242, Flow.CONFIG_V2)
+	for i in 300:
+		a.step({})
+		b.step({})
+	var da: Dictionary = a.discoveries()
+	t.equal(da, b.discoveries(), "AD-145 same seed gives same discoveries")
+	for id in cfg["initial_unlocked"]:
+		t.equal(id in da["runes"], true, "AD-145 discoveries include initial rune %s" % id)
+	var sorted_ok := true
+	for key in da:
+		var copy: Array = (da[key] as Array).duplicate()
+		copy.sort()
+		sorted_ok = sorted_ok and copy == da[key]
+	t.equal(sorted_ok, true, "AD-145 discoveries sorted")
+	t.equal(da.keys().size(), 4, "AD-145 discoveries has four categories")
+	t.equal(a.summary().has("discovered"), false, "AD-145 summary excludes discoveries")
+
+func _profile(t) -> void:
 	_clean()
 	var svc = Service.new()
 	svc.set_base_dir(DIR)

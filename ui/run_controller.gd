@@ -445,6 +445,7 @@ func _pause_quit() -> void:
 	if save != null and not _stats_recorded:
 		var s: Dictionary = flow.summary()
 		s["outcome"] = "abandoned"
+		s["discovered"] = flow.discoveries()
 		save.record_run(s)
 		_stats_recorded = true
 	close_pause()
@@ -994,6 +995,7 @@ func _build_summary_panel() -> void:
 	var save = get_node_or_null("/root/SaveService")
 	if save != null and not _stats_recorded:
 		_stats_recorded = true
+		stats["discovered"] = flow.discoveries()
 		save.record_run(stats)
 	_heading(context,tr("run.summary.title") % (tr("run.summary.victory") if flow.state == "won" else tr("run.summary.defeated")),18)
 	var seconds := int(stats["seconds"])
@@ -1021,11 +1023,18 @@ func _build_summary_panel() -> void:
 		b.autowrap_mode = TextServer.AUTOWRAP_OFF # a wrapping button in a row shrinks to one character per line
 		b.custom_minimum_size.x = 110
 
+## AD-145: locks are recomputed from the profile before each run starts.
+func _apply_meta_locks() -> void:
+	var save = get_node_or_null("/root/SaveService")
+	if save != null:
+		flow.set_meta_locks(save.locked_runes(),save.locked_artifacts())
+
 func _retry_same_seed() -> void:
 	close_pause()
 	_close_visual_editor()
 	_stats_recorded = false
 	_rift_shown = false
+	_apply_meta_locks()
 	flow.retry_same_seed()
 	_begin_desk()
 	current_notice = tr("run.notice.retry")
@@ -1036,6 +1045,7 @@ func _new_seed() -> void:
 	_close_visual_editor()
 	_stats_recorded = false
 	_rift_shown = false
+	_apply_meta_locks()
 	flow.start_new_seed()
 	_begin_desk()
 	current_notice = tr("run.notice.new_seed")
