@@ -64,3 +64,24 @@ Regenerated 2026-11-03 for reward, merchant, workshop_editor and summary (`bash 
 - **Run summary:** a centred modal with a Retry same seed / New seed / Title button row (buttons no longer wrap).
 - **Floating text:** damage numbers, status labels and ARC! stack per actor without overlap; the DEFEATED banner is screen-centre text, not over the mage.
 - **Tests:** the floating-text overlap test (6 damage numbers + a status label on one enemy) and the editor-vs-dummies check in `tests/test_ad_ui_bounds.gd`, plus per-panel coverage in `tests/run_ui_smoke.gd`.
+
+## AD-152 (skin A front-end)
+
+Regenerated 2026-11-06: `bash tools/ui_matrix.sh --godot /usr/local/bin/godot --states "title settings settings_video settings_controls settings_access pause"`; the run ended with `SUMMARY: 78 shots, 0 failed`. Pause was re-shot once after `i18n/strings_en.en.translation` was re-imported (the committed file lacked the new `pause.*` keys). Sheets are in `sheets/<state>.png`.
+
+- **New shot states** (main menu debug hook): `title`, `settings` (audio tab), `settings_audio`, `settings_video`, `settings_controls`, `settings_access`, `compendium`. `pause` is a run state.
+- **Mocks:** `mocks/ad_ui_screen_<menu|settings_audio|settings_video|settings_controls|settings_access|pause>_2x.png`. The 1280x720 shot is compared with the 2x mock; other sizes were checked for clipping and overlap.
+- **Title:** AD-098 illustration, logo and menu panel match the mock layout (New Run, Compendium, Settings, Quit).
+- **Settings (4 tabs):** same tab strip, section headers, rows, side info panel, light preview and footer buttons as the mocks.
+- **Pause:** same panel, run-info line and button stack as the mock; backdrop dim is 50% per game-art (AD-159) rather than the mock's dither.
+
+Known deviations:
+- Engine default font instead of m5x7, so text is mixed case and sized differently from the mock.
+- Settings widgets with no backing setting (frame limit, VSync, particles, glow, show FPS and similar) are drawn disabled.
+- The UI scale slider sits in the mock's Resolution slot; a telemetry toggle is an extra row at the bottom of the accessibility Input section.
+- Pause: Retry, Tips and Controls are removed (Controls moved to the Settings tab). Save+Quit is not visible in the shot (hidden in that state), leaving a gap above Abandon.
+- Title: the water strip is a scripted AD-160 placeholder until the Cistern anchor is signed off.
+- Title: Continue is hidden when there is no save, so the shot shows four buttons.
+- Settings video shot: the light preview uses the in-game test sprite, not the mock's mage.
+
+Review: game-design and game-art review is pending.
