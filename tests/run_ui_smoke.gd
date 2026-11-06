@@ -98,16 +98,13 @@ func _run() -> void:
 	expect(control.pause_menu.is_settings_open(),"AD-068 pause opens settings")
 	control.pause_menu.handle_cancel()
 	expect(not control.pause_menu.is_settings_open() and control.is_paused(),"AD-068 cancel closes settings only")
-	var controls_button: Button = control.pause_menu.find_child("ControlsButton",true,false)
-	expect(controls_button != null and controls_button.text == "Controls","AD-092 pause menu has a Controls button")
-	controls_button.emit_signal("pressed")
-	expect(control.pause_menu.is_controls_open() and control.pause_menu.controls_box.is_visible_in_tree()
-		and control.pause_menu.controls_box.find_children("*","Label",true,false).any(func(l): return l.text.contains("Basic Bolt")),
-		"AD-092 Controls opens the controls help")
+	control.pause_menu.open_controls()
+	expect(control.pause_menu.is_settings_open() and control.pause_menu.settings_screen.current_tab == "controls",
+		"AD-152 Settings opens and select_tab(controls) works")
 	control.pause_menu.handle_cancel()
-	expect(not control.pause_menu.is_controls_open() and control.is_paused() and control.pause_menu.panel.visible,
-		"AD-092 cancel closes controls only")
-	expect(control.pause_menu.find_child("QuitButton",true,false).text == "Back to Menu","AD-092 pause menu leaves via Back to Menu")
+	expect(not control.pause_menu.is_settings_open() and control.is_paused() and control.pause_menu.panel.visible,
+		"AD-092 cancel closes settings")
+	expect(control.pause_menu.find_child("QuitButton",true,false).text == "Abandon","AD-152 pause menu leaves via Abandon")
 	control.pause_menu.tips_toggled.emit()
 	expect(control.guide.dismissed and control.tip.text.is_empty(),"AD-092 pause menu hides tips")
 	control.pause_menu.tips_toggled.emit()

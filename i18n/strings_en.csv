@@ -168,8 +168,11 @@ menu.arena,Combat Arena
 pause.title,Paused
 pause.resume,Resume
 pause.settings,Settings
+pause.loadout,Loadout
+pause.abandon,Abandon
+pause.hint,ESC resume   ENTER select
+pause.run_info,Stage %d   Room %d   %02d:%02d
 pause.retry,Retry same seed
-pause.quit,Back to Menu
 pause.controls,Controls
 pause.back,Back
 pause.tips_hide,Hide tips
