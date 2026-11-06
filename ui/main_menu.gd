@@ -2,11 +2,13 @@ extends Control
 const VisualTheme = preload("res://ui/pixel_theme.gd")
 const MenuImage = preload("res://assets/pixel/menu_background.png")
 const SettingsScreen = preload("res://ui/settings_screen.gd")
+const CompendiumScreen = preload("res://ui/compendium_screen.gd")
 ## AD-067: GDD §8 Title screen. Sandbox/Arena are shown only in debug builds.
 const TEXT := {
 	"title": "menu.title",
 	"subtitle": "menu.subtitle",
 	"new_run": "menu.new_run",
+	"compendium": "menu.compendium",
 	"settings": "menu.settings",
 	"quit": "menu.quit",
 	"debug": "menu.debug",
@@ -16,6 +18,7 @@ const TEXT := {
 ## null = resolve from OS.is_debug_build(); tests set false before add_child for a release-like run.
 var show_debug_entries = null
 var settings_screen: Control = null
+var compendium_screen: Control = null
 var panel: VBoxContainer
 
 func _ready() -> void:
@@ -52,6 +55,7 @@ func _ready() -> void:
 	panel.add_child(subheading)
 	var new_run := _button(panel, "NewRunButton", tr(TEXT["new_run"]))
 	new_run.pressed.connect(_switch_scene.bind("res://scenes/run.tscn"))
+	_button(panel, "CompendiumButton", tr(TEXT["compendium"])).pressed.connect(open_compendium)
 	_button(panel, "SettingsButton", tr(TEXT["settings"])).pressed.connect(open_settings)
 	_button(panel, "QuitButton", tr(TEXT["quit"])).pressed.connect(func(): get_tree().quit())
 	if show_debug_entries:
@@ -94,14 +98,30 @@ func _close_settings() -> void:
 	panel.show()
 	panel.get_node("SettingsButton").grab_focus()
 
+func open_compendium() -> void:
+	if compendium_screen == null:
+		compendium_screen = CompendiumScreen.new()
+		compendium_screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		add_child(compendium_screen)
+		compendium_screen.back_requested.connect(_close_compendium)
+	compendium_screen.show()
+	panel.hide()
+
+func _close_compendium() -> void:
+	compendium_screen.hide()
+	panel.show()
+	panel.get_node("CompendiumButton").grab_focus()
+
 ## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.
 const SHOT_RUN_STATES := ["combat","reward","workshop_editor","merchant","pause","summary"]
 
 func apply_debug_shot_state(state: String) -> bool:
-	if not OS.is_debug_build() or not state in ["title","settings"]:
+	if not OS.is_debug_build() or not state in ["title","settings","compendium"]:
 		return false
 	if state == "settings":
 		open_settings()
+	elif state == "compendium":
+		open_compendium()
 	return true
 
 func _debug_shot_entry() -> void:

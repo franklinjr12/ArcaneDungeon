@@ -3,6 +3,7 @@ extends RefCounted
 const Service = preload("res://game/core/save_service.gd")
 const Meta = preload("res://world/meta_progress.gd")
 const DIR := "user://ad145_test/"
+const Screen = preload("res://ui/compendium_screen.gd")
 const Reward = preload("res://world/reward_generator.gd")
 const Merchant = preload("res://world/merchant.gd")
 const Flow = preload("res://world/run_flow.gd")
@@ -35,6 +36,7 @@ func run(t) -> void:
 	_pools(t)
 	_discoveries(t)
 	_profile(t)
+	_compendium(t)
 
 func _fresh(cfg: Dictionary, run_seed: int):
 	var st = State.new()
@@ -184,5 +186,53 @@ func _profile(t) -> void:
 	svc2.load_profile()
 	t.equal(_corrupt_count(), 4, "AD-145 future version quarantined")
 	t.equal(svc2.profile, Service.default_profile(), "AD-145 defaults after quarantine")
+	svc2.free()
+	svc.free()
+	_clean()
+	DirAccess.remove_absolute(DIR)
+
+func _compendium(t) -> void:
+	_clean()
+	var root = (Engine.get_main_loop() as SceneTree).root
+	var svc = Service.new()
+	svc.set_base_dir(DIR)
+	svc.record_discoveries({"runes": ["essence.fire"], "reactions": ["chill_freeze"]})
+	var screen = Screen.new()
+	screen.save_service = svc
+	root.add_child(screen)
+	var cats := Screen.catalogs_by_category()
+	var cfg: Dictionary = Meta.load_config()
+	t.equal(screen.section_labels.keys(), ["runes", "reactions", "enemies", "artifacts"], "AD-145 compendium four sections")
+	t.check(screen.section_labels["runes"].text.ends_with("1/%d" % cats["runes"].size()), "AD-145 compendium runes count")
+	t.check(screen.section_labels["reactions"].text.ends_with("1/%d" % cfg["compendium"]["reactions"].size()), "AD-145 compendium reactions count")
+	t.check(screen.section_labels["enemies"].text.ends_with("0/%d" % cfg["compendium"]["enemies"].size()), "AD-145 compendium enemies count")
+	t.check(screen.section_labels["artifacts"].text.ends_with("0/%d" % cats["artifacts"].size()), "AD-145 compendium artifacts count")
+	var texts := []
+	for l in screen.find_children("*", "Label", true, false):
+		texts.append(l.text)
+	t.check(screen.tr("rune.essence.fire.name") in texts and screen.tr("rune.essence.water.name") not in texts, "AD-145 discovered rune named")
+	t.check(screen.tr("compendium.unknown") in texts, "AD-145 undiscovered shows ???")
+	t.equal(screen.milestone_rows.size(), cfg["milestones"].size(), "AD-145 milestone rows match data")
+	for i in screen.milestone_rows.size():
+		t.equal(screen.milestone_rows[i]["id"], cfg["milestones"][i]["id"], "AD-145 milestone row id " + str(i))
+	t.check(screen.back_button.focus_mode == Control.FOCUS_ALL, "AD-145 compendium back focusable")
+	var hits := []
+	screen.back_requested.connect(func(): hits.append(1))
+	screen.back_button.pressed.emit()
+	t.equal(hits.size(), 1, "AD-145 compendium back emits back_requested")
+	t.equal(svc.meta()["discovered"]["runes"], ["essence.fire"], "AD-145 compendium read-only")
+	screen.free()
+	var menu = load("res://scenes/main.tscn").instantiate()
+	menu.show_debug_entries = false
+	root.add_child(menu)
+	var btn = menu.find_child("CompendiumButton", true, false)
+	t.check(btn != null, "AD-145 CompendiumButton exists")
+	if btn != null:
+		btn.pressed.emit()
+		t.check(menu.compendium_screen != null and menu.compendium_screen.visible and not menu.panel.visible, "AD-145 button opens compendium")
+		menu.compendium_screen.back_requested.emit()
+		t.check(menu.panel.visible and not menu.compendium_screen.visible, "AD-145 back restores title")
+	menu.free()
+	svc.free()
 	_clean()
 	DirAccess.remove_absolute(DIR)

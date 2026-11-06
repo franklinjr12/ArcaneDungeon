@@ -15,6 +15,7 @@ Godot 4.7.1 stable (pinned) GL Compatibility M0–M3 playable prototypes are imp
 | [M3_vertical_slice.md](M3_vertical_slice.md) | M3 run walkthrough, seeded rewards/rooms, mini-boss, shop, spell editor, safe testing, full-route regression |
 | [M4_validation.md](M4_validation.md) | M4 code, regression/stress/telemetry commands, observability boundaries and deferred acceptance |
 | [artifacts.md](artifacts.md) | AD-143 run artifacts: data file, hooks, max held, sources, proposed numbers |
+| [meta_progress.md](meta_progress.md) | AD-145 meta progression: profile v2 schema, discoveries, milestone unlocks, Compendium |
 | [GDD_v1_conformance.md](GDD_v1_conformance.md) | GDD v1.0 rule → status (OK/GAP) → board row tracker for Round AD-R1 |
 | [ART_IMPLEMENTATION.md](ART_IMPLEMENTATION.md) | First owner-reference-inspired pixel art pass: PNG sprites, Aseprite timelines, VFX and Godot integration. Contact sheet in art/previews/art_overview.png. |
 | [../assets/audio/README.md](../assets/audio/README.md) | Placeholder audio source record: GDD §12 cue → file, bus, priority, voice cap; mix rules |

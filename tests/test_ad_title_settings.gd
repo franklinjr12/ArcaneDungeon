@@ -55,7 +55,7 @@ func _title(t) -> void:
 	var texts := []
 	for b in menu.find_children("*", "Button", true, false):
 		texts.append(b.text)
-	t.equal(texts, ["New Run", "Settings", "Quit"], "AD-067 release title buttons")
+	t.equal(texts, ["New Run", "Compendium", "Settings", "Quit"], "AD-067 release title buttons")
 	t.check(menu.find_child("SandboxButton", true, false) == null and menu.find_child("ArenaButton", true, false) == null, "AD-067 no debug entries in release")
 	menu.open_settings()
 	t.check(menu.settings_screen.visible and not menu.panel.visible, "AD-067 settings replaces title panel")
