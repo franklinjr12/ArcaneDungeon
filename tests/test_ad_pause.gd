@@ -41,7 +41,7 @@ func run(t) -> void:
 	menu.cancel_confirm()
 	menu.open_settings()
 	t.check(menu.is_settings_open() and not menu.panel.visible, "AD-068 settings opens")
-	t.check(menu.settings_screen.volume_sliders.size() == 4, "AD-068 settings has volume sliders")
+	t.check(menu.settings_screen.volume_sliders.size() == 5, "AD-068 settings has volume sliders")
 	menu.request_quit()
 	menu.handle_cancel()
 	t.check(not menu.is_settings_open() and menu.is_confirm_open(), "AD-068 cancel closes settings first")

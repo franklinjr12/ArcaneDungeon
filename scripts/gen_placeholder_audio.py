@@ -300,7 +300,7 @@ def wav_bytes(samples, loop):
 
 
 def load_cues():
-    cues = json.loads(CUES.read_text())["cues"]
+    cues = {k: v for k, v in json.loads(CUES.read_text())["cues"].items() if not v.get("provided")}
     missing = sorted(set(cues) - set(SYNTH))
     extra = sorted(set(SYNTH) - set(cues))
     if missing or extra:

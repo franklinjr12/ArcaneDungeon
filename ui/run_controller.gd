@@ -119,6 +119,7 @@ func _ready() -> void:
 	if _director != null:
 		flow.audio_sink = _director.play
 		_director.play("amb.workshop" if flow.mode == "workshop" else "amb.ruins")
+		_director.play("music." + flow.music_context_for_room())
 	var save = get_node_or_null("/root/SaveService")
 	if save != null:
 		_settings = save.settings
