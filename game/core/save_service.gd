@@ -7,11 +7,15 @@ const MetaProgress = preload("res://world/meta_progress.gd")
 const SCHEMA_VERSION := 2
 const SETTINGS_FILE := "settings.cfg"
 const PROFILE_FILE := "profile.json"
+const RUN_FILE := "run.json"
+const RUN_SCHEMA_VERSION := 1
 const DEFAULT_STATS := {"runs": 0, "wins": 0, "deaths": 0, "best_time_seconds": -1.0, "last_seed": -1}
 
 var base_dir := "user://"
 var settings = Settings.new()
 var profile: Dictionary = default_profile()
+## AD-146: set by the main menu Continue; the run scene reads and clears it.
+var resume_requested := false
 
 func _ready() -> void:
 	load_all()
@@ -115,6 +119,30 @@ func save_settings() -> Error:
 
 func save_profile() -> Error:
 	return _atomic_write(_path(PROFILE_FILE), JSON.stringify(profile, "\t"))
+
+## AD-146: workshop-only run save, a separate file from the profile.
+func save_run(payload: Dictionary) -> Error:
+	return _atomic_write(_path(RUN_FILE), JSON.stringify({"schema_version": RUN_SCHEMA_VERSION, "flow": payload}, "\t"))
+
+func has_run() -> bool:
+	return FileAccess.file_exists(_path(RUN_FILE))
+
+func load_run() -> Dictionary:
+	var path := _path(RUN_FILE)
+	if not FileAccess.file_exists(path):
+		return {}
+	var json := JSON.new()
+	var parsed = json.data if json.parse(FileAccess.get_file_as_string(path)) == OK else null
+	if typeof(parsed) != TYPE_DICTIONARY or not _is_num(parsed.get("schema_version")) \
+			or int(parsed["schema_version"]) != RUN_SCHEMA_VERSION or typeof(parsed.get("flow")) != TYPE_DICTIONARY:
+		_quarantine(path)
+		return {}
+	return parsed["flow"]
+
+func delete_run() -> void:
+	for path in [_path(RUN_FILE), _path(RUN_FILE) + ".tmp"]:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
 
 func _atomic_write(path: String, text: String) -> Error:
 	var tmp := path + ".tmp"

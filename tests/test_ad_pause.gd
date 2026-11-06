@@ -14,6 +14,16 @@ func run(t) -> void:
 	var resumes := [0]
 	menu.quit_confirmed.connect(func(): quits[0] += 1)
 	menu.retry_confirmed.connect(func(): retries[0] += 1)
+	var saves := [0]
+	menu.save_quit_confirmed.connect(func(): saves[0] += 1)
+	t.check(not menu.save_quit_button.visible, "AD-146 save&quit hidden by default")
+	menu.set_save_available(true)
+	t.check(menu.save_quit_button.visible, "AD-146 save&quit shown when available")
+	menu.request_save_quit()
+	t.check(menu.is_confirm_open(), "AD-146 save&quit asks for confirmation")
+	menu.confirm_pending()
+	t.equal(saves[0], 1, "AD-146 save&quit emitted on confirm")
+	t.equal(quits[0], 0, "AD-146 save&quit does not emit quit")
 	menu.resume_requested.connect(func(): resumes[0] += 1)
 	menu.request_quit()
 	t.check(menu.is_confirm_open() and not menu.panel.visible, "AD-068 quit shows confirm")

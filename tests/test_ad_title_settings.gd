@@ -47,6 +47,9 @@ func run(t) -> void:
 
 func _title(t) -> void:
 	var root = (Engine.get_main_loop() as SceneTree).root
+	var run_save = root.get_node_or_null("SaveService")
+	if run_save != null:
+		run_save.delete_run()
 	var menu = load("res://scenes/main.tscn").instantiate()
 	menu.show_debug_entries = false
 	root.add_child(menu)
@@ -57,6 +60,15 @@ func _title(t) -> void:
 		texts.append(b.text)
 	t.equal(texts, ["New Run", "Compendium", "Settings", "Quit"], "AD-067 release title buttons")
 	t.check(menu.find_child("SandboxButton", true, false) == null and menu.find_child("ArenaButton", true, false) == null, "AD-067 no debug entries in release")
+	if run_save != null:
+		run_save.save_run({"fake": true})
+		var with_save = load("res://scenes/main.tscn").instantiate()
+		with_save.show_debug_entries = false
+		root.add_child(with_save)
+		var first_btn = with_save.find_children("*", "Button", true, false)[0]
+		t.check(first_btn.name == "ContinueButton" and first_btn.text == "Continue", "AD-146 Continue is first when a run save exists")
+		with_save.free()
+		run_save.delete_run()
 	menu.open_settings()
 	t.check(menu.settings_screen.visible and not menu.panel.visible, "AD-067 settings replaces title panel")
 	menu.settings_screen.back_requested.emit()

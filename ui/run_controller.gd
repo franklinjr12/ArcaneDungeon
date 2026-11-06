@@ -96,7 +96,22 @@ func _ready() -> void:
 	if show_dev_tools == null:
 		show_dev_tools = OS.is_debug_build()
 	flow = Flow.new(-1, config_path)
-	_begin_desk()
+	var resume_save = get_node_or_null("/root/SaveService")
+	var resumed := false
+	if resume_save != null:
+		var wanted: bool = resume_save.resume_requested
+		resume_save.resume_requested = false
+		if wanted:
+			resumed = flow.resume(resume_save.load_run())
+			if resumed:
+				current_notice = tr("run.notice.resumed")
+			else:
+				_drop_save()
+				current_notice = tr("run.notice.resume_failed")
+		else:
+			_drop_save()
+	if not resumed:
+		_begin_desk()
 	_director = get_node_or_null("/root/AudioDirector")
 	if _director != null:
 		flow.audio_sink = _director.play
@@ -202,6 +217,7 @@ func _build() -> void:
 	pause_menu.resume_requested.connect(close_pause)
 	pause_menu.retry_confirmed.connect(_pause_retry)
 	pause_menu.quit_confirmed.connect(_pause_quit)
+	pause_menu.save_quit_confirmed.connect(_save_and_quit)
 	pause_menu.tips_toggled.connect(_toggle_tips)
 	_fit_editor_panel()
 
@@ -411,6 +427,7 @@ func open_pause() -> void:
 	_prev_mouse_mode = Input.mouse_mode
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	pause_menu.set_tips_visible(not guide.dismissed)
+	pause_menu.set_save_available(flow.can_save())
 	pause_menu.visible = true
 
 func close_pause() -> void:
@@ -440,7 +457,27 @@ func _pause_retry() -> void:
 	close_pause()
 	_retry_same_seed()
 
+func _autosave() -> void:
+	var save = get_node_or_null("/root/SaveService")
+	if save != null and flow.can_save():
+		save.save_run(flow.save_payload())
+
+func _drop_save() -> void:
+	var save = get_node_or_null("/root/SaveService")
+	if save != null:
+		save.delete_run()
+
+## AD-146: the run is not over, so nothing is recorded; Continue resumes in this workshop.
+func _save_and_quit() -> void:
+	if not flow.can_save():
+		return
+	_autosave()
+	_stats_recorded = true
+	close_pause()
+	_to_title()
+
 func _pause_quit() -> void:
+	_drop_save()
 	var save = get_node_or_null("/root/SaveService")
 	if save != null and not _stats_recorded:
 		var s: Dictionary = flow.summary()
@@ -983,16 +1020,20 @@ func _buy(i: int) -> void:
 	current_notice = tr("run.notice.merchant") % str(result.get("kind",result.get("reason","")))
 	if result.get("ok",false):
 		current_notice = tr(flow.merchant.purchase_line(flow.run.purchases.size()))
+		_autosave()
 	_redraw_panel()
 
 func _reroll() -> void:
 	var result: Dictionary = flow.reroll()
 	current_notice = tr("run.notice.merchant") % str(result.get("kind",result.get("reason","")))
+	if result.get("ok",false):
+		_autosave()
 	_redraw_panel()
 
 func _build_summary_panel() -> void:
 	var stats: Dictionary = flow.summary()
 	var save = get_node_or_null("/root/SaveService")
+	_drop_save()
 	if save != null and not _stats_recorded:
 		_stats_recorded = true
 		stats["discovered"] = flow.discoveries()
@@ -1032,6 +1073,7 @@ func _apply_meta_locks() -> void:
 func _retry_same_seed() -> void:
 	close_pause()
 	_close_visual_editor()
+	_drop_save()
 	_stats_recorded = false
 	_rift_shown = false
 	_apply_meta_locks()
@@ -1043,6 +1085,7 @@ func _retry_same_seed() -> void:
 func _new_seed() -> void:
 	close_pause()
 	_close_visual_editor()
+	_drop_save()
 	_stats_recorded = false
 	_rift_shown = false
 	_apply_meta_locks()
@@ -1096,11 +1139,16 @@ func _exit(take_optional: bool = true) -> void:
 		return
 	var was_desk: bool = flow.prelude
 	var desk_skipped: bool = was_desk and not flow.prelude_ready()
+	var was_workshop: bool = flow.state == "workshop"
 	var result: Dictionary = flow.try_exit(flow.session.sim.actor.position, take_optional)
 	if was_desk and result["ok"]:
 		_after_desk(desk_skipped)
 	current_notice = tr("run.notice.door") % (str(result.get("reason","OPEN")) if result["ok"] == false else tr("run.notice.next_room"))
 	if result["ok"]:
+		if was_workshop:
+			_drop_save()
+		if flow.state == "workshop":
+			_autosave()
 		_flash_transition()
 	_redraw_panel()
 
@@ -1341,6 +1389,7 @@ func _close_editor(apply_changes: bool) -> void:
 		guide.note_valid_edit()
 	current_notice = (tr("run.notice.formula_applied") if apply_changes else tr("run.notice.formula_cancelled"))+tr("run.notice.duration") % duration
 	_close_visual_editor()
+	_autosave()
 	_redraw_panel()
 
 ## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.

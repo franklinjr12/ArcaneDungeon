@@ -219,6 +219,10 @@ func _run() -> void:
 		run.session.sim.actor.position = run.room.marker("exit")
 		control._exit()
 	expect(run.room.values["id"]=="workshop","UI traversal reaches workshop after boss")
+	expect(save.has_run(),"AD-146 entering the workshop writes a run save")
+	control.open_pause()
+	expect(control.pause_menu.save_quit_button.visible,"AD-146 Save & Quit visible in workshop pause")
+	control.close_pause()
 	expect(run.mode=="workshop" and control.test_canvas.visible,"test canvas enabled in safe workshop")
 	var w0: int = run.range_sim.clock.tick
 	var wpos: Vector2 = run.range_sim.actor.position
@@ -397,6 +401,7 @@ func _run() -> void:
 	# No visible door in the workshop: the continue button/F works from wherever the player stands.
 	control._exit()
 	expect(run.room.values["id"]=="s2_r1","workshop exit leads into next stage")
+	expect(not save.has_run(),"AD-146 leaving the workshop deletes the run save")
 	for enemy in run.session.enemies:
 		enemy.target.receive_damage(10000,"fire",1,100)
 	run.step()
@@ -436,11 +441,13 @@ func _run() -> void:
 	expect(run.state=="dead" and joined.contains("RUN SUMMARY") and joined.contains("DEFEATED"),
 		"death opens Run Summary: defeated")
 	expect(save.stats()["runs"]==2 and save.stats()["deaths"]==1,"AD-019 death recorded in stats")
+	expect(not save.has_run(),"AD-146 death deletes the run save")
 	control.summary_new_seed_button.emit_signal("pressed")
 	expect(run.run.seed != seed_before and run.room.values["id"]=="s1_r1" and run.run.currency==0
 		and run.run.unlocked==run.config["initial_unlocked"],"new seed differs and resets run-local state")
 	var runs_before: int = save.stats()["runs"]
 	control.open_pause()
+	expect(not control.pause_menu.save_quit_button.visible,"AD-146 Save & Quit hidden when pausing in combat")
 	control.pause_menu.request_quit()
 	expect(control.pause_menu.is_confirm_open(),"AD-068 quit asks for confirmation")
 	control.pause_menu.confirm_pending()
@@ -451,9 +458,8 @@ func _run() -> void:
 	var sources := ""
 	for path in ["res://ui/run_controller.gd","res://ui/main_menu.gd","res://ui/run_canvas.gd"]:
 		sources += FileAccess.get_file_as_string(path)
-	expect(not sources.contains("recover(") and not sources.contains(".restore("),"no UI path loads a saved run")
-	var menu_src := FileAccess.get_file_as_string("res://ui/main_menu.gd")
-	expect(not menu_src.contains("Continue") and not menu_src.contains("Resume"),"main menu has no Continue/Resume")
+	var ctrl_src := FileAccess.get_file_as_string("res://ui/run_controller.gd")
+	expect(ctrl_src.contains("flow.resume(") and not sources.contains("recover("),"AD-146 resume goes through flow.resume, never recover")
 	expect(current_scene != null and current_scene.scene_file_path=="res://scenes/main.tscn","Title returns to main menu")
 	var menu = load("res://scenes/main.tscn").instantiate()
 	root.add_child(menu)
@@ -474,5 +480,6 @@ func _run() -> void:
 		"AD-019 settings file written atomically")
 	expect(reborn.stats()["runs"]==3,"AD-019 stats survive restart")
 	reborn.free()
+	save.delete_run()
 	save.set_base_dir("user://")
 	quit(1 if failures>0 else 0)
