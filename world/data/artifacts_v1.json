@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "_note": "AD-143: all numbers are proposed and get tuned later (Demo Plan section 11). Tick values assume the 60 Hz simulation clock.",
+  "max_held": 6,
+  "reward_artifact_chance": 0.35,
+  "treasure_artifact_cards": 1,
+  "merchant_artifact_price": 55,
+  "seed_salt": 91357,
+  "artifacts": {
+    "rebound_sigil": {"name_key": "artifact.rebound_sigil.name", "desc_key": "artifact.rebound_sigil.desc", "rarity": "common", "hooks": ["on_hit"], "params": {"bounces": 1}},
+    "residue_crystal": {"name_key": "artifact.residue_crystal.name", "desc_key": "artifact.residue_crystal.desc", "rarity": "common", "hooks": ["on_cast"], "params": {"field_radius": 48, "duration_ticks": 120, "damage_per_pulse": 2, "pulse_interval_ticks": 30}},
+    "shatterheart": {"name_key": "artifact.shatterheart.name", "desc_key": "artifact.shatterheart.desc", "rarity": "rare", "hooks": ["on_kill"], "params": {"radius": 70, "damage": 12}},
+    "momentum_rune": {"name_key": "artifact.momentum_rune.name", "desc_key": "artifact.momentum_rune.desc", "rarity": "common", "hooks": ["on_dash", "on_cast"], "params": {"free_casts": 1}},
+    "echo_chamber": {"name_key": "artifact.echo_chamber.name", "desc_key": "artifact.echo_chamber.desc", "rarity": "rare", "hooks": ["on_cast"], "params": {"every": 5, "damage_scale": 0.5}},
+    "stormglass": {"name_key": "artifact.stormglass.name", "desc_key": "artifact.stormglass.desc", "rarity": "rare", "hooks": ["on_hit"], "params": {"extra_jumps": 1, "dry_damage_scale": 0.5}},
+    "tidewalkers_boots": {"name_key": "artifact.tidewalkers_boots.name", "desc_key": "artifact.tidewalkers_boots.desc", "rarity": "common", "hooks": ["on_dash"], "params": {"trail_radius": 28, "trail_ticks": 90, "wet_duration_ticks": 180}},
+    "ember_heart": {"name_key": "artifact.ember_heart.name", "desc_key": "artifact.ember_heart.desc", "rarity": "common", "hooks": ["on_kill"], "params": {"radius": 110}},
+    "gravity_lens": {"name_key": "artifact.gravity_lens.name", "desc_key": "artifact.gravity_lens.desc", "rarity": "rare", "hooks": ["on_hit"], "params": {"pull_force": 160}},
+    "split_prism": {"name_key": "artifact.split_prism.name", "desc_key": "artifact.split_prism.desc", "rarity": "common", "hooks": ["on_cast"], "params": {"extra_projectiles": 1}},
+    "archivists_quill": {"name_key": "artifact.archivists_quill.name", "desc_key": "artifact.archivists_quill.desc", "rarity": "rare", "hooks": ["on_hp_threshold"], "params": {"threshold": 0.25}},
+    "warding_lantern": {"name_key": "artifact.warding_lantern.name", "desc_key": "artifact.warding_lantern.desc", "rarity": "common", "hooks": ["on_room_clear"], "params": {"shield_hits": 1}}
+  }
+}

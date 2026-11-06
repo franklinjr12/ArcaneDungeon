@@ -680,7 +680,7 @@ func _redraw_panel() -> void:
 		for i in flow.reward_options.size():
 			var item: Dictionary = flow.reward_options[i]
 			var caption := ""
-			if item["kind"] == "rune":
+			if item["kind"] in ["rune","artifact"]:
 				caption = tr(str(item["name_key"]))+"\n"+tr(str(item["behaviour_key"]))
 			else:
 				caption = tr("run.reward.currency") % int(item["amount"])
@@ -817,6 +817,8 @@ func _build_shop_panel() -> void:
 			explanation = str(item["rune_id"])
 			if rune != null:
 				explanation = tr(desc_key) if tr(desc_key) != desc_key else str(rune.snapshot()["description"])
+		elif item["kind"] == "artifact":
+			explanation = tr(str(item["desc_key"]))
 		else:
 			explanation = tr("run.shop.max_hp") % int(item["amount"])
 		detail.text = explanation+" | "+(tr("run.shop.purchased") if flow.merchant.bought.has(item["id"]) else (tr("run.shop.affordable") if affordable else tr("run.shop.need") % (int(item["price"])-flow.run.currency)))

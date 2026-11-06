@@ -1,5 +1,6 @@
 extends RefCounted
 const RewardGenerator = preload("res://world/reward_generator.gd")
+const Artifacts = preload("res://world/artifacts.gd")
 var tuning: Dictionary = {}
 ## TASK-046 deterministic stock; all updates checked atomically.
 var config: Dictionary
@@ -49,10 +50,28 @@ func build(run, all_ids: Array, excluded_ids: Array = []) -> Array:
 			"label_key":"run.shop.rune_label","label_args":["rune."+selected+".name"],"label":"Rune "+selected})
 	stock.append({"id":"upgrade.hp","kind":"upgrade","price":int(config["max_hp_upgrade_price"]),"amount":int(config["max_hp_upgrade_amount"]),
 		"label_key":"run.shop.hp_label","label_args":[int(config["max_hp_upgrade_amount"])],"label":"Max HP +"+str(config["max_hp_upgrade_amount"])})
+	# AD-143: one artifact offer appended after the existing items, seeded separately.
+	var artifact_id := _artifact_pick(run)
+	if artifact_id != "":
+		var def: Dictionary = Artifacts.definitions()[artifact_id]
+		stock.append({"id":"artifact."+artifact_id,"kind":"artifact","artifact_id":artifact_id,
+			"price":int(Artifacts.config().get("merchant_artifact_price",0)),
+			"desc_key":str(def["desc_key"]),"label_key":"run.shop.artifact_label","label_args":[str(def["name_key"])]})
 	bought.clear()
 	for id in run.purchases:
 		bought[str(id)] = true
 	return stock.duplicate(true)
+
+func _artifact_pick(run) -> String:
+	if run.artifacts.size() >= Artifacts.max_held():
+		return ""
+	var candidates: Array = Artifacts.definitions().keys().filter(func(id): return id not in run.artifacts)
+	candidates.sort()
+	if candidates.is_empty():
+		return ""
+	var random := RandomNumberGenerator.new()
+	random.seed = posmod(int(run.seed)*2654435761+int(Artifacts.config().get("seed_salt",0)),0x7fffffff)
+	return str(candidates[random.randi() % candidates.size()])
 
 ## Localised stock label; label_args entries that are tr keys are translated.
 static func item_label(item: Dictionary) -> String:
@@ -60,7 +79,7 @@ static func item_label(item: Dictionary) -> String:
 		return str(item.get("label",""))
 	var args: Array = []
 	for arg in item.get("label_args",[]):
-		args.append(TranslationServer.translate(arg) if arg is String and arg.begins_with("rune.") else arg)
+		args.append(TranslationServer.translate(arg) if arg is String and (arg.begins_with("rune.") or arg.begins_with("artifact.")) else arg)
 	return TranslationServer.translate(str(item["label_key"])) % args
 
 func purchase(index: int, run) -> Dictionary:
@@ -73,9 +92,15 @@ func purchase(index: int, run) -> Dictionary:
 		return {"ok":false,"reason":"INSUFFICIENT_CURRENCY"}
 	if item["kind"] == "rune" and item["rune_id"] in run.unlocked:
 		return {"ok":false,"reason":"ALREADY_UNLOCKED"}
+	if item["kind"] == "artifact":
+		var held := Artifacts.new(run.artifacts)
+		if not held.can_add(str(item["artifact_id"])):
+			return {"ok":false,"reason":"ARTIFACT_LIMIT" if held.ids().size() >= Artifacts.max_held() else "ARTIFACT_DUPLICATE"}
 	run.currency -= int(item["price"])
 	if item["kind"] == "rune":
 		run.unlock(item["rune_id"],0)
+	elif item["kind"] == "artifact":
+		run.add_artifact(str(item["artifact_id"]))
 	else:
 		run.max_hp += float(item["amount"])
 		run.hp = minf(run.max_hp,run.hp+float(item["amount"]))

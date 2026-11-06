@@ -325,3 +325,28 @@ editor.issue.unknown_parameter,A parameter is not valid for these runes.
 editor.issue.parameter_type_invalid,A parameter has the wrong type.
 editor.issue.parameter_out_of_range,A parameter is outside its allowed range.
 editor.issue.generic,This spell cannot be built.
+run.shop.artifact_label,Artifact: %s
+artifact.rebound_sigil.name,Rebound Sigil
+artifact.rebound_sigil.desc,Projectiles that hit a wall bounce back once.
+artifact.residue_crystal.name,Residue Crystal
+artifact.residue_crystal.desc,Bursts leave a small Field of their essence that lingers for 2 seconds.
+artifact.shatterheart.name,Shatterheart
+artifact.shatterheart.desc,Frozen enemies burst into a Cold blast when they die.
+artifact.momentum_rune.name,Momentum Rune
+artifact.momentum_rune.desc,The first cast after a dash costs no mana.
+artifact.echo_chamber.name,Echo Chamber
+artifact.echo_chamber.desc,Every 5th cast from the same slot repeats once for free at half damage.
+artifact.stormglass.name,Stormglass
+artifact.stormglass.desc,Lightning arcs jump to one more target and may arc to non-Wet targets at half damage.
+artifact.tidewalkers_boots.name,Tidewalker's Boots
+artifact.tidewalkers_boots.desc,Your dash leaves a short trail that makes enemies Wet.
+artifact.ember_heart.name,Ember Heart
+artifact.ember_heart.desc,Enemies that die while Burning pass Burning to one nearby enemy.
+artifact.gravity_lens.name,Gravity Lens
+artifact.gravity_lens.desc,Orbiting Orbs drag the enemies they hit toward the orbit.
+artifact.split_prism.name,Split Prism
+artifact.split_prism.desc,Split makes one extra child projectile.
+artifact.archivists_quill.name,Archivist's Quill
+artifact.archivists_quill.desc,On Kill payloads also fire each time an elite or boss loses 25% of its HP.
+artifact.warding_lantern.name,Warding Lantern
+artifact.warding_lantern.desc,Clearing a room gives a shield that absorbs the next hit.

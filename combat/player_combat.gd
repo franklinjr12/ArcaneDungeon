@@ -14,6 +14,8 @@ var dashes := 0
 var casts := 0
 var last_message := ""
 var hit_flash := 0
+## AD-143 Warding Lantern: remaining shield charges; each absorbs one damage_player call.
+var shield := 0
 
 func _init(runtime, geometry, parameters: Dictionary) -> void:
 	sim = runtime
@@ -31,6 +33,7 @@ func reset() -> void:
 	casts = 0
 	last_message = ""
 	hit_flash = 0
+	shield = 0
 	modal = false
 
 func can_act() -> bool:
@@ -54,10 +57,13 @@ func process_command(command: Dictionary) -> Dictionary:
 		invulnerable_left = int(tuning["dash_invulnerable_ticks"])
 		dash_cooldown = int(tuning["dash_cooldown_ticks"])
 		dashes += 1
+		sim.artifact_dash()
 	var wanted: Vector2 = delta*float(tuning["move_speed"])/float(sim.clock.tick_rate)
 	if dash_left > 0:
 		wanted = dash_heading*float(tuning["dash_speed"])/float(sim.clock.tick_rate)
 	sim.actor.position = world.move_body(sim.actor.position,wanted,sim.actor.radius)
+	if dash_left > 0:
+		sim.artifact_dash_step()
 	var cast_slot: int = int(command.get("cast",-1))
 	if cast_slot >= 0:
 		if dash_left > 0 or recovery_left > 0:

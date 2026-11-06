@@ -2,6 +2,7 @@ extends RefCounted
 ## TASK-039: serialized run progression, never runtime entities, queues or enemies.
 const VERSION := 1
 const Difficulty = preload("res://game/core/difficulty.gd")
+const Artifacts = preload("res://world/artifacts.gd")
 var seed := 0
 var sequence_index := 0
 var hp := 150.0
@@ -15,6 +16,7 @@ var purchases: Array = []
 var edit_seconds := 0.0
 var edit_count := 0
 var quick_edit_count := 0
+var artifacts: Array = []
 
 func initialize(run_seed: int, config: Dictionary, formulas_by_id: Dictionary) -> void:
 	seed = run_seed
@@ -32,13 +34,14 @@ func initialize(run_seed: int, config: Dictionary, formulas_by_id: Dictionary) -
 	edit_seconds = 0
 	edit_count = 0
 	quick_edit_count = 0
+	artifacts.clear()
 
 func snapshot() -> Dictionary:
 	return {"schema_version":VERSION,"seed":seed,"sequence_index":sequence_index,
 		"hp":hp,"mana":mana,"max_hp":max_hp,"currency":currency,"unlocked":unlocked.duplicate(true),
 		"formulas":formulas.duplicate(true),"collected":collected.duplicate(true),
 		"purchases":purchases.duplicate(true),"edit_seconds":edit_seconds,
-		"edit_count":edit_count,"quick_edit_count":quick_edit_count}
+		"edit_count":edit_count,"quick_edit_count":quick_edit_count,"artifacts":artifacts.duplicate(true)}
 
 func restore(data: Variant, registry, max_rooms: int) -> Dictionary:
 	if typeof(data) != TYPE_DICTIONARY:
@@ -62,6 +65,15 @@ func restore(data: Variant, registry, max_rooms: int) -> Dictionary:
 			return {"ok":false,"reason":"RUN_INTEGER_INVALID_"+key}
 	if float(data["max_hp"]) < 1.0 or float(data["hp"]) > float(data["max_hp"]) or float(data["mana"]) > Difficulty.scale_f(120.0,"player_mana"):
 		return {"ok":false,"reason":"RUN_RESOURCES_INVALID"}
+	# AD-143: optional so saves from before artifacts still load.
+	if data.has("artifacts"):
+		if typeof(data["artifacts"]) != TYPE_ARRAY or data["artifacts"].size() > Artifacts.max_held():
+			return {"ok":false,"reason":"RUN_ARTIFACTS_INVALID"}
+		var seen: Array = []
+		for artifact in data["artifacts"]:
+			if typeof(artifact) != TYPE_STRING or not Artifacts.is_known(artifact) or artifact in seen:
+				return {"ok":false,"reason":"RUN_ARTIFACTS_INVALID"}
+			seen.append(artifact)
 	var ids: Array = registry.get_ids()
 	for rune in data["unlocked"]:
 		if typeof(rune) != TYPE_STRING or rune not in ids:
@@ -83,7 +95,15 @@ func restore(data: Variant, registry, max_rooms: int) -> Dictionary:
 	edit_seconds = float(data["edit_seconds"])
 	edit_count = int(data["edit_count"])
 	quick_edit_count = int(data["quick_edit_count"])
+	artifacts = data["artifacts"].duplicate(true) if data.has("artifacts") else []
 	return {"ok":true,"reason":"LOADED"}
+
+func add_artifact(id: String) -> Dictionary:
+	var holder = Artifacts.new(artifacts)
+	var outcome: Dictionary = holder.add(id)
+	if outcome["ok"]:
+		artifacts = holder.ids()
+	return outcome
 
 func unlock(rune_id: String, duplicate_currency: int) -> Dictionary:
 	if rune_id in unlocked:

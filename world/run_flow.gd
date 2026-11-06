@@ -6,6 +6,7 @@ const Room = preload("res://world/room_template.gd")
 const Encounter = preload("res://world/encounter_director.gd")
 const Reward = preload("res://world/reward_generator.gd")
 const Merchant = preload("res://world/merchant.gd")
+const Artifacts = preload("res://world/artifacts.gd")
 const Editor = preload("res://magic/editor/spell_editor.gd")
 const Session = preload("res://combat/combat_session.gd")
 const Runner = preload("res://magic/runtime/spell_runner.gd")
@@ -149,6 +150,8 @@ func start_new(run_seed: int) -> void:
 	prelude_tested = false
 	edit_policy = str(config["edit_policy"])
 	logs.clear()
+	if session != null:
+		session.player.shield = 0
 	experiment.record("run_restart")
 	_enter_current()
 
@@ -177,6 +180,7 @@ func _build_room(entry: Dictionary) -> Dictionary:
 		return verdict
 	room = template
 	mode = "workshop" if room.values["type"] == "workshop" else "combat"
+	var carried_shield: int = session.player.shield if session != null else 0
 	session = Session.new(run.seed+run.sequence_index,"empty",0)
 	session.defer_clear = true
 	# AD-138: per-room layout walls and water join the shared arena (rooms without layout are untouched).
@@ -210,7 +214,19 @@ func _build_room(entry: Dictionary) -> Dictionary:
 	range_sim = null
 	encounter = null
 	rewards = Reward.new(config)
+	_attach_artifacts()
+	session.player.shield = carried_shield
 	return {"ok":true}
+
+## AD-143: the room sim gets a holder built from the run, so newly gained artifacts apply at once.
+func _attach_artifacts() -> void:
+	if session == null:
+		return
+	if session.sim.artifacts == null:
+		session.sim.artifacts = Artifacts.new(run.artifacts)
+	else:
+		for id in run.artifacts:
+			session.sim.artifacts.add(str(id))
 
 func _enter_current() -> Dictionary:
 	_bank_arcs()
@@ -227,7 +243,7 @@ func _enter_current() -> Dictionary:
 		# Optional reward room: no enemies, the reward cards are available immediately.
 		session.state = "cleared"
 		state = "cleared"
-		reward_options = rewards.choices(run,str(room.values["id"]))
+		reward_options = rewards.choices(run,str(room.values["id"]),true)
 	elif room.values["type"] == "boss":
 		var p: Dictionary = config["bosses"][str(room.values["boss"])] if room.values.has("boss") and config.has("bosses") else config["boss"]
 		if session.spawn_boss(p,Vector2(float(p["position"][0]),float(p["position"][1]))) == null:
@@ -354,6 +370,9 @@ func _finish_combat() -> void:
 	_cue("sfx.room.cleared",session.sim.actor.position)
 	run.hp = session.sim.actor.health.current
 	run.mana = session.sim.mana
+	var lantern = session.sim.artifacts
+	if lantern != null and lantern.has("warding_lantern"):
+		session.player.shield = int(lantern.param("warding_lantern","shield_hits",1))
 	if room.values["type"] == "boss":
 		boss_defeated_events += 1
 	if run.sequence_index >= rooms.size()-1:
@@ -400,6 +419,12 @@ func choose_reward(index: int) -> Dictionary:
 	var outcome: Dictionary
 	if option["kind"] == "rune":
 		outcome = run.unlock(str(option["id"]),Difficulty.scale_i(int(config["duplicate_reward_currency"]),"coin_rate",0))
+	elif option["kind"] == "artifact":
+		var added: Dictionary = run.add_artifact(str(option["id"]))
+		if not added["ok"]:
+			return added
+		outcome = {"ok":true,"kind":"artifact","id":str(option["id"])}
+		_attach_artifacts()
 	else:
 		run.currency += int(option["amount"])
 		outcome = {"ok":true,"kind":"currency","currency":int(option["amount"])}
@@ -555,6 +580,7 @@ func buy(index: int) -> Dictionary:
 			_cue("sfx.pickup.rune")
 		experiment.record("purchase",{"room_index":run.sequence_index,"price":int(merchant.stock[index]["price"])})
 		session.sim.loadout.unlocked = run.unlocked.duplicate(true)
+		_attach_artifacts()
 		if outcome["kind"] == "upgrade":
 			session.sim.actor.health.maximum = run.max_hp
 			session.sim.actor.health.current = run.hp
