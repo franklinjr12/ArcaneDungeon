@@ -6,7 +6,7 @@ const ATLAS_GLOW := preload("res://assets/ui/ad_ui_kit_atlas_glow.png")
 const LAYOUT_DIR := "res://assets/ui/layouts/"
 const ICON_ATLAS := preload("res://assets/ui/icons/ad_ico_atlas_demo.png")
 const ICON_INDEX_PATH := "res://assets/ui/icons/ad_ico_atlas_demo_index.json"
-const PixelHud = preload("res://ui/pixel_hud.gd")
+const PIXEL_HUD_PATH := "res://ui/pixel_hud.gd" # loaded lazily: pixel_hud.gd preloads this file
 const CANVAS := Vector2(640, 360)
 ## Game-art note: the pause layout names the busy 25% dither; code uses the 50% dim.
 const SPRITE_REMAP := {"ad_ui_modal_backdrop_25": "ad_ui_modal_backdrop_50"}
@@ -106,7 +106,7 @@ static func icon(name: String) -> AtlasTexture:
 static func icon_or_mvp(name: String) -> AtlasTexture:
 	if has_icon(name):
 		return icon(name)
-	return PixelHud.ui_icon_texture(name)
+	return load(PIXEL_HUD_PATH).ui_icon_texture(name)
 
 static func widgets_by_id(screen: String) -> Dictionary:
 	var out := {}

@@ -257,10 +257,9 @@ hud.rune_choice,RUNE CHOICE
 hud.key.lmb,LMB
 hud.key.rmb,RMB
 hud.key.space,SPACE
-hud.hp,HP %d/%d
-hud.mp,MP %d/%d
-hud.mana_cost,%d MP
-hud.dash,DASH
+hud.value,%d/%d
+hud.stage,STAGE %d   ROOM %d
+hud.dash_charges,X%d
 sandbox.header,MAGIC SANDBOX  /  M1
 sandbox.hint,LMB/RMB cast • WASD debug move
 sandbox.select_formula,Select formula for highlighted slot

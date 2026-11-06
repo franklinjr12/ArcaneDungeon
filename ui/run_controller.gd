@@ -6,6 +6,7 @@ const Flow = preload("res://world/run_flow.gd")
 const ArenaCanvas = preload("res://ui/run_canvas.gd")
 const TestCanvas = preload("res://ui/sandbox_canvas.gd")
 const PortraitHUD = preload("res://ui/pixel_hud.gd")
+const SkinA = preload("res://ui/skin_a.gd")
 const ShopCard = preload("res://art/export/ui/ad_ui_tooltip_and_shop_card.png")
 const RewardCard = preload("res://art/export/ui/ad_ui_reward_card.png")
 const Prompts = preload("res://ui/onboarding_prompts.gd")
@@ -22,6 +23,8 @@ var tip: Label
 var tip_panel: PanelContainer
 var notice_panel: PanelContainer
 var objective: Label
+var objective_panel: PanelContainer
+var top_toasts: VBoxContainer
 var coins_label: Label
 var pause_button: Button
 var loadout_view
@@ -88,6 +91,10 @@ var arena_area: Control
 const SCREEN_MARGIN := 6
 const WORKSHOP_PANEL_WIDTH := 360.0
 const TOP_BAR_HEIGHT := 44
+## Edges of the HUD groups in 640x360 layout px (ad_ui_screen_hud_layout.json).
+const HUD_ARTIFACT_LEFT := 499.0
+const HUD_BOSS_BOTTOM := 46.0
+const HUD_STATUS_BOTTOM := 80.0
 const NOTICE_MS := 5000
 const TEST_RANGE_SIZE := Vector2(916,650)
 const DESK_DOOR_RADIUS := 34.0
@@ -271,67 +278,76 @@ func _toast(parent: Control, label: Label) -> PanelContainer:
 	parent.add_child(holder)
 	return holder
 
-## Top-left objective + coins, top-centre toasts, top-right pause button.
+## AD-153: the skin A HUD (pixel_hud.gd) owns HP/MP, stage, coins and artifacts. This bar keeps the goal line (below the
+## status row), the toasts, and the Pause / Loadout buttons, positioned clear of the HUD by `_layout_top_bar`.
 func _build_top_bar() -> void:
 	var bar := Control.new()
 	bar.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bar)
-	var objective_panel := PanelContainer.new()
+	objective_panel = PanelContainer.new()
 	objective_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	objective_panel.position = Vector2(SCREEN_MARGIN+4,SCREEN_MARGIN+4)
 	bar.add_child(objective_panel)
-	var objective_box := VBoxContainer.new()
-	objective_panel.add_child(objective_box)
 	objective = Label.new()
 	objective.name = "Objective"
 	objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	objective.custom_minimum_size.x = 360
 	objective.add_theme_color_override("font_color",Color("#efbc65"))
-	objective_box.add_child(objective)
-	var coin_row := HBoxContainer.new()
-	objective_box.add_child(coin_row)
-	var coin := TextureRect.new()
-	coin.texture = PortraitHUD.ui_icon_texture("coin")
-	coin.custom_minimum_size = Vector2(20,20)
-	coin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	coin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	coin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	coin_row.add_child(coin)
-	coins_label = Label.new()
+	objective_panel.add_child(objective)
+	coins_label = Label.new() # mirrors the coin count the HUD draws; kept for tests and screen readers
 	coins_label.name = "Coins"
-	coin_row.add_child(coins_label)
+	coins_label.visible = false
+	bar.add_child(coins_label)
 	pause_button = _button(bar,tr("run.btn.pause"),func(): open_pause())
 	pause_button.name = "PauseButton"
 	pause_button.focus_mode = Control.FOCUS_NONE # Space is the dash key; a focused button would also fire on it
 	pause_button.custom_minimum_size = Vector2(120,34)
-	pause_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	pause_button.offset_left = -(SCREEN_MARGIN+4+120)
-	pause_button.offset_right = -(SCREEN_MARGIN+4)
-	pause_button.offset_top = SCREEN_MARGIN+4
-	pause_button.offset_bottom = SCREEN_MARGIN+4+34
 	loadout_view_button = _button(bar,tr("run.btn.loadout_view"),func(): open_loadout_view())
 	loadout_view_button.name = "LoadoutViewButton"
 	loadout_view_button.focus_mode = Control.FOCUS_NONE
-	loadout_view_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	loadout_view_button.offset_left = -(SCREEN_MARGIN+4+120+8+150)
-	loadout_view_button.offset_right = -(SCREEN_MARGIN+4+120+8)
-	loadout_view_button.offset_top = SCREEN_MARGIN+4
-	loadout_view_button.offset_bottom = SCREEN_MARGIN+4+34
+	loadout_view_button.custom_minimum_size = Vector2(150,34)
 	loadout_view_button.visible = false
 	var toasts := VBoxContainer.new()
 	toasts.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	toasts.custom_minimum_size.x = 460
 	toasts.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP,Control.PRESET_MODE_MINSIZE)
-	toasts.offset_top = SCREEN_MARGIN+4
 	toasts.offset_left = -230 # centred on the screen, clear of the right-hand panel
 	toasts.offset_right = 230
 	toasts.add_theme_constant_override("separation",4)
 	bar.add_child(toasts)
+	top_toasts = toasts
 	tip = Label.new()
 	tip_panel = _toast(toasts,tip)
 	notices = Label.new()
 	notice_panel = _toast(toasts,notices)
+	get_viewport().size_changed.connect(_layout_top_bar)
+	_layout_top_bar()
+
+## Pixel-scale and HUD-free top edge for the top bar. While the arena HUD is up (combat), the buttons sit left of the
+## artifact column and below the boss block; in the workshop (no HUD) they keep the original top-right spot.
+func _layout_top_bar() -> void:
+	if pause_button == null:
+		return
+	var view := get_viewport_rect().size
+	var sc := floorf(SkinA.canvas_scale(view))
+	var hud_up: bool = arena_canvas != null and arena_canvas.visible
+	var edge := float(SCREEN_MARGIN+4)
+	var right := view.x-edge
+	var top := edge
+	if hud_up:
+		right = view.x-SCREEN_MARGIN-(SkinA.CANVAS.x-HUD_ARTIFACT_LEFT)*sc-8.0
+		top = SCREEN_MARGIN+HUD_BOSS_BOTTOM*sc+4.0
+	pause_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	pause_button.position = Vector2(right-120,top)
+	pause_button.size = Vector2(120,34)
+	loadout_view_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	loadout_view_button.position = Vector2(right-120-8-150,top)
+	loadout_view_button.size = Vector2(150,34)
+	objective_panel.position = Vector2(SCREEN_MARGIN+4,SCREEN_MARGIN+HUD_STATUS_BOTTOM*sc+4.0 if hud_up else edge)
+	top_toasts.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP,Control.PRESET_MODE_MINSIZE)
+	top_toasts.offset_left = -230
+	top_toasts.offset_right = 230
+	top_toasts.offset_top = top+34.0+8.0
 
 ## Centred, non-pausing panels: reward choice (cleared combat room) and the run summary modal (dead / won).
 func _build_overlays() -> void:
@@ -729,6 +745,7 @@ func _redraw_panel() -> void:
 	arena_canvas.lighting_props = flow.room.values.get("layout",{}).get("props",[])
 	portrait_hud.queue_redraw()
 	arena_canvas.visible = flow.mode != "workshop"
+	_layout_top_bar()
 	test_canvas.visible = flow.mode == "workshop"
 	test_canvas.runner = flow.range_sim
 	test_canvas.door_at = desk_door_position() if flow.prelude else Vector2.INF
@@ -1021,6 +1038,7 @@ func _update_objective() -> void:
 	var title := room_display_name(str(flow.room.values["id"]))
 	objective.text = title if goal == "" else tr("run.objective") % [title,goal]
 	coins_label.text = "%d" % flow.run.currency
+	portrait_hud.room_title = title
 
 func _update_dev_label() -> void:
 	if dev_panel == null or not dev_panel.visible:
