@@ -15,9 +15,10 @@ const ALLOW := {
 	],
 	"ui/combat_canvas.gd": ["DEFEAT"], # prefix compared against sim feedback labels, never displayed
 	"ui/room_placeholder.gd": ["MagicSandbox"], # scene node name comparison
-	"ui/main_menu.gd": ["NewRunButton", "CompendiumButton", "ContinueButton"], # node name
-	"ui/pause_menu.gd": ["ResumeButton", "SettingsButton", "ControlsButton", "TipsButton", "RetryButton", "QuitButton", "SaveQuitButton", "ConfirmButton", "CancelButton", "ControlsBackButton"], # node names
-	"ui/pixel_theme.gd": ["PanelContainer", "Button", "Label", "LineEdit", "OptionButton", "CheckBox"], # Godot theme type names
+	"ui/main_menu.gd": ["NewRunButton", "CompendiumButton", "ContinueButton", "SettingsButton", "QuitButton"], # node name
+	"ui/pause_menu.gd": ["ResumeButton", "LoadoutButton", "SettingsButton", "SaveQuitButton", "QuitButton", "ConfirmButton", "CancelButton"], # node names
+	"ui/settings_screen.gd": ["Music"], # audio bus name
+	"ui/pixel_theme.gd": ["PanelContainer", "Button", "Label", "LineEdit", "OptionButton", "CheckBox", "TabBar", "TabContainer", "HSlider", "CheckButton", "VScrollBar"], # Godot theme type names
 }
 
 func run(t) -> void:

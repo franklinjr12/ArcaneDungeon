@@ -1,0 +1,199 @@
+{
+ "screen": "pause",
+ "canvas": [
+  640,
+  360
+ ],
+ "safe_area": {
+  "x": 16,
+  "y": 9,
+  "w": 608,
+  "h": 342
+ },
+ "status": "CANDIDATE",
+ "skin": "AD-095 kit (skin A)",
+ "coordinate_origin": "top-left, px at 640x360 (engine scales x2 = 1280x720 exactly)",
+ "note": "rects are the final sprite/text bounds; 9-slice sprites are stretched with the margins in ad_ui_kit.json; labels are engine text (m5x7) positioned at x,y (top-left of the glyph box)",
+ "fonts": {
+  "label": "arc_fnt_m5x7",
+  "small": "arc_fnt_silkscreen"
+ },
+ "focus_order": [
+  "btn_resume",
+  "btn_loadout",
+  "btn_settings",
+  "btn_save_quit",
+  "btn_abandon"
+ ],
+ "widgets": [
+  {
+   "id": "modal_backdrop",
+   "type": "backdrop",
+   "x": 0,
+   "y": 0,
+   "w": 640,
+   "h": 360,
+   "sprite": "ad_ui_modal_backdrop_25",
+   "tiled": true
+  },
+  {
+   "id": "panel",
+   "type": "panel",
+   "x": 216,
+   "y": 52,
+   "w": 208,
+   "h": 256,
+   "sprite": "ad_ui_panel_large"
+  },
+  {
+   "id": "title_header",
+   "type": "header",
+   "x": 240,
+   "y": 60,
+   "w": 160,
+   "h": 16,
+   "sprite": "ad_ui_header"
+  },
+  {
+   "id": "title",
+   "type": "label",
+   "x": 299,
+   "y": 65,
+   "w": 41,
+   "h": 7,
+   "text": "PAUSED"
+  },
+  {
+   "id": "run_info",
+   "type": "label",
+   "x": 250,
+   "y": 86,
+   "w": 139,
+   "h": 7,
+   "text": "STAGE 1   ROOM 3   04:12"
+  },
+  {
+   "id": "div_1",
+   "type": "divider",
+   "x": 240,
+   "y": 98,
+   "w": 160,
+   "h": 5,
+   "sprite": "ad_ui_divider_h"
+  },
+  {
+   "id": "btn_resume",
+   "type": "button",
+   "x": 248,
+   "y": 110,
+   "w": 144,
+   "h": 24,
+   "sprite": "ad_ui_btn_focus",
+   "state": "focus",
+   "text": "RESUME",
+   "action": "resume"
+  },
+  {
+   "id": "btn_resume_label",
+   "type": "label",
+   "x": 279,
+   "y": 115,
+   "w": 82,
+   "h": 14,
+   "text": "RESUME"
+  },
+  {
+   "id": "btn_loadout",
+   "type": "button",
+   "x": 248,
+   "y": 142,
+   "w": 144,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "LOADOUT",
+   "action": "loadout"
+  },
+  {
+   "id": "btn_loadout_label",
+   "type": "label",
+   "x": 272,
+   "y": 147,
+   "w": 96,
+   "h": 14,
+   "text": "LOADOUT"
+  },
+  {
+   "id": "btn_settings",
+   "type": "button",
+   "x": 248,
+   "y": 174,
+   "w": 144,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "SETTINGS",
+   "action": "settings"
+  },
+  {
+   "id": "btn_settings_label",
+   "type": "label",
+   "x": 266,
+   "y": 179,
+   "w": 108,
+   "h": 14,
+   "text": "SETTINGS"
+  },
+  {
+   "id": "btn_save_quit",
+   "type": "button",
+   "x": 248,
+   "y": 206,
+   "w": 144,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "SAVE+QUIT",
+   "action": "save_quit"
+  },
+  {
+   "id": "btn_save_quit_label",
+   "type": "label",
+   "x": 259,
+   "y": 211,
+   "w": 122,
+   "h": 14,
+   "text": "SAVE+QUIT"
+  },
+  {
+   "id": "btn_abandon",
+   "type": "button",
+   "x": 248,
+   "y": 248,
+   "w": 144,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "ABANDON",
+   "action": "abandon"
+  },
+  {
+   "id": "btn_abandon_label",
+   "type": "label",
+   "x": 272,
+   "y": 253,
+   "w": 96,
+   "h": 14,
+   "text": "ABANDON"
+  },
+  {
+   "id": "hint",
+   "type": "label",
+   "x": 240,
+   "y": 294,
+   "w": 159,
+   "h": 7,
+   "text": "ESC RESUME   ENTER SELECT"
+  }
+ ]
+}

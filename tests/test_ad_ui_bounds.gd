@@ -7,7 +7,7 @@ extends RefCounted
 const REPORT_ONLY := false
 const SIZES := [Vector2i(1280,720), Vector2i(1366,768), Vector2i(1600,900), Vector2i(1920,1080), Vector2i(2560,1440),
 	Vector2i(3840,2160), Vector2i(1280,800), Vector2i(1920,1200), Vector2i(2560,1080), Vector2i(3440,1440), Vector2i(1024,768)]
-const MENU_STATES := ["title","settings"]
+const MENU_STATES := ["title","settings","settings_video","settings_controls","settings_access"]
 const DEV_TEXTS := ["ARCANE DUNGEON / M4","Edit policy","Render FPS","Waves scheduled","telemetry","Toggle debug","Toggle edit policy"]
 const RUN_STATES := ["combat","reward","workshop_editor","merchant","pause","summary","sigil_desk"]
 
@@ -205,7 +205,8 @@ func _check_controls(t, root: Node, size_label: String, state: String, bounds: R
 		var rect := _visible_rect(c)
 		if rect.size == Vector2.ZERO:
 			continue
-		if not bounds.encloses(rect):
+		# Title parallax layers (par_*) overscan the viewport by design (AD-152); they are decorative and not interactive.
+		if not bounds.encloses(rect) and not String(c.name).begins_with("par_"):
 			_report(t, size_label, state, "outside", c, rect)
 		if _interactive(c):
 			interactive.append([c, rect])

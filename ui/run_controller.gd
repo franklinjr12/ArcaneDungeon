@@ -226,6 +226,9 @@ func _build() -> void:
 	pause_menu.quit_confirmed.connect(_pause_quit)
 	pause_menu.save_quit_confirmed.connect(_save_and_quit)
 	pause_menu.tips_toggled.connect(_toggle_tips)
+	pause_menu.loadout_requested.connect(func():
+		close_pause()
+		open_loadout_view())
 	_fit_editor_panel()
 
 ## Workshop is a safe room, so it gets a side panel (merchant, test range tools, loadout, test feedback); combat has none.
@@ -459,6 +462,8 @@ func open_pause() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	pause_menu.set_tips_visible(not guide.dismissed)
 	pause_menu.set_save_available(flow.can_save())
+	var seconds := int(flow.summary()["seconds"])
+	pause_menu.set_run_info(tr("pause.run_info") % [int(flow.room.values.get("stage",0))+1,int(flow.rooms_cleared)+1,seconds/60,seconds%60])
 	pause_menu.visible = true
 
 func close_pause() -> void:

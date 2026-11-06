@@ -1,0 +1,640 @@
+{
+ "screen": "settings_access",
+ "canvas": [
+  640,
+  360
+ ],
+ "safe_area": {
+  "x": 16,
+  "y": 9,
+  "w": 608,
+  "h": 342
+ },
+ "status": "CANDIDATE",
+ "skin": "AD-095 kit (skin A)",
+ "coordinate_origin": "top-left, px at 640x360 (engine scales x2 = 1280x720 exactly)",
+ "note": "rects are the final sprite/text bounds; 9-slice sprites are stretched with the margins in ad_ui_kit.json; labels are engine text (m5x7) positioned at x,y (top-left of the glyph box)",
+ "fonts": {
+  "label": "arc_fnt_m5x7",
+  "small": "arc_fnt_silkscreen"
+ },
+ "focus_order": [
+  "tab_audio",
+  "tab_video",
+  "tab_controls",
+  "tab_access",
+  "btn_back",
+  "btn_defaults",
+  "btn_apply",
+  "toggle_reduce_flash",
+  "toggle_reduce_shake",
+  "dd_colourblind",
+  "dd_text_size",
+  "toggle_telegraph",
+  "toggle_hold_cast",
+  "toggle_aim_assist",
+  "toggle_visual_cues"
+ ],
+ "widgets": [
+  {
+   "id": "modal_backdrop",
+   "type": "backdrop",
+   "x": 0,
+   "y": 0,
+   "w": 640,
+   "h": 360,
+   "sprite": "ad_ui_modal_backdrop_50",
+   "tiled": true
+  },
+  {
+   "id": "panel",
+   "type": "panel",
+   "x": 16,
+   "y": 18,
+   "w": 608,
+   "h": 332,
+   "sprite": "ad_ui_panel_large"
+  },
+  {
+   "id": "title_header",
+   "type": "header",
+   "x": 220,
+   "y": 10,
+   "w": 200,
+   "h": 16,
+   "sprite": "ad_ui_header"
+  },
+  {
+   "id": "title",
+   "type": "label",
+   "x": 293,
+   "y": 15,
+   "w": 54,
+   "h": 7,
+   "text": "SETTINGS"
+  },
+  {
+   "id": "tab_audio",
+   "type": "tab",
+   "x": 32,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "AUDIO",
+   "tab": "audio"
+  },
+  {
+   "id": "tab_audio_label",
+   "type": "label",
+   "x": 64,
+   "y": 39,
+   "w": 33,
+   "h": 7,
+   "text": "AUDIO"
+  },
+  {
+   "id": "tab_video",
+   "type": "tab",
+   "x": 132,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "VIDEO",
+   "tab": "video"
+  },
+  {
+   "id": "tab_video_label",
+   "type": "label",
+   "x": 164,
+   "y": 39,
+   "w": 33,
+   "h": 7,
+   "text": "VIDEO"
+  },
+  {
+   "id": "tab_controls",
+   "type": "tab",
+   "x": 232,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "CONTROLS",
+   "tab": "controls"
+  },
+  {
+   "id": "tab_controls_label",
+   "type": "label",
+   "x": 253,
+   "y": 39,
+   "w": 55,
+   "h": 7,
+   "text": "CONTROLS"
+  },
+  {
+   "id": "tab_access",
+   "type": "tab",
+   "x": 332,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_active",
+   "state": "active",
+   "text": "ACCESSIBILITY",
+   "tab": "access"
+  },
+  {
+   "id": "tab_access_label",
+   "type": "label",
+   "x": 337,
+   "y": 39,
+   "w": 87,
+   "h": 7,
+   "text": "ACCESSIBILITY"
+  },
+  {
+   "id": "content",
+   "type": "panel",
+   "x": 28,
+   "y": 50,
+   "w": 584,
+   "h": 252,
+   "sprite": "ad_ui_panel_inset"
+  },
+  {
+   "id": "btn_back",
+   "type": "button",
+   "x": 40,
+   "y": 314,
+   "w": 96,
+   "h": 24,
+   "sprite": "ad_ui_btn_focus",
+   "state": "focus",
+   "text": "BACK",
+   "action": "close_settings"
+  },
+  {
+   "id": "btn_back_label",
+   "type": "label",
+   "x": 74,
+   "y": 322,
+   "w": 27,
+   "h": 7,
+   "text": "BACK"
+  },
+  {
+   "id": "btn_defaults",
+   "type": "button",
+   "x": 144,
+   "y": 314,
+   "w": 96,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "DEFAULTS",
+   "action": "reset_tab"
+  },
+  {
+   "id": "btn_defaults_label",
+   "type": "label",
+   "x": 164,
+   "y": 322,
+   "w": 55,
+   "h": 7,
+   "text": "DEFAULTS"
+  },
+  {
+   "id": "btn_apply",
+   "type": "button",
+   "x": 520,
+   "y": 314,
+   "w": 96,
+   "h": 24,
+   "sprite": "ad_ui_btn_selected",
+   "state": "selected",
+   "text": "APPLY",
+   "action": "apply"
+  },
+  {
+   "id": "btn_apply_label",
+   "type": "label",
+   "x": 551,
+   "y": 322,
+   "w": 34,
+   "h": 7,
+   "text": "APPLY"
+  },
+  {
+   "id": "hint",
+   "type": "label",
+   "x": 249,
+   "y": 322,
+   "w": 264,
+   "h": 7,
+   "text": "ESC BACK    Q / E SWITCH TAB    ENTER CHANGE"
+  },
+  {
+   "id": "hdr_vision",
+   "type": "header",
+   "x": 36,
+   "y": 56,
+   "w": 368,
+   "h": 12,
+   "sprite": "ad_ui_header_small"
+  },
+  {
+   "id": "label_22",
+   "type": "label",
+   "x": 161,
+   "y": 59,
+   "w": 117,
+   "h": 7,
+   "text": "VISION AND COMFORT"
+  },
+  {
+   "id": "label_23",
+   "type": "label",
+   "x": 44,
+   "y": 76,
+   "w": 80,
+   "h": 7,
+   "text": "REDUCE FLASH"
+  },
+  {
+   "id": "toggle_reduce_flash",
+   "type": "toggle",
+   "x": 196,
+   "y": 71,
+   "w": 28,
+   "h": 14,
+   "sprite": "ad_ui_toggle_on_hover",
+   "value": true,
+   "state": "hover"
+  },
+  {
+   "id": "toggle_reduce_flash_value",
+   "type": "label",
+   "x": 230,
+   "y": 75,
+   "w": 13,
+   "h": 7,
+   "text": "ON"
+  },
+  {
+   "id": "label_26",
+   "type": "label",
+   "x": 44,
+   "y": 100,
+   "w": 126,
+   "h": 7,
+   "text": "REDUCE SCREEN SHAKE"
+  },
+  {
+   "id": "toggle_reduce_shake",
+   "type": "toggle",
+   "x": 246,
+   "y": 95,
+   "w": 28,
+   "h": 14,
+   "sprite": "ad_ui_toggle_on_normal",
+   "value": true,
+   "state": "normal"
+  },
+  {
+   "id": "toggle_reduce_shake_value",
+   "type": "label",
+   "x": 280,
+   "y": 99,
+   "w": 13,
+   "h": 7,
+   "text": "ON"
+  },
+  {
+   "id": "label_29",
+   "type": "label",
+   "x": 44,
+   "y": 124,
+   "w": 114,
+   "h": 7,
+   "text": "COLOUR-BLIND MODE"
+  },
+  {
+   "id": "dd_colourblind",
+   "type": "dropdown",
+   "x": 246,
+   "y": 119,
+   "w": 120,
+   "h": 18,
+   "sprite": "ad_ui_dropdown_normal",
+   "state": "normal",
+   "text": "OFF"
+  },
+  {
+   "id": "dd_colourblind_label",
+   "type": "label",
+   "x": 252,
+   "y": 125,
+   "w": 20,
+   "h": 7,
+   "text": "OFF"
+  },
+  {
+   "id": "label_32",
+   "type": "label",
+   "x": 44,
+   "y": 148,
+   "w": 58,
+   "h": 7,
+   "text": "TEXT SIZE"
+  },
+  {
+   "id": "dd_text_size",
+   "type": "dropdown",
+   "x": 246,
+   "y": 143,
+   "w": 120,
+   "h": 18,
+   "sprite": "ad_ui_dropdown_normal",
+   "state": "normal",
+   "text": "LARGE"
+  },
+  {
+   "id": "dd_text_size_label",
+   "type": "label",
+   "x": 252,
+   "y": 149,
+   "w": 34,
+   "h": 7,
+   "text": "LARGE"
+  },
+  {
+   "id": "label_35",
+   "type": "label",
+   "x": 44,
+   "y": 172,
+   "w": 115,
+   "h": 7,
+   "text": "STRONG TELEGRAPHS"
+  },
+  {
+   "id": "toggle_telegraph",
+   "type": "toggle",
+   "x": 246,
+   "y": 167,
+   "w": 28,
+   "h": 14,
+   "sprite": "ad_ui_toggle_off_normal",
+   "value": false,
+   "state": "normal"
+  },
+  {
+   "id": "toggle_telegraph_value",
+   "type": "label",
+   "x": 280,
+   "y": 171,
+   "w": 20,
+   "h": 7,
+   "text": "OFF"
+  },
+  {
+   "id": "div_1",
+   "type": "divider",
+   "x": 36,
+   "y": 192,
+   "w": 368,
+   "h": 5,
+   "sprite": "ad_ui_divider_h"
+  },
+  {
+   "id": "hdr_input",
+   "type": "header",
+   "x": 36,
+   "y": 202,
+   "w": 368,
+   "h": 12,
+   "sprite": "ad_ui_header_small"
+  },
+  {
+   "id": "label_40",
+   "type": "label",
+   "x": 171,
+   "y": 205,
+   "w": 97,
+   "h": 7,
+   "text": "INPUT AND SOUND"
+  },
+  {
+   "id": "label_41",
+   "type": "label",
+   "x": 44,
+   "y": 222,
+   "w": 77,
+   "h": 7,
+   "text": "HOLD TO CAST"
+  },
+  {
+   "id": "toggle_hold_cast",
+   "type": "toggle",
+   "x": 246,
+   "y": 217,
+   "w": 28,
+   "h": 14,
+   "sprite": "ad_ui_toggle_off_normal",
+   "value": false,
+   "state": "normal"
+  },
+  {
+   "id": "toggle_hold_cast_value",
+   "type": "label",
+   "x": 280,
+   "y": 221,
+   "w": 20,
+   "h": 7,
+   "text": "OFF"
+  },
+  {
+   "id": "label_44",
+   "type": "label",
+   "x": 44,
+   "y": 246,
+   "w": 64,
+   "h": 7,
+   "text": "AIM ASSIST"
+  },
+  {
+   "id": "toggle_aim_assist",
+   "type": "toggle",
+   "x": 246,
+   "y": 241,
+   "w": 28,
+   "h": 14,
+   "sprite": "ad_ui_toggle_on_normal",
+   "value": true,
+   "state": "normal"
+  },
+  {
+   "id": "toggle_aim_assist_value",
+   "type": "label",
+   "x": 280,
+   "y": 245,
+   "w": 13,
+   "h": 7,
+   "text": "ON"
+  },
+  {
+   "id": "label_47",
+   "type": "label",
+   "x": 44,
+   "y": 270,
+   "w": 111,
+   "h": 7,
+   "text": "VISUAL SOUND CUES"
+  },
+  {
+   "id": "toggle_visual_cues",
+   "type": "toggle",
+   "x": 246,
+   "y": 265,
+   "w": 28,
+   "h": 14,
+   "sprite": "ad_ui_toggle_on_normal",
+   "value": true,
+   "state": "normal"
+  },
+  {
+   "id": "toggle_visual_cues_value",
+   "type": "label",
+   "x": 280,
+   "y": 269,
+   "w": 13,
+   "h": 7,
+   "text": "ON"
+  },
+  {
+   "id": "help_panel",
+   "type": "tooltip",
+   "x": 410,
+   "y": 58,
+   "w": 178,
+   "h": 72,
+   "sprite": "ad_ui_panel_tooltip"
+  },
+  {
+   "id": "help_title",
+   "type": "label",
+   "x": 418,
+   "y": 66,
+   "w": 80,
+   "h": 7,
+   "text": "REDUCE FLASH"
+  },
+  {
+   "id": "divider_52",
+   "type": "divider",
+   "x": 418,
+   "y": 77,
+   "w": 162,
+   "h": 3,
+   "sprite": "ad_ui_divider_plain",
+   "tiled": true
+  },
+  {
+   "id": "label_53",
+   "type": "label",
+   "x": 418,
+   "y": 84,
+   "w": 137,
+   "h": 7,
+   "text": "TONES DOWN HIT-FLASH,"
+  },
+  {
+   "id": "label_54",
+   "type": "label",
+   "x": 418,
+   "y": 93,
+   "w": 150,
+   "h": 7,
+   "text": "WHITE BURSTS AND SCREEN"
+  },
+  {
+   "id": "label_55",
+   "type": "label",
+   "x": 418,
+   "y": 102,
+   "w": 52,
+   "h": 7,
+   "text": "FLICKER."
+  },
+  {
+   "id": "cb_preview",
+   "type": "preview",
+   "x": 410,
+   "y": 158,
+   "w": 178,
+   "h": 60,
+   "sprite": "ad_ui_panel_inset"
+  },
+  {
+   "id": "label_57",
+   "type": "label",
+   "x": 459,
+   "y": 162,
+   "w": 79,
+   "h": 7,
+   "text": "STATUS ICONS"
+  },
+  {
+   "id": "prev_status_0",
+   "type": "slot",
+   "x": 440,
+   "y": 176,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    444,
+    180,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "prev_status_1",
+   "type": "slot",
+   "x": 476,
+   "y": 176,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    480,
+    180,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "prev_status_2",
+   "type": "slot",
+   "x": 512,
+   "y": 176,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    516,
+    180,
+    16,
+    16
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1158 @@
+{
+ "screen": "settings_controls",
+ "canvas": [
+  640,
+  360
+ ],
+ "safe_area": {
+  "x": 16,
+  "y": 9,
+  "w": 608,
+  "h": 342
+ },
+ "status": "CANDIDATE",
+ "skin": "AD-095 kit (skin A)",
+ "coordinate_origin": "top-left, px at 640x360 (engine scales x2 = 1280x720 exactly)",
+ "note": "rects are the final sprite/text bounds; 9-slice sprites are stretched with the margins in ad_ui_kit.json; labels are engine text (m5x7) positioned at x,y (top-left of the glyph box)",
+ "fonts": {
+  "label": "arc_fnt_m5x7",
+  "small": "arc_fnt_silkscreen"
+ },
+ "focus_order": [
+  "tab_audio",
+  "tab_video",
+  "tab_controls",
+  "tab_access",
+  "btn_back",
+  "btn_defaults",
+  "btn_apply",
+  "rb_move_up_1",
+  "rb_move_up_2",
+  "rb_move_down_1",
+  "rb_move_down_2",
+  "rb_move_left_1",
+  "rb_move_left_2",
+  "rb_move_right_1",
+  "rb_move_right_2",
+  "rb_dash_1",
+  "rb_dash_2",
+  "rb_cast_1_1",
+  "rb_cast_1_2",
+  "rb_cast_2_1",
+  "rb_cast_2_2",
+  "rb_cast_3_1",
+  "rb_cast_3_2",
+  "rb_cast_4_1",
+  "rb_cast_4_2",
+  "rb_interact_1",
+  "rb_interact_2",
+  "rb_loadout_1",
+  "rb_loadout_2",
+  "rb_compendium_1",
+  "rb_compendium_2",
+  "rb_pause_1",
+  "rb_pause_2",
+  "rb_screenshot_1",
+  "rb_screenshot_2",
+  "btn_swap",
+  "btn_cancel",
+  "btn_reset_keys"
+ ],
+ "widgets": [
+  {
+   "id": "modal_backdrop",
+   "type": "backdrop",
+   "x": 0,
+   "y": 0,
+   "w": 640,
+   "h": 360,
+   "sprite": "ad_ui_modal_backdrop_50",
+   "tiled": true
+  },
+  {
+   "id": "panel",
+   "type": "panel",
+   "x": 16,
+   "y": 18,
+   "w": 608,
+   "h": 332,
+   "sprite": "ad_ui_panel_large"
+  },
+  {
+   "id": "title_header",
+   "type": "header",
+   "x": 220,
+   "y": 10,
+   "w": 200,
+   "h": 16,
+   "sprite": "ad_ui_header"
+  },
+  {
+   "id": "title",
+   "type": "label",
+   "x": 293,
+   "y": 15,
+   "w": 54,
+   "h": 7,
+   "text": "SETTINGS"
+  },
+  {
+   "id": "tab_audio",
+   "type": "tab",
+   "x": 32,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "AUDIO",
+   "tab": "audio"
+  },
+  {
+   "id": "tab_audio_label",
+   "type": "label",
+   "x": 64,
+   "y": 39,
+   "w": 33,
+   "h": 7,
+   "text": "AUDIO"
+  },
+  {
+   "id": "tab_video",
+   "type": "tab",
+   "x": 132,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "VIDEO",
+   "tab": "video"
+  },
+  {
+   "id": "tab_video_label",
+   "type": "label",
+   "x": 164,
+   "y": 39,
+   "w": 33,
+   "h": 7,
+   "text": "VIDEO"
+  },
+  {
+   "id": "tab_controls",
+   "type": "tab",
+   "x": 232,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_active",
+   "state": "active",
+   "text": "CONTROLS",
+   "tab": "controls"
+  },
+  {
+   "id": "tab_controls_label",
+   "type": "label",
+   "x": 253,
+   "y": 39,
+   "w": 55,
+   "h": 7,
+   "text": "CONTROLS"
+  },
+  {
+   "id": "tab_access",
+   "type": "tab",
+   "x": 332,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "ACCESSIBILITY",
+   "tab": "access"
+  },
+  {
+   "id": "tab_access_label",
+   "type": "label",
+   "x": 337,
+   "y": 39,
+   "w": 87,
+   "h": 7,
+   "text": "ACCESSIBILITY"
+  },
+  {
+   "id": "content",
+   "type": "panel",
+   "x": 28,
+   "y": 50,
+   "w": 584,
+   "h": 252,
+   "sprite": "ad_ui_panel_inset"
+  },
+  {
+   "id": "btn_back",
+   "type": "button",
+   "x": 40,
+   "y": 314,
+   "w": 96,
+   "h": 24,
+   "sprite": "ad_ui_btn_focus",
+   "state": "focus",
+   "text": "BACK",
+   "action": "close_settings"
+  },
+  {
+   "id": "btn_back_label",
+   "type": "label",
+   "x": 74,
+   "y": 322,
+   "w": 27,
+   "h": 7,
+   "text": "BACK"
+  },
+  {
+   "id": "btn_defaults",
+   "type": "button",
+   "x": 144,
+   "y": 314,
+   "w": 96,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "DEFAULTS",
+   "action": "reset_tab"
+  },
+  {
+   "id": "btn_defaults_label",
+   "type": "label",
+   "x": 164,
+   "y": 322,
+   "w": 55,
+   "h": 7,
+   "text": "DEFAULTS"
+  },
+  {
+   "id": "btn_apply",
+   "type": "button",
+   "x": 520,
+   "y": 314,
+   "w": 96,
+   "h": 24,
+   "sprite": "ad_ui_btn_selected",
+   "state": "selected",
+   "text": "APPLY",
+   "action": "apply"
+  },
+  {
+   "id": "btn_apply_label",
+   "type": "label",
+   "x": 551,
+   "y": 322,
+   "w": 34,
+   "h": 7,
+   "text": "APPLY"
+  },
+  {
+   "id": "hint",
+   "type": "label",
+   "x": 249,
+   "y": 322,
+   "w": 264,
+   "h": 7,
+   "text": "ESC BACK    Q / E SWITCH TAB    ENTER CHANGE"
+  },
+  {
+   "id": "hdr_combat",
+   "type": "header",
+   "x": 36,
+   "y": 56,
+   "w": 264,
+   "h": 12,
+   "sprite": "ad_ui_header_small"
+  },
+  {
+   "id": "label_22",
+   "type": "label",
+   "x": 40,
+   "y": 59,
+   "w": 41,
+   "h": 7,
+   "text": "COMBAT"
+  },
+  {
+   "id": "label_23",
+   "type": "label",
+   "x": 142,
+   "y": 59,
+   "w": 47,
+   "h": 7,
+   "text": "PRIMARY"
+  },
+  {
+   "id": "label_24",
+   "type": "label",
+   "x": 244,
+   "y": 59,
+   "w": 20,
+   "h": 7,
+   "text": "ALT"
+  },
+  {
+   "id": "lbl_move_up",
+   "type": "label",
+   "x": 40,
+   "y": 80,
+   "w": 45,
+   "h": 7,
+   "text": "MOVE UP"
+  },
+  {
+   "id": "rb_move_up_1",
+   "type": "rebind",
+   "x": 124,
+   "y": 73,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "W"
+  },
+  {
+   "id": "rb_move_up_1_label",
+   "type": "label",
+   "x": 163,
+   "y": 80,
+   "w": 6,
+   "h": 7,
+   "text": "W"
+  },
+  {
+   "id": "rb_move_up_2",
+   "type": "rebind",
+   "x": 212,
+   "y": 73,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "UP"
+  },
+  {
+   "id": "rb_move_up_2_label",
+   "type": "label",
+   "x": 247,
+   "y": 80,
+   "w": 13,
+   "h": 7,
+   "text": "UP"
+  },
+  {
+   "id": "lbl_move_down",
+   "type": "label",
+   "x": 40,
+   "y": 104,
+   "w": 59,
+   "h": 7,
+   "text": "MOVE DOWN"
+  },
+  {
+   "id": "rb_move_down_1",
+   "type": "rebind",
+   "x": 124,
+   "y": 97,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "S"
+  },
+  {
+   "id": "rb_move_down_1_label",
+   "type": "label",
+   "x": 163,
+   "y": 104,
+   "w": 6,
+   "h": 7,
+   "text": "S"
+  },
+  {
+   "id": "rb_move_down_2",
+   "type": "rebind",
+   "x": 212,
+   "y": 97,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "DOWN"
+  },
+  {
+   "id": "rb_move_down_2_label",
+   "type": "label",
+   "x": 240,
+   "y": 104,
+   "w": 27,
+   "h": 7,
+   "text": "DOWN"
+  },
+  {
+   "id": "lbl_move_left",
+   "type": "label",
+   "x": 40,
+   "y": 128,
+   "w": 59,
+   "h": 7,
+   "text": "MOVE LEFT"
+  },
+  {
+   "id": "rb_move_left_1",
+   "type": "rebind",
+   "x": 124,
+   "y": 121,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_hover",
+   "state": "hover",
+   "text": "A"
+  },
+  {
+   "id": "rb_move_left_1_label",
+   "type": "label",
+   "x": 163,
+   "y": 128,
+   "w": 6,
+   "h": 7,
+   "text": "A"
+  },
+  {
+   "id": "rb_move_left_2",
+   "type": "rebind",
+   "x": 212,
+   "y": 121,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "LEFT"
+  },
+  {
+   "id": "rb_move_left_2_label",
+   "type": "label",
+   "x": 240,
+   "y": 128,
+   "w": 27,
+   "h": 7,
+   "text": "LEFT"
+  },
+  {
+   "id": "lbl_move_right",
+   "type": "label",
+   "x": 40,
+   "y": 152,
+   "w": 65,
+   "h": 7,
+   "text": "MOVE RIGHT"
+  },
+  {
+   "id": "rb_move_right_1",
+   "type": "rebind",
+   "x": 124,
+   "y": 145,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "D"
+  },
+  {
+   "id": "rb_move_right_1_label",
+   "type": "label",
+   "x": 163,
+   "y": 152,
+   "w": 6,
+   "h": 7,
+   "text": "D"
+  },
+  {
+   "id": "rb_move_right_2",
+   "type": "rebind",
+   "x": 212,
+   "y": 145,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "RIGHT"
+  },
+  {
+   "id": "rb_move_right_2_label",
+   "type": "label",
+   "x": 237,
+   "y": 152,
+   "w": 33,
+   "h": 7,
+   "text": "RIGHT"
+  },
+  {
+   "id": "lbl_dash",
+   "type": "label",
+   "x": 40,
+   "y": 176,
+   "w": 27,
+   "h": 7,
+   "text": "DASH"
+  },
+  {
+   "id": "rb_dash_1",
+   "type": "rebind",
+   "x": 124,
+   "y": 169,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_listening",
+   "state": "listening",
+   "text": "PRESS A KEY"
+  },
+  {
+   "id": "rb_dash_1_label",
+   "type": "label",
+   "x": 131,
+   "y": 176,
+   "w": 70,
+   "h": 7,
+   "text": "PRESS A KEY"
+  },
+  {
+   "id": "rb_dash_2",
+   "type": "rebind",
+   "x": 212,
+   "y": 169,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "-"
+  },
+  {
+   "id": "rb_dash_2_label",
+   "type": "label",
+   "x": 251,
+   "y": 176,
+   "w": 6,
+   "h": 7,
+   "text": "-"
+  },
+  {
+   "id": "lbl_cast_1",
+   "type": "label",
+   "x": 40,
+   "y": 200,
+   "w": 37,
+   "h": 7,
+   "text": "CAST 1"
+  },
+  {
+   "id": "rb_cast_1_1",
+   "type": "rebind",
+   "x": 124,
+   "y": 193,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "LMB"
+  },
+  {
+   "id": "rb_cast_1_1_label",
+   "type": "label",
+   "x": 156,
+   "y": 200,
+   "w": 20,
+   "h": 7,
+   "text": "LMB"
+  },
+  {
+   "id": "rb_cast_1_2",
+   "type": "rebind",
+   "x": 212,
+   "y": 193,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "-"
+  },
+  {
+   "id": "rb_cast_1_2_label",
+   "type": "label",
+   "x": 251,
+   "y": 200,
+   "w": 6,
+   "h": 7,
+   "text": "-"
+  },
+  {
+   "id": "lbl_cast_2",
+   "type": "label",
+   "x": 40,
+   "y": 224,
+   "w": 38,
+   "h": 7,
+   "text": "CAST 2"
+  },
+  {
+   "id": "rb_cast_2_1",
+   "type": "rebind",
+   "x": 124,
+   "y": 217,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "RMB"
+  },
+  {
+   "id": "rb_cast_2_1_label",
+   "type": "label",
+   "x": 156,
+   "y": 224,
+   "w": 20,
+   "h": 7,
+   "text": "RMB"
+  },
+  {
+   "id": "rb_cast_2_2",
+   "type": "rebind",
+   "x": 212,
+   "y": 217,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "-"
+  },
+  {
+   "id": "rb_cast_2_2_label",
+   "type": "label",
+   "x": 251,
+   "y": 224,
+   "w": 6,
+   "h": 7,
+   "text": "-"
+  },
+  {
+   "id": "lbl_cast_3",
+   "type": "label",
+   "x": 40,
+   "y": 248,
+   "w": 38,
+   "h": 7,
+   "text": "CAST 3"
+  },
+  {
+   "id": "rb_cast_3_1",
+   "type": "rebind",
+   "x": 124,
+   "y": 241,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "Q"
+  },
+  {
+   "id": "rb_cast_3_1_label",
+   "type": "label",
+   "x": 163,
+   "y": 248,
+   "w": 6,
+   "h": 7,
+   "text": "Q"
+  },
+  {
+   "id": "rb_cast_3_2",
+   "type": "rebind",
+   "x": 212,
+   "y": 241,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "-"
+  },
+  {
+   "id": "rb_cast_3_2_label",
+   "type": "label",
+   "x": 251,
+   "y": 248,
+   "w": 6,
+   "h": 7,
+   "text": "-"
+  },
+  {
+   "id": "lbl_cast_4",
+   "type": "label",
+   "x": 40,
+   "y": 272,
+   "w": 38,
+   "h": 7,
+   "text": "CAST 4"
+  },
+  {
+   "id": "rb_cast_4_1",
+   "type": "rebind",
+   "x": 124,
+   "y": 265,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_conflict",
+   "state": "conflict",
+   "text": "E"
+  },
+  {
+   "id": "rb_cast_4_1_label",
+   "type": "label",
+   "x": 163,
+   "y": 272,
+   "w": 6,
+   "h": 7,
+   "text": "E"
+  },
+  {
+   "id": "rb_cast_4_2",
+   "type": "rebind",
+   "x": 212,
+   "y": 265,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "R"
+  },
+  {
+   "id": "rb_cast_4_2_label",
+   "type": "label",
+   "x": 251,
+   "y": 272,
+   "w": 6,
+   "h": 7,
+   "text": "R"
+  },
+  {
+   "id": "hdr_system",
+   "type": "header",
+   "x": 312,
+   "y": 56,
+   "w": 264,
+   "h": 12,
+   "sprite": "ad_ui_header_small"
+  },
+  {
+   "id": "label_71",
+   "type": "label",
+   "x": 316,
+   "y": 59,
+   "w": 41,
+   "h": 7,
+   "text": "SYSTEM"
+  },
+  {
+   "id": "label_72",
+   "type": "label",
+   "x": 418,
+   "y": 59,
+   "w": 47,
+   "h": 7,
+   "text": "PRIMARY"
+  },
+  {
+   "id": "label_73",
+   "type": "label",
+   "x": 520,
+   "y": 59,
+   "w": 20,
+   "h": 7,
+   "text": "ALT"
+  },
+  {
+   "id": "lbl_interact",
+   "type": "label",
+   "x": 316,
+   "y": 80,
+   "w": 54,
+   "h": 7,
+   "text": "INTERACT"
+  },
+  {
+   "id": "rb_interact_1",
+   "type": "rebind",
+   "x": 400,
+   "y": 73,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "F"
+  },
+  {
+   "id": "rb_interact_1_label",
+   "type": "label",
+   "x": 439,
+   "y": 80,
+   "w": 6,
+   "h": 7,
+   "text": "F"
+  },
+  {
+   "id": "rb_interact_2",
+   "type": "rebind",
+   "x": 488,
+   "y": 73,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "ENTER"
+  },
+  {
+   "id": "rb_interact_2_label",
+   "type": "label",
+   "x": 513,
+   "y": 80,
+   "w": 34,
+   "h": 7,
+   "text": "ENTER"
+  },
+  {
+   "id": "lbl_loadout",
+   "type": "label",
+   "x": 316,
+   "y": 104,
+   "w": 48,
+   "h": 7,
+   "text": "LOADOUT"
+  },
+  {
+   "id": "rb_loadout_1",
+   "type": "rebind",
+   "x": 400,
+   "y": 97,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "TAB"
+  },
+  {
+   "id": "rb_loadout_1_label",
+   "type": "label",
+   "x": 432,
+   "y": 104,
+   "w": 20,
+   "h": 7,
+   "text": "TAB"
+  },
+  {
+   "id": "rb_loadout_2",
+   "type": "rebind",
+   "x": 488,
+   "y": 97,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "-"
+  },
+  {
+   "id": "rb_loadout_2_label",
+   "type": "label",
+   "x": 527,
+   "y": 104,
+   "w": 6,
+   "h": 7,
+   "text": "-"
+  },
+  {
+   "id": "lbl_compendium",
+   "type": "label",
+   "x": 316,
+   "y": 128,
+   "w": 68,
+   "h": 7,
+   "text": "COMPENDIUM"
+  },
+  {
+   "id": "rb_compendium_1",
+   "type": "rebind",
+   "x": 400,
+   "y": 121,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "C"
+  },
+  {
+   "id": "rb_compendium_1_label",
+   "type": "label",
+   "x": 439,
+   "y": 128,
+   "w": 6,
+   "h": 7,
+   "text": "C"
+  },
+  {
+   "id": "rb_compendium_2",
+   "type": "rebind",
+   "x": 488,
+   "y": 121,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "-"
+  },
+  {
+   "id": "rb_compendium_2_label",
+   "type": "label",
+   "x": 527,
+   "y": 128,
+   "w": 6,
+   "h": 7,
+   "text": "-"
+  },
+  {
+   "id": "lbl_pause",
+   "type": "label",
+   "x": 316,
+   "y": 152,
+   "w": 34,
+   "h": 7,
+   "text": "PAUSE"
+  },
+  {
+   "id": "rb_pause_1",
+   "type": "rebind",
+   "x": 400,
+   "y": 145,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_disabled",
+   "state": "disabled",
+   "text": "ESC"
+  },
+  {
+   "id": "rb_pause_1_label",
+   "type": "label",
+   "x": 432,
+   "y": 152,
+   "w": 20,
+   "h": 7,
+   "text": "ESC"
+  },
+  {
+   "id": "rb_pause_2",
+   "type": "rebind",
+   "x": 488,
+   "y": 145,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_disabled",
+   "state": "disabled",
+   "text": "-"
+  },
+  {
+   "id": "rb_pause_2_label",
+   "type": "label",
+   "x": 527,
+   "y": 152,
+   "w": 6,
+   "h": 7,
+   "text": "-"
+  },
+  {
+   "id": "lbl_screenshot",
+   "type": "label",
+   "x": 316,
+   "y": 176,
+   "w": 69,
+   "h": 7,
+   "text": "SCREENSHOT"
+  },
+  {
+   "id": "rb_screenshot_1",
+   "type": "rebind",
+   "x": 400,
+   "y": 169,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "F12"
+  },
+  {
+   "id": "rb_screenshot_1_label",
+   "type": "label",
+   "x": 432,
+   "y": 176,
+   "w": 19,
+   "h": 7,
+   "text": "F12"
+  },
+  {
+   "id": "rb_screenshot_2",
+   "type": "rebind",
+   "x": 488,
+   "y": 169,
+   "w": 84,
+   "h": 20,
+   "sprite": "ad_ui_rebind_idle",
+   "state": "idle",
+   "text": "-"
+  },
+  {
+   "id": "rb_screenshot_2_label",
+   "type": "label",
+   "x": 527,
+   "y": 176,
+   "w": 6,
+   "h": 7,
+   "text": "-"
+  },
+  {
+   "id": "conflict_panel",
+   "type": "tooltip",
+   "x": 316,
+   "y": 200,
+   "w": 264,
+   "h": 56,
+   "sprite": "ad_ui_panel_tooltip"
+  },
+  {
+   "id": "label_100",
+   "type": "label",
+   "x": 324,
+   "y": 207,
+   "w": 126,
+   "h": 7,
+   "text": "E IS ALREADY USED BY"
+  },
+  {
+   "id": "label_101",
+   "type": "label",
+   "x": 324,
+   "y": 216,
+   "w": 146,
+   "h": 7,
+   "text": "CAST 4. SWAP OR CANCEL?"
+  },
+  {
+   "id": "btn_swap",
+   "type": "button",
+   "x": 324,
+   "y": 228,
+   "w": 72,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "SWAP",
+   "action": "swap_binding"
+  },
+  {
+   "id": "btn_swap_label",
+   "type": "label",
+   "x": 346,
+   "y": 236,
+   "w": 27,
+   "h": 7,
+   "text": "SWAP"
+  },
+  {
+   "id": "btn_cancel",
+   "type": "button",
+   "x": 404,
+   "y": 228,
+   "w": 72,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "CANCEL",
+   "action": "cancel_rebind"
+  },
+  {
+   "id": "btn_cancel_label",
+   "type": "label",
+   "x": 419,
+   "y": 236,
+   "w": 41,
+   "h": 7,
+   "text": "CANCEL"
+  },
+  {
+   "id": "btn_reset_keys",
+   "type": "button",
+   "x": 484,
+   "y": 228,
+   "w": 88,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "RESET KEYS",
+   "action": "reset_keys"
+  },
+  {
+   "id": "btn_reset_keys_label",
+   "type": "label",
+   "x": 495,
+   "y": 236,
+   "w": 66,
+   "h": 7,
+   "text": "RESET KEYS"
+  },
+  {
+   "id": "scroll_up",
+   "type": "scroll",
+   "x": 584,
+   "y": 73,
+   "w": 10,
+   "h": 10,
+   "sprite": "ad_ui_scroll_arrow_up_normal"
+  },
+  {
+   "id": "scroll_track",
+   "type": "scroll",
+   "x": 584,
+   "y": 83,
+   "w": 10,
+   "h": 130,
+   "sprite": "ad_ui_scroll_track_v"
+  },
+  {
+   "id": "scroll_thumb",
+   "type": "scroll",
+   "x": 584,
+   "y": 86,
+   "w": 10,
+   "h": 56,
+   "sprite": "ad_ui_scroll_thumb_v_hover"
+  },
+  {
+   "id": "scroll_down",
+   "type": "scroll",
+   "x": 584,
+   "y": 213,
+   "w": 10,
+   "h": 10,
+   "sprite": "ad_ui_scroll_arrow_down_normal"
+  },
+  {
+   "id": "listen_hint",
+   "type": "label",
+   "x": 316,
+   "y": 272,
+   "w": 223,
+   "h": 7,
+   "text": "LISTENING: PRESS A KEY, ESC CANCELS"
+  }
+ ]
+}

@@ -1,0 +1,171 @@
+{
+ "screen": "menu",
+ "canvas": [
+  640,
+  360
+ ],
+ "safe_area": {
+  "x": 16,
+  "y": 9,
+  "w": 608,
+  "h": 342
+ },
+ "status": "CANDIDATE",
+ "skin": "AD-095 kit (skin A)",
+ "coordinate_origin": "top-left, px at 640x360 (engine scales x2 = 1280x720 exactly)",
+ "note": "rects are the final sprite/text bounds; 9-slice sprites are stretched with the margins in ad_ui_kit.json; labels are engine text (m5x7) positioned at x,y (top-left of the glyph box)",
+ "fonts": {
+  "label": "arc_fnt_m5x7",
+  "small": "arc_fnt_silkscreen"
+ },
+ "focus_order": [
+  "btn_continue",
+  "btn_new_run",
+  "btn_compendium",
+  "btn_settings",
+  "btn_quit"
+ ],
+ "widgets": [
+  {
+   "id": "logo",
+   "type": "image",
+   "x": 160,
+   "y": 24,
+   "w": 320,
+   "h": 96,
+   "sprite": "ad_key_logo"
+  },
+  {
+   "id": "menu_panel",
+   "type": "panel",
+   "x": 16,
+   "y": 132,
+   "w": 184,
+   "h": 190,
+   "sprite": "ad_ui_panel_large"
+  },
+  {
+   "id": "btn_continue",
+   "type": "button",
+   "x": 32,
+   "y": 148,
+   "w": 152,
+   "h": 24,
+   "sprite": "ad_ui_btn_focus",
+   "state": "focus",
+   "text": "CONTINUE",
+   "action": "continue"
+  },
+  {
+   "id": "btn_continue_label",
+   "type": "label",
+   "x": 54,
+   "y": 153,
+   "w": 108,
+   "h": 14,
+   "text": "CONTINUE"
+  },
+  {
+   "id": "btn_new_run",
+   "type": "button",
+   "x": 32,
+   "y": 180,
+   "w": 152,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "NEW RUN",
+   "action": "new_run"
+  },
+  {
+   "id": "btn_new_run_label",
+   "type": "label",
+   "x": 63,
+   "y": 185,
+   "w": 90,
+   "h": 14,
+   "text": "NEW RUN"
+  },
+  {
+   "id": "btn_compendium",
+   "type": "button",
+   "x": 32,
+   "y": 212,
+   "w": 152,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "COMPENDIUM",
+   "action": "compendium"
+  },
+  {
+   "id": "btn_compendium_label",
+   "type": "label",
+   "x": 40,
+   "y": 217,
+   "w": 136,
+   "h": 14,
+   "text": "COMPENDIUM"
+  },
+  {
+   "id": "btn_settings",
+   "type": "button",
+   "x": 32,
+   "y": 244,
+   "w": 152,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "SETTINGS",
+   "action": "settings"
+  },
+  {
+   "id": "btn_settings_label",
+   "type": "label",
+   "x": 54,
+   "y": 249,
+   "w": 108,
+   "h": 14,
+   "text": "SETTINGS"
+  },
+  {
+   "id": "btn_quit",
+   "type": "button",
+   "x": 32,
+   "y": 276,
+   "w": 152,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "QUIT",
+   "action": "quit"
+  },
+  {
+   "id": "btn_quit_label",
+   "type": "label",
+   "x": 82,
+   "y": 281,
+   "w": 52,
+   "h": 14,
+   "text": "QUIT"
+  },
+  {
+   "id": "hint",
+   "type": "label",
+   "x": 24,
+   "y": 343,
+   "w": 145,
+   "h": 7,
+   "text": "ENTER SELECT   ESC BACK"
+  },
+  {
+   "id": "version",
+   "type": "label",
+   "x": 560,
+   "y": 343,
+   "w": 56,
+   "h": 7,
+   "text": "V0.1 DEMO"
+  }
+ ]
+}
