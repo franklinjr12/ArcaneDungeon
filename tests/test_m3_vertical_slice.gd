@@ -108,9 +108,13 @@ func run(t) -> void:
 	t.equal(flow.range_sim.mana,float(flow.config["workshop_restore_mana"]),"TASK-045 test-only refill")
 	t.equal(flow.run.hp,hp_before_test,"TASK-043 refill cannot restore or damage run HP")
 	t.equal(flow.session.state,"cleared","TASK-043 no workshop encounter event can spawn")
-	var health_offer: Dictionary = flow.merchant.stock[1]
+	var health_index := -1
+	for i in flow.merchant.stock.size():
+		if flow.merchant.stock[i]["id"] == "upgrade.hp":
+			health_index = i
+	var health_offer: Dictionary = flow.merchant.stock[health_index]
 	var max_before: float = flow.run.max_hp
-	t.check(flow.buy(1)["ok"],"TASK-046 numeric upgrade purchased")
+	t.check(flow.buy(health_index)["ok"],"TASK-046 numeric upgrade purchased")
 	t.equal(flow.run.max_hp,max_before+float(health_offer["amount"]),"TASK-046 HP upgrade atomically updates RunState")
 	var after_boss: Dictionary = flow.run.snapshot()
 	var restored = Flow.new(20261022)

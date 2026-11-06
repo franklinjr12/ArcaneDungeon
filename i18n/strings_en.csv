@@ -93,6 +93,12 @@ rune.trigger.timer.name,Timer
 rune.essence.neutral.name,Basic Bolt
 run.shop.rune_label,Rune: %s
 run.shop.hp_label,Max HP +%d
+run.shop.mana_label,Max mana +%d
+run.shop.dash_label,Dash charge +%d
+run.shop.max_mana,Increase max mana by %d (run-persistent)
+run.shop.dash_charge,Gain %d extra dash charge (run-persistent)
+run.shop.reroll,Reroll stock (%d coins)
+run.shop.reroll_used,Stock already rerolled
 run.shop.item_price,%s / %s coins
 run.shop.max_hp,Increase max HP by %d (run-persistent)
 run.shop.purchased,Purchased

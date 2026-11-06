@@ -25,6 +25,8 @@ var room
 var encounter
 var rewards
 var merchant
+## AD-144: base max mana of the current room before the merchant bonus.
+var _base_max_mana := 0.0
 var editor
 var range_sim
 var state := "uninitialized"
@@ -197,6 +199,9 @@ func _build_room(entry: Dictionary) -> Dictionary:
 	session.sim.actor.health.maximum = run.max_hp
 	session.sim.actor.health.current = run.hp
 	# Owner request 2026-11-05: mana fully regenerates on every room change.
+	_base_max_mana = float(session.sim.settings["combat"]["player_max_mana"])
+	session.sim.settings["combat"]["player_max_mana"] = _base_max_mana+run.max_mana_bonus
+	session.player.set_dash_bonus(run.dash_charges_bonus)
 	run.mana = float(session.sim.settings["combat"]["player_max_mana"])
 	session.sim.mana = run.mana
 	session.sim.loadout.unlocked = run.unlocked.duplicate(true)
@@ -364,6 +369,7 @@ func _finish_combat() -> void:
 	session.player.recovery_left = 0
 	session.player.invulnerable_left = 0
 	session.player.dash_cooldown = 0
+	session.player.bonus_dashes_left = session.player.dash_charges_bonus
 	# Old projectiles remain only in this room and are discarded on transition.
 	state = "cleared"
 	rooms_cleared += 1
@@ -584,6 +590,18 @@ func buy(index: int) -> Dictionary:
 		if outcome["kind"] == "upgrade":
 			session.sim.actor.health.maximum = run.max_hp
 			session.sim.actor.health.current = run.hp
+			session.sim.settings["combat"]["player_max_mana"] = _base_max_mana+run.max_mana_bonus
+			session.sim.mana = run.mana
+			session.player.set_dash_bonus(run.dash_charges_bonus)
+	return outcome
+
+func reroll() -> Dictionary:
+	if mode != "workshop" or merchant == null:
+		return {"ok":false,"reason":"SHOP_ONLY_WORKSHOP"}
+	var outcome: Dictionary = merchant.reroll(run)
+	if outcome["ok"]:
+		_cue("ui.purchase")
+		experiment.record("merchant_reroll",{"room_index":run.sequence_index,"price":int(merchant.config.get("reroll_price",0))})
 	return outcome
 
 func change_edit_policy(value: String) -> bool:

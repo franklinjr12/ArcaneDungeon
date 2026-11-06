@@ -7,6 +7,8 @@ var config: Dictionary
 var stock: Array = []
 var bought: Dictionary = {}
 var flavour: Dictionary = {}
+var _all_ids: Array = []
+var _excluded_ids: Array = []
 const FLAVOUR_PATH := "res://world/data/flavour_v1.json"
 
 static func load_flavour() -> Dictionary:
@@ -32,6 +34,10 @@ func purchase_line(count: int) -> String:
 	return _line("purchase", count)
 
 func build(run, all_ids: Array, excluded_ids: Array = []) -> Array:
+	_all_ids = all_ids.duplicate()
+	_excluded_ids = excluded_ids.duplicate()
+	var rerolled: bool = not reroll_available(run)
+	var reroll_salt := int(config.get("reroll_salt",0)) if rerolled else 0
 	var source: Array = tuning.get("reward_pool",[])
 	if source.is_empty():
 		source = all_ids
@@ -41,17 +47,22 @@ func build(run, all_ids: Array, excluded_ids: Array = []) -> Array:
 			available.append(id)
 	available.sort()
 	var random := RandomNumberGenerator.new()
-	random.seed = posmod(int(run.seed)*2654435761+int(config.get("seed_salt",0)),0x7fffffff)
-	var picked: Array = RewardGenerator.pick_weighted(available,1,random,tuning)
+	random.seed = posmod(int(run.seed)*2654435761+int(config.get("seed_salt",0))+reroll_salt,0x7fffffff)
+	var count_random := RandomNumberGenerator.new()
+	count_random.seed = posmod(int(run.seed)*2654435761+int(config.get("rune_count_salt",0)),0x7fffffff)
+	var count := count_random.randi_range(int(config.get("rune_count_min",1)),int(config.get("rune_count_max",1)))
+	var picked: Array = RewardGenerator.pick_weighted(available,count,random,tuning)
 	stock.clear()
-	if not picked.is_empty():
-		var selected: String = picked[0]
+	for selected in picked:
 		stock.append({"id":"rune."+selected,"kind":"rune","rune_id":selected,"price":int(config["rune_price"]),
 			"label_key":"run.shop.rune_label","label_args":["rune."+selected+".name"],"label":"Rune "+selected})
-	stock.append({"id":"upgrade.hp","kind":"upgrade","price":int(config["max_hp_upgrade_price"]),"amount":int(config["max_hp_upgrade_amount"]),
-		"label_key":"run.shop.hp_label","label_args":[int(config["max_hp_upgrade_amount"])],"label":"Max HP +"+str(config["max_hp_upgrade_amount"])})
+	stock.append(_upgrade("upgrade.hp","max_hp","max_hp_upgrade","run.shop.hp_label"))
+	if config.has("max_mana_upgrade_price"):
+		stock.append(_upgrade("upgrade.mana","max_mana","max_mana_upgrade","run.shop.mana_label"))
+	if config.has("dash_charge_upgrade_price"):
+		stock.append(_upgrade("upgrade.dash","dash_charge","dash_charge_upgrade","run.shop.dash_label"))
 	# AD-143: one artifact offer appended after the existing items, seeded separately.
-	var artifact_id := _artifact_pick(run)
+	var artifact_id := _artifact_pick(run,reroll_salt)
 	if artifact_id != "":
 		var def: Dictionary = Artifacts.definitions()[artifact_id]
 		stock.append({"id":"artifact."+artifact_id,"kind":"artifact","artifact_id":artifact_id,
@@ -62,7 +73,31 @@ func build(run, all_ids: Array, excluded_ids: Array = []) -> Array:
 		bought[str(id)] = true
 	return stock.duplicate(true)
 
-func _artifact_pick(run) -> String:
+func _upgrade(id: String, stat: String, prefix: String, label_key: String) -> Dictionary:
+	var amount := int(config[prefix+"_amount"])
+	return {"id":id,"kind":"upgrade","stat":stat,"price":int(config[prefix+"_price"]),"amount":amount,
+		"label_key":label_key,"label_args":[amount],"label":id+" +"+str(amount)}
+
+static func reroll_marker(run) -> String:
+	var index = run.get("sequence_index")
+	return "reroll@%d" % (int(index) if index != null else 0)
+
+func reroll_available(run) -> bool:
+	return reroll_marker(run) not in run.purchases
+
+## One paid reroll per visit; the marker lives in run.purchases so a restore rebuilds the same stock.
+func reroll(run) -> Dictionary:
+	if not reroll_available(run):
+		return {"ok":false,"reason":"REROLL_USED"}
+	var price := int(config.get("reroll_price",0))
+	if run.currency < price:
+		return {"ok":false,"reason":"INSUFFICIENT_CURRENCY"}
+	run.currency -= price
+	run.purchases.append(reroll_marker(run))
+	build(run,_all_ids,_excluded_ids)
+	return {"ok":true,"kind":"reroll","stock":stock.duplicate(true)}
+
+func _artifact_pick(run, salt: int = 0) -> String:
 	if run.artifacts.size() >= Artifacts.max_held():
 		return ""
 	var candidates: Array = Artifacts.definitions().keys().filter(func(id): return id not in run.artifacts)
@@ -70,7 +105,7 @@ func _artifact_pick(run) -> String:
 	if candidates.is_empty():
 		return ""
 	var random := RandomNumberGenerator.new()
-	random.seed = posmod(int(run.seed)*2654435761+int(Artifacts.config().get("seed_salt",0)),0x7fffffff)
+	random.seed = posmod(int(run.seed)*2654435761+int(Artifacts.config().get("seed_salt",0))+salt,0x7fffffff)
 	return str(candidates[random.randi() % candidates.size()])
 
 ## Localised stock label; label_args entries that are tr keys are translated.
@@ -102,8 +137,15 @@ func purchase(index: int, run) -> Dictionary:
 	elif item["kind"] == "artifact":
 		run.add_artifact(str(item["artifact_id"]))
 	else:
-		run.max_hp += float(item["amount"])
-		run.hp = minf(run.max_hp,run.hp+float(item["amount"]))
+		match str(item.get("stat","max_hp")):
+			"max_mana":
+				run.max_mana_bonus += float(item["amount"])
+				run.mana += float(item["amount"])
+			"dash_charge":
+				run.dash_charges_bonus += int(item["amount"])
+			_:
+				run.max_hp += float(item["amount"])
+				run.hp = minf(run.max_hp,run.hp+float(item["amount"]))
 	bought[item["id"]] = true
 	run.purchases.append(item["id"])
 	return {"ok":true,"kind":item["kind"],"id":item["id"]}

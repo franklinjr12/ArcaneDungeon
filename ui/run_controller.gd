@@ -777,9 +777,11 @@ func _build_shop_panel() -> void:
 	greet.custom_minimum_size.x = 380
 	greet.text = tr(flow.merchant.greeting(flow.run.seed))
 	shop_list.add_child(greet)
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation",8)
+	# AD-144: up to 6 offers, so cards wrap into rows of three.
+	var row := GridContainer.new()
+	row.columns = 3
+	row.add_theme_constant_override("h_separation",8)
+	row.add_theme_constant_override("v_separation",8)
 	shop_list.add_child(row)
 	for i in flow.merchant.stock.size():
 		var item: Dictionary = flow.merchant.stock[i]
@@ -820,7 +822,7 @@ func _build_shop_panel() -> void:
 		elif item["kind"] == "artifact":
 			explanation = tr(str(item["desc_key"]))
 		else:
-			explanation = tr("run.shop.max_hp") % int(item["amount"])
+			explanation = tr("run.shop."+str(item.get("stat","max_hp"))) % int(item["amount"])
 		detail.text = explanation+" | "+(tr("run.shop.purchased") if flow.merchant.bought.has(item["id"]) else (tr("run.shop.affordable") if affordable else tr("run.shop.need") % (int(item["price"])-flow.run.currency)))
 		col.add_child(detail)
 	shop_close_button = _button(shop_list,tr("run.btn.close_shop"),func(): _set_shop_open(false),"ui.cancel")
