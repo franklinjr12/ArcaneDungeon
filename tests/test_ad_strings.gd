@@ -17,7 +17,7 @@ const ALLOW := {
 	"ui/room_placeholder.gd": ["MagicSandbox"], # scene node name comparison
 	"ui/main_menu.gd": ["NewRunButton", "CompendiumButton", "ContinueButton"], # node name
 	"ui/pause_menu.gd": ["ResumeButton", "SettingsButton", "ControlsButton", "TipsButton", "RetryButton", "QuitButton", "SaveQuitButton", "ConfirmButton", "CancelButton", "ControlsBackButton"], # node names
-	"ui/pixel_theme.gd": ["PanelContainer", "Button", "Label", "LineEdit", "OptionButton", "CheckBox"], # Godot theme type names
+	"ui/pixel_theme.gd": ["PanelContainer", "Button", "Label", "LineEdit", "OptionButton", "CheckBox", "TabBar", "TabContainer", "HSlider", "CheckButton", "VScrollBar"], # Godot theme type names
 }
 
 func run(t) -> void:

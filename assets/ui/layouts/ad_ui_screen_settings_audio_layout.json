@@ -1,0 +1,557 @@
+{
+ "screen": "settings_audio",
+ "canvas": [
+  640,
+  360
+ ],
+ "safe_area": {
+  "x": 16,
+  "y": 9,
+  "w": 608,
+  "h": 342
+ },
+ "status": "CANDIDATE",
+ "skin": "AD-095 kit (skin A)",
+ "coordinate_origin": "top-left, px at 640x360 (engine scales x2 = 1280x720 exactly)",
+ "note": "rects are the final sprite/text bounds; 9-slice sprites are stretched with the margins in ad_ui_kit.json; labels are engine text (m5x7) positioned at x,y (top-left of the glyph box)",
+ "fonts": {
+  "label": "arc_fnt_m5x7",
+  "small": "arc_fnt_silkscreen"
+ },
+ "focus_order": [
+  "tab_audio",
+  "tab_video",
+  "tab_controls",
+  "tab_access",
+  "btn_back",
+  "btn_defaults",
+  "btn_apply",
+  "slider_master",
+  "slider_music",
+  "slider_sound_effects",
+  "slider_interface",
+  "slider_ambience",
+  "toggle_mute_unfocused",
+  "toggle_priority",
+  "btn_test_sfx"
+ ],
+ "widgets": [
+  {
+   "id": "modal_backdrop",
+   "type": "backdrop",
+   "x": 0,
+   "y": 0,
+   "w": 640,
+   "h": 360,
+   "sprite": "ad_ui_modal_backdrop_50",
+   "tiled": true
+  },
+  {
+   "id": "panel",
+   "type": "panel",
+   "x": 16,
+   "y": 18,
+   "w": 608,
+   "h": 332,
+   "sprite": "ad_ui_panel_large"
+  },
+  {
+   "id": "title_header",
+   "type": "header",
+   "x": 220,
+   "y": 10,
+   "w": 200,
+   "h": 16,
+   "sprite": "ad_ui_header"
+  },
+  {
+   "id": "title",
+   "type": "label",
+   "x": 293,
+   "y": 15,
+   "w": 54,
+   "h": 7,
+   "text": "SETTINGS"
+  },
+  {
+   "id": "tab_audio",
+   "type": "tab",
+   "x": 32,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_active",
+   "state": "active",
+   "text": "AUDIO",
+   "tab": "audio"
+  },
+  {
+   "id": "tab_audio_label",
+   "type": "label",
+   "x": 64,
+   "y": 39,
+   "w": 33,
+   "h": 7,
+   "text": "AUDIO"
+  },
+  {
+   "id": "tab_video",
+   "type": "tab",
+   "x": 132,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "VIDEO",
+   "tab": "video"
+  },
+  {
+   "id": "tab_video_label",
+   "type": "label",
+   "x": 164,
+   "y": 39,
+   "w": 33,
+   "h": 7,
+   "text": "VIDEO"
+  },
+  {
+   "id": "tab_controls",
+   "type": "tab",
+   "x": 232,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_hover",
+   "state": "hover",
+   "text": "CONTROLS",
+   "tab": "controls"
+  },
+  {
+   "id": "tab_controls_label",
+   "type": "label",
+   "x": 253,
+   "y": 39,
+   "w": 55,
+   "h": 7,
+   "text": "CONTROLS"
+  },
+  {
+   "id": "tab_access",
+   "type": "tab",
+   "x": 332,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "ACCESSIBILITY",
+   "tab": "access"
+  },
+  {
+   "id": "tab_access_label",
+   "type": "label",
+   "x": 337,
+   "y": 39,
+   "w": 87,
+   "h": 7,
+   "text": "ACCESSIBILITY"
+  },
+  {
+   "id": "content",
+   "type": "panel",
+   "x": 28,
+   "y": 50,
+   "w": 584,
+   "h": 252,
+   "sprite": "ad_ui_panel_inset"
+  },
+  {
+   "id": "btn_back",
+   "type": "button",
+   "x": 40,
+   "y": 314,
+   "w": 96,
+   "h": 24,
+   "sprite": "ad_ui_btn_focus",
+   "state": "focus",
+   "text": "BACK",
+   "action": "close_settings"
+  },
+  {
+   "id": "btn_back_label",
+   "type": "label",
+   "x": 74,
+   "y": 322,
+   "w": 27,
+   "h": 7,
+   "text": "BACK"
+  },
+  {
+   "id": "btn_defaults",
+   "type": "button",
+   "x": 144,
+   "y": 314,
+   "w": 96,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "DEFAULTS",
+   "action": "reset_tab"
+  },
+  {
+   "id": "btn_defaults_label",
+   "type": "label",
+   "x": 164,
+   "y": 322,
+   "w": 55,
+   "h": 7,
+   "text": "DEFAULTS"
+  },
+  {
+   "id": "btn_apply",
+   "type": "button",
+   "x": 520,
+   "y": 314,
+   "w": 96,
+   "h": 24,
+   "sprite": "ad_ui_btn_selected",
+   "state": "selected",
+   "text": "APPLY",
+   "action": "apply"
+  },
+  {
+   "id": "btn_apply_label",
+   "type": "label",
+   "x": 551,
+   "y": 322,
+   "w": 34,
+   "h": 7,
+   "text": "APPLY"
+  },
+  {
+   "id": "hint",
+   "type": "label",
+   "x": 249,
+   "y": 322,
+   "w": 264,
+   "h": 7,
+   "text": "ESC BACK    Q / E SWITCH TAB    ENTER CHANGE"
+  },
+  {
+   "id": "hdr_volume",
+   "type": "header",
+   "x": 36,
+   "y": 56,
+   "w": 368,
+   "h": 12,
+   "sprite": "ad_ui_header_small"
+  },
+  {
+   "id": "label_22",
+   "type": "label",
+   "x": 199,
+   "y": 59,
+   "w": 41,
+   "h": 7,
+   "text": "VOLUME"
+  },
+  {
+   "id": "label_23",
+   "type": "label",
+   "x": 44,
+   "y": 79,
+   "w": 41,
+   "h": 7,
+   "text": "MASTER"
+  },
+  {
+   "id": "slider_master",
+   "type": "slider",
+   "x": 196,
+   "y": 74,
+   "w": 170,
+   "h": 14,
+   "sprite": "ad_ui_slider_track",
+   "value": 80,
+   "state": "hover"
+  },
+  {
+   "id": "val_0",
+   "type": "label",
+   "x": 376,
+   "y": 78,
+   "w": 20,
+   "h": 7,
+   "text": "80%"
+  },
+  {
+   "id": "label_26",
+   "type": "label",
+   "x": 44,
+   "y": 103,
+   "w": 33,
+   "h": 7,
+   "text": "MUSIC"
+  },
+  {
+   "id": "slider_music",
+   "type": "slider",
+   "x": 196,
+   "y": 98,
+   "w": 170,
+   "h": 14,
+   "sprite": "ad_ui_slider_track",
+   "value": 55,
+   "state": "normal"
+  },
+  {
+   "id": "val_1",
+   "type": "label",
+   "x": 376,
+   "y": 102,
+   "w": 20,
+   "h": 7,
+   "text": "55%"
+  },
+  {
+   "id": "label_29",
+   "type": "label",
+   "x": 44,
+   "y": 127,
+   "w": 87,
+   "h": 7,
+   "text": "SOUND EFFECTS"
+  },
+  {
+   "id": "slider_sound_effects",
+   "type": "slider",
+   "x": 196,
+   "y": 122,
+   "w": 170,
+   "h": 14,
+   "sprite": "ad_ui_slider_track",
+   "value": 70,
+   "state": "normal"
+  },
+  {
+   "id": "val_2",
+   "type": "label",
+   "x": 376,
+   "y": 126,
+   "w": 20,
+   "h": 7,
+   "text": "70%"
+  },
+  {
+   "id": "label_32",
+   "type": "label",
+   "x": 44,
+   "y": 151,
+   "w": 61,
+   "h": 7,
+   "text": "INTERFACE"
+  },
+  {
+   "id": "slider_interface",
+   "type": "slider",
+   "x": 196,
+   "y": 146,
+   "w": 170,
+   "h": 14,
+   "sprite": "ad_ui_slider_track",
+   "value": 60,
+   "state": "normal"
+  },
+  {
+   "id": "val_3",
+   "type": "label",
+   "x": 376,
+   "y": 150,
+   "w": 20,
+   "h": 7,
+   "text": "60%"
+  },
+  {
+   "id": "label_35",
+   "type": "label",
+   "x": 44,
+   "y": 175,
+   "w": 54,
+   "h": 7,
+   "text": "AMBIENCE"
+  },
+  {
+   "id": "slider_ambience",
+   "type": "slider",
+   "x": 196,
+   "y": 170,
+   "w": 170,
+   "h": 14,
+   "sprite": "ad_ui_slider_track",
+   "value": 40,
+   "state": "normal"
+  },
+  {
+   "id": "val_4",
+   "type": "label",
+   "x": 376,
+   "y": 174,
+   "w": 20,
+   "h": 7,
+   "text": "40%"
+  },
+  {
+   "id": "div_1",
+   "type": "divider",
+   "x": 36,
+   "y": 200,
+   "w": 368,
+   "h": 5,
+   "sprite": "ad_ui_divider_h"
+  },
+  {
+   "id": "hdr_options",
+   "type": "header",
+   "x": 36,
+   "y": 210,
+   "w": 368,
+   "h": 12,
+   "sprite": "ad_ui_header_small"
+  },
+  {
+   "id": "label_40",
+   "type": "label",
+   "x": 196,
+   "y": 213,
+   "w": 47,
+   "h": 7,
+   "text": "OPTIONS"
+  },
+  {
+   "id": "label_41",
+   "type": "label",
+   "x": 44,
+   "y": 232,
+   "w": 126,
+   "h": 7,
+   "text": "MUTE WHEN UNFOCUSED"
+  },
+  {
+   "id": "toggle_mute_unfocused",
+   "type": "toggle",
+   "x": 246,
+   "y": 227,
+   "w": 28,
+   "h": 14,
+   "sprite": "ad_ui_toggle_on_normal",
+   "value": true,
+   "state": "normal"
+  },
+  {
+   "id": "toggle_mute_unfocused_value",
+   "type": "label",
+   "x": 280,
+   "y": 231,
+   "w": 13,
+   "h": 7,
+   "text": "ON"
+  },
+  {
+   "id": "label_44",
+   "type": "label",
+   "x": 44,
+   "y": 256,
+   "w": 163,
+   "h": 7,
+   "text": "SPELL SOUNDS TOP PRIORITY"
+  },
+  {
+   "id": "toggle_priority",
+   "type": "toggle",
+   "x": 246,
+   "y": 251,
+   "w": 28,
+   "h": 14,
+   "sprite": "ad_ui_toggle_off_normal",
+   "value": false,
+   "state": "normal"
+  },
+  {
+   "id": "toggle_priority_value",
+   "type": "label",
+   "x": 280,
+   "y": 255,
+   "w": 20,
+   "h": 7,
+   "text": "OFF"
+  },
+  {
+   "id": "btn_test_sfx",
+   "type": "button",
+   "x": 360,
+   "y": 255,
+   "w": 44,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "TEST",
+   "action": "test_sfx"
+  },
+  {
+   "id": "btn_test_sfx_label",
+   "type": "label",
+   "x": 368,
+   "y": 263,
+   "w": 27,
+   "h": 7,
+   "text": "TEST"
+  },
+  {
+   "id": "help_panel",
+   "type": "tooltip",
+   "x": 410,
+   "y": 58,
+   "w": 178,
+   "h": 72,
+   "sprite": "ad_ui_panel_tooltip"
+  },
+  {
+   "id": "help_title",
+   "type": "label",
+   "x": 418,
+   "y": 66,
+   "w": 87,
+   "h": 7,
+   "text": "MASTER VOLUME"
+  },
+  {
+   "id": "divider_51",
+   "type": "divider",
+   "x": 418,
+   "y": 77,
+   "w": 162,
+   "h": 3,
+   "sprite": "ad_ui_divider_plain",
+   "tiled": true
+  },
+  {
+   "id": "label_52",
+   "type": "label",
+   "x": 418,
+   "y": 84,
+   "w": 151,
+   "h": 7,
+   "text": "OVERALL LOUDNESS OF THE"
+  },
+  {
+   "id": "label_53",
+   "type": "label",
+   "x": 418,
+   "y": 93,
+   "w": 32,
+   "h": 7,
+   "text": "GAME."
+  }
+ ]
+}
