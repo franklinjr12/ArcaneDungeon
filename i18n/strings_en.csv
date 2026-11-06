@@ -192,6 +192,10 @@ settings.flashes,Reduce flashes
 settings.shake,Reduce screen shake
 settings.telemetry,Local telemetry (opt-in)
 settings.window_mode,Window mode
+settings.lighting,Lighting
+settings.lighting.high,High
+settings.lighting.low,Low
+settings.lighting.off,Off
 settings.ui_scale,UI scale
 settings.back,Back
 settings.bus.master,Master volume

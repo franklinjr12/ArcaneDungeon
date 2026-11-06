@@ -11,6 +11,7 @@ var _fx_session = null
 var _anim_memo: Dictionary = {}
 var _anim_session = null
 const SlotHUD = preload("res://ui/pixel_hud.gd")
+const Lighting = preload("res://ui/lighting.gd")
 var session
 var settings = null
 var hover := Vector2(440,440)
@@ -22,6 +23,11 @@ var environment_id := 0
 var last_player_at := Vector2.ZERO
 var last_enemy_at: Dictionary = {}
 var slot_hud
+## AD-148: render-only lighting inputs (the run screen sets these from the room); defaults suit the sandbox.
+var lighting_stage := 0
+var lighting_room_type := "combat"
+var lighting_props: Array = []
+var lighting
 ## AD-091: the run screen sets this node's `scale` to texel/(2*physical scale) so one art texel is a whole number of
 ## physical pixels, and `size` to the visible world size. Node scale (not draw_set_transform) because the renderer resets the draw transform.
 const FRAME_COLOR := Color("#0b1320")
@@ -31,6 +37,10 @@ func _ready() -> void:
 	slot_hud.name = "SlotHUD"
 	slot_hud.canvas = self
 	add_child(slot_hud)
+	lighting = Lighting.new()
+	lighting.name = "Lighting"
+	add_child(lighting)
+	lighting.setup(self)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	clip_contents = true
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -89,6 +99,7 @@ func _draw() -> void:
 		tick = session.sim.clock.tick
 	Art.tile_floor(self,Rect2(Vector2.ZERO,view_size()),offset,environment_id)
 	if session == null:
+		lighting.hide_all()
 		return
 	_draw_frame(Rect2(arena.position-offset,arena.size))
 	Art.walls(self,session.world.walls,offset)
@@ -158,6 +169,7 @@ func _draw() -> void:
 	_draw_death_banner()
 	if show_debug:
 		_label(Vector2(18,20),tr("combat.debug_geometry"),Color("#d6edf7"))
+	lighting.sync(self,session,settings,lighting_stage,lighting_room_type,lighting_props)
 
 ## Dark frame around the arena when the view is larger than the arena bounds (extreme aspects).
 func _draw_frame(arena_view: Rect2) -> void:

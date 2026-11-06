@@ -718,6 +718,9 @@ func _redraw_panel() -> void:
 	scene_key = str(flow.run.sequence_index)+":"+flow.state+":"+str(flow.reward_collected)
 	arena_canvas.session = flow.session
 	arena_canvas.environment_id = 2 if int(flow.room.values.get("stage",0))>=1 else (1 if flow.room.values["type"]=="boss" else 0)
+	arena_canvas.lighting_stage = int(flow.room.values.get("stage",0))
+	arena_canvas.lighting_room_type = str(flow.room.values.get("type","combat"))
+	arena_canvas.lighting_props = flow.room.values.get("layout",{}).get("props",[])
 	portrait_hud.queue_redraw()
 	arena_canvas.visible = flow.mode != "workshop"
 	test_canvas.visible = flow.mode == "workshop"
