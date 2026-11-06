@@ -6,6 +6,9 @@ const Emitters = preload("res://ui/vfx/vfx_emitters.gd")
 const Reduce = preload("res://ui/reduce_motion.gd")
 const Settings = preload("res://game/core/settings.gd")
 const Flow = preload("res://world/run_flow.gd")
+const Canvas = preload("res://ui/combat_canvas.gd")
+const Art = preload("res://ui/pixel_art_renderer.gd")
+const Driver = preload("res://tests/m3_run_driver.gd")
 const SEED := 20261022
 
 class FakeEffect:
@@ -28,6 +31,8 @@ func run(t) -> void:
 	_emitters(t)
 	_reduce(t)
 	_assets(t)
+	_functional(t)
+	_determinism(t)
 
 func _data(t) -> void:
 	var d := Data.load_data()
@@ -122,3 +127,94 @@ func _assets(t) -> void:
 	t.check(Data.texture("", "glow") is Texture2D, "AD-149 procedural glow fallback")
 	t.check(Data.texture("res://nope/missing.png", "particle") is Texture2D, "AD-149 missing path falls back")
 	t.check(Data.texture("", "glow") == Data.texture("", "glow"), "AD-149 procedural texture cached")
+
+func _make_canvas(flow, mode: String, reduce_flashes: bool = false):
+	var canvas = Canvas.new()
+	var s := Settings.new()
+	s.lighting = mode
+	s.reduce_flashes = reduce_flashes
+	canvas.settings = s
+	canvas.session = flow.session
+	canvas.size = Vector2(916, 650)
+	(Engine.get_main_loop() as SceneTree).root.add_child(canvas)
+	return canvas
+
+func _sync(canvas, flow) -> void:
+	var tick: int = flow.session.sim.clock.tick
+	canvas.vfx.sync(canvas, flow.session, canvas.settings, Art.collect_fx(flow.session, tick, canvas._fx_memo), tick)
+
+func _functional(t) -> void:
+	var flow = Flow.new(SEED)
+	var canvas = _make_canvas(flow, "high")
+	var vfx = canvas.vfx
+	t.equal(vfx.capacity(), Data.particle_cap("high"), "AD-149 vfx pool sized to the high cap")
+	t.equal((vfx.material as CanvasItemMaterial).blend_mode, CanvasItemMaterial.BLEND_MODE_ADD, "AD-149 vfx layer is additive")
+	t.equal(vfx.light_mask, canvas.light_mask, "AD-149 vfx layer on the arena light mask")
+	t.equal(canvas.get_child(canvas.get_child_count() - 1), canvas.slot_hud, "AD-149 slot HUD stays the last (top) child")
+	var seen := [0, 0]  # lambdas capture by value, so use an array: [peak particles, peak glows]
+	var on_tick := func(_f):
+		_sync(canvas, flow)
+		seen[0] = maxi(seen[0], vfx.active_count())
+		seen[1] = maxi(seen[1], vfx.glow_count())
+		t.check(vfx.active_count() <= vfx.capacity(), "AD-149 active particles within capacity")
+	Driver.fight(flow, 300, on_tick)
+	t.check(seen[0] > 0, "AD-149 casting spawns particles")
+	t.check(seen[1] > 0, "AD-149 projectiles/bursts spawn glow sprites")
+	var before: int = vfx.active_count()
+	for n in 3:
+		_sync(canvas, flow)
+	t.equal(vfx.active_count(), before, "AD-149 redraw on the same tick never advances particles")
+	canvas.settings.lighting = "low"
+	var low_cap := Data.particle_cap("low")
+	vfx._pool.clear()
+	for n in 40:
+		flow.session.sim.clock.tick += 1
+		_sync(canvas, flow)
+	t.check(vfx.active_count() <= low_cap, "AD-149 low quality respects the low cap")
+	canvas.settings.lighting = "off"
+	_sync(canvas, flow)
+	t.equal(vfx.active_count(), 0, "AD-149 lighting off: no particles")
+	t.equal(vfx.glow_count(), 0, "AD-149 lighting off: no glow")
+	canvas.settings.lighting = "high"
+	flow.session.sim.clock.tick = 0
+	_sync(canvas, flow)
+	t.check(vfx.active_count() <= vfx.capacity(), "AD-149 tick rewind resets without error")
+	# Hit flash: policy on the mage entry, then through the overlay node.
+	var at := Vector2(100, 100)
+	flow.session.player.hit_flash = int(flow.session.player.tuning["hit_flash_ticks"])
+	var anim := {"tag": "idle_down", "elapsed": 0, "loop": true, "face_left": false}
+	var full: Dictionary = canvas.mage_flash_entry(false, at, 0, Vector2.ZERO, anim)
+	canvas.hit_flash.set_entries([full] if not full.is_empty() else [])
+	t.equal(canvas.hit_flash.entry_count(), 1, "AD-149 full effects: one hit-flash entry after damage")
+	var calm: Dictionary = canvas.mage_flash_entry(true, at, 0, Vector2.ZERO, anim)
+	t.check(calm.is_empty(), "AD-149 reduce_flashes: no hit-flash entry")
+	canvas.hit_flash.set_entries([calm] if not calm.is_empty() else [])
+	t.equal(canvas.hit_flash.entry_count(), 0, "AD-149 reduce_flashes: overlay has no entries")
+	canvas.settings.reduce_flashes = true
+	t.check(Reduce.flashes_reduced(canvas.settings, flow.session), "AD-149 reduce_flashes setting reduces flashes")
+	t.check(canvas.hit_flash.material is ShaderMaterial, "AD-149 overlay uses the hit-flash shader material")
+	flow.session.player.hit_flash = 0
+	t.check(canvas.mage_flash_entry(false, at, 0, Vector2.ZERO, anim).is_empty(), "AD-149 no flash once hit_flash expires")
+	canvas.session = null
+	canvas.vfx.hide_all()
+	t.equal(vfx.active_count(), 0, "AD-149 hide_all clears particles")
+	canvas.queue_free()
+
+func _run_ticks(flow, canvas, with_vfx: bool) -> Array:
+	var on_tick := func(_f):
+		if with_vfx:
+			_sync(canvas, flow)
+	Driver.fight(flow, 400, on_tick)
+	return [flow.session.sim.trace_json(), flow.session.sim.clock.tick, flow.session.sim.clock._rng.state]
+
+func _determinism(t) -> void:
+	var a = Flow.new(SEED)
+	var ca = _make_canvas(a, "high")
+	var b = Flow.new(SEED)
+	var cb = _make_canvas(b, "off")
+	var ra := _run_ticks(a, ca, true)
+	var rb := _run_ticks(b, cb, false)
+	t.check(ra[1] > 0, "AD-149 determinism run advanced ticks")
+	t.check(ra == rb, "AD-149 sim trace/tick/RNG identical with VFX on vs off")
+	ca.queue_free()
+	cb.queue_free()
