@@ -149,6 +149,26 @@ run.editor.onhit,Trigger → Burst payload
 run.editor.child_essence,Child Burst Essence
 run.editor.valid,VALID / Mana %d / Cooldown %d ticks / Complexity %d / %d cap
 run.editor.invalid,INVALID — cannot apply:
+editor.spell_slots,Spell slots
+editor.chain_title,Slot %d chain   %s
+editor.role.essence,Essence
+editor.role.form,Form
+editor.role.mod,Mod
+editor.role.trigger,Trigger
+editor.role.payload,Payload
+editor.remove_tip,Click or right click to remove this rune.
+editor.locked_tip,Locked runes unlock by discovery.
+editor.tab.all,All
+editor.tab.essence,Essence
+editor.tab.form,Form
+editor.tab.modifier,Modifier
+editor.tab.trigger,Trigger
+editor.hint1,Click a rune to add or remove it
+editor.hint2,Locked runes unlock by discovery
+editor.btn.cancel,Cancel
+editor.btn.undo,Undo
+editor.btn.reset,Reset
+editor.btn.apply,Apply
 run.btn.undo,Undo
 run.btn.reset_draft,Reset draft
 run.btn.cancel_edit,Cancel (restore original)

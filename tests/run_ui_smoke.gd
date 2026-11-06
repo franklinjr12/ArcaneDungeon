@@ -325,9 +325,23 @@ func _run() -> void:
 		if b.has_meta("rune_id"):
 			palette_ids.append(str(b.get_meta("rune_id")))
 	palette_ids.sort()
-	expect(palette_tabs is TabContainer and palette_tabs.get_tab_count()==4 and palette_ids.size()==run.session.sim.registry.get_ids().size()
+	var tab_names: Array = []
+	for b in palette_tabs.find_children("PaletteTab_*","Button",true,false):
+		tab_names.append(str(b.name))
+	expect(palette_tabs != null and tab_names.size()==5 and palette_ids.size()==run.session.sim.registry.get_ids().size()
 		and palette_ids==run.session.sim.registry.get_ids(),
-		"AD-129 editor has RunePalette with 4 category tabs and one button per registered rune")
+		"AD-129 editor has RunePalette with All plus 4 category tabs and one button per registered rune")
+	expect(control.editor_buttons.find_child("EditorApplyButton",true,false) != null and control.editor_buttons.find_child("EditorCancelButton",true,false) != null
+		and control.editor_buttons.find_child("EditorUndoButton",true,false) != null and control.editor_buttons.find_child("EditorResetButton",true,false) != null,
+		"AD-153 editor keeps Apply, Cancel, Undo and Reset reachable")
+	var rune_pressed: Button = control.editor_controls.find_child("Rune_essence_water",true,false)
+	expect(rune_pressed != null and rune_pressed.get_child_count()>0 and run.editor.draft["root"]["essence_id"]!="essence.water",
+		"AD-153 palette runes are icon slots")
+	rune_pressed.emit_signal("pressed")
+	expect(run.editor.draft["root"]["essence_id"]=="essence.water" and control.editor_controls.find_child("Rune_essence_water",true,false).button_pressed,
+		"AD-153 clicking a palette rune edits the draft and the rebuilt slot shows it selected")
+	control.editor_buttons.find_child("EditorUndoButton",true,false).emit_signal("pressed")
+	expect(run.editor.draft["root"]["essence_id"]!="essence.water","AD-153 Undo button reverts the draft")
 	var old: Dictionary = run.run.formulas[0].duplicate(true)
 	run.editor.set_root("essence.water","form.projectile")
 	control._editor_rebuild()
@@ -361,10 +375,7 @@ func _run() -> void:
 	run.editor.set_root("essence.fire","form.projectile")
 	run.editor.toggle_modifier(locked_mod)
 	control._editor_rebuild()
-	var apply_disabled := false
-	for b in control.editor_controls.find_children("*","Button",true,false):
-		if b.text.begins_with("Apply"):
-			apply_disabled = b.disabled
+	var apply_disabled: bool = control.editor_buttons.find_child("EditorApplyButton",true,false).disabled
 	expect(control.editor_preview.text.contains("INVALID") and control.editor_preview.text.contains(control.tr("editor.issue.rune_locked").get_slice(":",0)) and apply_disabled,
 		"invalid formula shows reason, Apply disabled")
 	control._close_editor(true)
@@ -407,10 +418,7 @@ func _run() -> void:
 	run.editor.set_root("essence.fire","form.burst")
 	run.editor.set_trigger(true,"essence.cold","trigger.timer")
 	control._editor_rebuild()
-	var neg_apply_disabled := false
-	for b in control.editor_controls.find_children("*","Button",true,false):
-		if b.text.begins_with("Apply"):
-			neg_apply_disabled = b.disabled
+	var neg_apply_disabled: bool = control.editor_buttons.find_child("EditorApplyButton",true,false).disabled
 	expect(control.editor_preview.text.contains(control.tr("editor.issue.trigger_needs_lasting")) and neg_apply_disabled,
 		"AD-135 burst + timer shows lasting-form reason, Apply disabled")
 	control._close_editor(false)

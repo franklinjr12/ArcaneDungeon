@@ -15,6 +15,7 @@ const InputActions = preload("res://ui/input_actions.gd")
 var aim_source = InputActions.default_aim_source()
 const PauseMenu = preload("res://ui/pause_menu.gd")
 const LoadoutView = preload("res://ui/loadout_view.gd")
+const EditorView = preload("res://ui/skin_a_editor.gd")
 const MerchantScript = preload("res://world/merchant.gd")
 var flow
 var config_path: String = Flow.CONFIG_V2
@@ -64,7 +65,9 @@ var editor_panel: PanelContainer
 var editor_dock: MarginContainer
 var editor_controls: VBoxContainer
 var editor_preview: Label
-var palette_tab := 0
+var editor_scroll: ScrollContainer
+var editor_buttons: HBoxContainer
+var editor_view
 var transition_veil: ColorRect
 var current_notice := ""
 var summary_retry_button: Button
@@ -99,7 +102,7 @@ const HUD_STATUS_BOTTOM := 80.0
 const NOTICE_MS := 5000
 const TEST_RANGE_SIZE := Vector2(916,650)
 const DESK_DOOR_RADIUS := 34.0
-const EDITOR_SIZE := Vector2(500,665)
+const EDITOR_SIZE := Vector2(632,665) # AD-153: 296 canvas px at x2 (skin A editor column) plus the panel frame and scrollbar
 var _prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
 
 func _ready() -> void:
@@ -197,15 +200,24 @@ func _build() -> void:
 	layout.add_child(editor_dock)
 	editor_panel = PanelContainer.new()
 	editor_panel.visible = false
+	editor_panel.add_theme_stylebox_override("panel",SkinA.stylebox("ad_ui_panel_large",16))
 	editor_dock.add_child(editor_panel)
 	resized.connect(_fit_editor_panel)
-	var editor_scroll := ScrollContainer.new()
+	var editor_body := VBoxContainer.new()
+	editor_body.add_theme_constant_override("separation",8)
+	editor_panel.add_child(editor_body)
+	editor_scroll = ScrollContainer.new()
 	editor_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	editor_panel.add_child(editor_scroll)
+	editor_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	editor_body.add_child(editor_scroll)
 	editor_controls = VBoxContainer.new()
-	editor_controls.custom_minimum_size = Vector2(470,0)
-	editor_controls.add_theme_constant_override("separation",9)
+	editor_controls.custom_minimum_size = Vector2(EditorView.WIDTH*EditorView.SC,0)
+	editor_controls.add_theme_constant_override("separation",int(4*EditorView.SC))
 	editor_scroll.add_child(editor_controls)
+	editor_buttons = HBoxContainer.new()
+	editor_buttons.add_theme_constant_override("separation",int(4*EditorView.SC))
+	editor_body.add_child(editor_buttons)
+	editor_view = EditorView.new()
 	_build_dev_overlay()
 	loadout_view = LoadoutView.new()
 	add_child(loadout_view)
@@ -418,7 +430,7 @@ func _fit_test_canvas() -> void:
 func _fit_editor_panel() -> void:
 	if editor_panel == null:
 		return
-	editor_panel.custom_minimum_size = Vector2(minf(EDITOR_SIZE.x,size.x*0.45),0)
+	editor_panel.custom_minimum_size = Vector2(minf(EDITOR_SIZE.x,size.x*0.5),0)
 
 func is_paused() -> bool:
 	return pause_menu != null and pause_menu.visible
@@ -1431,112 +1443,13 @@ func _open_editor(index: int) -> void:
 	_update_labels()
 
 func _editor_rebuild() -> void:
+	var keep := editor_scroll.scroll_vertical
 	_clear(editor_controls)
-	var e = flow.editor
-	_heading(editor_controls,tr("run.editor.title") % (e.slot+2),20)
-	if not e.guided_runes.is_empty():
-		_heading(editor_controls,tr("run.desk.guided") % _rune_label(e.guided_next()),14)
-	_heading(editor_controls,tr("run.editor.chain"))
-	_build_rune_palette(e)
-	if e.draft.has("on_hit"):
-		_heading(editor_controls,tr("run.editor.child_essence"),14)
-		var child: OptionButton = _option(editor_controls,e.available("essence"),
-			str(e.draft["on_hit"]["payload"]["essence_id"]))
-		child.item_selected.connect(func(idx):
-			e.change_payload_essence(str(child.get_item_metadata(idx)))
-			_editor_rebuild())
-	editor_preview = Label.new()
-	editor_preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	editor_controls.add_child(editor_preview)
-	var verdict: Dictionary = e.validate()
-	if verdict["ok"]:
-		editor_preview.text = tr("run.editor.valid") % [
-			verdict["mana"],verdict["cooldown"],verdict["complexity"],verdict["complexity_cap"]]+"\n"+str(verdict["summary"])
-	else:
-		editor_preview.text = tr("run.editor.invalid")+"\n"
-		for issue in verdict["issues"]:
-			var reason := tr(str(issue["reason_key"]))
-			var args: Array = issue["reason_args"]
-			editor_preview.text += (reason % args if not args.is_empty() else reason)+"\n"
-	_button(editor_controls,tr("run.btn.undo"),func(): e.undo(); _editor_rebuild())
-	_button(editor_controls,tr("run.btn.reset_draft"),func(): e.reset_draft();_editor_rebuild())
-	_button(editor_controls,tr("run.btn.cancel_edit"),func(): _close_editor(false),"ui.cancel")
-	var apply := _button(editor_controls,tr("run.btn.apply"),func(): _close_editor(true))
-	apply.disabled = not verdict["ok"]
-
-func _build_rune_palette(e) -> void:
-	var tabs := TabContainer.new()
-	tabs.name = "RunePalette"
-	editor_controls.add_child(tabs)
-	var root: Dictionary = e.draft["root"]
-	for entry in e.palette():
-		var scroll := ScrollContainer.new()
-		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-		scroll.custom_minimum_size = Vector2(0,160)
-		tabs.add_child(scroll)
-		var title := tr(str(entry["display_key"]))
-		tabs.set_tab_title(scroll.get_index(),str(entry["label"]) if title == str(entry["display_key"]) else title)
-		var list := VBoxContainer.new()
-		list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		scroll.add_child(list)
-		var kind := str(entry["id"])
-		for rune in entry["runes"]:
-			var id := str(rune["id"])
-			var b := Button.new()
-			b.toggle_mode = true
-			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			b.set_meta("rune_id",id)
-			b.text = _rune_label(id)+(tr("run.suffix.locked") if rune["locked"] else "")
-			b.tooltip_text = str(rune["description"])
-			var icon: Texture2D = _rune_icon(id)
-			if icon != null:
-				b.icon = icon
-			match kind:
-				"essence": b.button_pressed = str(root["essence_id"]) == id
-				"form": b.button_pressed = str(root["manifestation_id"]) == id
-				"modifier": b.button_pressed = id in root["modifier_ids"]
-				"trigger": b.button_pressed = e.draft.has("on_hit") and str(e.draft["on_hit"]["trigger_id"]) == id
-			if id == e.guided_next() and not e.guided_runes.is_empty():
-				b.modulate = Color("#efbc65")
-			var attach: Dictionary = e.can_attach(id) if kind in ["modifier","trigger"] else {"ok":true,"reason_key":""}
-			if not bool(attach["ok"]):
-				b.tooltip_text = tr(str(attach["reason_key"]))
-			b.disabled = bool(rune["locked"]) or not bool(attach["ok"])
-			list.add_child(b)
-			b.pressed.connect(func():
-				match kind:
-					"essence": e.set_root(id,str(e.draft["root"]["manifestation_id"]))
-					"form": e.set_root(str(e.draft["root"]["essence_id"]),id)
-					"modifier": e.toggle_modifier(id)
-					"trigger":
-						var active: bool = e.draft.has("on_hit") and str(e.draft["on_hit"]["trigger_id"]) == id
-						var payload := str(e.draft["on_hit"]["payload"]["essence_id"]) if e.draft.has("on_hit") else "essence.lightning"
-						e.set_trigger(not active,payload,id)
-				_editor_rebuild())
-	palette_tab = clampi(palette_tab,0,maxi(tabs.get_tab_count()-1,0))
-	tabs.current_tab = palette_tab
-	tabs.tab_changed.connect(func(index): palette_tab = index)
-
-func _rune_icon(rune_id: String) -> Texture2D:
-	return PortraitHUD.rune_icon_texture(rune_id)
-
-func _option(parent: Node, list: Array, selection: String) -> OptionButton:
-	var option := OptionButton.new()
-	parent.add_child(option)
-	var current := -1
-	for i in list.size():
-		var item: Dictionary = list[i]
-		option.add_item(str(item["id"])+(tr("run.suffix.locked_lower") if item["locked"] else ""))
-		option.set_item_metadata(i,str(item["id"]))
-		var rune_icon: Texture2D = _rune_icon(str(item["id"]))
-		if rune_icon != null:
-			option.set_item_icon(i,rune_icon)
-		option.set_item_disabled(i,bool(item["locked"]))
-		if str(item["id"]) == selection:
-			current = i
-	if current >= 0:
-		option.select(current)
-	return option
+	_clear(editor_buttons)
+	editor_view.build(editor_controls,editor_buttons,flow.editor,{"rebuild":_editor_rebuild,"loadout":flow.range_sim.loadout if flow.range_sim != null else null,
+		"apply":func(): _close_editor(true),"cancel":func(): _close_editor(false)},_director)
+	editor_preview = editor_view.preview
+	editor_scroll.set_deferred("scroll_vertical",keep) # a rebuild keeps the player's place in the column
 
 func _close_visual_editor() -> void:
 	editor_open = false

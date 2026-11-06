@@ -49,7 +49,8 @@ static func glow_region(name: String) -> AtlasTexture:
 static func stylebox(name: String, content_margin: float = 4) -> StyleBoxTexture:
 	var s := StyleBoxTexture.new()
 	s.texture = region(name)
-	var nine: Dictionary = kit().get("sprites", {}).get(resolve(name), {}).get("nine", {})
+	var raw = kit().get("sprites", {}).get(resolve(name), {}).get("nine") # null for flat sprites (slots, dividers)
+	var nine: Dictionary = raw if raw is Dictionary else {}
 	s.texture_margin_left = nine.get("left", 0)
 	s.texture_margin_top = nine.get("top", 0)
 	s.texture_margin_right = nine.get("right", 0)
