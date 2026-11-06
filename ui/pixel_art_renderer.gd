@@ -846,6 +846,60 @@ static func draw_water(canvas: CanvasItem, session, offset: Vector2) -> void:
 		var deep: bool = str(tile["kind"]) == "deep"
 		canvas.draw_rect(rect,Color(0.08,0.2,0.45,1.0) if deep else Color(0.55,0.78,0.95,0.4))
 
+## AD-150 env props: primitive placeholder draws. Reads session.env_props.view() only; never mutates the sim.
+static func draw_env_props(canvas: CanvasItem, session, offset: Vector2) -> void:
+	if session.env_props == null:
+		return
+	var tick: int = session.sim.clock.tick
+	for prop in session.env_props.view():
+		var state := str(prop["state"])
+		if state == "destroyed":
+			continue
+		var rect: Rect2 = prop["rect"]
+		rect.position -= offset
+		var mid := rect.get_center()
+		var burning := state == "burning"
+		match str(prop["kind"]):
+			"crate":
+				var body := Color("#8a5a32")
+				var edge := Color("#4a2e18")
+				if burning:
+					body = body.lerp(Color("#ff8a2a"),0.5+0.25*float((tick/3)%2))
+				canvas.draw_rect(rect,body)
+				canvas.draw_rect(rect,edge,false,2.0)
+				canvas.draw_line(rect.position,rect.end,edge,1.5)
+				canvas.draw_line(Vector2(rect.end.x,rect.position.y),Vector2(rect.position.x,rect.end.y),edge,1.5)
+			"cobweb":
+				var web := Color(0.9,0.92,0.95,0.8 if not burning else 0.5+0.3*float((tick/3)%2))
+				for corner in [rect.position,rect.end,Vector2(rect.end.x,rect.position.y),Vector2(rect.position.x,rect.end.y)]:
+					canvas.draw_line(mid,corner,web,1.0)
+				canvas.draw_line(Vector2(rect.position.x,mid.y),Vector2(rect.end.x,mid.y),web,1.0)
+				canvas.draw_line(Vector2(mid.x,rect.position.y),Vector2(mid.x,rect.end.y),web,1.0)
+			"puddle":
+				var r: float = minf(rect.size.x,rect.size.y)*0.5
+				canvas.draw_circle(mid,r,Color(0.75,0.9,1.0,0.7) if state == "frozen" else Color(0.45,0.7,0.9,0.4))
+				canvas.draw_arc(mid,r,0.0,TAU,32,Color(0.9,0.97,1.0,0.8) if state == "frozen" else Color(0.6,0.82,0.95,0.6),1.5)
+			"brazier":
+				var fire: Color = essence_color("essence.fire")
+				var w := rect.size.x*0.5
+				canvas.draw_rect(Rect2(mid.x-w*0.6,mid.y,w*1.2,w*0.8),Color("#3d3d46"))
+				canvas.draw_rect(Rect2(mid.x-w,mid.y-w*0.2,w*2.0,w*0.4),Color("#5a5a66"))
+				if bool(prop.get("lit",false)):
+					var flick := 0.8+0.2*float((tick/4)%2)
+					canvas.draw_circle(mid+Vector2(0,-w*0.5),w*0.7*flick,fire)
+					canvas.draw_circle(mid+Vector2(0,-w*0.4),w*0.35*flick,Color("#ffe9a0"))
+			"urn":
+				var r2: float = minf(rect.size.x,rect.size.y)*0.5
+				canvas.draw_circle(mid,r2,Color("#9a5a3a"))
+				canvas.draw_rect(Rect2(mid.x-r2*0.5,mid.y-r2*1.1,r2,r2*0.4),Color("#7a4228"))
+				canvas.draw_arc(mid,r2,0.0,TAU,24,Color("#4a2a1a"),1.5)
+			"cracked_wall":
+				canvas.draw_rect(rect,Color("#4a4a58"))
+				var crack := Color("#1c1c24")
+				canvas.draw_polyline(PackedVector2Array([Vector2(mid.x,rect.position.y),Vector2(mid.x-4,mid.y-6),
+					Vector2(mid.x+3,mid.y+2),Vector2(mid.x-2,rect.end.y)]),crack,1.5)
+				canvas.draw_line(Vector2(mid.x+3,mid.y+2),Vector2(rect.end.x,mid.y+8),crack,1.0)
+
 static func draw_hazards(canvas: CanvasItem, session, offset: Vector2) -> void:
 	for hazard in session.hazards:
 		var at: Vector2 = hazard["position"]-offset

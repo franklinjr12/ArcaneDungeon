@@ -2,6 +2,7 @@ extends RefCounted
 ## AD-150 step 1: environment props sim core (burn, puddle/ice, brazier, breakables), one test per interaction.
 const Session = preload("res://combat/combat_session.gd")
 const EnvProps = preload("res://world/env_props.gd")
+const Art = preload("res://ui/pixel_art_renderer.gd")
 const Room = preload("res://world/room_template.gd")
 const Flow = preload("res://world/run_flow.gd")
 const POOLS := ["res://world/data/rooms_ruins_v1.json","res://world/data/rooms_cistern_v1.json"]
@@ -22,6 +23,7 @@ func run(t) -> void:
 	_templates(t)
 	_template_negatives(t)
 	_run_flow_urn(t)
+	_render_readonly(t)
 
 func _shot(essence: String) -> Dictionary:
 	return {"schema_version":1,"formula_id":"test."+essence,"display_name":essence,
@@ -293,3 +295,17 @@ func _run_flow_urn(t) -> void:
 	t.equal(_state(flow.session,"urn1"),"destroyed","AD-150 run flow: Force hit breaks the urn")
 	t.equal(flow.run.currency-before,coins,"AD-150 run flow: urn coins join the run purse")
 	t.equal(flow.session.env_props.pending_coins,0,"AD-150 run flow: pending coins are drained")
+
+func _render_readonly(t) -> void:
+	var s = _rig([{"id":"c1","kind":"crate","rect":[300,790,40,60]},{"id":"b1","kind":"brazier","position":[200,820]},
+		{"id":"p1","kind":"puddle","rect":[420,770,100,100]},{"id":"u1","kind":"urn","position":[600,820]},
+		{"id":"w1","kind":"cracked_wall","rect":[700,770,40,80]},{"id":"web","kind":"cobweb","rect":[800,770,60,60]}])
+	_run(s,3)
+	var snap_before: Dictionary = s.env_props.snapshot()
+	var tick_before: int = s.sim.clock.tick
+	# Drawing is only legal inside _draw(), so hand the canvas a callable via its draw signal.
+	var canvas := Node2D.new()
+	canvas.draw.connect(func(): Art.draw_env_props(canvas,s,Vector2.ZERO))
+	canvas.notification(CanvasItem.NOTIFICATION_DRAW)
+	canvas.free()
+	t.check(s.env_props.snapshot() == snap_before and s.sim.clock.tick == tick_before,"AD-150 render: draw_env_props leaves env snapshot and sim tick unchanged")
