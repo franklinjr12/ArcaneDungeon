@@ -70,6 +70,14 @@ func _title(t) -> void:
 		t.check(first_btn.name == "ContinueButton" and first_btn.text == "Continue", "AD-146 Continue is first when a run save exists")
 		with_save.free()
 		run_save.delete_run()
+	t.check(menu.find_child("Logo", true, false) != null, "AD-152 title logo exists")
+	for layer in ["par_far", "par_mid", "par_near"]:
+		t.check(menu.find_child(layer, true, false) != null, "AD-152 parallax layer " + layer)
+	var vp_rect := Rect2(Vector2.ZERO, menu.get_viewport_rect().size)
+	var inside := true
+	for b in menu.find_children("*", "Button", true, false):
+		inside = inside and vp_rect.encloses(b.get_global_rect())
+	t.check(inside, "AD-152 title buttons inside viewport")
 	menu.open_settings()
 	t.check(menu.settings_screen.visible and not menu.panel.visible, "AD-067 settings replaces title panel")
 	menu.settings_screen.back_requested.emit()
