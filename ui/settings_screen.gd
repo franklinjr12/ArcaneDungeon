@@ -13,6 +13,8 @@ const TEXT := {
 	"telemetry": "settings.telemetry",
 	"window_mode": "settings.window_mode",
 	"modes": ["settings.mode.windowed", "settings.mode.fullscreen", "settings.mode.borderless"],
+	"lighting": "settings.lighting",
+	"lighting_modes": ["settings.lighting.high", "settings.lighting.low", "settings.lighting.off"],
 	"ui_scale": "settings.ui_scale",
 	"back": "settings.back",
 }
@@ -26,6 +28,7 @@ var telemetry_toggle: CheckBox
 var back_button: Button
 var _scroll: ScrollContainer
 var window_mode_option: OptionButton
+var lighting_option: OptionButton
 var ui_scale_slider: HSlider
 var ui_scale_label: Label
 var binding_buttons := {}
@@ -106,6 +109,23 @@ func _ready() -> void:
 		settings.window_mode = Settings.WINDOW_MODES[i]
 		settings.apply_display(get_window())
 		_save())
+	var light_row := HBoxContainer.new()
+	panel.add_child(light_row)
+	var light_label := Label.new()
+	light_label.text = tr(TEXT["lighting"])
+	light_label.custom_minimum_size.x = 150
+	light_row.add_child(light_label)
+	lighting_option = OptionButton.new()
+	for m in TEXT["lighting_modes"]:
+		lighting_option.add_item(tr(m))
+	lighting_option.selected = maxi(Settings.LIGHTING_MODES.find(settings.lighting), 0)
+	lighting_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lighting_option.focus_mode = Control.FOCUS_ALL
+	lighting_option.disabled = disabled
+	light_row.add_child(lighting_option)
+	lighting_option.item_selected.connect(func(i: int):
+		settings.lighting = Settings.LIGHTING_MODES[i]
+		_save())
 	var scale_row := HBoxContainer.new()
 	panel.add_child(scale_row)
 	var scale_name := Label.new()
@@ -132,6 +152,7 @@ func _ready() -> void:
 		_save())
 	if director_ref != null:
 		director_ref.bind_button(window_mode_option)
+		director_ref.bind_button(lighting_option)
 	var controls_heading := Label.new()
 	controls_heading.text = tr("settings.controls.title")
 	controls_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

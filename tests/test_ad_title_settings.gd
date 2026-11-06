@@ -34,6 +34,7 @@ func run(t) -> void:
 	t.check(svc2.settings.reduce_flashes, "AD-067 reduce_flashes persists")
 	t.check(not svc2.settings.screen_shake, "AD-067 reduce shake stored as screen_shake=false")
 	t.check(svc2.settings.telemetry_opt_in, "AD-067 telemetry opt-in persists")
+	t.check(screen.lighting_option != null and screen.lighting_option.item_count == 3, "AD-148 lighting option has 3 items")
 	var hits := []
 	screen.back_requested.connect(func(): hits.append(1))
 	screen.back_button.pressed.emit()
