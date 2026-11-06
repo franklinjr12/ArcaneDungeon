@@ -228,6 +228,8 @@ func _build_room(entry: Dictionary) -> Dictionary:
 			session.sim.collision_walls.append(wall)
 		if layout.has("water"):
 			session.set_water(layout["water"])
+		if layout.has("env_props"):
+			session.set_env_props(layout["env_props"])
 	session.audio_sink = _cue
 	session.sim.actor.position = room.marker("entrance")
 	session.sim.actor.health.maximum = run.max_hp
@@ -372,6 +374,11 @@ func step(command: Dictionary = {}) -> Dictionary:
 			wet_ids.append(enemy)
 	session.step()
 	ticks_elapsed += 1
+	# AD-150: coins released by broken props join the run purse (props exist only in rooms whose layout lists them).
+	if session.env_props != null and session.env_props.pending_coins > 0:
+		run.currency += session.env_props.pending_coins
+		session.env_props.pending_coins = 0
+		_cue("sfx.pickup.currency",session.sim.actor.position)
 	for enemy in wet_ids:
 		if not enemy.target.alive():
 			wet_kills += 1

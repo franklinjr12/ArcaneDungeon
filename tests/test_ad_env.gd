@@ -2,6 +2,9 @@ extends RefCounted
 ## AD-150 step 1: environment props sim core (burn, puddle/ice, brazier, breakables), one test per interaction.
 const Session = preload("res://combat/combat_session.gd")
 const EnvProps = preload("res://world/env_props.gd")
+const Room = preload("res://world/room_template.gd")
+const Flow = preload("res://world/run_flow.gd")
+const POOLS := ["res://world/data/rooms_ruins_v1.json","res://world/data/rooms_cistern_v1.json"]
 
 # Same free strip as test_ad_cistern: arena walls end at y=735, so y 770-870 is open. The player stands at (100,820) and shoots right.
 const SPOT := Vector2(100,820)
@@ -16,6 +19,9 @@ func run(t) -> void:
 	_cracked_wall(t)
 	_validate(t)
 	_determinism(t)
+	_templates(t)
+	_template_negatives(t)
+	_run_flow_urn(t)
 
 func _shot(essence: String) -> Dictionary:
 	return {"schema_version":1,"formula_id":"test."+essence,"display_name":essence,
@@ -220,3 +226,70 @@ func _determinism(t) -> void:
 	t.equal(far.snapshot()["foes"],plain.snapshot()["foes"],"AD-150 determinism: untouched props leave enemy state unchanged")
 	plain.restart()
 	t.check(plain.env_props == null,"AD-150 determinism: restart clears env props")
+
+func _tuning() -> Dictionary:
+	return JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))
+
+func _initialize(template: Dictionary, rules: Dictionary, tuning: Dictionary) -> Dictionary:
+	var copy: Dictionary = template.duplicate(true)
+	for key in ["min_spawn_distance","player_radius","grid_step"]:
+		if rules.has(key):
+			copy[key] = rules[key]
+	return Room.new().initialize(copy,tuning["arena"],tuning["enemies"].keys())
+
+func _templates(t) -> void:
+	var tuning := _tuning()
+	for path in POOLS:
+		var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+		var with_props := 0
+		var seen: Dictionary = {}
+		for id in doc["room_templates"]:
+			var template: Dictionary = doc["room_templates"][id]
+			t.check(bool(_initialize(template,doc["rules"],tuning)["ok"]),"AD-150 templates: %s initializes" % id)
+			var props = template.get("layout",{}).get("env_props",[])
+			if not props.is_empty():
+				with_props += 1
+				for entry in props:
+					seen[str(entry["kind"])] = true
+		t.check(with_props >= 3,"AD-150 templates: %s has at least 3 templates with env props" % path.get_file())
+		t.equal(seen.keys().size(),EnvProps.KIND_IDS.size(),"AD-150 templates: %s covers every prop kind" % path.get_file())
+
+func _template_negatives(t) -> void:
+	var tuning := _tuning()
+	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(POOLS[0]))
+	var base: Dictionary = doc["room_templates"]["ruins_p01"]
+	var cases := {
+		"on exit":[[{"id":"c1","kind":"crate","rect":[1200,430,40,40]}],"ROOM_ENV_PROP_BLOCKS"],
+		"urn on entrance":[[{"id":"u1","kind":"urn","position":[185,450]}],"ROOM_ENV_PROP_BLOCKS"],
+		"unknown kind":[[{"id":"x1","kind":"boulder","rect":[600,100,40,40]}],"ENV_PROP_INVALID"],
+		"on spawn":[[{"id":"c1","kind":"crate","rect":[400,180,40,40]}],"ROOM_SPAWN_BLOCKED"],
+	}
+	for label in cases:
+		var template: Dictionary = base.duplicate(true)
+		template["layout"]["env_props"] = cases[label][0]
+		var verdict := _initialize(template,doc["rules"],tuning)
+		var codes: Array = []
+		for issue in verdict["issues"]:
+			codes.append(str(issue["code"]))
+		t.check(not bool(verdict["ok"]) and codes.has(cases[label][1]),"AD-150 templates: crate/prop %s gives %s" % [label,cases[label][1]])
+	var bad := base.duplicate(true)
+	bad["layout"]["env_props"] = [{"id":"x1","kind":"boulder","rect":[600,100,40,40]}]
+	var issue = _initialize(bad,doc["rules"],tuning)["issues"][0]
+	t.equal(str(issue["path"]),"layout.env_props[0].kind","AD-150 templates: issue path prefixed with layout.")
+
+func _run_flow_urn(t) -> void:
+	var flow = Flow.new(150,Flow.CONFIG_V2)
+	var entry: Dictionary = Flow.merged_templates(flow.config)["cistern_p05"].duplicate(true)
+	t.check(bool(flow._build_room(entry)["ok"]),"AD-150 run flow: props template builds")
+	t.check(flow.session.env_props != null,"AD-150 run flow: props template installs env props")
+	flow.state = "fighting"
+	var coins: int = int(flow.session.env_props.kinds["urn"]["coins"])
+	flow.session.sim.actor.position = Vector2(420,300)
+	flow.session.sim.loadout.unlocked.append("essence.force") # a fresh run has not unlocked Force yet
+	_shoot(flow.session,"essence.force")
+	var before: int = flow.run.currency
+	for i in 40:
+		flow.step()
+	t.equal(_state(flow.session,"urn1"),"destroyed","AD-150 run flow: Force hit breaks the urn")
+	t.equal(flow.run.currency-before,coins,"AD-150 run flow: urn coins join the run purse")
+	t.equal(flow.session.env_props.pending_coins,0,"AD-150 run flow: pending coins are drained")
