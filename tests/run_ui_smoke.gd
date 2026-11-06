@@ -196,11 +196,47 @@ func _run() -> void:
 	control._input(key_one)
 	expect(run.reward_collected,"key 1 grants first reward")
 	expect(str(run.room.values["id"]) in run.run.collected,"collect event recorded")
+	expect(control.loadout_view_button.is_visible_in_tree(),"AD-147 loadout button visible after clear")
+	var tab := InputEventKey.new()
+	tab.keycode = KEY_TAB
+	tab.physical_keycode = KEY_TAB
+	tab.pressed = true
+	control._input(tab)
+	expect(control.is_loadout_view_open(),"AD-147 Tab opens the loadout view")
+	var slot_rows := 0
+	for i in 4:
+		if control.loadout_view.find_child("LoadoutSlot%d" % i,true,false) != null: slot_rows += 1
+	expect(slot_rows==4,"AD-147 view shows 4 slot rows")
+	var art_ok: bool = false
+	for l in control.loadout_view.find_children("*","Label",true,false):
+		if l.text==tr("loadout_view.artifacts") or l.text==tr("loadout_view.no_artifacts"): art_ok = true
+	expect(art_ok,"AD-147 view shows artifacts section")
+	var view_buttons: Array = control.loadout_view.find_children("*","Button",true,false)
+	expect(view_buttons.size()==1 and view_buttons[0].name=="LoadoutCloseButton"
+		and control.loadout_view.find_children("*","OptionButton",true,false).is_empty()
+		and control.loadout_view.find_children("*","LineEdit",true,false).is_empty(),"AD-147 view is read-only (close button only)")
+	control._open_editor(2)
+	var edit_try: Dictionary = control.flow.open_editor(1)
+	expect(not control.editor_open and not edit_try["ok"] and str(edit_try.get("reason",""))=="POLICY_WORKSHOP_ONLY" and run.edit_policy=="workshop_only",
+		"AD-147 editing impossible outside the workshop")
+	var room_before = run.room.values["id"]
+	var collected_before: bool = run.reward_collected
+	control._input(key_one)
+	expect(control.is_loadout_view_open() and run.reward_collected==collected_before and run.room.values["id"]==room_before,"AD-147 gameplay keys swallowed while open")
+	control._input(tab)
+	expect(not control.is_loadout_view_open(),"AD-147 Tab closes the view")
+	control.loadout_view_button.emit_signal("pressed")
+	expect(control.is_loadout_view_open(),"AD-147 button opens the view")
+	control.loadout_view.find_child("LoadoutCloseButton",true,false).emit_signal("pressed")
+	expect(not control.is_loadout_view_open(),"AD-147 close button closes the view")
+	control.loadout_view_button.emit_signal("pressed")
 	control._exit()
 	expect(run.room.values["id"]=="s1_r1","far-away exit button cannot skip door")
 	run.session.sim.actor.position = run.room.marker("exit")
 	control._exit()
 	expect(run.room.values["id"]=="s1_r2","exit button from marker traverses to room 2")
+	control.open_loadout_view()
+	expect(not control.is_loadout_view_open() and not control.loadout_view_button.visible,"AD-147 view closed and button hidden in next room")
 	control._policy()
 	expect(run.edit_policy=="cleared_room","edit-policy toggle")
 	for i in [1,2,3]:

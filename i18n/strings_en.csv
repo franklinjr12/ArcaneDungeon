@@ -397,3 +397,12 @@ META_MILESTONE_ENEMIES_6,Discover 6 enemies
 META_MILESTONE_ARTIFACTS_4,Discover 4 artifacts
 run.notice.resumed,Run resumed in the workshop.
 run.notice.resume_failed,The saved run could not be loaded; a new run has started.
+run.btn.loadout_view,Loadout (Tab)
+loadout_view.title,Loadout
+loadout_view.slot,Slot %d: %s
+loadout_view.locked, [LOCKED]
+loadout_view.cost,%d MP · %.1fs cooldown
+loadout_view.artifacts,Artifacts
+loadout_view.no_artifacts,No artifacts yet
+loadout_view.read_only,Read-only. Spells can only be edited at the workshop.
+loadout_view.close,Close (Tab)
