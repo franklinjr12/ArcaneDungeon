@@ -55,7 +55,8 @@ func _spell_row(i: int, loadout) -> void:
 	var preview: Dictionary = loadout.preview(i)
 	var empty := preview.is_empty()
 	var formula: Dictionary = loadout.slots[i]["formula"]
-	frame("LoadoutSlot%d" % i, "ad_ui_panel_inset", rect_of("spell_row_%d" % n))
+	var row_panel := frame("spell_row_%d" % n, "ad_ui_panel_inset", rect_of("spell_row_%d" % n))
+	row_panel.name = "LoadoutSlot" + str(i) # the smoke test looks rows up by this name
 	var slot_sprite := "ad_ui_slot24_empty" if empty else ("ad_ui_slot24_selected" if loadout.is_locked(i) else "ad_ui_slot24_ready")
 	picture("spell_slot_%d" % n, SkinA.region(slot_sprite), rect_of("spell_slot_%d" % n))
 	text("spell_key_%d" % n, SkinA.slot_key(i), rect_of("spell_key_%d" % n), "hover")
