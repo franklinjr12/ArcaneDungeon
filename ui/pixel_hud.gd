@@ -299,8 +299,8 @@ func _draw_slots(live, sc: float) -> void:
 		_label("dash_charges",tr("hud.dash_charges") % int(dash["charges"]),SkinA.label_color("selected"),sc)
 
 # --- AD-040 art lookups (rune/UI icon atlas; independent of Art.use_art_export) ---
-const ATLAS := "res://art/export/ico/ad_ico_atlas_mvp.png"
-const ATLAS_INDEX := "res://art/export/ico/ad_ico_atlas_mvp_index.json"
+const ATLAS := "res://art/export/ico/ad_ico_atlas_demo.png"
+const ATLAS_INDEX := "res://art/export/ico/ad_ico_atlas_demo_index.json"
 static var _atlas: Texture2D
 static var _icons: Dictionary = {}
 

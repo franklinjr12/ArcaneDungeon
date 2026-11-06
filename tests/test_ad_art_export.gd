@@ -81,6 +81,7 @@ func run(t) -> void:
 	t.check(sprites >= 30, "AD-030 sprite entries >= 30")
 	_cistern(t, m, assets)
 	_demo_x2(t, m, assets)
+	_demo_fx(t)
 	_engine_map(t, assets)
 	_actors(t)
 	_renderer(t)
@@ -180,6 +181,48 @@ func _demo_x2(t, m: Dictionary, assets: Dictionary) -> void:
 			var k: String = "ad_fx_ptc_%s_%d" % [p, sz]
 			t.check(assets.has(k) and assets[k]["category"] == "vfx" and assets[k]["row"] == "AD-117", "AD-155 particle " + k)
 			t.check(assets.get(k, {}).get("mask") != null, "AD-155 particle mask " + k)
+
+const DEMO_FX := ["projectile.cold", "impact.cold", "burst.cold", "orb.cold", "projectile.force", "impact.force", "burst.force",
+	"orb.force", "status.chilled", "status.frozen", "status.brittle", "reaction.shatter", "reaction.steam", "reaction.flash_freeze",
+	"mod.chain", "mod.rapid", "trigger.on_kill", "trigger.on_expire", "trigger.timer"]
+const OLD_RUNE_ICONS := {"essence.cold": "ad_ico_water", "essence.force": "ad_ico_projectile", "form.beam": "ad_ico_projectile",
+	"form.field": "ad_ico_burst", "mod.chain": "ad_ico_split", "mod.expand": "ad_ico_burst", "mod.rapid": "ad_ico_homing",
+	"trigger.on_kill": "ad_ico_on_hit", "trigger.on_expire": "ad_ico_on_hit", "trigger.timer": "ad_ico_on_hit"}
+
+## AD-155 step 2: Cold/Force + AD-114 FX events resolve, rune icons are real demo-atlas keys, no FX falls back.
+func _demo_fx(t) -> void:
+	ART.fx_fallbacks.clear()
+	for ev in DEMO_FX:
+		t.check(ART.FX_EVENTS.has(ev), "AD-155 FX_EVENTS has " + ev)
+		var fr: Dictionary = ART.fx_frame(ev, 0)
+		t.check(not fr.is_empty(), "AD-155 fx_frame not empty: " + ev)
+		if fr.is_empty():
+			continue
+		var tex: Texture2D = load(ART.export_manifest()[fr["stem"]]["png"])
+		var r: Rect2 = fr["region"]
+		t.check(r.size.x > 0 and r.position.x >= 0 and r.position.y >= 0 and r.end.x <= tex.get_width() and r.end.y <= tex.get_height(), "AD-155 fx region inside texture: " + ev)
+		var gl: Dictionary = ART.fx_glow_frame(fr)
+		t.check(not gl.is_empty() and Rect2(Vector2.ZERO, gl["tex"].get_size()).encloses(gl["region"]), "AD-155 fx glow region inside texture: " + ev)
+	for ev in ART.FX_EVENTS:
+		ART.fx_frame(ev, 0)
+		t.check(not ART.fx_frame(ev, 0).is_empty(), "AD-155 FX_EVENTS entry mapped: " + ev)
+	t.check(ART.fx_fallbacks.is_empty(), "AD-155 fx_fallbacks stays empty")
+	for ev in ART.FX_UNEMITTED:
+		t.check(ART.FX_EVENTS.has(ev), "AD-155 unemitted event is a known event: " + ev)
+	var map: Dictionary = ART.export_map()
+	t.equal(map["icons"], "ad_ico_atlas_demo", "AD-155 icons atlas is the demo atlas")
+	var idx = _json("res://art/export/ico/ad_ico_atlas_demo_index.json")
+	var runes = _json("res://magic/data/runes_v2.json")
+	var ids: Array = map["rune_icons"].keys()
+	if runes is Dictionary:
+		for r in runes["runes"]:
+			t.check(map["rune_icons"].has(r["id"]), "AD-155 rune mapped: " + str(r["id"]))
+	for id in ids:
+		t.check(idx["icons"].has(map["rune_icons"][id]), "AD-155 rune icon in demo atlas: " + id)
+	for id in OLD_RUNE_ICONS:
+		t.check(map["rune_icons"][id] != OLD_RUNE_ICONS[id], "AD-155 no placeholder icon for " + id)
+	for k in ["hp_up", "mana_up", "dash_up", "reroll", "undiscovered"]:
+		t.check(map["ui_icons"].has(k) and idx["icons"].has(map["ui_icons"][k]), "AD-155 ui icon " + k)
 
 func _engine_map(t, assets: Dictionary) -> void:
 	t.check(not ART.use_art_export, "AD-030 art export off by default")

@@ -301,7 +301,11 @@ static func draw_actor_glows(ci: CanvasItem, alpha_mult: float = 1.0) -> void:
 		return
 	var col := Color(1, 1, 1, alpha_mult)
 	for it in _glow_queue:
-		if it["mirror"]:
+		if it.has("rot"):  # AD-155 fx glow: same dest rect and rotation as the base sprite
+			ci.draw_set_transform(it["at"], float(it["rot"]), Vector2.ONE)
+			ci.draw_texture_rect_region(it["tex"], it["rect"], it["region"], col)
+			ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		elif it["mirror"]:
 			ci.draw_set_transform(it["at"], 0.0, Vector2(-1, 1))
 			ci.draw_texture_rect_region(it["tex"], it["rect"], it["region"], col)
 		else:
@@ -471,22 +475,29 @@ static func effect(canvas: CanvasItem, kind: String, center: Vector2, tick: int,
 static func status_icons(canvas: CanvasItem, target, tick: int, at: Vector2) -> void:
 	var current: Dictionary = target.status.snapshot(tick)
 	var slot := 0
-	for status_id in ["burning","wet","charged"]:
+	for status_id in ["burning","wet","charged","chilled","frozen","brittle"]:
 		if current.has(status_id):
 			draw_fx(canvas,"status."+status_id,at+Vector2(15,-(target.radius+21)),tick,0.0,0.0,Color.WHITE,slot)
 			slot += 1
 
 # AD-039: P1 spell FX are the default visuals (not behind F6). Resolved through engine_map.fx + manifest.
-const FX_ELEMENTS := ["fire","water","lightning"]
+const FX_ELEMENTS := ["fire","water","lightning","cold","force"]
 const FX_EVENTS := [
 	"projectile.fire","projectile.water","projectile.lightning","projectile.neutral",
 	"orb.fire","orb.water","orb.lightning","mod.homing",
 	"impact.fire","impact.water","impact.lightning","impact.neutral",
 	"burst.fire","burst.water","burst.lightning",
+	"projectile.cold","impact.cold","burst.cold","orb.cold","projectile.force","impact.force","burst.force","orb.force",
+	"status.chilled","status.frozen","status.brittle",
+	"reaction.shatter","reaction.steam","reaction.flash_freeze","mod.chain","mod.rapid",
+	"trigger.on_kill","trigger.on_expire","trigger.timer",
 	"reaction.arc","reaction.extinguish","mod.split","mod.pierce","trigger.on_hit",
 	"status.wet","status.burning","status.charged",
 	"cast.charge","cast.muzzle","dash.trail","hit.spark","enemy.spawn","enemy.dissolve","enemy.bolt","enemy.bolt_impact",
 	"boss.bullet","boss.phase","room.clear","telegraph.circle","telegraph.line","telegraph.dash_lane"]
+## AD-155: mapped events the sim emits no trace / visual for (mod.rapid only changes cooldown and damage scale;
+## on_expire and timer fire without a hit position, so they are drawn only when a payload spawn carries one).
+const FX_UNEMITTED := ["mod.rapid"]
 const IFRAME_OUTLINE := Color("#e9f2e5")
 ## Events that had no P1 mapping when drawn (legacy sprite used instead); must stay empty in the slice.
 static var fx_fallbacks: Array = []
@@ -523,6 +534,23 @@ static func fx_frame(event: String, age_ticks: int) -> Dictionary:
 	var piv: Array = entry["pivot"]
 	return {"stem": stem, "tag": tag, "index": index, "total_ms": total, "done": done,
 		"region": Rect2(f["x"], f["y"], f["w"], f["h"]), "pivot": Vector2(piv[0], piv[1])}
+
+## AD-155: glow slice of an fx_frame result. Glow sheets are packed separately, so their own json is authoritative
+## (same frame size as the base; only the sheet position may differ). {} when the stem has no glow.
+static func fx_glow_frame(fr: Dictionary) -> Dictionary:
+	if fr.is_empty():
+		return {}
+	var png: String = str(_manifest[fr["stem"]].get("glow", ""))
+	if png == "":
+		return {}
+	if not _glow_tex.has(png):
+		_glow_tex[png] = load(png)
+		_glow_json[png] = JSON.parse_string(FileAccess.get_file_as_string(png.get_basename() + ".json"))
+	var i: int = int(_manifest[fr["stem"]]["tags"][fr["tag"]]["from"]) + int(fr["index"])
+	var f: Dictionary = _glow_json[png]["frames"][i]["frame"]
+	return {"tex": _glow_tex[png], "region": Rect2(f["x"], f["y"], f["w"], f["h"])}
+
+static var _glow_json: Dictionary = {}
 
 static func _legacy_kind(event: String) -> String:
 	var parts := event.split(".")
@@ -593,6 +621,9 @@ static func draw_fx(canvas: CanvasItem, event: String, center: Vector2, age_tick
 		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		return
 	canvas.draw_texture_rect_region(_texs[fr["stem"]], dest, region, modulate)
+	var gl := fx_glow_frame(fr)
+	if not gl.is_empty():
+		_queue_glow({"tex": gl["tex"], "rect": dest, "region": gl["region"], "mirror": false, "at": center, "rot": rotation})
 	if event.begins_with("status."):
 		_status_icon(canvas, event, fr, slot, modulate)
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
@@ -604,7 +635,7 @@ static func _status_icon(canvas: CanvasItem, event: String, fr: Dictionary, slot
 		return
 	var atlas: String = _map["icons"]
 	if _icon_index.is_empty():
-		_icon_index = JSON.parse_string(FileAccess.get_file_as_string("res://art/export/ico/ad_ico_atlas_mvp_index.json"))["icons"]
+		_icon_index = JSON.parse_string(FileAccess.get_file_as_string("res://art/export/ico/%s_index.json" % atlas))["icons"]
 	var cell: Dictionary = _icon_index["ad_ico_" + event.trim_prefix("status.")]
 	_export_json(atlas)
 	var sc: float = float(_map.get("scale", 2))
@@ -613,6 +644,10 @@ static func _status_icon(canvas: CanvasItem, event: String, fr: Dictionary, slot
 	canvas.draw_texture_rect_region(_texs[atlas],
 		Rect2(anchor + Vector2(-size.x / 2.0 + slot * size.x, -size.y), size),
 		Rect2(float(cell["x"]), float(cell["y"]), float(cell["w"]), float(cell["h"])), modulate)
+
+## AD-155: sim.visuals "reaction" ids -> one-shot FX events.
+const REACTION_FX := {"wet_cold_freeze": "reaction.flash_freeze", "frozen_force_shatter": "reaction.shatter",
+	"fire_thaw_steam": "reaction.steam"}
 
 static func _element(essence_id: String) -> String:
 	var el := essence_id.trim_prefix("essence.")
@@ -696,13 +731,17 @@ static func collect_fx(session, tick: int, memo: Dictionary) -> Array:
 			"burst":
 				var el := _element(str(v.get("essence", "")))
 				_shot(shots, ("burst." + el) if el != "neutral" else "impact.neutral", v["position"], tick)
+			"reaction":
+				var rev: String = REACTION_FX.get(str(v.get("reaction", "")), "")
+				if rev != "":
+					_shot(shots, rev, v["position"], tick)
 			"arc":
 				var d: Vector2 = v["to"] - v["from"]
 				_shot(shots, "reaction.arc", (v["from"] + v["to"]) / 2.0, tick, d.angle(), d.length())
 	memo["seen"] = seen_now
 	# Trace-derived modifier / trigger FX, consumed through per-type cursors.
 	var batch: Dictionary = {}
-	for kind in ["spawn", "hit", "trigger"]:
+	for kind in ["spawn", "hit", "trigger", "chain"]:
 		var recs: Array = sim.trace.filter_records(-1, "", kind)
 		var from: int = int(memo["cursor"].get(kind, 0))
 		if recs.size() < from:
@@ -717,9 +756,25 @@ static func collect_fx(session, tick: int, memo: Dictionary) -> Array:
 		hit_at[int(r["effect_id"])] = target.position
 		if pierce_ids.has(int(r["effect_id"])):
 			_shot(shots, "mod.pierce", target.position, tick)
+	var spawn_at: Dictionary = {}
+	for r in batch["spawn"]:
+		spawn_at[int(r["parent_effect_id"])] = _pos(r["position"])
 	for r in batch["trigger"]:
-		if hit_at.has(int(r["parent_effect_id"])):
-			_shot(shots, "trigger.on_hit", hit_at[int(r["parent_effect_id"])], tick)
+		var pid := int(r["parent_effect_id"])
+		var tev: String = str(r.get("reason", "trigger.on_hit"))
+		if not tev.begins_with("trigger."):
+			tev = "trigger.on_hit"
+		if tev == "trigger.on_hit":
+			if hit_at.has(pid):
+				_shot(shots, tev, hit_at[pid], tick)
+		elif spawn_at.has(pid):
+			_shot(shots, tev, spawn_at[pid], tick)
+		elif hit_at.has(pid):
+			_shot(shots, tev, hit_at[pid], tick)
+	for r in batch["chain"]:
+		var ct = sim.targets.get_target(int(r["target_id"]))
+		if ct != null:
+			_shot(shots, "mod.chain", ct.position, tick)
 	var groups: Dictionary = {}
 	for r in batch["spawn"]:
 		if int(r["parent_effect_id"]) != 0:
@@ -738,7 +793,7 @@ static func collect_fx(session, tick: int, memo: Dictionary) -> Array:
 			_shot(shots, "reaction.extinguish", target.position, tick)
 		memo["prev"][target.id] = snap
 		var slot := 0
-		for sid in ["burning", "wet", "charged"]:
+		for sid in ["burning", "wet", "charged", "chilled", "frozen", "brittle"]:
 			var skey := "%d:%s" % [target.id, sid]
 			if not snap.has(sid):
 				memo["since"].erase(skey)

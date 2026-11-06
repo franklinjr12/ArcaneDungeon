@@ -21,7 +21,7 @@ func run(t) -> void:
 	t.check(map["scale"] is float and map["scale"] == 2.0 and int(map["scale"]) == 2, "AD-039 engine_map scale == 2")
 	t.check(not str(map["note"]).contains("PROPOSED (scale") and not str(map["note"]).to_lower().contains("scale and"), "AD-039 note no longer calls scale PROPOSED")
 	var fx: Dictionary = map["fx"]
-	t.check(fx.size() == 37, "AD-039 fx map has all event keys")
+	t.check(fx.size() == 56, "AD-039 fx map has all event keys")
 	for key in fx:
 		var stem: String = fx[key]["asset"]
 		var tag: String = fx[key]["tag"]
@@ -38,8 +38,8 @@ func run(t) -> void:
 	if gj is Dictionary:
 		for g in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "flame", "droplet", "bolt"]:
 			t.check(gj["glyphs"].has(g), "AD-039 glyph " + g)
-	t.equal(map["icons"], "ad_ico_atlas_mvp", "AD-039 icon atlas stem")
-	var idx = _load_json("res://art/export/ico/ad_ico_atlas_mvp_index.json")
+	t.equal(map["icons"], "ad_ico_atlas_demo", "AD-039 icon atlas stem")
+	var idx = _load_json("res://art/export/ico/ad_ico_atlas_demo_index.json")
 	t.check(idx is Dictionary, "AD-039 icon index parses")
 	if idx is Dictionary:
 		for n in ["ad_ico_wet", "ad_ico_burning", "ad_ico_charged"]:
