@@ -21,7 +21,7 @@ func run(t) -> void:
 	t.check(map["scale"] is float and map["scale"] == 2.0 and int(map["scale"]) == 2, "AD-039 engine_map scale == 2")
 	t.check(not str(map["note"]).contains("PROPOSED (scale") and not str(map["note"]).to_lower().contains("scale and"), "AD-039 note no longer calls scale PROPOSED")
 	var fx: Dictionary = map["fx"]
-	t.check(fx.size() == 56, "AD-039 fx map has all event keys")
+	t.check(fx.size() == 79, "AD-039 fx map has all event keys")  # +23 AD-155 beam.<el>.* / field.<el>
 	for key in fx:
 		var stem: String = fx[key]["asset"]
 		var tag: String = fx[key]["tag"]

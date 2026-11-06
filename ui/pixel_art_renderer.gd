@@ -663,14 +663,77 @@ static func essence_color(essence_id: String) -> Color:
 		"force": return Color("#c9a6f0")
 	return Color("#e8e0cc")
 
-## AD-132: draws beam lines and field circles from sim.visuals; `offset` is the camera offset.
-static func draw_form_visuals(canvas: CanvasItem, visuals: Array, offset: Vector2 = Vector2.ZERO) -> void:
+## AD-155: beam piece list [{stem, part, region, pos (world), rot, scale, pivot}] for from->to at the map's 1x scale.
+## Segment pieces tile [0,|to-from|] exactly (last tile cropped); start/end caps overlay the ends. Pure; [] when unmapped.
+static func beam_segments(from: Vector2, to: Vector2, element: String, tick: int = 0, width_scale: float = 1.0) -> Array:
+	var el := "neutral" if element == "" else element
+	var fs := fx_frame("beam.%s.start" % el, tick)
+	var fm := fx_frame("beam.%s.segment" % el, tick)
+	var fe := fx_frame("beam.%s.end" % el, tick)
+	if fs.is_empty() or fm.is_empty() or fe.is_empty():
+		return []
+	_export_data()
+	var k := float(_map.get("beam", {}).get("scale", 1)) * 1.0
+	var ws := k * width_scale
+	var dir := to - from
+	var length := dir.length()
+	var rot := dir.angle()
+	var u := dir / length if length > 0.0 else Vector2.RIGHT
+	var out: Array = []
+	var tile: float = fm["region"].size.x * k
+	var along := 0.0
+	while along < length - 0.001:
+		var w := minf(tile, length - along)
+		var reg: Rect2 = fm["region"]
+		reg.size.x = w / k
+		out.append({"stem": fm["stem"], "part": "segment", "region": reg, "pos": from + u * along, "rot": rot,
+			"scale": Vector2(k, ws), "pivot": Vector2(0.0, fm["pivot"].y), "tag": fm})
+		along += w
+	out.append({"stem": fs["stem"], "part": "start", "region": fs["region"], "pos": from, "rot": rot,
+		"scale": Vector2(k, ws), "pivot": fs["pivot"], "tag": fs})
+	out.append({"stem": fe["stem"], "part": "end", "region": fe["region"], "pos": to, "rot": rot,
+		"scale": Vector2(k, ws), "pivot": fe["pivot"], "tag": fe})
+	return out
+
+static func _draw_beam_sprites(canvas: CanvasItem, from: Vector2, to: Vector2, element: String, tick: int, width_scale: float) -> bool:
+	var pieces := beam_segments(from, to, element, tick, width_scale)
+	if pieces.is_empty():
+		return false
+	for pc in pieces:
+		var reg: Rect2 = pc["region"]
+		var sc: Vector2 = pc["scale"]
+		var dest := Rect2(-pc["pivot"] * sc, reg.size * sc)
+		canvas.draw_set_transform(pc["pos"], pc["rot"], Vector2.ONE)
+		canvas.draw_texture_rect_region(_texs[pc["stem"]], dest, reg)
+		var gl := fx_glow_frame(pc["tag"])
+		if not gl.is_empty():
+			var greg: Rect2 = gl["region"]
+			greg.size.x = reg.size.x
+			_queue_glow({"tex": gl["tex"], "rect": dest, "region": greg, "mirror": false, "at": pc["pos"], "rot": pc["rot"]})
+	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	return true
+
+## AD-132/AD-155: draws beam and field sprites from sim.visuals (primitive lines/circles when an asset is missing);
+## `offset` is the camera offset, `tick` animates the sprites. Visual only.
+static func draw_form_visuals(canvas: CanvasItem, visuals: Array, offset: Vector2 = Vector2.ZERO, tick: int = 0) -> void:
 	for v in visuals:
-		var color := essence_color(str(v.get("essence", "")))
+		var essence := str(v.get("essence", ""))
+		var el := _element(essence)
+		var color := essence_color(essence)
+		var age := int(v.get("age", tick))
 		if v["kind"] == "beam":
+			var wscale := float(v.get("width_scale", 1.0))
+			if v.get("expand", false):
+				wscale *= float(_map.get("beam", {}).get("expand_width", 1.0))
+			if _draw_beam_sprites(canvas, v["from"] - offset, v["to"] - offset, el, age, wscale):
+				continue
 			canvas.draw_line(v["from"] - offset, v["to"] - offset, Color(color, 0.35), 9.0)
 			canvas.draw_line(v["from"] - offset, v["to"] - offset, color, 3.0)
 		elif v["kind"] == "field":
+			var ev := "field." + el
+			if not fx_frame(ev, age).is_empty():
+				draw_fx(canvas, ev, v["position"] - offset, age, 0.0, 0.0, Color.WHITE, 0, float(v["radius"]) * 2.0)
+				continue
 			canvas.draw_circle(v["position"] - offset, float(v["radius"]), Color(color, 0.22))
 			canvas.draw_arc(v["position"] - offset, float(v["radius"]), 0.0, TAU, 48, Color(color, 0.8), 2.0)
 

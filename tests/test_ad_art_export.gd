@@ -82,6 +82,7 @@ func run(t) -> void:
 	_cistern(t, m, assets)
 	_demo_x2(t, m, assets)
 	_demo_fx(t)
+	_demo_forms(t)
 	_engine_map(t, assets)
 	_actors(t)
 	_renderer(t)
@@ -188,6 +189,35 @@ const DEMO_FX := ["projectile.cold", "impact.cold", "burst.cold", "orb.cold", "p
 const OLD_RUNE_ICONS := {"essence.cold": "ad_ico_water", "essence.force": "ad_ico_projectile", "form.beam": "ad_ico_projectile",
 	"form.field": "ad_ico_burst", "mod.chain": "ad_ico_split", "mod.expand": "ad_ico_burst", "mod.rapid": "ad_ico_homing",
 	"trigger.on_kill": "ad_ico_on_hit", "trigger.on_expire": "ad_ico_on_hit", "trigger.timer": "ad_ico_on_hit"}
+
+## AD-155 step 3: Beam/Field sprites resolve per element; beam pieces tile |to - from| exactly at 1x.
+func _demo_forms(t) -> void:
+	var man: Dictionary = ART.export_manifest()
+	for el in ["fire", "water", "lightning", "cold", "force", "neutral"]:
+		var evs := ["beam.%s.start" % el, "beam.%s.segment" % el, "beam.%s.end" % el]
+		if el != "neutral":
+			evs.append("field." + el)
+		for ev in evs:
+			var fr: Dictionary = ART.fx_frame(ev, 0)
+			t.check(not fr.is_empty(), "AD-155 form fx mapped: " + ev)
+			if fr.is_empty():
+				continue
+			var tex: Texture2D = load(man[fr["stem"]]["png"])
+			t.check(Rect2(Vector2.ZERO, tex.get_size()).encloses(fr["region"]), "AD-155 form region inside texture: " + ev)
+			var gl: Dictionary = ART.fx_glow_frame(fr)
+			t.check(not gl.is_empty() and Rect2(Vector2.ZERO, gl["tex"].get_size()).encloses(gl["region"]), "AD-155 form glow inside texture: " + ev)
+		var from := Vector2(10, 20)
+		var to := Vector2(137, 95)
+		var pieces: Array = ART.beam_segments(from, to, el, 0)
+		var total := 0.0
+		var parts := {}
+		for pc in pieces:
+			parts[pc["part"]] = true
+			if pc["part"] == "segment":
+				total += pc["region"].size.x * pc["scale"].x
+		t.check(parts.has("start") and parts.has("end") and parts.has("segment"), "AD-155 beam has start/segment/end: " + el)
+		t.check(absf(total - (to - from).length()) <= 1.0, "AD-155 beam segments cover length: " + el)
+	t.check(ART.fx_frame("field.neutral", 0).is_empty(), "AD-155 neutral field keeps circle fallback")
 
 ## AD-155 step 2: Cold/Force + AD-114 FX events resolve, rune icons are real demo-atlas keys, no FX falls back.
 func _demo_fx(t) -> void:

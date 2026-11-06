@@ -282,6 +282,98 @@
   "trigger.timer": {
    "asset": "ad_vfx_trig_timer_glyph",
    "tag": "play"
+  },
+  "beam.fire.start": {
+   "asset": "ad_vfx_beam_fire_start",
+   "tag": "loop"
+  },
+  "beam.fire.segment": {
+   "asset": "ad_vfx_beam_fire_segment",
+   "tag": "loop"
+  },
+  "beam.fire.end": {
+   "asset": "ad_vfx_beam_fire_end",
+   "tag": "loop"
+  },
+  "field.fire": {
+   "asset": "ad_vfx_fire_field",
+   "tag": "loop"
+  },
+  "beam.water.start": {
+   "asset": "ad_vfx_beam_water_start",
+   "tag": "loop"
+  },
+  "beam.water.segment": {
+   "asset": "ad_vfx_beam_water_segment",
+   "tag": "loop"
+  },
+  "beam.water.end": {
+   "asset": "ad_vfx_beam_water_end",
+   "tag": "loop"
+  },
+  "field.water": {
+   "asset": "ad_vfx_water_field",
+   "tag": "loop"
+  },
+  "beam.lightning.start": {
+   "asset": "ad_vfx_beam_lightning_start",
+   "tag": "loop"
+  },
+  "beam.lightning.segment": {
+   "asset": "ad_vfx_beam_lightning_segment",
+   "tag": "loop"
+  },
+  "beam.lightning.end": {
+   "asset": "ad_vfx_beam_lightning_end",
+   "tag": "loop"
+  },
+  "field.lightning": {
+   "asset": "ad_vfx_lightning_field",
+   "tag": "loop"
+  },
+  "beam.cold.start": {
+   "asset": "ad_vfx_beam_ice_start",
+   "tag": "loop"
+  },
+  "beam.cold.segment": {
+   "asset": "ad_vfx_beam_ice_segment",
+   "tag": "loop"
+  },
+  "beam.cold.end": {
+   "asset": "ad_vfx_beam_ice_end",
+   "tag": "loop"
+  },
+  "field.cold": {
+   "asset": "ad_vfx_ice_field",
+   "tag": "loop"
+  },
+  "beam.force.start": {
+   "asset": "ad_vfx_beam_force_start",
+   "tag": "loop"
+  },
+  "beam.force.segment": {
+   "asset": "ad_vfx_beam_force_segment",
+   "tag": "loop"
+  },
+  "beam.force.end": {
+   "asset": "ad_vfx_beam_force_end",
+   "tag": "loop"
+  },
+  "field.force": {
+   "asset": "ad_vfx_force_field",
+   "tag": "loop"
+  },
+  "beam.neutral.start": {
+   "asset": "ad_vfx_beam_neutral_start",
+   "tag": "loop"
+  },
+  "beam.neutral.segment": {
+   "asset": "ad_vfx_beam_neutral_segment",
+   "tag": "loop"
+  },
+  "beam.neutral.end": {
+   "asset": "ad_vfx_beam_neutral_end",
+   "tag": "loop"
   }
  },
  "damage_glyphs": "ad_vfx_damage_numbers",
@@ -328,5 +420,9 @@
   "dash_up": "ad_ico_dash_up",
   "reroll": "ad_ico_reroll",
   "undiscovered": "ad_ico_undiscovered"
+ },
+ "beam": {
+  "scale": 1,
+  "expand_width": 2.0
  }
 }
