@@ -15,7 +15,7 @@ var props: Array = []
 var pending_coins := 0
 ## Append-only deterministic log: {tick, prop_id, kind, action}.
 var events: Array = []
-var _session = null
+var _session_ref: WeakRef = null ## weak: the session owns this object, a strong ref would leak both
 
 static func load_data() -> Dictionary:
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(DATA_FILE))
@@ -86,7 +86,7 @@ func _init(entries: Array = [], data: Dictionary = {}) -> void:
 
 ## Registers solid rects (walking / spells) and puddles (water). Call after set_water, if both are used.
 func attach(session) -> void:
-	_session = session
+	_session_ref = weakref(session)
 	var puddles: Array = []
 	for prop in props:
 		var rule: Dictionary = prop["rule"]
@@ -167,11 +167,11 @@ func _apply(prop: Dictionary, essence: String, tick: int) -> void:
 		prop["state"] = "burning"
 		prop["timer"] = tick+_scaled(int(rule["burn_ticks"]),"burn_ticks_scale")
 		events.append({"tick":tick,"prop_id":prop["id"],"kind":prop["kind"],"action":"ignite"})
-	elif (rule.get("freeze_by",[]) as Array).has(essence) and state == "intact" and _session != null:
+	elif (rule.get("freeze_by",[]) as Array).has(essence) and state == "intact" and _session() != null:
 		prop["state"] = "frozen"
 		prop["timer"] = tick+int(rule["ice_ticks"])
-		if _session.water != null:
-			_session.water.remove_tag("env_puddle_"+str(prop["id"]))
+		if _session().water != null:
+			_session().water.remove_tag("env_puddle_"+str(prop["id"]))
 		events.append({"tick":tick,"prop_id":prop["id"],"kind":prop["kind"],"action":"freeze"})
 	elif (rule.get("break_by",[]) as Array).has(essence) and state == "intact":
 		_destroy(prop,tick,"break")
@@ -179,9 +179,9 @@ func _apply(prop: Dictionary, essence: String, tick: int) -> void:
 func _destroy(prop: Dictionary, tick: int, action: String) -> void:
 	prop["state"] = "destroyed"
 	var rule: Dictionary = prop["rule"]
-	if _session != null:
-		_session.world.walls.erase(prop["rect"])
-		_session.sim.collision_walls.erase(prop["rect"])
+	if _session() != null:
+		_session().world.walls.erase(prop["rect"])
+		_session().sim.collision_walls.erase(prop["rect"])
 	var coins := roundi(float(int(rule.get("coins",0)))*float(difficulty.get("coin_scale",1.0)))
 	pending_coins += coins
 	events.append({"tick":tick,"prop_id":prop["id"],"kind":prop["kind"],"action":action,"coins":coins})
@@ -193,8 +193,8 @@ func step_timers(tick: int) -> void:
 			_destroy(prop,tick,"burn_out")
 		elif prop["state"] == "frozen" and tick >= int(prop["timer"]):
 			prop["state"] = "intact"
-			if _session != null and _session.water != null:
-				_session.water.add_entries([_puddle_entry(prop)])
+			if _session() != null and _session().water != null:
+				_session().water.add_entries([_puddle_entry(prop)])
 			events.append({"tick":tick,"prop_id":prop["id"],"kind":prop["kind"],"action":"thaw"})
 
 func on_ice(pos: Vector2) -> bool:
@@ -219,3 +219,6 @@ func snapshot() -> Dictionary:
 	for prop in props:
 		states.append([prop["id"],prop["state"],int(prop["timer"])])
 	return {"props":states,"pending_coins":pending_coins,"events":events.duplicate(true)}
+
+func _session():
+	return _session_ref.get_ref() if _session_ref != null else null
