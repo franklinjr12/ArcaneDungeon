@@ -411,3 +411,79 @@ loadout_view.artifacts,Artifacts
 loadout_view.no_artifacts,No artifacts yet
 loadout_view.read_only,Read-only. Spells can only be edited at the workshop.
 loadout_view.close,Close (Tab)
+settings.tab.audio,Audio
+settings.tab.video,Video
+settings.tab.controls,Controls
+settings.tab.access,Accessibility
+settings.defaults,Defaults
+settings.apply,Apply
+settings.test,Test
+settings.swap,Swap
+settings.cancel,Cancel
+settings.hint,Esc back    Q / E switch tab    Enter change
+settings.disabled_hint,Disabled: coming later
+settings.value.on,On
+settings.value.off,Off
+settings.value.fps60,60 FPS
+settings.value.full,Full
+settings.value.large,Large
+settings.section.volume,Volume
+settings.section.options,Options
+settings.section.display,Display
+settings.section.light,Lighting and effects
+settings.section.combat,Combat
+settings.section.system,System
+settings.section.vision,Vision and comfort
+settings.section.input,Input and sound
+settings.audio.master,Master
+settings.audio.music,Music
+settings.audio.sfx,Sound effects
+settings.audio.ui,Interface
+settings.audio.ambience,Ambience
+settings.audio.mute_unfocused,Mute when unfocused
+settings.audio.priority,Spell sounds top priority
+settings.video.frame_limit,Frame limit
+settings.video.vsync,VSync
+settings.video.light_quality,Light quality
+settings.video.particles,Particles
+settings.video.glow,Glow
+settings.video.fps,Show FPS
+settings.lighting.hint,Off = low-end PCs
+settings.lighting.preview,Light preview
+settings.access.colourblind,Colour-blind mode
+settings.access.text_size,Text size
+settings.access.telegraphs,Strong telegraphs
+settings.access.hold_cast,Hold to cast
+settings.access.aim_assist,Aim assist
+settings.access.visual_cues,Visual sound cues
+settings.access.status_icons,Status icons
+settings.controls.primary,Primary
+settings.controls.alt,Alt
+settings.controls.reset_keys,Reset keys
+settings.controls.listen_hint,"Listening: press a key, Esc cancels"
+settings.controls.conflict_panel,%s is already used by %s. Swap or cancel?
+settings.help.master,Overall loudness of the game.
+settings.help.music,Background music loudness. Disabled until the game has a music bus.
+settings.help.sfx,Spells; hits and footsteps.
+settings.help.ui,Menu clicks and interface cues.
+settings.help.ambience,Room hum; torches and water.
+settings.help.mute_unfocused,Silences the game while its window is in the background.
+settings.help.priority,Keeps spell sounds audible when many sounds play at once.
+settings.help.window_mode,"Windowed, fullscreen or borderless. Applies at once."
+settings.help.ui_scale,Scales every menu and HUD element from 90% to 150%.
+settings.help.frame_limit,Caps the frame rate.
+settings.help.vsync,Syncs frames to the monitor to avoid tearing.
+settings.help.lighting,"Dim rooms, torch and spell light. Turn off for low-end PCs: the game stays readable."
+settings.help.light_quality,High or low light detail. Only used while lighting is on.
+settings.help.particles,How many particles spells and impacts spawn.
+settings.help.glow,Bloom around bright spells and runes.
+settings.help.fps,Shows the frame rate in a corner.
+settings.help.reduce_flash,"Tones down hit-flash, white bursts and screen flicker."
+settings.help.reduce_shake,Turns off camera shake from hits and blasts.
+settings.help.colourblind,Alternative colour palette for elements and warnings.
+settings.help.text_size,Text size lives in the Video tab as UI scale.
+settings.help.telegraphs,Makes enemy attack warnings larger and brighter.
+settings.help.hold_cast,Hold the cast button instead of clicking repeatedly.
+settings.help.aim_assist,Nudges spells toward the nearest enemy.
+settings.help.visual_cues,Shows an icon on screen for important sounds.
+settings.help.telemetry,Writes anonymous play stats to a local file only. Nothing is sent anywhere.

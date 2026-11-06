@@ -138,7 +138,7 @@ func _relayout() -> void:
 			SkinA.place(_buttons[id], widgets[id], sc, origin - panel.position)
 			_buttons[id].add_theme_font_size_override("font_size", int(7 * sc))
 	if _debug_box != null:
-		var area := SkinA.layout("menu").get("safe_area", {})
+		var area: Dictionary = SkinA.layout("menu").get("safe_area", {})
 		var bottom_right := origin + Vector2(area.get("x", 16) + area.get("w", 608), area.get("y", 9) + area.get("h", 342)) * sc
 		_debug_box.size = Vector2(130, 0) * sc
 		_debug_box.position = bottom_right - Vector2(_debug_box.size.x, 0) - Vector2(0, 100 * sc)
