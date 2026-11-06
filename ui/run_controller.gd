@@ -13,6 +13,7 @@ const Art = preload("res://ui/pixel_art_renderer.gd")
 const InputActions = preload("res://ui/input_actions.gd")
 var aim_source = InputActions.default_aim_source()
 const PauseMenu = preload("res://ui/pause_menu.gd")
+const LoadoutView = preload("res://ui/loadout_view.gd")
 const MerchantScript = preload("res://world/merchant.gd")
 var flow
 var config_path: String = Flow.CONFIG_V2
@@ -23,6 +24,8 @@ var notice_panel: PanelContainer
 var objective: Label
 var coins_label: Label
 var pause_button: Button
+var loadout_view
+var loadout_view_button: Button
 var workshop_holder: MarginContainer
 var workshop_column: VBoxContainer
 var reward_overlay: CenterContainer
@@ -210,6 +213,9 @@ func _build() -> void:
 	editor_controls.add_theme_constant_override("separation",9)
 	editor_scroll.add_child(editor_controls)
 	_build_dev_overlay()
+	loadout_view = LoadoutView.new()
+	add_child(loadout_view)
+	loadout_view.close_requested.connect(close_loadout_view)
 	pause_menu = PauseMenu.new()
 	pause_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	pause_menu.visible = false
@@ -300,6 +306,15 @@ func _build_top_bar() -> void:
 	pause_button.offset_right = -(SCREEN_MARGIN+4)
 	pause_button.offset_top = SCREEN_MARGIN+4
 	pause_button.offset_bottom = SCREEN_MARGIN+4+34
+	loadout_view_button = _button(bar,tr("run.btn.loadout_view"),func(): open_loadout_view())
+	loadout_view_button.name = "LoadoutViewButton"
+	loadout_view_button.focus_mode = Control.FOCUS_NONE
+	loadout_view_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	loadout_view_button.offset_left = -(SCREEN_MARGIN+4+120+8+150)
+	loadout_view_button.offset_right = -(SCREEN_MARGIN+4+120+8)
+	loadout_view_button.offset_top = SCREEN_MARGIN+4
+	loadout_view_button.offset_bottom = SCREEN_MARGIN+4+34
+	loadout_view_button.visible = false
 	var toasts := VBoxContainer.new()
 	toasts.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	toasts.custom_minimum_size.x = 460
@@ -420,9 +435,24 @@ func is_paused() -> bool:
 func can_pause() -> bool:
 	return not editor_open and flow.state in ["fighting","cleared","workshop"]
 
+func can_view_loadout() -> bool:
+	return flow != null and flow.state == "cleared" and not editor_open and not is_paused()
+
+func is_loadout_view_open() -> bool:
+	return loadout_view != null and loadout_view.visible
+
+func open_loadout_view() -> void:
+	if can_view_loadout():
+		loadout_view.show_for(flow)
+
+func close_loadout_view() -> void:
+	if loadout_view != null:
+		loadout_view.visible = false
+
 func open_pause() -> void:
 	if not can_pause() or is_paused():
 		return
+	close_loadout_view()
 	_set_clocks_paused(true)
 	_prev_mouse_mode = Input.mouse_mode
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -546,6 +576,11 @@ func _input(event: InputEvent) -> void:
 		return
 	if editor_open or not event.is_pressed() or event.is_echo():
 		return
+	if is_loadout_view_open():
+		if event.is_action_pressed("loadout_view") or event.is_action_pressed("pause"):
+			close_loadout_view()
+		get_viewport().set_input_as_handled()
+		return
 	var fighting: bool = flow.state == "fighting"
 	var slot := InputActions.cast_slot_for_event(event)
 	if slot >= 0 and not event is InputEventMouseButton and fighting:
@@ -556,6 +591,8 @@ func _input(event: InputEvent) -> void:
 	elif _reward_index(event) >= 0 and flow.state == "cleared" and not flow.reward_collected \
 			and _reward_index(event) < flow.reward_options.size():
 		_choose_reward(_reward_index(event))
+	elif event.is_action_pressed("loadout_view"):
+		open_loadout_view()
 	elif event.is_action_pressed("interact"):
 		_exit()
 	elif event.is_action_pressed("pause"):
@@ -687,6 +724,9 @@ func _redraw_panel() -> void:
 	test_canvas.runner = flow.range_sim
 	test_canvas.door_at = desk_door_position() if flow.prelude else Vector2.INF
 	test_canvas.door_open = flow.prelude and (not flow.prelude_required() or flow.prelude_ready())
+	loadout_view_button.visible = flow.state == "cleared"
+	if flow.state != "cleared":
+		close_loadout_view()
 	_rebuild_loadout()
 	_clear(context)
 	if scroll != null:
