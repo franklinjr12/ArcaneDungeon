@@ -26,6 +26,11 @@ func run(t) -> void:
 		if e.get("kind", "") == "glyph_atlas":
 			continue
 		var tsize: Vector2i = Vector2i(tex.get_size())
+		if e.get("glow") != null:
+			var gt = load(e["glow"])
+			t.check(gt is Texture2D, "AD-154 glow png loads: " + stem)
+			if gt is Texture2D:
+				t.equal(Vector2i(gt.get_size()), tsize, "AD-154 glow size matches base: " + stem)
 		var frames: Array = j["frames"]
 		var tags: Array = j["meta"]["frameTags"]
 		var sf: SpriteFrames = ART.build_sprite_frames(stem)
@@ -65,7 +70,38 @@ func run(t) -> void:
 		if pivot != null:
 			t.equal(e["pivot"], pivot, "AD-030 manifest pivot: " + stem)
 	t.check(sprites >= 30, "AD-030 sprite entries >= 30")
+	_cistern(t, m, assets)
 	_engine_map(t, assets)
+	_actors(t)
+	_renderer(t)
+	_env_props(t)
+
+## AD-154: Cistern tileset, arena, AD-120 props and AD-122 chest/altar are in the manifest.
+func _cistern(t, m: Dictionary, assets: Dictionary) -> void:
+	for row in ["AD-099", "AD-100", "AD-120", "AD-122"]:
+		t.check(row in m["source_rows"], "AD-154 source row " + row)
+		var n := 0
+		for stem in assets:
+			if assets[stem]["row"] == row:
+				n += 1
+		t.check(n > 0, "AD-154 assets from " + row)
+	t.check(assets.has("ad_til_flooded_cistern"), "AD-154 flooded cistern tiles")
+	if assets.has("ad_til_flooded_cistern"):
+		var tg: Array = assets["ad_til_flooded_cistern"]["tags"].keys()
+		tg.sort()
+		for n in ["floor", "shore", "deep", "water_loop", "deep_loop"]:
+			t.check(n in tg, "AD-154 flooded cistern tag " + n)
+	t.equal(assets.get("ad_fx_cistern_motes", {}).get("category", ""), "vfx", "AD-154 motes are vfx")
+	t.equal(assets.get("ad_fx_cistern_motes", {}).get("id", ""), "AD-TIL-010-motes", "AD-154 motes id")
+	for s in ["brazier_cistern", "brazier_ruins", "breakable_urn", "breakable_urn_cistern", "burnable_crate_cistern", "burnable_crate_ruins", "cobweb_cistern", "cobweb_ruins", "cracked_wall_cistern", "cracked_wall_ruins", "ice_patch", "puddle_cistern", "puddle_ruins"]:
+		t.check(assets.has("ad_prp_" + s) and assets["ad_prp_" + s]["row"] == "AD-120", "AD-154 AD-120 prop " + s)
+	for s in ["treasure_chest", "challenge_altar"]:
+		for v in ["ruins", "cistern"]:
+			var k := "ad_prp_%s_%s" % [s, v]
+			t.check(assets.has(k) and assets[k]["row"] == "AD-122", "AD-154 AD-122 " + k)
+	for lv in ["high", "mid", "low"]:
+		for suf in ["", "_glow"]:
+			t.check(FileAccess.file_exists("res://art/export/til/ad_til_archivist_arena_lvl_%s%s.png" % [lv, suf]), "AD-154 arena level %s%s" % [lv, suf])
 
 func _engine_map(t, assets: Dictionary) -> void:
 	t.check(not ART.use_art_export, "AD-030 art export off by default")
@@ -89,3 +125,125 @@ func _engine_map(t, assets: Dictionary) -> void:
 	ART.use_art_export = true
 	t.check(ART.export_frame_for("undead_warden", "cast", 5).has("region"), "AD-030 export frame has atlas region")
 	ART.use_art_export = false
+
+const ACTORS_MANIFEST := "res://art/export/actors/actors_manifest.json"
+const TUNING := "res://combat/combat_tuning_v1.json"
+const ENEMY_TAGS := ["idle_side", "move_side", "telegraph_side", "attack_side", "hit_side", "death_side"]
+
+## AD-154: actors_manifest.json matches each sheet json (tags, ms, pivot, hurtbox, glow rects); enemies carry the canvas tags.
+func _actors(t) -> void:
+	var m = JSON.parse_string(FileAccess.get_file_as_string(ACTORS_MANIFEST))
+	t.check(m is Dictionary and m.has("actors"), "AD-154 actors manifest parses")
+	if not m is Dictionary:
+		return
+	var actors: Dictionary = m["actors"]
+	var jsons := {}
+	for kind in actors:
+		var ent: Dictionary = actors[kind]
+		for key in ent["sheets"]:
+			var sh: Dictionary = ent["sheets"][key]
+			var j = JSON.parse_string(FileAccess.get_file_as_string(sh["json"]))
+			t.check(j is Dictionary, "AD-154 json parses: %s/%s" % [kind, key])
+			t.check(load(sh["png"]) is Texture2D, "AD-154 png loads: %s/%s" % [kind, key])
+			if not j is Dictionary:
+				continue
+			jsons[kind + "/" + key] = j
+			var slices := {}
+			for s in j["meta"].get("slices", []):
+				slices[s["name"]] = s["keys"][0]["bounds"]
+			t.check(slices.has("pivot") and slices.has("hurtbox"), "AD-154 pivot/hurtbox slices: %s/%s" % [kind, key])
+			if slices.has("pivot"):
+				t.equal(sh["pivot"], [slices["pivot"]["x"], slices["pivot"]["y"]], "AD-154 pivot: %s/%s" % [kind, key])
+			t.check(sh["hurtbox"] is Dictionary, "AD-154 hurtbox: %s/%s" % [kind, key])
+			if sh.get("glow_png") != null:
+				var gtex = load(sh["glow_png"])
+				t.check(gtex is Texture2D, "AD-154 glow png loads: %s/%s" % [kind, key])
+				if gtex is Texture2D:
+					for fi in sh["glow"]:
+						var r: Dictionary = sh["glow"][fi]
+						t.check(int(fi) < j["frames"].size() and r["x"] >= 0 and r["y"] >= 0 and r["x"] + r["w"] <= gtex.get_width() and r["y"] + r["h"] <= gtex.get_height(), "AD-154 glow rect inside texture: %s/%s/%s" % [kind, key, fi])
+		for n in ent["tags"]:
+			var tg: Dictionary = ent["tags"][n]
+			var j = jsons.get(kind + "/" + str(tg["sheet"]))
+			if j == null:
+				continue
+			var src := str(tg.get("src", n))
+			var jt = null
+			for x in j["meta"]["frameTags"]:
+				if x["name"] == src:
+					jt = x
+			t.check(jt != null, "AD-154 json tag exists: %s/%s" % [kind, n])
+			if jt == null:
+				continue
+			var f: int = int(tg["from"])
+			var to: int = int(tg["to"])
+			t.check(f >= int(jt["from"]) and f <= to and to <= int(jt["to"]), "AD-154 tag range inside source: %s/%s" % [kind, n])
+			if not tg.has("src"):
+				t.check(f == int(jt["from"]) and to == int(jt["to"]), "AD-154 tag from/to equals json: %s/%s" % [kind, n])
+			t.equal(int(tg["frames"]), to - f + 1, "AD-154 tag frames: %s/%s" % [kind, n])
+			var ms := []
+			for i in range(f, to + 1):
+				ms.append(int(j["frames"][i]["duration"]))
+			var got := []
+			for v in tg["ms"]:
+				got.append(int(v))
+			t.equal(got, ms, "AD-154 tag ms equals json: %s/%s" % [kind, n])
+	var tuning = JSON.parse_string(FileAccess.get_file_as_string(TUNING))
+	var kinds: Array = tuning["enemies"].keys() if tuning is Dictionary else []
+	kinds.append("drowned_archivist")
+	for kind in kinds:
+		t.check(actors.has(kind), "AD-154 actor exists: " + kind)
+		for n in ENEMY_TAGS:
+			t.check(actors.has(kind) and actors[kind]["tags"].has(n), "AD-154 required tag %s/%s" % [kind, n])
+
+const REAL_KINDS := ["ossuary_shieldbearer", "wailing_spirit", "corpse_bloat", "cistern_slime", "cistern_slimelet", "drowned_acolyte", "deep_eel", "lantern_wisp", "storm_crystal", "rust_golem", "drowned_archivist"]
+const RUN_V2 := "res://world/data/run_v2.json"
+
+func _windup_ok(t, kind: String, ticks: int, label: String) -> void:
+	var tag := "telegraph_side" if ART.actor_has_tag(kind, "telegraph_side") else "telegraph_burst_side"
+	var n := ART.actor_tag_frames(kind, tag)
+	t.equal(ART.telegraph_anim_ticks(kind, ticks), ticks, "AD-154 telegraph covers windup: " + label)
+	t.equal(ART.stretched_index(ticks - 1, ticks, n), n - 1, "AD-154 telegraph ends on last frame: " + label)
+
+## AD-154: placeholders retired, telegraph stretch matches data windups, actor glow lookup/queue.
+func _renderer(t) -> void:
+	for k in REAL_KINDS:
+		t.equal(ART.resolve_kind(k), k, "AD-154 resolve_kind own entry: " + k)
+	t.check(ART.PLACEHOLDER_KIND.is_empty(), "AD-154 no placeholder kinds left")
+	var spirit := ART.placeholder_modulate("wailing_spirit", Color.RED, true, false)
+	t.check(is_equal_approx(spirit.a, 0.4), "AD-154 intangible alpha kept")
+	t.check(spirit.r == 1.0 and spirit.g == 1.0 and spirit.b == 1.0, "AD-154 real art has no tint")
+	t.check(is_equal_approx(ART.placeholder_modulate("deep_eel", Color.RED, false, true).a, 0.7), "AD-154 warning flicker alpha kept")
+	var tuning = JSON.parse_string(FileAccess.get_file_as_string(TUNING))
+	for kind in tuning["enemies"]:
+		_windup_ok(t, kind, int(tuning["enemies"][kind]["telegraph_ticks"]), "enemy " + kind)
+	for id in tuning["mini_bosses"]:
+		var mb: Dictionary = tuning["mini_bosses"][id]
+		_windup_ok(t, str(mb["kind"]), int(mb["windup_ticks"]), id + " windup")
+		_windup_ok(t, str(mb["kind"]), int(mb["second_phase_windup_ticks"]), id + " phase 2")
+	var run = JSON.parse_string(FileAccess.get_file_as_string(RUN_V2))
+	for ph in run["bosses"]["cistern_boss"]["phases"]:
+		_windup_ok(t, "drowned_archivist", int(ph["windup_ticks"]), "archivist %d" % int(ph["windup_ticks"]))
+	for c in [["deep_eel", "telegraph_side"], ["mage", "channel_side"]]:
+		var g := ART.actor_glow_frame(c[0], c[1], 0)
+		t.check(not g.is_empty(), "AD-154 glow frame exists: " + c[0])
+		if not g.is_empty():
+			var r: Rect2 = g["region"]
+			t.check(r.size.x > 0 and r.size.y > 0 and r.position.x >= 0 and r.position.y >= 0 and r.end.x <= g["tex"].get_width() and r.end.y <= g["tex"].get_height(), "AD-154 glow region inside texture: " + c[0])
+
+## AD-154: env prop kinds map to imported AD-120 stems/tags for ruins and cistern.
+func _env_props(t) -> void:
+	var kinds: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://world/data/env_props_v1.json"))["kinds"]
+	var man: Dictionary = ART.export_manifest()
+	for kind in kinds:
+		if kind == "ice":
+			continue
+		for stage in [0, 2]:
+			var fr := ART.env_prop_frame(kind, "intact", true, stage, 0)
+			var label := "%s stage %d" % [kind, stage]
+			t.check(not fr.is_empty() and man.has(fr["stem"]) and man[fr["stem"]]["tags"].has(fr["tag"]), "AD-154 env prop maps: " + label)
+	t.equal(ART.env_prop_frame("puddle", "frozen", false, 2, 0)["stem"], "ad_prp_ice_patch", "AD-154 frozen puddle is ice patch")
+	t.equal(ART.env_prop_frame("urn", "intact", false, 0, 0)["stem"], "ad_prp_breakable_urn", "AD-154 ruins urn has no suffix")
+	t.equal(ART.env_prop_frame("brazier", "intact", false, 2, 0)["tag"], "unlit", "AD-154 unlit brazier")
+	t.equal(ART.env_prop_frame("crate", "burning", false, 0, 7)["tag"], "burning", "AD-154 burning crate")
+	t.check(ART.env_prop_frame("crate", "destroyed", false, 0, 0).is_empty(), "AD-154 destroyed crate skipped")

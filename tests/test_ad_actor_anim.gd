@@ -11,7 +11,7 @@ const WARDEN_LATE := ["phase_side", "hit_side", "death_side"]
 
 func _expected() -> Dictionary:
 	var mage := {}
-	var counts := {"idle": 4, "walk": 6, "cast": 5, "dash": 4, "hit": 2, "death": 6}
+	var counts := {"idle": 4, "walk": 6, "cast": 5, "dash": 4, "hit": 2, "death": 6, "channel": 4}
 	for a in counts:
 		for d in ["down", "side", "up"]:
 			mage[a + "_" + d] = counts[a]
@@ -93,7 +93,7 @@ func run(t) -> void:
 	if not m is Dictionary:
 		return
 	var actors: Dictionary = m["actors"]
-	t.equal(actors.size(), 5, "AD-065 five actor kinds")
+	t.check(actors.size() >= 5, "AD-065 the five AD-065 actor kinds plus later imports")
 	var exp := _expected()
 	for kind in exp:
 		t.check(actors.has(kind), "AD-065 kind present: " + kind)

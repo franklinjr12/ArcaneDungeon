@@ -1,0 +1,3066 @@
+{
+ "frames": [
+  {
+   "filename": "ad_til_flooded_cistern_floor_00",
+   "frame": {
+    "x": 1,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_floor_01",
+   "frame": {
+    "x": 19,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_floor_02",
+   "frame": {
+    "x": 37,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_floor_03",
+   "frame": {
+    "x": 55,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_floor_04",
+   "frame": {
+    "x": 73,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_floor_05",
+   "frame": {
+    "x": 91,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_floor_06",
+   "frame": {
+    "x": 109,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_floor_07",
+   "frame": {
+    "x": 127,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_floor_wall_00",
+   "frame": {
+    "x": 1,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_floor_wall_01",
+   "frame": {
+    "x": 19,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_floor_accent_00",
+   "frame": {
+    "x": 37,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_floor_accent_01",
+   "frame": {
+    "x": 55,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_floor_accent_02",
+   "frame": {
+    "x": 73,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_floor_accent_03",
+   "frame": {
+    "x": 91,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_floor_accent_04",
+   "frame": {
+    "x": 109,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_cap_00",
+   "frame": {
+    "x": 127,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_cap_01",
+   "frame": {
+    "x": 1,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_00",
+   "frame": {
+    "x": 19,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_01",
+   "frame": {
+    "x": 37,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_02",
+   "frame": {
+    "x": 55,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_03",
+   "frame": {
+    "x": 73,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_04",
+   "frame": {
+    "x": 91,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_05",
+   "frame": {
+    "x": 109,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_06",
+   "frame": {
+    "x": 127,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_07",
+   "frame": {
+    "x": 1,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_08",
+   "frame": {
+    "x": 19,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_09",
+   "frame": {
+    "x": 37,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_10",
+   "frame": {
+    "x": 55,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_11",
+   "frame": {
+    "x": 73,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_12",
+   "frame": {
+    "x": 91,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_13",
+   "frame": {
+    "x": 109,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_14",
+   "frame": {
+    "x": 127,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_wall_face_15",
+   "frame": {
+    "x": 1,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_00",
+   "frame": {
+    "x": 19,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_01",
+   "frame": {
+    "x": 37,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_02",
+   "frame": {
+    "x": 55,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_03",
+   "frame": {
+    "x": 73,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_04",
+   "frame": {
+    "x": 91,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_05",
+   "frame": {
+    "x": 109,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_06",
+   "frame": {
+    "x": 127,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_07",
+   "frame": {
+    "x": 1,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_08",
+   "frame": {
+    "x": 19,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_09",
+   "frame": {
+    "x": 37,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_10",
+   "frame": {
+    "x": 55,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_11",
+   "frame": {
+    "x": 73,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_12",
+   "frame": {
+    "x": 91,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_13",
+   "frame": {
+    "x": 109,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_14",
+   "frame": {
+    "x": 127,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_15",
+   "frame": {
+    "x": 1,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_16",
+   "frame": {
+    "x": 19,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_17",
+   "frame": {
+    "x": 37,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_18",
+   "frame": {
+    "x": 55,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_19",
+   "frame": {
+    "x": 73,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_20",
+   "frame": {
+    "x": 91,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_21",
+   "frame": {
+    "x": 109,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_22",
+   "frame": {
+    "x": 127,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_23",
+   "frame": {
+    "x": 1,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_24",
+   "frame": {
+    "x": 19,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_25",
+   "frame": {
+    "x": 37,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_26",
+   "frame": {
+    "x": 55,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_27",
+   "frame": {
+    "x": 73,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_28",
+   "frame": {
+    "x": 91,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_29",
+   "frame": {
+    "x": 109,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_30",
+   "frame": {
+    "x": 127,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_31",
+   "frame": {
+    "x": 1,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_32",
+   "frame": {
+    "x": 19,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_33",
+   "frame": {
+    "x": 37,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_34",
+   "frame": {
+    "x": 55,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_35",
+   "frame": {
+    "x": 73,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_36",
+   "frame": {
+    "x": 91,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_37",
+   "frame": {
+    "x": 109,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_38",
+   "frame": {
+    "x": 127,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_39",
+   "frame": {
+    "x": 1,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_40",
+   "frame": {
+    "x": 19,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_41",
+   "frame": {
+    "x": 37,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_42",
+   "frame": {
+    "x": 55,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_43",
+   "frame": {
+    "x": 73,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_44",
+   "frame": {
+    "x": 91,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_45",
+   "frame": {
+    "x": 109,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_shore_46",
+   "frame": {
+    "x": 127,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_00",
+   "frame": {
+    "x": 1,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_01",
+   "frame": {
+    "x": 19,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_02",
+   "frame": {
+    "x": 37,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_03",
+   "frame": {
+    "x": 55,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_04",
+   "frame": {
+    "x": 73,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_05",
+   "frame": {
+    "x": 91,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_06",
+   "frame": {
+    "x": 109,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_07",
+   "frame": {
+    "x": 127,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_08",
+   "frame": {
+    "x": 1,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_09",
+   "frame": {
+    "x": 19,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_10",
+   "frame": {
+    "x": 37,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_11",
+   "frame": {
+    "x": 55,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_12",
+   "frame": {
+    "x": 73,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_13",
+   "frame": {
+    "x": 91,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_14",
+   "frame": {
+    "x": 109,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_15",
+   "frame": {
+    "x": 127,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_16",
+   "frame": {
+    "x": 1,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_17",
+   "frame": {
+    "x": 19,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_18",
+   "frame": {
+    "x": 37,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_19",
+   "frame": {
+    "x": 55,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_20",
+   "frame": {
+    "x": 73,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_21",
+   "frame": {
+    "x": 91,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_22",
+   "frame": {
+    "x": 109,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_23",
+   "frame": {
+    "x": 127,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_24",
+   "frame": {
+    "x": 1,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_25",
+   "frame": {
+    "x": 19,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_26",
+   "frame": {
+    "x": 37,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_27",
+   "frame": {
+    "x": 55,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_28",
+   "frame": {
+    "x": 73,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_29",
+   "frame": {
+    "x": 91,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_30",
+   "frame": {
+    "x": 109,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_31",
+   "frame": {
+    "x": 127,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_32",
+   "frame": {
+    "x": 1,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_33",
+   "frame": {
+    "x": 19,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_34",
+   "frame": {
+    "x": 37,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_35",
+   "frame": {
+    "x": 55,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_36",
+   "frame": {
+    "x": 73,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_37",
+   "frame": {
+    "x": 91,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_38",
+   "frame": {
+    "x": 109,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_39",
+   "frame": {
+    "x": 127,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_40",
+   "frame": {
+    "x": 1,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_41",
+   "frame": {
+    "x": 19,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_42",
+   "frame": {
+    "x": 37,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_43",
+   "frame": {
+    "x": 55,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_44",
+   "frame": {
+    "x": 73,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_45",
+   "frame": {
+    "x": 91,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_46",
+   "frame": {
+    "x": 109,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_flooded_cistern_water_loop_00",
+   "frame": {
+    "x": 127,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 200
+  },
+  {
+   "filename": "ad_til_flooded_cistern_water_loop_01",
+   "frame": {
+    "x": 1,
+    "y": 289,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 200
+  },
+  {
+   "filename": "ad_til_flooded_cistern_water_loop_02",
+   "frame": {
+    "x": 19,
+    "y": 289,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 200
+  },
+  {
+   "filename": "ad_til_flooded_cistern_water_loop_03",
+   "frame": {
+    "x": 37,
+    "y": 289,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 200
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_loop_00",
+   "frame": {
+    "x": 55,
+    "y": 289,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 250
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_loop_01",
+   "frame": {
+    "x": 73,
+    "y": 289,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 250
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_loop_02",
+   "frame": {
+    "x": 91,
+    "y": 289,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 250
+  },
+  {
+   "filename": "ad_til_flooded_cistern_deep_loop_03",
+   "frame": {
+    "x": 109,
+    "y": 289,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 250
+  }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_til_flooded_cistern.png",
+  "format": "I8",
+  "size": {
+   "w": 144,
+   "h": 306
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "floor",
+    "from": 0,
+    "to": 7,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "floor_wall",
+    "from": 8,
+    "to": 9,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "floor_accent",
+    "from": 10,
+    "to": 14,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "wall_cap",
+    "from": 15,
+    "to": 16,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "wall_face",
+    "from": 17,
+    "to": 32,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "shore",
+    "from": 33,
+    "to": 79,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "deep",
+    "from": 80,
+    "to": 126,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "water_loop",
+    "from": 127,
+    "to": 130,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "deep_loop",
+    "from": 131,
+    "to": 134,
+    "direction": "forward",
+    "color": "#000000ff"
+   }
+  ],
+  "slices": [
+   {
+    "name": "pivot",
+    "keys": [
+     {
+      "frame": 0,
+      "bounds": {
+       "x": 0,
+       "y": 15,
+       "w": 1,
+       "h": 1
+      }
+     }
+    ]
+   }
+  ]
+ }
+}
