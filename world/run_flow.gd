@@ -13,9 +13,11 @@ const Runner = preload("res://magic/runtime/spell_runner.gd")
 const ExperimentLog = preload("res://debug/experiment_log.gd")
 const CONFIG := "res://world/data/vertical_slice_v1.json"
 const CONFIG_V2 := "res://world/data/run_v2.json"
+const SAVE_VERSION := 1
 const PRESET_SLOT_OFFSET := 1
 const SAMPLES := "res://magic/data/sandbox_samples_v1.json"
 var config: Dictionary = {}
+var config_path := ""
 ## Resolved room sequence for this run (v1: config["rooms"]; v2: seeded stage build).
 var rooms: Array = []
 var formulas: Dictionary = {}
@@ -65,6 +67,7 @@ var prelude_tested := false
 var audio_sink: Callable
 
 func _init(run_seed: int = -1, config_path: String = CONFIG) -> void:
+	self.config_path = config_path
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(config_path))
 	var formula_data = JSON.parse_string(FileAccess.get_file_as_string(SAMPLES))
 	if typeof(parsed) != TYPE_DICTIONARY or typeof(formula_data) != TYPE_DICTIONARY or int(parsed.get("schema_version",0)) != 1:
@@ -663,3 +666,115 @@ func recover(saved: Variant) -> Dictionary:
 		return result
 	run = validated
 	return _enter_current()
+
+## AD-146: the run may only be saved while resting in the workshop (never mid-combat, prelude or editor).
+func can_save() -> bool:
+	return initialized and mode == "workshop" and state == "workshop" and not prelude \
+		and not (editor != null and editor.allowed)
+
+func save_payload() -> Dictionary:
+	if not can_save():
+		return {}
+	var enemies: Array = _seen_enemies.keys()
+	var reactions: Array = _seen_reactions.keys()
+	enemies.sort()
+	reactions.sort()
+	return {"version":SAVE_VERSION,"config_path":config_path,"run":run.snapshot(),
+		"counters":{"rooms_cleared":rooms_cleared,"kills":kills,"ticks_elapsed":ticks_elapsed,
+			"spells_used":spells_used,"wet_kills":wet_kills,"arcs":arc_total(),
+			"boss_defeated_events":boss_defeated_events,"transition_count":transition_count},
+		"seen_enemies":enemies,"seen_reactions":reactions,
+		"meta_locked_runes":meta_locked_runes.duplicate(),"meta_locked_artifacts":meta_locked_artifacts.duplicate(),
+		"merchant_stock":merchant.stock.duplicate(true),"edit_policy":edit_policy}
+
+static func _whole(v) -> bool:
+	return typeof(v) in [TYPE_INT,TYPE_FLOAT] and is_finite(float(v)) and float(v) == floorf(float(v))
+
+## JSON turns every number into a float; whole numbers go back to int so restored stock equals the original.
+static func _intify(v: Variant) -> Variant:
+	if typeof(v) == TYPE_FLOAT and is_finite(v) and v == floorf(v):
+		return int(v)
+	if typeof(v) == TYPE_DICTIONARY:
+		var d := {}
+		for k in v:
+			d[k] = _intify(v[k])
+		return d
+	if typeof(v) == TYPE_ARRAY:
+		return v.map(_intify)
+	return v
+
+func _valid_stock(stock: Variant, rune_ids: Array) -> bool:
+	if typeof(stock) != TYPE_ARRAY:
+		return false
+	for item in stock:
+		if typeof(item) != TYPE_DICTIONARY or str(item.get("kind","")) not in ["rune","upgrade","artifact"]:
+			return false
+		if not _whole(item.get("price")) or float(item["price"]) < 0.0 or typeof(item.get("id")) != TYPE_STRING:
+			return false
+		if item["kind"] == "rune" and (typeof(item.get("rune_id")) != TYPE_STRING or str(item["rune_id"]) not in rune_ids):
+			return false
+		if item["kind"] == "artifact" and (typeof(item.get("artifact_id")) != TYPE_STRING or not Artifacts.is_known(str(item["artifact_id"]))):
+			return false
+	return true
+
+## Restores a payload from save_payload(); only workshop saves are accepted, so there is no way into combat.
+func resume(payload: Variant) -> Dictionary:
+	if typeof(payload) != TYPE_DICTIONARY:
+		return {"ok":false,"reason":"RUN_SAVE_NOT_OBJECT"}
+	if not _whole(payload.get("version")) or int(payload["version"]) != SAVE_VERSION:
+		return {"ok":false,"reason":"RUN_SAVE_VERSION"}
+	if str(payload.get("config_path","")) != config_path:
+		return {"ok":false,"reason":"RUN_SAVE_CONFIG_MISMATCH"}
+	var counters = payload.get("counters")
+	if typeof(counters) != TYPE_DICTIONARY:
+		return {"ok":false,"reason":"RUN_SAVE_COUNTERS"}
+	for key in ["rooms_cleared","kills","ticks_elapsed","spells_used","wet_kills","arcs","boss_defeated_events","transition_count"]:
+		if not _whole(counters.get(key)) or float(counters[key]) < 0.0:
+			return {"ok":false,"reason":"RUN_SAVE_COUNTERS"}
+	for key in ["seen_enemies","seen_reactions","meta_locked_runes","meta_locked_artifacts"]:
+		if typeof(payload.get(key)) != TYPE_ARRAY:
+			return {"ok":false,"reason":"RUN_SAVE_LISTS"}
+	if str(payload.get("edit_policy","")) not in ["workshop_only","cleared_room"]:
+		return {"ok":false,"reason":"RUN_SAVE_EDIT_POLICY"}
+	var saved_run = payload.get("run")
+	if typeof(saved_run) != TYPE_DICTIONARY or not _whole(saved_run.get("seed")):
+		return {"ok":false,"reason":"RUN_NOT_OBJECT"}
+	var new_rooms: Array = build_sequence(config,int(saved_run["seed"]))
+	var validated = State.new()
+	var result: Dictionary = validated.restore(saved_run,session.sim.registry,new_rooms.size())
+	if not result["ok"]:
+		return result
+	if str(new_rooms[validated.sequence_index].get("type","")) != "workshop":
+		return {"ok":false,"reason":"RUN_SAVE_NOT_WORKSHOP"}
+	if not _valid_stock(payload.get("merchant_stock"),session.sim.registry.get_ids()):
+		return {"ok":false,"reason":"RUN_SAVE_STOCK"}
+	rooms = new_rooms
+	run = validated
+	set_meta_locks(payload["meta_locked_runes"],payload["meta_locked_artifacts"])
+	rooms_cleared = int(counters["rooms_cleared"])
+	kills = int(counters["kills"])
+	ticks_elapsed = int(counters["ticks_elapsed"])
+	spells_used = int(counters["spells_used"])
+	wet_kills = int(counters["wet_kills"])
+	boss_defeated_events = int(counters["boss_defeated_events"])
+	transition_count = int(counters["transition_count"])
+	_seen_enemies.clear()
+	for id in payload["seen_enemies"]:
+		_seen_enemies[str(id)] = true
+	_seen_reactions.clear()
+	for id in payload["seen_reactions"]:
+		_seen_reactions[str(id)] = true
+	edit_policy = str(payload["edit_policy"])
+	prelude = false
+	prelude_built = false
+	prelude_tested = false
+	outcome = ""
+	win_events = 0
+	arcs = 0
+	var entered: Dictionary = _enter_current()
+	if not entered.get("ok",false):
+		return entered
+	merchant.stock = _intify(payload["merchant_stock"])
+	arcs = 0
+	arcs = int(counters["arcs"]) - arc_total()
+	return {"ok":true}
