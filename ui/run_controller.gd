@@ -36,6 +36,7 @@ var _shop_offered := false
 var shop_reopen_button: Button
 var desk_skip_button: Button
 var shop_close_button: Button
+var shop_reroll_button: Button
 var summary_panel: PanelContainer
 var dev_panel: PanelContainer
 var dev_label: Label
@@ -805,7 +806,12 @@ func _build_shop_panel() -> void:
 		card.add_child(col)
 		var b := _button(col,tr("run.shop.item_price") % [MerchantScript.item_label(item),str(item["price"])],_buy.bind(i))
 		b.disabled = flow.merchant.bought.has(item["id"]) or not affordable
-		b.icon = PortraitHUD.rune_icon_texture(str(item["rune_id"])) if item["kind"] == "rune" else PortraitHUD.ui_icon_texture("hp")
+		if item["kind"] == "rune":
+			b.icon = PortraitHUD.rune_icon_texture(str(item["rune_id"]))
+		elif item["kind"] == "artifact":
+			b.icon = PortraitHUD.ui_icon_texture("upgrade")
+		else:
+			b.icon = PortraitHUD.ui_icon_texture({"max_mana":"mana","dash_charge":"dash"}.get(str(item.get("stat","max_hp")),"hp"))
 		b.expand_icon = false
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -825,6 +831,10 @@ func _build_shop_panel() -> void:
 			explanation = tr("run.shop."+str(item.get("stat","max_hp"))) % int(item["amount"])
 		detail.text = explanation+" | "+(tr("run.shop.purchased") if flow.merchant.bought.has(item["id"]) else (tr("run.shop.affordable") if affordable else tr("run.shop.need") % (int(item["price"])-flow.run.currency)))
 		col.add_child(detail)
+	var reroll_price := int(flow.merchant.config.get("reroll_price",0))
+	var can_reroll: bool = flow.merchant.reroll_available(flow.run)
+	shop_reroll_button = _button(shop_list,tr("run.shop.reroll") % reroll_price if can_reroll else tr("run.shop.reroll_used"),_reroll)
+	shop_reroll_button.disabled = not can_reroll or flow.run.currency < reroll_price
 	shop_close_button = _button(shop_list,tr("run.btn.close_shop"),func(): _set_shop_open(false),"ui.cancel")
 
 func _hint(parent: Node, text: String) -> void:
@@ -972,6 +982,11 @@ func _buy(i: int) -> void:
 	current_notice = tr("run.notice.merchant") % str(result.get("kind",result.get("reason","")))
 	if result.get("ok",false):
 		current_notice = tr(flow.merchant.purchase_line(flow.run.purchases.size()))
+	_redraw_panel()
+
+func _reroll() -> void:
+	var result: Dictionary = flow.reroll()
+	current_notice = tr("run.notice.merchant") % str(result.get("kind",result.get("reason","")))
 	_redraw_panel()
 
 func _build_summary_panel() -> void:
