@@ -202,6 +202,7 @@ settings.bus.master,Master volume
 settings.bus.sfx,SFX volume
 settings.bus.ambience,Ambience volume
 settings.bus.ui,UI volume
+settings.bus.music,Music volume
 settings.mode.windowed,Windowed
 settings.mode.fullscreen,Fullscreen
 settings.mode.borderless,Borderless

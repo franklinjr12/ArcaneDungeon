@@ -7,7 +7,7 @@ const InputActions = preload("res://ui/input_actions.gd")
 const CONFLICT_COLOR := Color(1, 0.45, 0.4)
 const TEXT := {
 	"title": "settings.title",
-	"buses": {"Master": "settings.bus.master", "SFX": "settings.bus.sfx", "Ambience": "settings.bus.ambience", "UI": "settings.bus.ui"},
+	"buses": {"Master": "settings.bus.master", "SFX": "settings.bus.sfx", "Ambience": "settings.bus.ambience", "UI": "settings.bus.ui", "Music": "settings.bus.music"},
 	"flashes": "settings.flashes",
 	"shake": "settings.shake",
 	"telemetry": "settings.telemetry",

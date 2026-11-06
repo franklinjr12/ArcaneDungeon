@@ -134,5 +134,5 @@ func _route(t) -> void:
 			missing.append(id)
 	t.equal(missing, [], "AD-020 every cue fires in the scripted M3 route")
 	for id in seen:
-		t.check(id in IDS, "AD-020 only listed cues emitted: " + id)
+		t.check(id in IDS or id.begins_with("music."), "AD-020 only listed cues emitted: " + id)
 	director.free()

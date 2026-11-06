@@ -185,5 +185,27 @@
    "max_voices": 1,
    "loop": true
   }
+ },
+ "music": {
+  "bus": "Music",
+  "crossfade_sec": 1.5,
+  "contexts": {
+   "ruins": {
+    "stream": "res://assets/audio/music/mus_ruins.ogg",
+    "placeholder": "res://assets/audio/amb/amb_ruins.wav"
+   },
+   "cistern": {
+    "stream": "res://assets/audio/music/mus_cistern.ogg",
+    "placeholder": "res://assets/audio/amb/amb_ruins.wav"
+   },
+   "workshop": {
+    "stream": "res://assets/audio/music/mus_workshop.ogg",
+    "placeholder": "res://assets/audio/amb/amb_workshop.wav"
+   },
+   "boss": {
+    "stream": "res://assets/audio/music/mus_boss.ogg",
+    "placeholder": "res://assets/audio/amb/amb_ruins.wav"
+   }
+  }
  }
 }

@@ -269,6 +269,20 @@ func _attach_artifacts() -> void:
 		for id in run.artifacts:
 			session.sim.artifacts.add(str(id))
 
+## Output-only: music context for the current room (workshop, boss, else the stage's music_context).
+func music_context_for_room() -> String:
+	if mode == "workshop":
+		return "workshop"
+	if room != null and room.values.get("type","") == "boss":
+		return "boss"
+	var idx: int = run.sequence_index if run != null else 0
+	if idx >= 0 and idx < rooms.size():
+		var stages: Array = config.get("stages",[])
+		var s := int(rooms[idx].get("stage",0))
+		if s >= 0 and s < stages.size():
+			return str(stages[s].get("music_context","ruins"))
+	return "ruins"
+
 func _enter_current() -> Dictionary:
 	_bank_arcs()
 	var built: Dictionary = _build_room(rooms[run.sequence_index])
@@ -298,6 +312,7 @@ func _enter_current() -> Dictionary:
 		state = "fighting"
 	_prior_reactions = 0
 	_cue("amb.workshop" if mode == "workshop" else "amb.ruins")
+	_cue("music." + music_context_for_room())
 	experiment.record("room_enter",{"room_index":run.sequence_index})
 	logs.append({"kind":"room_enter","id":room.values["id"],"index":run.sequence_index})
 	return {"ok":true}
@@ -340,6 +355,7 @@ func enter_prelude() -> Dictionary:
 	prelude_tested = false
 	enter_test_range()
 	_cue("amb.workshop")
+	_cue("music.workshop")
 	experiment.record("prelude_enter")
 	logs.append({"kind":"prelude_enter","id":room.values["id"]})
 	return {"ok":true}
