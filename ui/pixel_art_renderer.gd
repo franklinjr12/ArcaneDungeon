@@ -14,7 +14,7 @@ const ICONS = ["fire","water","lightning","projectile","burst","orb","homing","s
 	"health","mana","rune","coin","dodge","wet","burning","charged","damage","door","shop","book","staff","shield"]
 const EFFECT_ROWS = ["fire","water","lightning","orb","enemy","arc","impact","dodge"]
 ## AD-137 placeholder art: new Stage 1 kinds borrow an existing sprite until the art import row (tinted by tuning color).
-const PLACEHOLDER_KIND := {"ossuary_shieldbearer":"bone_thrall","wailing_spirit":"grave_hound","corpse_bloat":"bone_thrall","cistern_slime":"bone_thrall","cistern_slimelet":"bone_thrall","drowned_acolyte":"fallen_adept","deep_eel":"grave_hound","storm_crystal":"fallen_adept","rust_golem":"bone_thrall","lantern_wisp":"grave_hound","drowned_archivist":"undead_warden"}
+const PLACEHOLDER_KIND := {}
 const F = {"mage":MAGE,"bone_thrall":PURSUER,"fallen_adept":RANGED,"grave_hound":FLANKER,"undead_warden":BOSS,"dummy":DUMMY}
 
 # AD-030: debug-only swap to art/export sprites (F6). Default stays assets/pixel.
@@ -154,6 +154,8 @@ static func actor_manifest() -> Dictionary:
 	return _actors
 
 static func resolve_kind(kind: String) -> String:
+	if actor_manifest().has(kind):
+		return kind
 	return PLACEHOLDER_KIND.get(kind,kind)
 
 static func actor_tag(kind: String, tag: String) -> Dictionary:
@@ -252,13 +254,61 @@ static func draw_actor(canvas: CanvasItem, kind: String, at: Vector2, anim: Dict
 	var hb: Rect2 = fr["hurtbox"]
 	var region: Rect2 = fr["region"]
 	var rect := Rect2((fr["offset"] - (hb.position + hb.size / 2.0)) * _actor_scale, region.size * _actor_scale)
-	if left and not fr["left"] and bool(actor_manifest()[resolve_kind(kind)].get("mirror", false)):
+	var mirror: bool = left and not fr["left"] and bool(actor_manifest()[resolve_kind(kind)].get("mirror", false))
+	if mirror:
 		canvas.draw_set_transform(at, 0.0, Vector2(-1, 1))
 		canvas.draw_texture_rect_region(fr["tex"], rect, region, modulate)
 		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	else:
 		rect.position += at
 		canvas.draw_texture_rect_region(fr["tex"], rect, region, modulate)
+	var gl := actor_glow_frame(kind, tag, int(fr["index"]), left)
+	if not gl.is_empty():
+		var grect := Rect2((gl["offset"] - (hb.position + hb.size / 2.0)) * _actor_scale, gl["region"].size * _actor_scale)
+		_queue_glow({"tex": gl["tex"], "rect": grect, "region": gl["region"], "mirror": mirror, "at": at})
+
+## AD-154 glow layer: *_glow frames queued while the base is drawn, drawn later on the additive V2 layer.
+## Pure lookup: {tex, region, offset} of the glow slice for a tag frame, or {} when the frame has none.
+static func actor_glow_frame(kind: String, tag: String, index: int, left: bool = false) -> Dictionary:
+	var tg := actor_tag(kind, tag)
+	if tg.is_empty():
+		return {}
+	var sh: Dictionary = actor_manifest()[resolve_kind(kind)]["sheets"][tg["sheet"]]
+	if sh.get("glow_png") == null or (left and sh.get("left_json") != null):
+		return {}
+	index = clampi(index, 0, int(tg["frames"]) - 1)
+	var g = sh.get("glow", {}).get(str(int(tg["from"]) + index))
+	if g == null:
+		return {}
+	if not _glow_tex.has(sh["glow_png"]):
+		_glow_tex[sh["glow_png"]] = load(sh["glow_png"])
+	return {"tex": _glow_tex[sh["glow_png"]], "region": Rect2(g["x"], g["y"], g["w"], g["h"]), "offset": Vector2(g["ox"], g["oy"])}
+
+static var _glow_tex: Dictionary = {}
+static var _glow_queue: Array = []
+static var _glow_frame := -1
+
+static func _queue_glow(item: Dictionary) -> void:
+	var f := Engine.get_frames_drawn()
+	if f != _glow_frame:
+		_glow_frame = f
+		_glow_queue.clear()
+	_glow_queue.append(item)
+
+## Draws this frame's queued glows (additive canvas item). Rendering only; never touches the sim.
+static func draw_actor_glows(ci: CanvasItem, alpha_mult: float = 1.0) -> void:
+	if _glow_frame != Engine.get_frames_drawn():
+		return
+	var col := Color(1, 1, 1, alpha_mult)
+	for it in _glow_queue:
+		if it["mirror"]:
+			ci.draw_set_transform(it["at"], 0.0, Vector2(-1, 1))
+			ci.draw_texture_rect_region(it["tex"], it["rect"], it["region"], col)
+		else:
+			var r: Rect2 = it["rect"]
+			r.position += it["at"]
+			ci.draw_texture_rect_region(it["tex"], r, it["region"], col)
+	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 static func tile_floor(canvas: CanvasItem, view: Rect2, offset: Vector2, stage: int = 0) -> void:
 	if use_art_export:
@@ -817,6 +867,8 @@ static func draw_damage_number(canvas: CanvasItem, symbol: String, text: String,
 
 ## AD-137 placeholder tint for a borrowed sprite: the enemy 'color' lerped over white; alpha < 1 while intangible.
 static func placeholder_modulate(kind: String, color: Color, intangible: bool, warning_flicker: bool) -> Color:
+	if actor_manifest().has(kind):
+		return Color(1.0,1.0,1.0,0.4 if intangible else (0.7 if warning_flicker else 1.0))
 	if not PLACEHOLDER_KIND.has(kind):
 		return Color.WHITE
 	var out := Color.WHITE.lerp(color,0.6)

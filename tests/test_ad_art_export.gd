@@ -73,6 +73,7 @@ func run(t) -> void:
 	_cistern(t, m, assets)
 	_engine_map(t, assets)
 	_actors(t)
+	_renderer(t)
 
 ## AD-154: Cistern tileset, arena, AD-120 props and AD-122 chest/altar are in the manifest.
 func _cistern(t, m: Dictionary, assets: Dictionary) -> void:
@@ -193,3 +194,38 @@ func _actors(t) -> void:
 		t.check(actors.has(kind), "AD-154 actor exists: " + kind)
 		for n in ENEMY_TAGS:
 			t.check(actors.has(kind) and actors[kind]["tags"].has(n), "AD-154 required tag %s/%s" % [kind, n])
+
+const REAL_KINDS := ["ossuary_shieldbearer", "wailing_spirit", "corpse_bloat", "cistern_slime", "cistern_slimelet", "drowned_acolyte", "deep_eel", "lantern_wisp", "storm_crystal", "rust_golem", "drowned_archivist"]
+const RUN_V2 := "res://world/data/run_v2.json"
+
+func _windup_ok(t, kind: String, ticks: int, label: String) -> void:
+	var tag := "telegraph_side" if ART.actor_has_tag(kind, "telegraph_side") else "telegraph_burst_side"
+	var n := ART.actor_tag_frames(kind, tag)
+	t.equal(ART.telegraph_anim_ticks(kind, ticks), ticks, "AD-154 telegraph covers windup: " + label)
+	t.equal(ART.stretched_index(ticks - 1, ticks, n), n - 1, "AD-154 telegraph ends on last frame: " + label)
+
+## AD-154: placeholders retired, telegraph stretch matches data windups, actor glow lookup/queue.
+func _renderer(t) -> void:
+	for k in REAL_KINDS:
+		t.equal(ART.resolve_kind(k), k, "AD-154 resolve_kind own entry: " + k)
+	t.check(ART.PLACEHOLDER_KIND.is_empty(), "AD-154 no placeholder kinds left")
+	var spirit := ART.placeholder_modulate("wailing_spirit", Color.RED, true, false)
+	t.check(is_equal_approx(spirit.a, 0.4), "AD-154 intangible alpha kept")
+	t.check(spirit.r == 1.0 and spirit.g == 1.0 and spirit.b == 1.0, "AD-154 real art has no tint")
+	t.check(is_equal_approx(ART.placeholder_modulate("deep_eel", Color.RED, false, true).a, 0.7), "AD-154 warning flicker alpha kept")
+	var tuning = JSON.parse_string(FileAccess.get_file_as_string(TUNING))
+	for kind in tuning["enemies"]:
+		_windup_ok(t, kind, int(tuning["enemies"][kind]["telegraph_ticks"]), "enemy " + kind)
+	for id in tuning["mini_bosses"]:
+		var mb: Dictionary = tuning["mini_bosses"][id]
+		_windup_ok(t, str(mb["kind"]), int(mb["windup_ticks"]), id + " windup")
+		_windup_ok(t, str(mb["kind"]), int(mb["second_phase_windup_ticks"]), id + " phase 2")
+	var run = JSON.parse_string(FileAccess.get_file_as_string(RUN_V2))
+	for ph in run["bosses"]["cistern_boss"]["phases"]:
+		_windup_ok(t, "drowned_archivist", int(ph["windup_ticks"]), "archivist %d" % int(ph["windup_ticks"]))
+	for c in [["deep_eel", "telegraph_side"], ["mage", "channel_side"]]:
+		var g := ART.actor_glow_frame(c[0], c[1], 0)
+		t.check(not g.is_empty(), "AD-154 glow frame exists: " + c[0])
+		if not g.is_empty():
+			var r: Rect2 = g["region"]
+			t.check(r.size.x > 0 and r.size.y > 0 and r.position.x >= 0 and r.position.y >= 0 and r.end.x <= g["tex"].get_width() and r.end.y <= g["tex"].get_height(), "AD-154 glow region inside texture: " + c[0])

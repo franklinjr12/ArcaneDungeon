@@ -1,6 +1,7 @@
 extends Node2D
 ## AD-149 render-only additive VFX: pooled particles plus *_glow sprites. Reads the session, never writes it.
 ## The pool only advances when the sim tick changes, so paused or redrawn frames never move particles.
+const Art = preload("res://ui/pixel_art_renderer.gd")
 const Data = preload("res://ui/vfx/vfx_data.gd")
 const Pool = preload("res://ui/vfx/particle_pool.gd")
 const Emitters = preload("res://ui/vfx/vfx_emitters.gd")
@@ -16,6 +17,7 @@ var _glows: Array = []
 var _cap := 0
 var _last_tick := -1
 var _session_id := 0
+var _params: Dictionary = {}
 
 func setup(canvas) -> void:
 	_canvas = canvas
@@ -54,6 +56,7 @@ func sync(canvas, session, settings, fx_list: Array, tick: int) -> void:
 	_session_id = sid
 	var reduced := ReduceMotion.flashes_reduced(settings, session)
 	var params := ReduceMotion.vfx_params(reduced)
+	_params = params
 	if _cap <= 0:
 		_pool.clear()
 		_glows.clear()
@@ -92,6 +95,8 @@ func _draw() -> void:
 	if _canvas == null or _canvas.session == null:
 		return
 	var offset: Vector2 = _canvas.camera_offset()
+	if _cap > 0:
+		Art.draw_actor_glows(self, float(_params.get("glow_alpha_mult", 1.0)))
 	for g in _glows:
 		var tex := Data.texture(str(g["texture"]), "glow")
 		var r := float(g["radius"])
