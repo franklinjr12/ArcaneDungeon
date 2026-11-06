@@ -66,6 +66,7 @@ func run(t) -> void:
 			t.equal(e["pivot"], pivot, "AD-030 manifest pivot: " + stem)
 	t.check(sprites >= 30, "AD-030 sprite entries >= 30")
 	_engine_map(t, assets)
+	_actors(t)
 
 func _engine_map(t, assets: Dictionary) -> void:
 	t.check(not ART.use_art_export, "AD-030 art export off by default")
@@ -89,3 +90,73 @@ func _engine_map(t, assets: Dictionary) -> void:
 	ART.use_art_export = true
 	t.check(ART.export_frame_for("undead_warden", "cast", 5).has("region"), "AD-030 export frame has atlas region")
 	ART.use_art_export = false
+
+const ACTORS_MANIFEST := "res://art/export/actors/actors_manifest.json"
+const TUNING := "res://combat/combat_tuning_v1.json"
+const ENEMY_TAGS := ["idle_side", "move_side", "telegraph_side", "attack_side", "hit_side", "death_side"]
+
+## AD-154: actors_manifest.json matches each sheet json (tags, ms, pivot, hurtbox, glow rects); enemies carry the canvas tags.
+func _actors(t) -> void:
+	var m = JSON.parse_string(FileAccess.get_file_as_string(ACTORS_MANIFEST))
+	t.check(m is Dictionary and m.has("actors"), "AD-154 actors manifest parses")
+	if not m is Dictionary:
+		return
+	var actors: Dictionary = m["actors"]
+	var jsons := {}
+	for kind in actors:
+		var ent: Dictionary = actors[kind]
+		for key in ent["sheets"]:
+			var sh: Dictionary = ent["sheets"][key]
+			var j = JSON.parse_string(FileAccess.get_file_as_string(sh["json"]))
+			t.check(j is Dictionary, "AD-154 json parses: %s/%s" % [kind, key])
+			t.check(load(sh["png"]) is Texture2D, "AD-154 png loads: %s/%s" % [kind, key])
+			if not j is Dictionary:
+				continue
+			jsons[kind + "/" + key] = j
+			var slices := {}
+			for s in j["meta"].get("slices", []):
+				slices[s["name"]] = s["keys"][0]["bounds"]
+			t.check(slices.has("pivot") and slices.has("hurtbox"), "AD-154 pivot/hurtbox slices: %s/%s" % [kind, key])
+			if slices.has("pivot"):
+				t.equal(sh["pivot"], [slices["pivot"]["x"], slices["pivot"]["y"]], "AD-154 pivot: %s/%s" % [kind, key])
+			t.check(sh["hurtbox"] is Dictionary, "AD-154 hurtbox: %s/%s" % [kind, key])
+			if sh.get("glow_png") != null:
+				var gtex = load(sh["glow_png"])
+				t.check(gtex is Texture2D, "AD-154 glow png loads: %s/%s" % [kind, key])
+				if gtex is Texture2D:
+					for fi in sh["glow"]:
+						var r: Dictionary = sh["glow"][fi]
+						t.check(int(fi) < j["frames"].size() and r["x"] >= 0 and r["y"] >= 0 and r["x"] + r["w"] <= gtex.get_width() and r["y"] + r["h"] <= gtex.get_height(), "AD-154 glow rect inside texture: %s/%s/%s" % [kind, key, fi])
+		for n in ent["tags"]:
+			var tg: Dictionary = ent["tags"][n]
+			var j = jsons.get(kind + "/" + str(tg["sheet"]))
+			if j == null:
+				continue
+			var src := str(tg.get("src", n))
+			var jt = null
+			for x in j["meta"]["frameTags"]:
+				if x["name"] == src:
+					jt = x
+			t.check(jt != null, "AD-154 json tag exists: %s/%s" % [kind, n])
+			if jt == null:
+				continue
+			var f: int = int(tg["from"])
+			var to: int = int(tg["to"])
+			t.check(f >= int(jt["from"]) and f <= to and to <= int(jt["to"]), "AD-154 tag range inside source: %s/%s" % [kind, n])
+			if not tg.has("src"):
+				t.check(f == int(jt["from"]) and to == int(jt["to"]), "AD-154 tag from/to equals json: %s/%s" % [kind, n])
+			t.equal(int(tg["frames"]), to - f + 1, "AD-154 tag frames: %s/%s" % [kind, n])
+			var ms := []
+			for i in range(f, to + 1):
+				ms.append(int(j["frames"][i]["duration"]))
+			var got := []
+			for v in tg["ms"]:
+				got.append(int(v))
+			t.equal(got, ms, "AD-154 tag ms equals json: %s/%s" % [kind, n])
+	var tuning = JSON.parse_string(FileAccess.get_file_as_string(TUNING))
+	var kinds: Array = tuning["enemies"].keys() if tuning is Dictionary else []
+	kinds.append("drowned_archivist")
+	for kind in kinds:
+		t.check(actors.has(kind), "AD-154 actor exists: " + kind)
+		for n in ENEMY_TAGS:
+			t.check(actors.has(kind) and actors[kind]["tags"].has(n), "AD-154 required tag %s/%s" % [kind, n])

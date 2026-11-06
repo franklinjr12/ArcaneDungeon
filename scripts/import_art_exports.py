@@ -116,16 +116,46 @@ def build_entry(stem, row, rowdir, cards, errors):
 A = "res://art/export/actors/"
 WARDEN_MAIN = ["idle_side", "move_side", "telegraph_burst_side", "burst_side", "telegraph_dash_side", "dash_side"]
 WARDEN_LATE = ["phase_side", "hit_side", "death_side"]
-# kind: rows, sheets{key: (src stem path, dest stem, has_left)}, tag filter per sheet (None = all)
+BARE = {"idle_side": ("idle",), "move_side": ("move",), "telegraph_side": ("telegraph",), "attack_side": ("attack",),
+        "hit_side": ("hit",), "death_side": ("death",), "spawn_side": ("spawn",)}
+
+
+def _enm(src, rows, alias=None):
+    """Single mirrored sheet (no _left); alias = {manifest_tag: (json_tag[, sub_from, sub_to])}."""
+    return {"rows": rows, "sheets": {"main": (src, src.rsplit("/", 1)[1], False, None, alias or {})}}
+
+
+# kind: rows, sheets{key: (src stem path, dest stem, has_left, tag filter (None = all)[, tag aliases])}
 ACTORS = {
-    "mage": {"rows": ["AD-061", "AD-062", "AD-064"], "sheets": {"main": ("AD-064/export/ad_chr_mage", "ad_chr_mage", False, None)}},
+    "mage": {"rows": ["AD-061", "AD-062", "AD-064", "AD-121"], "sheets": {"main": ("AD-121/export/ad_chr_mage", "ad_chr_mage", False, None)}},
     "bone_thrall": {"rows": ["AD-052"], "sheets": {"main": ("AD-052/export/ad_enm_bone_thrall", "ad_enm_bone_thrall", False, None)}},
     "fallen_adept": {"rows": ["AD-053", "AD-063"], "sheets": {"main": ("AD-063/adept/export/ad_enm_fallen_adept", "ad_enm_fallen_adept", True, None)}},
     "grave_hound": {"rows": ["AD-054", "AD-063"], "sheets": {"main": ("AD-063/hound/export/ad_enm_grave_hound", "ad_enm_grave_hound", True, None)}},
     "undead_warden": {"rows": ["AD-055", "AD-056", "AD-063", "AD-064"], "sheets": {
         "main": ("AD-063/warden/export/ad_bos_ossuary_warden", "ad_bos_ossuary_warden", True, WARDEN_MAIN),
         "late": ("AD-064/export/ad_bos_ossuary_warden", "ad_bos_ossuary_warden_late", True, WARDEN_LATE)}},
+    "ossuary_shieldbearer": _enm("AD-102/export/ad_enm_ossuary_shieldbearer", ["AD-101", "AD-102"]),
+    "wailing_spirit": _enm("AD-102/export/ad_enm_wailing_spirit", ["AD-101", "AD-102"]),
+    "corpse_bloat": _enm("AD-102/export/ad_enm_corpse_bloat", ["AD-101", "AD-102"]),
+    "cistern_slime": _enm("AD-105/export/ad_enm_cistern_slime", ["AD-103", "AD-105"], BARE),
+    "cistern_slimelet": _enm("AD-105/export/ad_enm_cistern_slime_small", ["AD-103", "AD-105"], {
+        "idle_side": ("move",), "move_side": ("move",), "attack_side": ("move",), "telegraph_side": ("move", 0, 2),
+        "hit_side": ("hit",), "death_side": ("death",)}),
+    "drowned_acolyte": _enm("AD-105/export/ad_enm_drowned_acolyte", ["AD-103", "AD-105"], {"attack_side": ("cast_side",)}),
+    "deep_eel": _enm("AD-105/export/ad_enm_deep_eel", ["AD-103", "AD-105"], {
+        "idle_side": ("idle",), "move_side": ("idle",), "telegraph_side": ("telegraph",), "attack_side": ("lunge",),
+        "spawn_side": ("emerge",), "hit_side": ("hit",), "death_side": ("death",)}),
+    "lantern_wisp": _enm("AD-106/export/ad_enm_lantern_wisp", ["AD-104", "AD-106"], dict(BARE, attack_side=("cast",))),
+    "storm_crystal": _enm("AD-106/export/ad_enm_storm_crystal", ["AD-104", "AD-106"], dict(BARE, move_side=("idle",))),
+    "rust_golem": _enm("AD-118/export/ad_enm_rust_golem", ["AD-104", "AD-106", "AD-118"], BARE),
+    "drowned_archivist": _enm("AD-118/export/ad_bos_drowned_archivist_anim", ["AD-107", "AD-108", "AD-118"], {
+        "idle_side": ("idle",), "move_side": ("move",), "telegraph_side": ("attack_a", 0, 2), "attack_side": ("attack_a", 3, 7),
+        "phase_side": ("phase",), "hit_side": ("hit",), "death_side": ("death",)}),
+    "mini_ossuary_shieldbearer": _enm("AD-109/export/ad_enm_mini_ossuary_shieldbearer", ["AD-109"]),
+    "mini_rust_golem": _enm("AD-109/export/ad_enm_mini_rust_golem", ["AD-109"], BARE),
 }
+REQUIRED_ENEMY_TAGS = ["idle_side", "move_side", "telegraph_side", "attack_side", "hit_side", "death_side"]
+# optional extras (spawn_side, phase_side) are not required
 
 
 def slice_bounds(data, name):
@@ -144,13 +174,37 @@ def tag_table(data):
     return out
 
 
+ENEMY_KINDS = [k for k in ACTORS if k not in ("mage", "undead_warden")]
+
+
+def glow_map(kind, key, frames, gdata, errors):
+    """{base frame index: {x, y, w, h, ox, oy}}; without a glow json the glow shares the base layout."""
+    out = {}
+    if gdata is None:
+        for i, f in enumerate(frames):
+            r = f["frame"]
+            out[str(i)] = {"x": r["x"], "y": r["y"], "w": r["w"], "h": r["h"], "ox": f["spriteSourceSize"]["x"], "oy": f["spriteSourceSize"]["y"]}
+        return out
+    byname = {f["filename"]: f for f in gdata["frames"]}
+    for i, f in enumerate(frames):
+        g = byname.get(f["filename"] + "_glow") or byname.get(f["filename"])
+        if g is None:
+            continue
+        r, o = g["frame"], g["spriteSourceSize"]
+        out[str(i)] = {"x": r["x"], "y": r["y"], "w": r["w"], "h": r["h"], "ox": o["x"], "oy": o["y"]}
+    if not out:
+        errors.append(f"{kind}/{key}: no glow frame matches a base frame")
+    return out
+
+
 def import_actors(a):
     root = (a.source or [DRIVE if DRIVE.is_dir() else FALLBACK])[0]
     errors, copies, actors = [], [], {}
     for kind, spec in ACTORS.items():
         ent = {"rows": spec["rows"], "mirror": not any(v[2] for v in spec["sheets"].values()),
                "sheets": {}, "tags": {}}
-        for key, (src, dstem, left, want) in spec["sheets"].items():
+        for key, (src, dstem, left, want, *rest) in spec["sheets"].items():
+            alias = rest[0] if rest else {}
             jp, pp = root / (src + ".json"), root / (src + ".png")
             if not jp.is_file() or not pp.is_file():
                 errors.append(f"{kind}/{key}: missing {src}.json/.png")
@@ -186,6 +240,14 @@ def import_actors(a):
                         sh.update({"left_png": A + dstem + "_left.png", "left_json": A + dstem + "_left.json",
                                    "left_pivot": [lpv["x"], lpv["y"]], "left_hurtbox": lhb})
                     copies += [(lj, a.dest / "actors" / (dstem + "_left.json")), (lp, a.dest / "actors" / (dstem + "_left.png"))]
+            gp = root / (src + "_glow.png")
+            if gp.is_file():
+                gj = root / (src + "_glow.json")
+                copies.append((gp, a.dest / "actors" / (dstem + "_glow.png")))
+                sh["glow_png"] = A + dstem + "_glow.png"
+                sh["glow"] = glow_map(kind, key, frames, json.loads(gj.read_text()) if gj.is_file() else None, errors)
+                if gj.is_file():
+                    copies.append((gj, a.dest / "actors" / (dstem + "_glow.json")))
             ent["sheets"][key] = sh
             for n in (want if want is not None else list(tags)):
                 if n not in tags:
@@ -193,6 +255,22 @@ def import_actors(a):
                     continue
                 f, t, ms = tags[n]
                 ent["tags"][n] = {"sheet": key, "from": f, "to": t, "frames": t - f + 1, "ms": ms}
+            for n, (jt, *sub) in alias.items():
+                if jt not in tags:
+                    errors.append(f"{kind}/{key}: alias {n} -> tag {jt} not in json")
+                    continue
+                f, t, ms = tags[jt]
+                if sub:
+                    f, t = tags[jt][0] + sub[0], tags[jt][0] + sub[1]
+                    if not (tags[jt][0] <= f <= t <= tags[jt][1]):
+                        errors.append(f"{kind}/{key}: alias {n} sub-range outside tag {jt}")
+                        continue
+                    ms = [frames[i]["duration"] for i in range(f, t + 1)]
+                ent["tags"][n] = {"sheet": key, "from": f, "to": t, "frames": t - f + 1, "ms": ms, "src": jt}
+        if kind in ENEMY_KINDS:
+            for n in REQUIRED_ENEMY_TAGS:
+                if n not in ent["tags"]:
+                    errors.append(f"{kind}: missing required enemy tag {n}")
         actors[kind] = ent
     if errors:
         print("import_art_exports --actors: FAILED\n  " + "\n  ".join(errors), file=sys.stderr)

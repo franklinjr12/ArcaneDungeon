@@ -1,0 +1,261 @@
+{ "frames": [
+   {
+    "filename": "ad_enm_rust_golem_idle_00",
+    "frame": { "x": 0, "y": 0, "w": 46, "h": 46 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 1, "w": 46, "h": 46 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 150
+   },
+   {
+    "filename": "ad_enm_rust_golem_idle_01",
+    "frame": { "x": 0, "y": 0, "w": 46, "h": 46 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 1, "w": 46, "h": 46 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 150
+   },
+   {
+    "filename": "ad_enm_rust_golem_idle_02",
+    "frame": { "x": 141, "y": 0, "w": 46, "h": 45 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 2, "w": 46, "h": 45 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 150
+   },
+   {
+    "filename": "ad_enm_rust_golem_idle_03",
+    "frame": { "x": 141, "y": 0, "w": 46, "h": 45 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 2, "w": 46, "h": 45 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 150
+   },
+   {
+    "filename": "ad_enm_rust_golem_move_00",
+    "frame": { "x": 47, "y": 0, "w": 46, "h": 46 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 1, "w": 46, "h": 46 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_enm_rust_golem_move_01",
+    "frame": { "x": 141, "y": 0, "w": 46, "h": 45 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 2, "w": 46, "h": 45 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_enm_rust_golem_move_02",
+    "frame": { "x": 94, "y": 0, "w": 46, "h": 46 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 1, "w": 46, "h": 46 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_enm_rust_golem_move_03",
+    "frame": { "x": 141, "y": 0, "w": 46, "h": 45 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 2, "w": 46, "h": 45 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_enm_rust_golem_telegraph_00",
+    "frame": { "x": 46, "y": 47, "w": 46, "h": 44 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 3, "w": 46, "h": 44 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 260
+   },
+   {
+    "filename": "ad_enm_rust_golem_telegraph_01",
+    "frame": { "x": 140, "y": 92, "w": 46, "h": 42 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 5, "w": 46, "h": 42 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 260
+   },
+   {
+    "filename": "ad_enm_rust_golem_telegraph_02",
+    "frame": { "x": 0, "y": 47, "w": 45, "h": 45 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 2, "w": 45, "h": 45 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 340
+   },
+   {
+    "filename": "ad_enm_rust_golem_attack_00",
+    "frame": { "x": 140, "y": 135, "w": 46, "h": 42 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 5, "w": 46, "h": 42 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 70
+   },
+   {
+    "filename": "ad_enm_rust_golem_attack_01",
+    "frame": { "x": 47, "y": 137, "w": 46, "h": 39 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 8, "w": 46, "h": 39 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 60
+   },
+   {
+    "filename": "ad_enm_rust_golem_attack_02",
+    "frame": { "x": 0, "y": 137, "w": 46, "h": 41 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 6, "w": 46, "h": 41 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_enm_rust_golem_attack_03",
+    "frame": { "x": 93, "y": 47, "w": 46, "h": 44 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 3, "w": 46, "h": 44 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_enm_rust_golem_hit_00",
+    "frame": { "x": 141, "y": 46, "w": 46, "h": 45 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 2, "w": 46, "h": 45 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 70
+   },
+   {
+    "filename": "ad_enm_rust_golem_hit_01",
+    "frame": { "x": 46, "y": 92, "w": 46, "h": 44 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 3, "w": 46, "h": 44 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_enm_rust_golem_death_00",
+    "frame": { "x": 93, "y": 92, "w": 46, "h": 44 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 3, "w": 46, "h": 44 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_enm_rust_golem_death_01",
+    "frame": { "x": 47, "y": 177, "w": 46, "h": 37 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 10, "w": 46, "h": 37 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_enm_rust_golem_death_02",
+    "frame": { "x": 141, "y": 178, "w": 46, "h": 28 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 19, "w": 46, "h": 28 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_enm_rust_golem_death_03",
+    "frame": { "x": 0, "y": 206, "w": 46, "h": 20 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 27, "w": 46, "h": 20 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 140
+   },
+   {
+    "filename": "ad_enm_rust_golem_death_04",
+    "frame": { "x": 141, "y": 207, "w": 46, "h": 14 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 33, "w": 46, "h": 14 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 220
+   },
+   {
+    "filename": "ad_enm_rust_golem_spawn_00",
+    "frame": { "x": 47, "y": 215, "w": 46, "h": 14 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 33, "w": 46, "h": 14 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_enm_rust_golem_spawn_01",
+    "frame": { "x": 0, "y": 179, "w": 46, "h": 26 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 21, "w": 46, "h": 26 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_enm_rust_golem_spawn_02",
+    "frame": { "x": 94, "y": 178, "w": 46, "h": 37 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 10, "w": 46, "h": 37 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_enm_rust_golem_spawn_03",
+    "frame": { "x": 0, "y": 0, "w": 46, "h": 46 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 1, "w": 46, "h": 46 },
+    "sourceSize": { "w": 48, "h": 48 },
+    "duration": 130
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_enm_rust_golem.png",
+  "format": "I8",
+  "size": { "w": 187, "h": 229 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "idle", "from": 0, "to": 3, "direction": "forward", "color": "#000000ff" },
+   { "name": "move", "from": 4, "to": 7, "direction": "forward", "color": "#000000ff" },
+   { "name": "telegraph", "from": 8, "to": 10, "direction": "forward", "color": "#000000ff" },
+   { "name": "attack", "from": 11, "to": 14, "direction": "forward", "color": "#000000ff" },
+   { "name": "hit", "from": 15, "to": 16, "direction": "forward", "color": "#000000ff" },
+   { "name": "death", "from": 17, "to": 21, "direction": "forward", "color": "#000000ff" },
+   { "name": "spawn", "from": 22, "to": 25, "direction": "forward", "color": "#000000ff" }
+  ],
+  "slices": [
+   { "name": "pivot", "keys": [{ "frame": 0, "bounds": {"x": 24, "y": 46, "w": 1, "h": 1 } }] },
+   { "name": "hurtbox", "keys": [{ "frame": 0, "bounds": {"x": 1, "y": 1, "w": 46, "h": 46 } }] },
+   { "name": "fist_impact_l", "keys": [{ "frame": 0, "bounds": {"x": 3, "y": 40, "w": 8, "h": 6 } }] },
+   { "name": "fist_impact_r", "keys": [{ "frame": 0, "bounds": {"x": 37, "y": 40, "w": 8, "h": 6 } }] },
+   { "name": "weak_rod", "keys": [{ "frame": 0, "bounds": {"x": 21, "y": 1, "w": 6, "h": 6 } }] }
+  ]
+ }
+}
