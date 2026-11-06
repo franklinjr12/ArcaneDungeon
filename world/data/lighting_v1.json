@@ -1,37 +1,305 @@
 {
-  "version": 1,
-  "note": "[PROPOSED FOR PROTOTYPE] AD-148 presentation only. Render-only 2D lighting; never read by the sim. Ambient colours multiply the arena; 'at' values are fractions of session.world.bounds.",
-  "arena_light_mask": 2,
-  "cookie_texture": "",
-  "fallback_cookie_px": 128,
-  "ambient": {
-    "ruins": "#9c8f80",
-    "ruins_boss": "#c8bcaa",
-    "cistern": "#8094a8",
-    "cistern_boss": "#b4c4d2"
+ "version": 1,
+ "note": "[PROPOSED FOR PROTOTYPE] AD-148/AD-165 presentation only. Render-only 2D lighting; never read by the sim. Per stage: ambient colour*energy multiplies the arena (factor = 1 - energy*(1-colour)); torch = brazier prop light; 'at' values are fractions of session.world.bounds; player_light is a soft always-on glow around the mage; spell_lights unchanged from AD-148. readability.min_fraction = minimum lit/unlit brightness of floor and enemies.",
+ "arena_light_mask": 2,
+ "cookie_texture": "",
+ "fallback_cookie_px": 128,
+ "readability": {
+  "min_fraction": 0.35,
+  "sample_step_px": 32
+ },
+ "modes": {
+  "high": {
+   "ambient": true,
+   "prop_lights": true,
+   "player_light": true,
+   "spell_light_cap": 24
   },
-  "modes": {
-    "high": {"ambient": true, "prop_lights": true, "spell_light_cap": 24},
-    "low": {"ambient": true, "prop_lights": true, "spell_light_cap": 8},
-    "off": {"ambient": false, "prop_lights": false, "spell_light_cap": 0}
+  "low": {
+   "ambient": true,
+   "prop_lights": true,
+   "player_light": true,
+   "spell_light_cap": 8
   },
-  "prop_lights": {
-    "brazier": {"color": "#ffb060", "energy": 1.0, "texture_scale": 2.2, "flicker_amp": 0.08, "flicker_period_ticks": 37}
-  },
-  "biome_fixed_lights": {
-    "ruins": [],
-    "cistern": [
-      {"at": [0.12, 0.15], "color": "#7fd0ff", "energy": 0.7, "texture_scale": 2.5},
-      {"at": [0.88, 0.15], "color": "#7fd0ff", "energy": 0.7, "texture_scale": 2.5},
-      {"at": [0.12, 0.85], "color": "#7fd0ff", "energy": 0.7, "texture_scale": 2.5},
-      {"at": [0.88, 0.85], "color": "#7fd0ff", "energy": 0.7, "texture_scale": 2.5}
-    ]
-  },
-  "boss_arena_light": {"color": "#fff2d8", "energy": 0.45, "texture_scale": 9.0},
-  "spell_lights": {
-    "projectile": {"energy": 0.9, "texture_scale": 0.8},
-    "orb": {"energy": 0.8, "texture_scale": 0.9},
-    "field": {"energy": 0.6, "texture_scale": 1.6},
-    "burst": {"energy": 1.2, "texture_scale": 1.6}
+  "off": {
+   "ambient": false,
+   "prop_lights": false,
+   "player_light": false,
+   "spell_light_cap": 0
   }
+ },
+ "stages": {
+  "ruins": {
+   "ambient": {
+    "color": "#e0d6c8",
+    "energy": 1.0
+   },
+   "torch": {
+    "color": "#ffb060",
+    "energy": 0.8,
+    "texture_scale": 3.3,
+    "flicker_amp": 0.08,
+    "flicker_period_ticks": 37
+   },
+   "fixed_lights": [],
+   "fill_light": null,
+   "spell_lights": {
+    "projectile": {
+     "energy": 0.9,
+     "texture_scale": 0.8
+    },
+    "orb": {
+     "energy": 0.8,
+     "texture_scale": 0.9
+    },
+    "field": {
+     "energy": 0.6,
+     "texture_scale": 1.6
+    },
+    "burst": {
+     "energy": 1.2,
+     "texture_scale": 1.6
+    }
+   },
+   "player_light": {
+    "color": "#fff0d8",
+    "energy": 0.35,
+    "texture_scale": 3.0
+   }
+  },
+  "ruins_boss": {
+   "ambient": {
+    "color": "#ece4d8",
+    "energy": 1.0
+   },
+   "torch": {
+    "color": "#ffb060",
+    "energy": 0.8,
+    "texture_scale": 3.3,
+    "flicker_amp": 0.08,
+    "flicker_period_ticks": 37
+   },
+   "fixed_lights": [],
+   "fill_light": {
+    "color": "#fff2d8",
+    "energy": 0.45,
+    "texture_scale": 9.0
+   },
+   "spell_lights": {
+    "projectile": {
+     "energy": 0.9,
+     "texture_scale": 0.8
+    },
+    "orb": {
+     "energy": 0.8,
+     "texture_scale": 0.9
+    },
+    "field": {
+     "energy": 0.6,
+     "texture_scale": 1.6
+    },
+    "burst": {
+     "energy": 1.2,
+     "texture_scale": 1.6
+    }
+   },
+   "player_light": {
+    "color": "#fff0d8",
+    "energy": 0.35,
+    "texture_scale": 3.0
+   }
+  },
+  "cistern": {
+   "ambient": {
+    "color": "#c8d6e4",
+    "energy": 1.0
+   },
+   "torch": {
+    "color": "#ffb060",
+    "energy": 0.8,
+    "texture_scale": 3.3,
+    "flicker_amp": 0.08,
+    "flicker_period_ticks": 37
+   },
+   "fixed_lights": [
+    {
+     "at": [
+      0.12,
+      0.15
+     ],
+     "color": "#7fd0ff",
+     "energy": 0.7,
+     "texture_scale": 3.5
+    },
+    {
+     "at": [
+      0.88,
+      0.15
+     ],
+     "color": "#7fd0ff",
+     "energy": 0.7,
+     "texture_scale": 3.5
+    },
+    {
+     "at": [
+      0.12,
+      0.85
+     ],
+     "color": "#7fd0ff",
+     "energy": 0.7,
+     "texture_scale": 3.5
+    },
+    {
+     "at": [
+      0.88,
+      0.85
+     ],
+     "color": "#7fd0ff",
+     "energy": 0.7,
+     "texture_scale": 3.5
+    }
+   ],
+   "fill_light": null,
+   "spell_lights": {
+    "projectile": {
+     "energy": 0.9,
+     "texture_scale": 0.8
+    },
+    "orb": {
+     "energy": 0.8,
+     "texture_scale": 0.9
+    },
+    "field": {
+     "energy": 0.6,
+     "texture_scale": 1.6
+    },
+    "burst": {
+     "energy": 1.2,
+     "texture_scale": 1.6
+    }
+   },
+   "player_light": {
+    "color": "#fff0d8",
+    "energy": 0.35,
+    "texture_scale": 3.0
+   }
+  },
+  "cistern_boss": {
+   "ambient": {
+    "color": "#dce6ee",
+    "energy": 1.0
+   },
+   "torch": {
+    "color": "#ffb060",
+    "energy": 0.8,
+    "texture_scale": 3.3,
+    "flicker_amp": 0.08,
+    "flicker_period_ticks": 37
+   },
+   "fixed_lights": [
+    {
+     "at": [
+      0.12,
+      0.15
+     ],
+     "color": "#7fd0ff",
+     "energy": 0.7,
+     "texture_scale": 3.5
+    },
+    {
+     "at": [
+      0.88,
+      0.15
+     ],
+     "color": "#7fd0ff",
+     "energy": 0.7,
+     "texture_scale": 3.5
+    },
+    {
+     "at": [
+      0.12,
+      0.85
+     ],
+     "color": "#7fd0ff",
+     "energy": 0.7,
+     "texture_scale": 3.5
+    },
+    {
+     "at": [
+      0.88,
+      0.85
+     ],
+     "color": "#7fd0ff",
+     "energy": 0.7,
+     "texture_scale": 3.5
+    }
+   ],
+   "fill_light": {
+    "color": "#fff2d8",
+    "energy": 0.45,
+    "texture_scale": 9.0
+   },
+   "spell_lights": {
+    "projectile": {
+     "energy": 0.9,
+     "texture_scale": 0.8
+    },
+    "orb": {
+     "energy": 0.8,
+     "texture_scale": 0.9
+    },
+    "field": {
+     "energy": 0.6,
+     "texture_scale": 1.6
+    },
+    "burst": {
+     "energy": 1.2,
+     "texture_scale": 1.6
+    }
+   },
+   "player_light": {
+    "color": "#fff0d8",
+    "energy": 0.35,
+    "texture_scale": 3.0
+   }
+  },
+  "workshop": {
+   "ambient": {
+    "color": "#ffffff",
+    "energy": 0.0
+   },
+   "torch": {
+    "color": "#ffb060",
+    "energy": 0.8,
+    "texture_scale": 3.3,
+    "flicker_amp": 0.08,
+    "flicker_period_ticks": 37
+   },
+   "fixed_lights": [],
+   "fill_light": null,
+   "spell_lights": {
+    "projectile": {
+     "energy": 0.9,
+     "texture_scale": 0.8
+    },
+    "orb": {
+     "energy": 0.8,
+     "texture_scale": 0.9
+    },
+    "field": {
+     "energy": 0.6,
+     "texture_scale": 1.6
+    },
+    "burst": {
+     "energy": 1.2,
+     "texture_scale": 1.6
+    }
+   },
+   "player_light": {
+    "color": "#fff0d8",
+    "energy": 0.35,
+    "texture_scale": 3.0
+   }
+  }
+ }
 }
