@@ -313,6 +313,7 @@
     },
     {
       "id": "cistern",
+      "music_context": "cistern",
       "combat_rooms": {
         "min": 5,
         "max": 6

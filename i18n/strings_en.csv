@@ -149,6 +149,26 @@ run.editor.onhit,Trigger → Burst payload
 run.editor.child_essence,Child Burst Essence
 run.editor.valid,VALID / Mana %d / Cooldown %d ticks / Complexity %d / %d cap
 run.editor.invalid,INVALID — cannot apply:
+editor.spell_slots,Spell slots
+editor.chain_title,Slot %d chain   %s
+editor.role.essence,Essence
+editor.role.form,Form
+editor.role.mod,Mod
+editor.role.trigger,Trigger
+editor.role.payload,Payload
+editor.remove_tip,Click or right click to remove this rune.
+editor.locked_tip,Locked runes unlock by discovery.
+editor.tab.all,All
+editor.tab.essence,Essence
+editor.tab.form,Form
+editor.tab.modifier,Modifier
+editor.tab.trigger,Trigger
+editor.hint1,Click a rune to add or remove it
+editor.hint2,Locked runes unlock by discovery
+editor.btn.cancel,Cancel
+editor.btn.undo,Undo
+editor.btn.reset,Reset
+editor.btn.apply,Apply
 run.btn.undo,Undo
 run.btn.reset_draft,Reset draft
 run.btn.cancel_edit,Cancel (restore original)
@@ -156,7 +176,7 @@ run.btn.apply,Apply valid formula
 run.notice.formula_applied,Formula applied
 run.notice.formula_cancelled,Formula cancelled
 run.notice.duration, / %.1f s
-menu.title,ARCANE DUNGEON
+menu.title,SIGILWRIGHT
 menu.subtitle,SPELLFORGE  •  THE FIRST DESCENT
 menu.continue,Continue
 menu.new_run,New Run
@@ -168,8 +188,11 @@ menu.arena,Combat Arena
 pause.title,Paused
 pause.resume,Resume
 pause.settings,Settings
+pause.loadout,Loadout
+pause.abandon,Abandon
+pause.hint,ESC resume   ENTER select
+pause.run_info,Stage %d   Room %d   %02d:%02d
 pause.retry,Retry same seed
-pause.quit,Back to Menu
 pause.controls,Controls
 pause.back,Back
 pause.tips_hide,Hide tips
@@ -202,11 +225,12 @@ settings.bus.master,Master volume
 settings.bus.sfx,SFX volume
 settings.bus.ambience,Ambience volume
 settings.bus.ui,UI volume
+settings.bus.music,Music volume
 settings.mode.windowed,Windowed
 settings.mode.fullscreen,Fullscreen
 settings.mode.borderless,Borderless
 combat.back_to_menu,Back to Menu
-combat.header,ARCANE DUNGEON / M2 COMBAT
+combat.header,SIGILWRIGHT / M2 COMBAT
 combat.tips,"WASD/Arrows Move   Mouse Aim
 LMB / RMB / Q / E: Cast slot 1-4
 SPACE Dash   ESC Pause
@@ -253,10 +277,9 @@ hud.rune_choice,RUNE CHOICE
 hud.key.lmb,LMB
 hud.key.rmb,RMB
 hud.key.space,SPACE
-hud.hp,HP %d/%d
-hud.mp,MP %d/%d
-hud.mana_cost,%d MP
-hud.dash,DASH
+hud.value,%d/%d
+hud.stage,STAGE %d   ROOM %d
+hud.dash_charges,X%d
 sandbox.header,MAGIC SANDBOX  /  M1
 sandbox.hint,LMB/RMB cast • WASD debug move
 sandbox.select_formula,Select formula for highlighted slot
@@ -374,6 +397,19 @@ compendium.section.artifacts,Artifacts
 compendium.milestones,Milestones
 compendium.progress,%d/%d
 compendium.met,[done]
+compendium.discovered,DISCOVERED %d / %d
+compendium.tag.rune,RUNE
+compendium.tag.reaction,REACTION
+compendium.tag.enemy,ENEMY
+compendium.tag.artifact,ARTIFACT
+compendium.note1,NO PERMANENT STAT POWER
+compendium.note2,MILESTONES UNLOCK NEW RUNES
+compendium.undiscovered,NOT DISCOVERED
+compendium.recipe.wet_lightning_arc,LIGHTNING + WET
+compendium.recipe.chill_freeze,3 CHILLED = FROZEN
+compendium.recipe.wet_cold_freeze,WET + COLD
+compendium.recipe.frozen_force_shatter,FROZEN + FORCE
+compendium.recipe.fire_thaw_steam,FIRE + CHILLED
 compendium.locked,[locked]
 compendium.reaction.wet_lightning_arc,Lightning Arc
 compendium.reaction.chill_freeze,Chill Freeze
@@ -403,10 +439,134 @@ run.notice.resumed,Run resumed in the workshop.
 run.notice.resume_failed,The saved run could not be loaded; a new run has started.
 run.btn.loadout_view,Loadout (Tab)
 loadout_view.title,Loadout
-loadout_view.slot,Slot %d: %s
 loadout_view.locked, [LOCKED]
-loadout_view.cost,%d MP · %.1fs cooldown
 loadout_view.artifacts,Artifacts
 loadout_view.no_artifacts,No artifacts yet
 loadout_view.read_only,Read-only. Spells can only be edited at the workshop.
-loadout_view.close,Close (Tab)
+loadout_view.back,Back
+loadout_view.continue,Continue
+loadout_view.spells,Spells
+loadout_view.status,Status
+loadout_view.upgrades,Upgrades
+loadout_view.mp,MP %d
+loadout_view.cooldown,%.1f s
+loadout_view.charges,%d charges
+loadout_view.artifacts_count,Artifacts  %d / %d
+loadout_view.room_cleared,Room %d cleared
+loadout_view.hp_up,Max HP +%d
+loadout_view.mana_up,Max MP +%d
+loadout_view.dash_up,Dash +%d
+settings.tab.audio,Audio
+settings.tab.video,Video
+settings.tab.controls,Controls
+settings.tab.access,Accessibility
+settings.defaults,Defaults
+settings.apply,Apply
+settings.test,Test
+settings.swap,Swap
+settings.cancel,Cancel
+settings.hint,Esc back    Q / E switch tab    Enter change
+settings.disabled_hint,Disabled: coming later
+settings.value.on,On
+settings.value.off,Off
+settings.value.fps60,60 FPS
+settings.value.full,Full
+settings.value.large,Large
+settings.section.volume,Volume
+settings.section.options,Options
+settings.section.display,Display
+settings.section.light,Lighting and effects
+settings.section.combat,Combat
+settings.section.system,System
+settings.section.vision,Vision and comfort
+settings.section.input,Input and sound
+settings.audio.master,Master
+settings.audio.music,Music
+settings.audio.sfx,Sound effects
+settings.audio.ui,Interface
+settings.audio.ambience,Ambience
+settings.audio.mute_unfocused,Mute when unfocused
+settings.audio.priority,Spell sounds top priority
+settings.video.frame_limit,Frame limit
+settings.video.vsync,VSync
+settings.video.light_quality,Light quality
+settings.video.particles,Particles
+settings.video.glow,Glow
+settings.video.fps,Show FPS
+settings.lighting.hint,Off = low-end PCs
+settings.lighting.preview,Light preview
+settings.access.colourblind,Colour-blind mode
+settings.access.text_size,Text size
+settings.access.telegraphs,Strong telegraphs
+settings.access.hold_cast,Hold to cast
+settings.access.aim_assist,Aim assist
+settings.access.visual_cues,Visual sound cues
+settings.access.status_icons,Status icons
+settings.controls.primary,Primary
+settings.controls.alt,Alt
+settings.controls.reset_keys,Reset keys
+settings.controls.listen_hint,"Listening: press a key, Esc cancels"
+settings.controls.conflict_panel,%s is already used by %s. Swap or cancel?
+settings.help.master,Overall loudness of the game.
+settings.help.music,Background music loudness. Disabled until the game has a music bus.
+settings.help.sfx,Spells; hits and footsteps.
+settings.help.ui,Menu clicks and interface cues.
+settings.help.ambience,Room hum; torches and water.
+settings.help.mute_unfocused,Silences the game while its window is in the background.
+settings.help.priority,Keeps spell sounds audible when many sounds play at once.
+settings.help.window_mode,"Windowed, fullscreen or borderless. Applies at once."
+settings.help.ui_scale,Scales every menu and HUD element from 90% to 150%.
+settings.help.frame_limit,Caps the frame rate.
+settings.help.vsync,Syncs frames to the monitor to avoid tearing.
+settings.help.lighting,"Dim rooms, torch and spell light. Turn off for low-end PCs: the game stays readable."
+settings.help.light_quality,High or low light detail. Only used while lighting is on.
+settings.help.particles,How many particles spells and impacts spawn.
+settings.help.glow,Bloom around bright spells and runes.
+settings.help.fps,Shows the frame rate in a corner.
+settings.help.reduce_flash,"Tones down hit-flash, white bursts and screen flicker."
+settings.help.reduce_shake,Turns off camera shake from hits and blasts.
+settings.help.colourblind,Alternative colour palette for elements and warnings.
+settings.help.text_size,Text size lives in the Video tab as UI scale.
+settings.help.telegraphs,Makes enemy attack warnings larger and brighter.
+settings.help.hold_cast,Hold the cast button instead of clicking repeatedly.
+settings.help.aim_assist,Nudges spells toward the nearest enemy.
+settings.help.visual_cues,Shows an icon on screen for important sounds.
+settings.help.telemetry,"When on, anonymous play stats and session/crash logs are saved locally to the log folder. Nothing is sent anywhere."
+run.reward.title,CHOOSE A REWARD
+run.reward.subtitle,ROOM %d CLEARED   TAKE ONE
+run.reward.take,TAKE
+run.reward.coins,COINS %d
+run.reward.coins_name,+%d COINS
+run.reward.coins_desc,Coins for the merchant. Added to your purse right away.
+run.reward.tag_rune,%s RUNE
+run.reward.tag_artifact,%s ARTIFACT
+run.reward.tag_upgrade,%s UPGRADE
+run.reward.tag_currency,%s REWARD
+run.rarity.common,COMMON
+run.rarity.uncommon,UNCOMMON
+run.rarity.rare,RARE
+run.rarity.epic,EPIC
+run.shop.price_coins,%d COINS
+run.shop.sold,SOLD
+run.shop.buy,BUY
+run.shop.need_short,NEED %d
+run.shop.coins,%d COINS
+run.shop.reroll_btn,REROLL   %d
+run.shop.reroll_spent,REROLLED
+run.shop.reroll_note,ONE PAID REROLL PER VISIT
+run.shop.leave,LEAVE
+run.shop.hint,ARROWS BROWSE   ENTER BUY   ESC LEAVE
+run.summary.title_win,RUN COMPLETE
+run.summary.title_lose,RUN OVER
+run.summary.sub_win,THE BOSS FALLS.
+run.summary.sub_lose,FELL IN STAGE %d.
+run.summary.l_stage,STAGE REACHED
+run.summary.l_rooms,ROOMS CLEARED
+run.summary.l_time,TIME
+run.summary.l_kills,ENEMIES DEFEATED
+run.summary.l_spells,SPELLS USED
+run.summary.l_coins,COINS HELD
+run.summary.loadout,FINAL LOADOUT
+menu.build_stamp,Build %s
+settings.open_logs,Open log folder
+settings.help.open_logs,"Opens the folder with your local session and crash logs. Send these files to Franklin. Nothing is uploaded."

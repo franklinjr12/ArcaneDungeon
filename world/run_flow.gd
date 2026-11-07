@@ -7,6 +7,7 @@ const Encounter = preload("res://world/encounter_director.gd")
 const Reward = preload("res://world/reward_generator.gd")
 const Merchant = preload("res://world/merchant.gd")
 const Artifacts = preload("res://world/artifacts.gd")
+const AudioDirector = preload("res://game/audio/audio_director.gd")
 const Editor = preload("res://magic/editor/spell_editor.gd")
 const Session = preload("res://combat/combat_session.gd")
 const Runner = preload("res://magic/runtime/spell_runner.gd")
@@ -143,6 +144,12 @@ func _cue(id: String, at = null) -> void:
 	if audio_sink.is_valid():
 		audio_sink.call(id,at)
 
+## AD-151: artifact pickup/purchase cue via the data-driven event map; output-only.
+func _artifact_cue(id: String) -> void:
+	var cue := str(AudioDirector.load_events().get("artifact:" + id,""))
+	if cue != "":
+		_cue(cue)
+
 func set_meta_locks(runes: Array, artifacts: Array) -> void:
 	meta_locked_runes = runes.duplicate()
 	meta_locked_artifacts = artifacts.duplicate()
@@ -269,6 +276,20 @@ func _attach_artifacts() -> void:
 		for id in run.artifacts:
 			session.sim.artifacts.add(str(id))
 
+## Output-only: music context for the current room (workshop, boss, else the stage's music_context).
+func music_context_for_room() -> String:
+	if mode == "workshop":
+		return "workshop"
+	if room != null and room.values.get("type","") == "boss":
+		return "boss"
+	var idx: int = run.sequence_index if run != null else 0
+	if idx >= 0 and idx < rooms.size():
+		var stages: Array = config.get("stages",[])
+		var s := int(rooms[idx].get("stage",0))
+		if s >= 0 and s < stages.size():
+			return str(stages[s].get("music_context","ruins"))
+	return "ruins"
+
 func _enter_current() -> Dictionary:
 	_bank_arcs()
 	var built: Dictionary = _build_room(rooms[run.sequence_index])
@@ -298,6 +319,7 @@ func _enter_current() -> Dictionary:
 		state = "fighting"
 	_prior_reactions = 0
 	_cue("amb.workshop" if mode == "workshop" else "amb.ruins")
+	_cue("music." + music_context_for_room())
 	experiment.record("room_enter",{"room_index":run.sequence_index})
 	logs.append({"kind":"room_enter","id":room.values["id"],"index":run.sequence_index})
 	return {"ok":true}
@@ -340,6 +362,7 @@ func enter_prelude() -> Dictionary:
 	prelude_tested = false
 	enter_test_range()
 	_cue("amb.workshop")
+	_cue("music.workshop")
 	experiment.record("prelude_enter")
 	logs.append({"kind":"prelude_enter","id":room.values["id"]})
 	return {"ok":true}
@@ -478,6 +501,7 @@ func choose_reward(index: int) -> Dictionary:
 		if not added["ok"]:
 			return added
 		outcome = {"ok":true,"kind":"artifact","id":str(option["id"])}
+		_artifact_cue(str(option["id"]))
 		_attach_artifacts()
 	else:
 		run.currency += int(option["amount"])
@@ -632,6 +656,8 @@ func buy(index: int) -> Dictionary:
 		_cue("ui.purchase")
 		if outcome["kind"] == "rune":
 			_cue("sfx.pickup.rune")
+		elif outcome["kind"] == "artifact":
+			_artifact_cue(str(merchant.stock[index].get("artifact_id","")))
 		experiment.record("purchase",{"room_index":run.sequence_index,"price":int(merchant.stock[index]["price"])})
 		session.sim.loadout.unlocked = run.unlocked.duplicate(true)
 		_attach_artifacts()

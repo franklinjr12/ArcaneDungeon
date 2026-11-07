@@ -14,7 +14,7 @@ const ICONS = ["fire","water","lightning","projectile","burst","orb","homing","s
 	"health","mana","rune","coin","dodge","wet","burning","charged","damage","door","shop","book","staff","shield"]
 const EFFECT_ROWS = ["fire","water","lightning","orb","enemy","arc","impact","dodge"]
 ## AD-137 placeholder art: new Stage 1 kinds borrow an existing sprite until the art import row (tinted by tuning color).
-const PLACEHOLDER_KIND := {"ossuary_shieldbearer":"bone_thrall","wailing_spirit":"grave_hound","corpse_bloat":"bone_thrall","cistern_slime":"bone_thrall","cistern_slimelet":"bone_thrall","drowned_acolyte":"fallen_adept","deep_eel":"grave_hound","storm_crystal":"fallen_adept","rust_golem":"bone_thrall","lantern_wisp":"grave_hound","drowned_archivist":"undead_warden"}
+const PLACEHOLDER_KIND := {}
 const F = {"mage":MAGE,"bone_thrall":PURSUER,"fallen_adept":RANGED,"grave_hound":FLANKER,"undead_warden":BOSS,"dummy":DUMMY}
 
 # AD-030: debug-only swap to art/export sprites (F6). Default stays assets/pixel.
@@ -44,6 +44,24 @@ static func _export_data() -> void:
 static func export_map() -> Dictionary:
 	_export_data()
 	return _map
+
+const ARTIFACT_INDEX := "res://art/export/ico/ad_ico_artifacts_index.json"
+const ARTIFACT_ATLAS := {16: "res://art/export/ico/ad_ico_artifacts_atlas_16.png", 32: "res://art/export/ico/ad_ico_artifacts_atlas_32_icon.png"}
+static var _artifact_index: Dictionary = {}
+
+## AD-115 per-artifact icon (16 px or 32 px icon atlas, never the placeholder card frames); unknown id -> generic upgrade icon.
+static func artifact_icon(id: String, px: int = 16) -> AtlasTexture:
+	if _artifact_index.is_empty():
+		var parsed = JSON.parse_string(FileAccess.get_file_as_string(ARTIFACT_INDEX))
+		_artifact_index = parsed.get("artifacts", {}) if parsed is Dictionary else {}
+	if not _artifact_index.has(id):
+		return load("res://ui/skin_a.gd").icon_or_mvp("upgrade")
+	px = 32 if px >= 32 else 16
+	var e: Dictionary = _artifact_index[id]
+	var t := AtlasTexture.new()
+	t.atlas = load(ARTIFACT_ATLAS[px])
+	t.region = Rect2(float(e["x%d" % px]), float(e["y%d" % px]), px, px)
+	return t
 
 static func export_manifest() -> Dictionary:
 	_export_data()
@@ -154,6 +172,8 @@ static func actor_manifest() -> Dictionary:
 	return _actors
 
 static func resolve_kind(kind: String) -> String:
+	if actor_manifest().has(kind):
+		return kind
 	return PLACEHOLDER_KIND.get(kind,kind)
 
 static func actor_tag(kind: String, tag: String) -> Dictionary:
@@ -252,15 +272,111 @@ static func draw_actor(canvas: CanvasItem, kind: String, at: Vector2, anim: Dict
 	var hb: Rect2 = fr["hurtbox"]
 	var region: Rect2 = fr["region"]
 	var rect := Rect2((fr["offset"] - (hb.position + hb.size / 2.0)) * _actor_scale, region.size * _actor_scale)
-	if left and not fr["left"] and bool(actor_manifest()[resolve_kind(kind)].get("mirror", false)):
+	var mirror: bool = left and not fr["left"] and bool(actor_manifest()[resolve_kind(kind)].get("mirror", false))
+	if mirror:
 		canvas.draw_set_transform(at, 0.0, Vector2(-1, 1))
 		canvas.draw_texture_rect_region(fr["tex"], rect, region, modulate)
 		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	else:
 		rect.position += at
 		canvas.draw_texture_rect_region(fr["tex"], rect, region, modulate)
+	var gl := actor_glow_frame(kind, tag, int(fr["index"]), left)
+	if not gl.is_empty():
+		var grect := Rect2((gl["offset"] - (hb.position + hb.size / 2.0)) * _actor_scale, gl["region"].size * _actor_scale)
+		_queue_glow({"tex": gl["tex"], "rect": grect, "region": gl["region"], "mirror": mirror, "at": at})
+
+## AD-154 glow layer: *_glow frames queued while the base is drawn, drawn later on the additive V2 layer.
+## Pure lookup: {tex, region, offset} of the glow slice for a tag frame, or {} when the frame has none.
+static func actor_glow_frame(kind: String, tag: String, index: int, left: bool = false) -> Dictionary:
+	var tg := actor_tag(kind, tag)
+	if tg.is_empty():
+		return {}
+	var sh: Dictionary = actor_manifest()[resolve_kind(kind)]["sheets"][tg["sheet"]]
+	if sh.get("glow_png") == null or (left and sh.get("left_json") != null):
+		return {}
+	index = clampi(index, 0, int(tg["frames"]) - 1)
+	var g = sh.get("glow", {}).get(str(int(tg["from"]) + index))
+	if g == null:
+		return {}
+	if not _glow_tex.has(sh["glow_png"]):
+		_glow_tex[sh["glow_png"]] = load(sh["glow_png"])
+	return {"tex": _glow_tex[sh["glow_png"]], "region": Rect2(g["x"], g["y"], g["w"], g["h"]), "offset": Vector2(g["ox"], g["oy"])}
+
+static var _glow_tex: Dictionary = {}
+static var _glow_queue: Array = []
+static var _glow_frame := -1
+
+static func _queue_glow(item: Dictionary) -> void:
+	var f := Engine.get_frames_drawn()
+	if f != _glow_frame:
+		_glow_frame = f
+		_glow_queue.clear()
+	_glow_queue.append(item)
+
+## Draws this frame's queued glows (additive canvas item). Rendering only; never touches the sim.
+static func draw_actor_glows(ci: CanvasItem, alpha_mult: float = 1.0) -> void:
+	if _glow_frame != Engine.get_frames_drawn():
+		return
+	var col := Color(1, 1, 1, alpha_mult)
+	for it in _glow_queue:
+		if it.has("rot"):  # AD-155 fx glow: same dest rect and rotation as the base sprite
+			ci.draw_set_transform(it["at"], float(it["rot"]), Vector2.ONE)
+			ci.draw_texture_rect_region(it["tex"], it["rect"], it["region"], col)
+			ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		elif it["mirror"]:
+			ci.draw_set_transform(it["at"], 0.0, Vector2(-1, 1))
+			ci.draw_texture_rect_region(it["tex"], it["rect"], it["region"], col)
+		else:
+			var r: Rect2 = it["rect"]
+			r.position += it["at"]
+			ci.draw_texture_rect_region(it["tex"], r, it["region"], col)
+	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+const CISTERN_TILES := "ad_til_flooded_cistern"
+
+static func _cistern_ready() -> bool:
+	_export_data()
+	return _manifest.has(CISTERN_TILES)
+
+## Region of a cistern tileset frame for a tag; index loops over the tag frames.
+static func _cistern_region(tag: String, index: int) -> Rect2:
+	var j: Dictionary = _export_json(CISTERN_TILES)
+	var tg: Dictionary = _manifest[CISTERN_TILES]["tags"][tag]
+	var f: Dictionary = j["frames"][int(tg["from"]) + posmod(index, int(tg["frames"]))]["frame"]
+	return Rect2(f["x"], f["y"], f["w"], f["h"])
+
+## Pure: index inside a tag's ms list at a 60 Hz tick, looped.
+static func loop_index(ms: Array, tick: int) -> int:
+	var total := 0
+	for d in ms:
+		total += int(d)
+	var t := (tick * 1000 / 60) % maxi(total, 1)
+	var acc := 0
+	for i in ms.size():
+		acc += int(ms[i])
+		if t < acc:
+			return i
+	return ms.size() - 1
+
+static func _tile_floor_cistern(canvas: CanvasItem, view: Rect2, offset: Vector2, stage: int) -> void:
+	_export_json(CISTERN_TILES)
+	var tex: Texture2D = _texs[CISTERN_TILES]
+	var count: int = int(_manifest[CISTERN_TILES]["tags"]["floor"]["frames"])
+	canvas.draw_rect(Rect2(Vector2.ZERO, view.size), Color("#0f1924"))
+	var first_x := int(floor(offset.x / 32))
+	var first_y := int(floor(offset.y / 32))
+	for ay in int(ceil(view.size.y / 32)) + 3:
+		for ax in int(ceil(view.size.x / 32)) + 3:
+			var gx := first_x + ax
+			var gy := first_y + ay
+			var h: int = (gx * 73856093 ^ gy * 19349663 ^ stage * 83492791) & 0x7fffffff
+			canvas.draw_texture_rect_region(tex, Rect2(Vector2(gx * 32, gy * 32) - offset, Vector2(32, 32)),
+				_cistern_region("floor", h % count))
 
 static func tile_floor(canvas: CanvasItem, view: Rect2, offset: Vector2, stage: int = 0) -> void:
+	if stage == 2 and _cistern_ready():
+		_tile_floor_cistern(canvas, view, offset, stage)
+		return
 	if use_art_export:
 		_tile_floor_export(canvas, view, offset, stage)
 		return
@@ -377,22 +493,29 @@ static func effect(canvas: CanvasItem, kind: String, center: Vector2, tick: int,
 static func status_icons(canvas: CanvasItem, target, tick: int, at: Vector2) -> void:
 	var current: Dictionary = target.status.snapshot(tick)
 	var slot := 0
-	for status_id in ["burning","wet","charged"]:
+	for status_id in ["burning","wet","charged","chilled","frozen","brittle"]:
 		if current.has(status_id):
 			draw_fx(canvas,"status."+status_id,at+Vector2(15,-(target.radius+21)),tick,0.0,0.0,Color.WHITE,slot)
 			slot += 1
 
 # AD-039: P1 spell FX are the default visuals (not behind F6). Resolved through engine_map.fx + manifest.
-const FX_ELEMENTS := ["fire","water","lightning"]
+const FX_ELEMENTS := ["fire","water","lightning","cold","force"]
 const FX_EVENTS := [
 	"projectile.fire","projectile.water","projectile.lightning","projectile.neutral",
 	"orb.fire","orb.water","orb.lightning","mod.homing",
 	"impact.fire","impact.water","impact.lightning","impact.neutral",
 	"burst.fire","burst.water","burst.lightning",
+	"projectile.cold","impact.cold","burst.cold","orb.cold","projectile.force","impact.force","burst.force","orb.force",
+	"status.chilled","status.frozen","status.brittle",
+	"reaction.shatter","reaction.steam","reaction.flash_freeze","mod.chain","mod.rapid",
+	"trigger.on_kill","trigger.on_expire","trigger.timer",
 	"reaction.arc","reaction.extinguish","mod.split","mod.pierce","trigger.on_hit",
 	"status.wet","status.burning","status.charged",
 	"cast.charge","cast.muzzle","dash.trail","hit.spark","enemy.spawn","enemy.dissolve","enemy.bolt","enemy.bolt_impact",
 	"boss.bullet","boss.phase","room.clear","telegraph.circle","telegraph.line","telegraph.dash_lane"]
+## AD-155: mapped events the sim emits no trace / visual for (mod.rapid only changes cooldown and damage scale;
+## on_expire and timer fire without a hit position, so they are drawn only when a payload spawn carries one).
+const FX_UNEMITTED := ["mod.rapid"]
 const IFRAME_OUTLINE := Color("#e9f2e5")
 ## Events that had no P1 mapping when drawn (legacy sprite used instead); must stay empty in the slice.
 static var fx_fallbacks: Array = []
@@ -429,6 +552,23 @@ static func fx_frame(event: String, age_ticks: int) -> Dictionary:
 	var piv: Array = entry["pivot"]
 	return {"stem": stem, "tag": tag, "index": index, "total_ms": total, "done": done,
 		"region": Rect2(f["x"], f["y"], f["w"], f["h"]), "pivot": Vector2(piv[0], piv[1])}
+
+## AD-155: glow slice of an fx_frame result. Glow sheets are packed separately, so their own json is authoritative
+## (same frame size as the base; only the sheet position may differ). {} when the stem has no glow.
+static func fx_glow_frame(fr: Dictionary) -> Dictionary:
+	if fr.is_empty():
+		return {}
+	var png: String = str(_manifest[fr["stem"]].get("glow", ""))
+	if png == "":
+		return {}
+	if not _glow_tex.has(png):
+		_glow_tex[png] = load(png)
+		_glow_json[png] = JSON.parse_string(FileAccess.get_file_as_string(png.get_basename() + ".json"))
+	var i: int = int(_manifest[fr["stem"]]["tags"][fr["tag"]]["from"]) + int(fr["index"])
+	var f: Dictionary = _glow_json[png]["frames"][i]["frame"]
+	return {"tex": _glow_tex[png], "region": Rect2(f["x"], f["y"], f["w"], f["h"])}
+
+static var _glow_json: Dictionary = {}
 
 static func _legacy_kind(event: String) -> String:
 	var parts := event.split(".")
@@ -499,6 +639,9 @@ static func draw_fx(canvas: CanvasItem, event: String, center: Vector2, age_tick
 		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		return
 	canvas.draw_texture_rect_region(_texs[fr["stem"]], dest, region, modulate)
+	var gl := fx_glow_frame(fr)
+	if not gl.is_empty():
+		_queue_glow({"tex": gl["tex"], "rect": dest, "region": gl["region"], "mirror": false, "at": center, "rot": rotation})
 	if event.begins_with("status."):
 		_status_icon(canvas, event, fr, slot, modulate)
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
@@ -510,7 +653,7 @@ static func _status_icon(canvas: CanvasItem, event: String, fr: Dictionary, slot
 		return
 	var atlas: String = _map["icons"]
 	if _icon_index.is_empty():
-		_icon_index = JSON.parse_string(FileAccess.get_file_as_string("res://art/export/ico/ad_ico_atlas_mvp_index.json"))["icons"]
+		_icon_index = JSON.parse_string(FileAccess.get_file_as_string("res://art/export/ico/%s_index.json" % atlas))["icons"]
 	var cell: Dictionary = _icon_index["ad_ico_" + event.trim_prefix("status.")]
 	_export_json(atlas)
 	var sc: float = float(_map.get("scale", 2))
@@ -519,6 +662,10 @@ static func _status_icon(canvas: CanvasItem, event: String, fr: Dictionary, slot
 	canvas.draw_texture_rect_region(_texs[atlas],
 		Rect2(anchor + Vector2(-size.x / 2.0 + slot * size.x, -size.y), size),
 		Rect2(float(cell["x"]), float(cell["y"]), float(cell["w"]), float(cell["h"])), modulate)
+
+## AD-155: sim.visuals "reaction" ids -> one-shot FX events.
+const REACTION_FX := {"wet_cold_freeze": "reaction.flash_freeze", "frozen_force_shatter": "reaction.shatter",
+	"fire_thaw_steam": "reaction.steam"}
 
 static func _element(essence_id: String) -> String:
 	var el := essence_id.trim_prefix("essence.")
@@ -534,14 +681,77 @@ static func essence_color(essence_id: String) -> Color:
 		"force": return Color("#c9a6f0")
 	return Color("#e8e0cc")
 
-## AD-132: draws beam lines and field circles from sim.visuals; `offset` is the camera offset.
-static func draw_form_visuals(canvas: CanvasItem, visuals: Array, offset: Vector2 = Vector2.ZERO) -> void:
+## AD-155: beam piece list [{stem, part, region, pos (world), rot, scale, pivot}] for from->to at the map's 1x scale.
+## Segment pieces tile [0,|to-from|] exactly (last tile cropped); start/end caps overlay the ends. Pure; [] when unmapped.
+static func beam_segments(from: Vector2, to: Vector2, element: String, tick: int = 0, width_scale: float = 1.0) -> Array:
+	var el := "neutral" if element == "" else element
+	var fs := fx_frame("beam.%s.start" % el, tick)
+	var fm := fx_frame("beam.%s.segment" % el, tick)
+	var fe := fx_frame("beam.%s.end" % el, tick)
+	if fs.is_empty() or fm.is_empty() or fe.is_empty():
+		return []
+	_export_data()
+	var k := float(_map.get("beam", {}).get("scale", 1)) * 1.0
+	var ws := k * width_scale
+	var dir := to - from
+	var length := dir.length()
+	var rot := dir.angle()
+	var u := dir / length if length > 0.0 else Vector2.RIGHT
+	var out: Array = []
+	var tile: float = fm["region"].size.x * k
+	var along := 0.0
+	while along < length - 0.001:
+		var w := minf(tile, length - along)
+		var reg: Rect2 = fm["region"]
+		reg.size.x = w / k
+		out.append({"stem": fm["stem"], "part": "segment", "region": reg, "pos": from + u * along, "rot": rot,
+			"scale": Vector2(k, ws), "pivot": Vector2(0.0, fm["pivot"].y), "tag": fm})
+		along += w
+	out.append({"stem": fs["stem"], "part": "start", "region": fs["region"], "pos": from, "rot": rot,
+		"scale": Vector2(k, ws), "pivot": fs["pivot"], "tag": fs})
+	out.append({"stem": fe["stem"], "part": "end", "region": fe["region"], "pos": to, "rot": rot,
+		"scale": Vector2(k, ws), "pivot": fe["pivot"], "tag": fe})
+	return out
+
+static func _draw_beam_sprites(canvas: CanvasItem, from: Vector2, to: Vector2, element: String, tick: int, width_scale: float) -> bool:
+	var pieces := beam_segments(from, to, element, tick, width_scale)
+	if pieces.is_empty():
+		return false
+	for pc in pieces:
+		var reg: Rect2 = pc["region"]
+		var sc: Vector2 = pc["scale"]
+		var dest := Rect2(-pc["pivot"] * sc, reg.size * sc)
+		canvas.draw_set_transform(pc["pos"], pc["rot"], Vector2.ONE)
+		canvas.draw_texture_rect_region(_texs[pc["stem"]], dest, reg)
+		var gl := fx_glow_frame(pc["tag"])
+		if not gl.is_empty():
+			var greg: Rect2 = gl["region"]
+			greg.size.x = reg.size.x
+			_queue_glow({"tex": gl["tex"], "rect": dest, "region": greg, "mirror": false, "at": pc["pos"], "rot": pc["rot"]})
+	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	return true
+
+## AD-132/AD-155: draws beam and field sprites from sim.visuals (primitive lines/circles when an asset is missing);
+## `offset` is the camera offset, `tick` animates the sprites. Visual only.
+static func draw_form_visuals(canvas: CanvasItem, visuals: Array, offset: Vector2 = Vector2.ZERO, tick: int = 0) -> void:
 	for v in visuals:
-		var color := essence_color(str(v.get("essence", "")))
+		var essence := str(v.get("essence", ""))
+		var el := _element(essence)
+		var color := essence_color(essence)
+		var age := int(v.get("age", tick))
 		if v["kind"] == "beam":
+			var wscale := float(v.get("width_scale", 1.0))
+			if v.get("expand", false):
+				wscale *= float(_map.get("beam", {}).get("expand_width", 1.0))
+			if _draw_beam_sprites(canvas, v["from"] - offset, v["to"] - offset, el, age, wscale):
+				continue
 			canvas.draw_line(v["from"] - offset, v["to"] - offset, Color(color, 0.35), 9.0)
 			canvas.draw_line(v["from"] - offset, v["to"] - offset, color, 3.0)
 		elif v["kind"] == "field":
+			var ev := "field." + el
+			if not fx_frame(ev, age).is_empty():
+				draw_fx(canvas, ev, v["position"] - offset, age, 0.0, 0.0, Color.WHITE, 0, float(v["radius"]) * 2.0)
+				continue
 			canvas.draw_circle(v["position"] - offset, float(v["radius"]), Color(color, 0.22))
 			canvas.draw_arc(v["position"] - offset, float(v["radius"]), 0.0, TAU, 48, Color(color, 0.8), 2.0)
 
@@ -602,13 +812,17 @@ static func collect_fx(session, tick: int, memo: Dictionary) -> Array:
 			"burst":
 				var el := _element(str(v.get("essence", "")))
 				_shot(shots, ("burst." + el) if el != "neutral" else "impact.neutral", v["position"], tick)
+			"reaction":
+				var rev: String = REACTION_FX.get(str(v.get("reaction", "")), "")
+				if rev != "":
+					_shot(shots, rev, v["position"], tick)
 			"arc":
 				var d: Vector2 = v["to"] - v["from"]
 				_shot(shots, "reaction.arc", (v["from"] + v["to"]) / 2.0, tick, d.angle(), d.length())
 	memo["seen"] = seen_now
 	# Trace-derived modifier / trigger FX, consumed through per-type cursors.
 	var batch: Dictionary = {}
-	for kind in ["spawn", "hit", "trigger"]:
+	for kind in ["spawn", "hit", "trigger", "chain"]:
 		var recs: Array = sim.trace.filter_records(-1, "", kind)
 		var from: int = int(memo["cursor"].get(kind, 0))
 		if recs.size() < from:
@@ -623,9 +837,25 @@ static func collect_fx(session, tick: int, memo: Dictionary) -> Array:
 		hit_at[int(r["effect_id"])] = target.position
 		if pierce_ids.has(int(r["effect_id"])):
 			_shot(shots, "mod.pierce", target.position, tick)
+	var spawn_at: Dictionary = {}
+	for r in batch["spawn"]:
+		spawn_at[int(r["parent_effect_id"])] = _pos(r["position"])
 	for r in batch["trigger"]:
-		if hit_at.has(int(r["parent_effect_id"])):
-			_shot(shots, "trigger.on_hit", hit_at[int(r["parent_effect_id"])], tick)
+		var pid := int(r["parent_effect_id"])
+		var tev: String = str(r.get("reason", "trigger.on_hit"))
+		if not tev.begins_with("trigger."):
+			tev = "trigger.on_hit"
+		if tev == "trigger.on_hit":
+			if hit_at.has(pid):
+				_shot(shots, tev, hit_at[pid], tick)
+		elif spawn_at.has(pid):
+			_shot(shots, tev, spawn_at[pid], tick)
+		elif hit_at.has(pid):
+			_shot(shots, tev, hit_at[pid], tick)
+	for r in batch["chain"]:
+		var ct = sim.targets.get_target(int(r["target_id"]))
+		if ct != null:
+			_shot(shots, "mod.chain", ct.position, tick)
 	var groups: Dictionary = {}
 	for r in batch["spawn"]:
 		if int(r["parent_effect_id"]) != 0:
@@ -644,7 +874,7 @@ static func collect_fx(session, tick: int, memo: Dictionary) -> Array:
 			_shot(shots, "reaction.extinguish", target.position, tick)
 		memo["prev"][target.id] = snap
 		var slot := 0
-		for sid in ["burning", "wet", "charged"]:
+		for sid in ["burning", "wet", "charged", "chilled", "frozen", "brittle"]:
 			var skey := "%d:%s" % [target.id, sid]
 			if not snap.has(sid):
 				memo["since"].erase(skey)
@@ -817,6 +1047,8 @@ static func draw_damage_number(canvas: CanvasItem, symbol: String, text: String,
 
 ## AD-137 placeholder tint for a borrowed sprite: the enemy 'color' lerped over white; alpha < 1 while intangible.
 static func placeholder_modulate(kind: String, color: Color, intangible: bool, warning_flicker: bool) -> Color:
+	if actor_manifest().has(kind):
+		return Color(1.0,1.0,1.0,0.4 if intangible else (0.7 if warning_flicker else 1.0))
 	if not PLACEHOLDER_KIND.has(kind):
 		return Color.WHITE
 	var out := Color.WHITE.lerp(color,0.6)
@@ -840,14 +1072,76 @@ static func draw_enemy_markers(canvas: CanvasItem, enemy, at: Vector2, tick: int
 static func draw_water(canvas: CanvasItem, session, offset: Vector2) -> void:
 	if session.water == null:
 		return
+	var cistern := _cistern_ready()
+	if cistern:
+		_export_json(CISTERN_TILES)
+	var tick: int = session.sim.clock.tick
 	for tile in session.water.view():
 		var rect: Rect2 = tile["rect"]
 		rect.position -= offset
 		var deep: bool = str(tile["kind"]) == "deep"
+		if cistern:
+			_draw_water_cells(canvas, rect, "deep_loop" if deep else "water_loop", tick, Color(1, 1, 1, 1.0 if deep else 0.85))
+			continue
 		canvas.draw_rect(rect,Color(0.08,0.2,0.45,1.0) if deep else Color(0.55,0.78,0.95,0.4))
 
+## Fills rect with 32-unit cells of a looped cistern tag; partial edge cells are clipped by region size.
+## Shore/deep 47-blob edge autotiling is out of scope here.
+static func _draw_water_cells(canvas: CanvasItem, rect: Rect2, tag: String, tick: int, col: Color) -> void:
+	var tg: Dictionary = _manifest[CISTERN_TILES]["tags"][tag]
+	var region := _cistern_region(tag, loop_index(tg["ms"], tick))
+	var tex: Texture2D = _texs[CISTERN_TILES]
+	var y := 0.0
+	while y < rect.size.y:
+		var x := 0.0
+		var ch := minf(32.0, rect.size.y - y)
+		while x < rect.size.x:
+			var cw := minf(32.0, rect.size.x - x)
+			canvas.draw_texture_rect_region(tex, Rect2(rect.position + Vector2(x, y), Vector2(cw, ch)),
+				Rect2(region.position, Vector2(cw / 2.0, ch / 2.0)), col)
+			x += 32.0
+		y += 32.0
+
 ## AD-150 env props: primitive placeholder draws. Reads session.env_props.view() only; never mutates the sim.
-static func draw_env_props(canvas: CanvasItem, session, offset: Vector2) -> void:
+## Pure: {stem, tag, index} of the imported AD-120 prop frame for a view entry, or {} (unmapped / skipped).
+static func env_prop_frame(kind: String, state: String, lit: bool, stage: int, tick: int) -> Dictionary:
+	_export_data()
+	var base := {"crate": "burnable_crate", "urn": "breakable_urn", "puddle": "puddle", "cobweb": "cobweb",
+		"brazier": "brazier", "cracked_wall": "cracked_wall"}.get(kind, "") as String
+	if base == "" or state == "destroyed":
+		return {}
+	var stem := "ad_prp_" + base + ("_cistern" if stage == 2 else ("" if kind == "urn" else "_ruins"))
+	var tag := "idle"
+	if kind == "puddle" and state == "frozen":
+		stem = "ad_prp_ice_patch"
+	elif kind == "brazier":
+		tag = "lit" if lit else "unlit"
+	elif state == "burning":
+		tag = "burning"
+	if not _manifest.has(stem) or not _manifest[stem]["tags"].has(tag):
+		return {}
+	return {"stem": stem, "tag": tag, "index": loop_index(_manifest[stem]["tags"][tag]["ms"], tick)}
+
+## Draws an env prop frame (scale 2, pivot at the rect's bottom-centre) and queues its glow. False if unavailable.
+static func _draw_env_prop_art(canvas: CanvasItem, fr: Dictionary, rect: Rect2) -> bool:
+	if fr.is_empty():
+		return false
+	var stem: String = fr["stem"]
+	var j: Dictionary = _export_json(stem)
+	var tg: Dictionary = _manifest[stem]["tags"][fr["tag"]]
+	var f: Dictionary = j["frames"][int(tg["from"]) + int(fr["index"])]["frame"]
+	var region := Rect2(f["x"], f["y"], f["w"], f["h"])
+	var pv: Array = _manifest[stem]["pivot"]
+	var dst := Rect2(Vector2(rect.get_center().x, rect.end.y) - Vector2(float(pv[0]), float(pv[1])) * 2.0, region.size * 2.0)
+	canvas.draw_texture_rect_region(_texs[stem], dst, region)
+	var gp = _manifest[stem].get("glow")
+	if gp != null:
+		if not _glow_tex.has(gp):
+			_glow_tex[gp] = load(gp)
+		_queue_glow({"tex": _glow_tex[gp], "rect": dst, "region": region, "mirror": false, "at": Vector2.ZERO})
+	return true
+
+static func draw_env_props(canvas: CanvasItem, session, offset: Vector2, stage: int = 0) -> void:
 	if session.env_props == null:
 		return
 	var tick: int = session.sim.clock.tick
@@ -859,6 +1153,8 @@ static func draw_env_props(canvas: CanvasItem, session, offset: Vector2) -> void
 		rect.position -= offset
 		var mid := rect.get_center()
 		var burning := state == "burning"
+		if _draw_env_prop_art(canvas, env_prop_frame(str(prop["kind"]), state, bool(prop.get("lit", false)), stage, tick), rect):
+			continue
 		match str(prop["kind"]):
 			"crate":
 				var body := Color("#8a5a32")

@@ -1,6 +1,6 @@
 {
  "version": 1,
- "note": "Scale 2 is the game-art ruling 2026-10-30 (Art 01 \u00a74: 640x360 internal, integer x2, 1 art px = 2 world units, nearest). The state->tag mapping is PROPOSED (AD-030), hand-authored, not approved art direction. Not written by import_art_exports.py. The rune_icons/hud/ui_icons mapping is AD-040 (hand-authored); the essence.neutral icon is a placeholder (ad_ico_projectile) until a basic-bolt icon exists.",
+ "note": "Scale 2 is the game-art ruling 2026-10-30 (Art 01 \u00a74: 640x360 internal, integer x2, 1 art px = 2 world units, nearest). The state->tag mapping is PROPOSED (AD-030), hand-authored, not approved art direction. Not written by import_art_exports.py. The rune_icons/hud/ui_icons mapping is AD-040 (hand-authored); essence.neutral uses the ad_ico_projectile glyph (the basic bolt); it is not a placeholder. AD-155 maps the demo atlas (ad_ico_atlas_demo, a superset of the MVP atlas) and the Cold/Force/AD-114 FX.",
  "scale": 2,
  "entities": {
   "mage": "ad_chr_mage",
@@ -206,10 +206,178 @@
   "telegraph.dash_lane": {
    "asset": "ad_vfx_telegraph_dash_lane",
    "tag": "play"
+  },
+  "projectile.cold": {
+   "asset": "ad_vfx_ice_projectile",
+   "tag": "loop"
+  },
+  "projectile.force": {
+   "asset": "ad_vfx_force_projectile",
+   "tag": "loop"
+  },
+  "impact.cold": {
+   "asset": "ad_vfx_ice_impact",
+   "tag": "impact"
+  },
+  "impact.force": {
+   "asset": "ad_vfx_force_impact",
+   "tag": "impact"
+  },
+  "burst.cold": {
+   "asset": "ad_vfx_ice_burst",
+   "tag": "burst"
+  },
+  "burst.force": {
+   "asset": "ad_vfx_force_burst",
+   "tag": "burst"
+  },
+  "orb.cold": {
+   "asset": "ad_vfx_ice_orb",
+   "tag": "loop"
+  },
+  "orb.force": {
+   "asset": "ad_vfx_force_orb",
+   "tag": "loop"
+  },
+  "status.chilled": {
+   "asset": "ad_vfx_status_chilled",
+   "tag": "stack1"
+  },
+  "status.frozen": {
+   "asset": "ad_vfx_status_frozen",
+   "tag": "loop"
+  },
+  "status.brittle": {
+   "asset": "ad_vfx_status_brittle",
+   "tag": "loop"
+  },
+  "reaction.shatter": {
+   "asset": "ad_vfx_shatter",
+   "tag": "play"
+  },
+  "reaction.steam": {
+   "asset": "ad_vfx_reaction_steam",
+   "tag": "play"
+  },
+  "reaction.flash_freeze": {
+   "asset": "ad_vfx_reaction_flash_freeze",
+   "tag": "play"
+  },
+  "mod.chain": {
+   "asset": "ad_vfx_mod_chain",
+   "tag": "play"
+  },
+  "mod.rapid": {
+   "asset": "ad_vfx_mod_rapid",
+   "tag": "play"
+  },
+  "trigger.on_kill": {
+   "asset": "ad_vfx_trig_on_kill_glyph",
+   "tag": "play"
+  },
+  "trigger.on_expire": {
+   "asset": "ad_vfx_trig_on_expire_glyph",
+   "tag": "play"
+  },
+  "trigger.timer": {
+   "asset": "ad_vfx_trig_timer_glyph",
+   "tag": "play"
+  },
+  "beam.fire.start": {
+   "asset": "ad_vfx_beam_fire_start",
+   "tag": "loop"
+  },
+  "beam.fire.segment": {
+   "asset": "ad_vfx_beam_fire_segment",
+   "tag": "loop"
+  },
+  "beam.fire.end": {
+   "asset": "ad_vfx_beam_fire_end",
+   "tag": "loop"
+  },
+  "field.fire": {
+   "asset": "ad_vfx_fire_field",
+   "tag": "loop"
+  },
+  "beam.water.start": {
+   "asset": "ad_vfx_beam_water_start",
+   "tag": "loop"
+  },
+  "beam.water.segment": {
+   "asset": "ad_vfx_beam_water_segment",
+   "tag": "loop"
+  },
+  "beam.water.end": {
+   "asset": "ad_vfx_beam_water_end",
+   "tag": "loop"
+  },
+  "field.water": {
+   "asset": "ad_vfx_water_field",
+   "tag": "loop"
+  },
+  "beam.lightning.start": {
+   "asset": "ad_vfx_beam_lightning_start",
+   "tag": "loop"
+  },
+  "beam.lightning.segment": {
+   "asset": "ad_vfx_beam_lightning_segment",
+   "tag": "loop"
+  },
+  "beam.lightning.end": {
+   "asset": "ad_vfx_beam_lightning_end",
+   "tag": "loop"
+  },
+  "field.lightning": {
+   "asset": "ad_vfx_lightning_field",
+   "tag": "loop"
+  },
+  "beam.cold.start": {
+   "asset": "ad_vfx_beam_ice_start",
+   "tag": "loop"
+  },
+  "beam.cold.segment": {
+   "asset": "ad_vfx_beam_ice_segment",
+   "tag": "loop"
+  },
+  "beam.cold.end": {
+   "asset": "ad_vfx_beam_ice_end",
+   "tag": "loop"
+  },
+  "field.cold": {
+   "asset": "ad_vfx_ice_field",
+   "tag": "loop"
+  },
+  "beam.force.start": {
+   "asset": "ad_vfx_beam_force_start",
+   "tag": "loop"
+  },
+  "beam.force.segment": {
+   "asset": "ad_vfx_beam_force_segment",
+   "tag": "loop"
+  },
+  "beam.force.end": {
+   "asset": "ad_vfx_beam_force_end",
+   "tag": "loop"
+  },
+  "field.force": {
+   "asset": "ad_vfx_force_field",
+   "tag": "loop"
+  },
+  "beam.neutral.start": {
+   "asset": "ad_vfx_beam_neutral_start",
+   "tag": "loop"
+  },
+  "beam.neutral.segment": {
+   "asset": "ad_vfx_beam_neutral_segment",
+   "tag": "loop"
+  },
+  "beam.neutral.end": {
+   "asset": "ad_vfx_beam_neutral_end",
+   "tag": "loop"
   }
  },
  "damage_glyphs": "ad_vfx_damage_numbers",
- "icons": "ad_ico_atlas_mvp",
+ "icons": "ad_ico_atlas_demo",
  "hud": {
   "spell_slot": "ad_ui_spell_slot",
   "slot_bar": "ad_ui_hud_slot_bar",
@@ -222,23 +390,23 @@
   "essence.fire": "ad_ico_fire",
   "essence.water": "ad_ico_water",
   "essence.lightning": "ad_ico_lightning",
-  "essence.cold": "ad_ico_water",
-  "essence.force": "ad_ico_projectile",
+  "essence.cold": "ad_ico_cold",
+  "essence.force": "ad_ico_force",
   "form.projectile": "ad_ico_projectile",
   "form.burst": "ad_ico_burst",
   "form.orb": "ad_ico_orb",
-  "form.beam": "ad_ico_projectile",
-  "form.field": "ad_ico_burst",
+  "form.beam": "ad_ico_beam",
+  "form.field": "ad_ico_field",
   "mod.homing": "ad_ico_homing",
   "mod.split": "ad_ico_split",
   "mod.pierce": "ad_ico_pierce",
-  "mod.chain": "ad_ico_split",
-  "mod.expand": "ad_ico_burst",
-  "mod.rapid": "ad_ico_homing",
+  "mod.chain": "ad_ico_chain",
+  "mod.expand": "ad_ico_expand",
+  "mod.rapid": "ad_ico_rapid",
   "trigger.on_hit": "ad_ico_on_hit",
-  "trigger.on_kill": "ad_ico_on_hit",
-  "trigger.on_expire": "ad_ico_on_hit",
-  "trigger.timer": "ad_ico_on_hit",
+  "trigger.on_kill": "ad_ico_on_kill",
+  "trigger.on_expire": "ad_ico_on_expire",
+  "trigger.timer": "ad_ico_timer",
   "essence.neutral": "ad_ico_projectile"
  },
  "ui_icons": {
@@ -246,6 +414,15 @@
   "mana": "ad_ico_mana",
   "coin": "ad_ico_coin",
   "upgrade": "ad_ico_upgrade",
-  "dash": "ad_ico_dash"
+  "dash": "ad_ico_dash",
+  "hp_up": "ad_ico_hp_up",
+  "mana_up": "ad_ico_mana_up",
+  "dash_up": "ad_ico_dash_up",
+  "reroll": "ad_ico_reroll",
+  "undiscovered": "ad_ico_undiscovered"
+ },
+ "beam": {
+  "scale": 1,
+  "expand_width": 2.0
  }
 }

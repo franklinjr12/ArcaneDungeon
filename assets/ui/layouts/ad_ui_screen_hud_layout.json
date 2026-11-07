@@ -1,0 +1,470 @@
+{
+ "screen": "hud",
+ "canvas": [
+  640,
+  360
+ ],
+ "safe_area": {
+  "x": 16,
+  "y": 9,
+  "w": 608,
+  "h": 342
+ },
+ "status": "CANDIDATE",
+ "skin": "AD-095 kit (skin A)",
+ "coordinate_origin": "top-left, px at 640x360 (engine scales x2 = 1280x720 exactly)",
+ "note": "rects are the final sprite/text bounds; 9-slice sprites are stretched with the margins in ad_ui_kit.json; labels are engine text (m5x7) positioned at x,y (top-left of the glyph box)",
+ "fonts": {
+  "label": "arc_fnt_m5x7",
+  "small": "arc_fnt_silkscreen"
+ },
+ "focus_order": [],
+ "widgets": [
+  {
+   "id": "ico_hp",
+   "type": "icon",
+   "x": 16,
+   "y": 11,
+   "w": 16,
+   "h": 16,
+   "sprite": "ad_ico_hp"
+  },
+  {
+   "id": "bar_hp",
+   "type": "bar",
+   "x": 36,
+   "y": 11,
+   "w": 112,
+   "h": 12,
+   "sprite": "ad_ui_bar_frame",
+   "fill_rect": [
+    39,
+    14,
+    106,
+    6
+   ],
+   "value": 70,
+   "kind": "hp"
+  },
+  {
+   "id": "txt_hp",
+   "type": "label",
+   "x": 154,
+   "y": 13,
+   "w": 40,
+   "h": 7,
+   "text": "70/100"
+  },
+  {
+   "id": "ico_mana",
+   "type": "icon",
+   "x": 16,
+   "y": 27,
+   "w": 16,
+   "h": 16,
+   "sprite": "ad_ico_mana"
+  },
+  {
+   "id": "bar_mp",
+   "type": "bar",
+   "x": 36,
+   "y": 27,
+   "w": 112,
+   "h": 12,
+   "sprite": "ad_ui_bar_frame",
+   "fill_rect": [
+    39,
+    30,
+    106,
+    6
+   ],
+   "value": 45,
+   "kind": "mana"
+  },
+  {
+   "id": "txt_mp",
+   "type": "label",
+   "x": 154,
+   "y": 29,
+   "w": 34,
+   "h": 7,
+   "text": "36/80"
+  },
+  {
+   "id": "status_0",
+   "type": "slot",
+   "x": 16,
+   "y": 46,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    20,
+    50,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "status_0_time",
+   "type": "label",
+   "x": 25,
+   "y": 72,
+   "w": 6,
+   "h": 7,
+   "text": "2"
+  },
+  {
+   "id": "status_1",
+   "type": "slot",
+   "x": 44,
+   "y": 46,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    48,
+    50,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "status_1_time",
+   "type": "label",
+   "x": 53,
+   "y": 72,
+   "w": 6,
+   "h": 7,
+   "text": "4"
+  },
+  {
+   "id": "status_2",
+   "type": "slot",
+   "x": 72,
+   "y": 46,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    76,
+    50,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "status_2_time",
+   "type": "label",
+   "x": 81,
+   "y": 72,
+   "w": 5,
+   "h": 7,
+   "text": "1"
+  },
+  {
+   "id": "boss_name_header",
+   "type": "header",
+   "x": 220,
+   "y": 10,
+   "w": 200,
+   "h": 16,
+   "sprite": "ad_ui_header"
+  },
+  {
+   "id": "boss_name",
+   "type": "label",
+   "x": 273,
+   "y": 15,
+   "w": 94,
+   "h": 7,
+   "text": "OSSUARY WARDEN"
+  },
+  {
+   "id": "bar_boss",
+   "type": "bar",
+   "x": 196,
+   "y": 28,
+   "w": 248,
+   "h": 12,
+   "sprite": "ad_ui_bar_frame",
+   "fill_rect": [
+    199,
+    31,
+    242,
+    6
+   ],
+   "value": 62,
+   "kind": "hp"
+  },
+  {
+   "id": "boss_phase_33",
+   "type": "marker",
+   "x": 278,
+   "y": 31,
+   "w": 1,
+   "h": 6
+  },
+  {
+   "id": "boss_phase_66",
+   "type": "marker",
+   "x": 358,
+   "y": 31,
+   "w": 1,
+   "h": 6
+  },
+  {
+   "id": "boss_status_0",
+   "type": "slot",
+   "x": 450,
+   "y": 22,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    454,
+    26,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "plate_stage",
+   "type": "tooltip",
+   "x": 500,
+   "y": 10,
+   "w": 124,
+   "h": 20,
+   "sprite": "ad_ui_panel_tooltip"
+  },
+  {
+   "id": "txt_stage",
+   "type": "label",
+   "x": 514,
+   "y": 17,
+   "w": 95,
+   "h": 7,
+   "text": "STAGE 1   ROOM 3"
+  },
+  {
+   "id": "ico_coin",
+   "type": "icon",
+   "x": 502,
+   "y": 34,
+   "w": 16,
+   "h": 16,
+   "sprite": "ad_ico_coin"
+  },
+  {
+   "id": "txt_coins",
+   "type": "label",
+   "x": 522,
+   "y": 38,
+   "w": 19,
+   "h": 7,
+   "text": "128"
+  },
+  {
+   "id": "artifact_0",
+   "type": "slot",
+   "x": 499,
+   "y": 56,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    503,
+    60,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "artifact_1",
+   "type": "slot",
+   "x": 524,
+   "y": 56,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    528,
+    60,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "artifact_2",
+   "type": "slot",
+   "x": 549,
+   "y": 56,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    553,
+    60,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "artifact_3",
+   "type": "slot",
+   "x": 574,
+   "y": 56,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    578,
+    60,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "slot_1",
+   "type": "slot",
+   "x": 245,
+   "y": 318,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_selected",
+   "state": "selected",
+   "icon_rect": [
+    249,
+    322,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "slot_1_key",
+   "type": "label",
+   "x": 247,
+   "y": 344,
+   "w": 20,
+   "h": 7,
+   "text": "LMB"
+  },
+  {
+   "id": "slot_2",
+   "type": "slot",
+   "x": 275,
+   "y": 318,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_cooldown",
+   "state": "cooldown",
+   "icon_rect": [
+    279,
+    322,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "slot_2_key",
+   "type": "label",
+   "x": 277,
+   "y": 344,
+   "w": 20,
+   "h": 7,
+   "text": "RMB"
+  },
+  {
+   "id": "slot_3",
+   "type": "slot",
+   "x": 305,
+   "y": 318,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_no_mana",
+   "state": "no_mana",
+   "icon_rect": [
+    309,
+    322,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "slot_3_key",
+   "type": "label",
+   "x": 314,
+   "y": 344,
+   "w": 6,
+   "h": 7,
+   "text": "Q"
+  },
+  {
+   "id": "slot_4",
+   "type": "slot",
+   "x": 335,
+   "y": 318,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_empty",
+   "state": "empty",
+   "icon_rect": [
+    339,
+    322,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "slot_4_key",
+   "type": "label",
+   "x": 344,
+   "y": 344,
+   "w": 6,
+   "h": 7,
+   "text": "E"
+  },
+  {
+   "id": "slot_dash",
+   "type": "slot",
+   "x": 375,
+   "y": 318,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    379,
+    322,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "slot_dash_key",
+   "type": "label",
+   "x": 370,
+   "y": 344,
+   "w": 34,
+   "h": 7,
+   "text": "SPACE"
+  },
+  {
+   "id": "dash_charges",
+   "type": "label",
+   "x": 380,
+   "y": 309,
+   "w": 13,
+   "h": 7,
+   "text": "X2"
+  }
+ ]
+}

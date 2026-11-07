@@ -9,11 +9,27 @@ card and no png (ad_ui_9slice_margins) is a side file; a card json without 'fram
 AD-045 status_* / extinguish_puff replace the AD-034 ones (--supersede). vfx/ico stems have no
 pivot slice requirement (pivot = canvas centre); the AD-036 glyph atlas is kind 'glyph_atlas'.
 
+Cistern (AD-154): python3 scripts/import_art_exports.py --source /workspace/art/arcane_dungeon \\
+    --row-dir AD-099=AD-099/r3 --rows AD-024 AD-025 AD-029 AD-032 AD-033 AD-034 AD-045 AD-035 AD-036 AD-037 AD-038 \\
+    AD-099 AD-100 AD-120 AD-122 --supersede AD-045
+Adds <stem>_glow.png side files (entry["glow"], same layout as the base), the AD-099 motes as vfx, and the
+AD-100 arena level variants (copied from AD-099/r3/arena, where the arena is re-rendered with the r3 tiles).
+
+Demo X2 (AD-155): python3 scripts/import_art_exports.py --source /workspace/art/arcane_dungeon \\
+    --row-dir AD-099=AD-099/r3 --rows AD-024 AD-025 AD-029 AD-032 AD-033 AD-034 AD-045 AD-035 AD-036 AD-037 AD-038 \\
+    AD-099 AD-100 AD-116 AD-120 AD-122 AD-110 AD-111 AD-112 AD-113 AD-114 AD-115 AD-117 AD-119 AD-123 \\
+    --supersede AD-045 --supersede AD-120 --supersede AD-119 --supersede AD-123
+AD-116 props are the AD-120 stems (AD-120 wins). AD-119 has no cards: its re-exported *_glow.png replace the AD-111/112/113
+ones (CARD_FROM). AD-123 supersedes the AD-110 atlas (adds merchant icons; card json lives in export/). AD-117 cookies and
+particles are vfx with ids from card_for(); *_mask / *_glow files are entry["mask"] / entry["glow"]. AD-115 is the special
+case ARTIFACT_FILES (kind 'icon_atlas', 32 px card frames are placeholders until the AD-095 skin).
+
 Actors (AD-065): python3 scripts/import_art_exports.py --actors  copies the mage/enemy/warden animation sheets
 (no cards, AD-063 nested) to art/export/actors/ and writes actors/actors_manifest.json only.
 """
 import argparse
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -24,8 +40,28 @@ FALLBACK = Path("/workspace/art/arcane_dungeon")
 CATS = {"chr", "enm", "bos", "npc", "por", "til", "prp", "ui", "fnt", "vfx", "ico"}
 
 
+# stems whose prefix is not a category and that have no card: {stem: {id, category}}
+EXTRA_CARDS = {"ad_fx_cistern_motes": {"id": "AD-TIL-010-motes", "category": "vfx"},
+               "ad_ico_status8_demo": {"id": "AD-ICO-002-status8"},
+               "ad_ico_merchant8": {"id": "AD-ICO-003-merchant8"}}
+# rows without cards: take the card (id) from the earlier rows that exported the same stems
+CARD_FROM = {"AD-119": ["AD-111", "AD-112", "AD-113"]}
+# AD-117 cookies / particles share one set card; the id is derived from the stem
+FX_STEM = re.compile(r"^ad_fx_(cookie_[a-z_]+|ptc_[a-z]+_(?:8|16))$")
+# AD-115: no cards or per-stem jsons; these files go to ico/ and become one 'icon_atlas' entry
+ARTIFACT_ROW = "AD-115"
+ARTIFACT_FILES = ["ad_ico_artifacts_atlas_16.png", "ad_ico_artifacts_atlas_16_glow.png", "ad_ico_artifacts_atlas_32_icon.png",
+                  "ad_ico_artifacts_atlas_32_icon_glow.png", "ad_ico_artifacts_atlas_32_card.png", "ad_ico_artifacts_index.json"]
+# AD-100 arena level variants are pngs only; the r3 copies in AD-099 are authoritative
+SIDE_PNGS = [("AD-100", "AD-099", "arena", "ad_til_archivist_arena_lvl_")]
+
+
 def category(stem):
+    if "category" in EXTRA_CARDS.get(stem, {}):
+        return EXTRA_CARDS[stem]["category"]
     parts = stem.split("_")
+    if parts[:2] == ["ad", "fx"] and parts[2:3] in (["cookie"], ["ptc"]):
+        return "vfx"
     cat = parts[1] if len(parts) > 1 else ""
     if parts[0] == "arc" and cat == "fnt":
         return "fnt"
@@ -34,23 +70,65 @@ def category(stem):
     return cat if cat in CATS else ""
 
 
-def find_row(sources, row):
+def artifact_entry(row, rowdir, dest, copies, errors):
+    """AD-115: copy the atlas pngs + index to ico/ and return the single 'ad_ico_artifacts' manifest entry."""
+    for f in ARTIFACT_FILES:
+        if not (rowdir / "export" / f).is_file():
+            errors.append(f"{row}: missing export/{f}")
+        copies.append((rowdir / "export" / f, dest / "ico" / f))
+    r = "res://art/export/ico/"
+    return {"ad_ico_artifacts": {
+        "id": "AD-ICO-ART-001", "row": row, "category": "ico", "kind": "icon_atlas",
+        "png": r + "ad_ico_artifacts_atlas_16.png", "json": r + "ad_ico_artifacts_index.json",
+        "glow": r + "ad_ico_artifacts_atlas_16_glow.png", "canvas": [16, 16], "tags": {}, "slices": {}, "pivot": None,
+        "png_32": r + "ad_ico_artifacts_atlas_32_icon.png", "glow_32": r + "ad_ico_artifacts_atlas_32_icon_glow.png"}}
+
+
+def find_row(sources, row, row_dirs=None):
+    rel = (row_dirs or {}).get(row, row)
     for s in sources:
-        if (s / row / "export").is_dir():
-            return s / row
+        if (s / rel / "export").is_dir():
+            return s / rel
     return None
 
 
 def load_cards(rowdir):
+    """name -> card; a card json found in export/ (AD-123) counts; part names of a set card map to its id."""
     cards = {}
-    for c in sorted((rowdir / "cards").glob("*.json")):
+    paths = sorted((rowdir / "cards").glob("*.json")) + sorted((rowdir / "export").glob("*.json"))
+    for c in paths:
         cd = json.loads(c.read_text())
-        cards[cd.get("name")] = cd
+        if c.parent.name == "export" and not (isinstance(cd.get("name"), str) and "id" in cd and "meta" not in cd):
+            continue
+        if "name" in cd:
+            cards[cd["name"]] = cd
+        else:
+            cards.update({v["name"]: v for v in cd.values() if isinstance(v, dict) and "name" in v})
+    for cd in list(cards.values()):
+        for part in cd.get("parts", []):
+            if isinstance(part, dict) and part.get("name") and part["name"] not in cards:
+                cards[part["name"]] = {"id": cd["id"]}
     return cards
 
 
-def is_side_file(stem, cards, rowdir):
+def card_for(stem, cards):
     if stem in cards:
+        return cards[stem]
+    if stem in EXTRA_CARDS:
+        return EXTRA_CARDS[stem]
+    if FX_STEM.match(stem):
+        return {"id": "AD-117-" + stem[len("ad_fx_"):]}
+    return None
+
+
+def is_card_json(path):
+    return path.parent.name == "export" and not path.stem.startswith("ad_") and path.stem.startswith("AD-")
+
+
+def is_side_file(stem, cards, rowdir):
+    if stem.endswith(("_glow", "_mask")):
+        return True
+    if card_for(stem, cards) is not None:
         return False
     return any(stem.startswith(n + "_") for n in cards if n) or not (rowdir / "export" / (stem + ".png")).is_file()
 
@@ -59,7 +137,7 @@ def build_entry(stem, row, rowdir, cards, errors):
     jpath = rowdir / "export" / (stem + ".json")
     ppath = rowdir / "export" / (stem + ".png")
     data = json.loads(jpath.read_text())
-    card = cards.get(stem)
+    card = card_for(stem, cards)
     if card is None:
         errors.append(f"{stem}: no card with name == stem in {row}/cards")
         return None
@@ -116,16 +194,46 @@ def build_entry(stem, row, rowdir, cards, errors):
 A = "res://art/export/actors/"
 WARDEN_MAIN = ["idle_side", "move_side", "telegraph_burst_side", "burst_side", "telegraph_dash_side", "dash_side"]
 WARDEN_LATE = ["phase_side", "hit_side", "death_side"]
-# kind: rows, sheets{key: (src stem path, dest stem, has_left)}, tag filter per sheet (None = all)
+BARE = {"idle_side": ("idle",), "move_side": ("move",), "telegraph_side": ("telegraph",), "attack_side": ("attack",),
+        "hit_side": ("hit",), "death_side": ("death",), "spawn_side": ("spawn",)}
+
+
+def _enm(src, rows, alias=None):
+    """Single mirrored sheet (no _left); alias = {manifest_tag: (json_tag[, sub_from, sub_to])}."""
+    return {"rows": rows, "sheets": {"main": (src, src.rsplit("/", 1)[1], False, None, alias or {})}}
+
+
+# kind: rows, sheets{key: (src stem path, dest stem, has_left, tag filter (None = all)[, tag aliases])}
 ACTORS = {
-    "mage": {"rows": ["AD-061", "AD-062", "AD-064"], "sheets": {"main": ("AD-064/export/ad_chr_mage", "ad_chr_mage", False, None)}},
+    "mage": {"rows": ["AD-061", "AD-062", "AD-064", "AD-121"], "sheets": {"main": ("AD-121/export/ad_chr_mage", "ad_chr_mage", False, None)}},
     "bone_thrall": {"rows": ["AD-052"], "sheets": {"main": ("AD-052/export/ad_enm_bone_thrall", "ad_enm_bone_thrall", False, None)}},
     "fallen_adept": {"rows": ["AD-053", "AD-063"], "sheets": {"main": ("AD-063/adept/export/ad_enm_fallen_adept", "ad_enm_fallen_adept", True, None)}},
     "grave_hound": {"rows": ["AD-054", "AD-063"], "sheets": {"main": ("AD-063/hound/export/ad_enm_grave_hound", "ad_enm_grave_hound", True, None)}},
     "undead_warden": {"rows": ["AD-055", "AD-056", "AD-063", "AD-064"], "sheets": {
         "main": ("AD-063/warden/export/ad_bos_ossuary_warden", "ad_bos_ossuary_warden", True, WARDEN_MAIN),
         "late": ("AD-064/export/ad_bos_ossuary_warden", "ad_bos_ossuary_warden_late", True, WARDEN_LATE)}},
+    "ossuary_shieldbearer": _enm("AD-102/export/ad_enm_ossuary_shieldbearer", ["AD-101", "AD-102"]),
+    "wailing_spirit": _enm("AD-102/export/ad_enm_wailing_spirit", ["AD-101", "AD-102"]),
+    "corpse_bloat": _enm("AD-102/export/ad_enm_corpse_bloat", ["AD-101", "AD-102"]),
+    "cistern_slime": _enm("AD-105/export/ad_enm_cistern_slime", ["AD-103", "AD-105"], BARE),
+    "cistern_slimelet": _enm("AD-105/export/ad_enm_cistern_slime_small", ["AD-103", "AD-105"], {
+        "idle_side": ("move",), "move_side": ("move",), "attack_side": ("move",), "telegraph_side": ("move", 0, 2),
+        "hit_side": ("hit",), "death_side": ("death",)}),
+    "drowned_acolyte": _enm("AD-105/export/ad_enm_drowned_acolyte", ["AD-103", "AD-105"], {"attack_side": ("cast_side",)}),
+    "deep_eel": _enm("AD-105/export/ad_enm_deep_eel", ["AD-103", "AD-105"], {
+        "idle_side": ("idle",), "move_side": ("idle",), "telegraph_side": ("telegraph",), "attack_side": ("lunge",),
+        "spawn_side": ("emerge",), "hit_side": ("hit",), "death_side": ("death",)}),
+    "lantern_wisp": _enm("AD-106/export/ad_enm_lantern_wisp", ["AD-104", "AD-106"], dict(BARE, attack_side=("cast",))),
+    "storm_crystal": _enm("AD-106/export/ad_enm_storm_crystal", ["AD-104", "AD-106"], dict(BARE, move_side=("idle",))),
+    "rust_golem": _enm("AD-118/export/ad_enm_rust_golem", ["AD-104", "AD-106", "AD-118"], BARE),
+    "drowned_archivist": _enm("AD-118/export/ad_bos_drowned_archivist_anim", ["AD-107", "AD-108", "AD-118"], {
+        "idle_side": ("idle",), "move_side": ("move",), "telegraph_side": ("attack_a", 0, 2), "attack_side": ("attack_a", 3, 7),
+        "phase_side": ("phase",), "hit_side": ("hit",), "death_side": ("death",)}),
+    "mini_ossuary_shieldbearer": _enm("AD-109/export/ad_enm_mini_ossuary_shieldbearer", ["AD-109"]),
+    "mini_rust_golem": _enm("AD-109/export/ad_enm_mini_rust_golem", ["AD-109"], BARE),
 }
+REQUIRED_ENEMY_TAGS = ["idle_side", "move_side", "telegraph_side", "attack_side", "hit_side", "death_side"]
+# optional extras (spawn_side, phase_side) are not required
 
 
 def slice_bounds(data, name):
@@ -144,13 +252,37 @@ def tag_table(data):
     return out
 
 
+ENEMY_KINDS = [k for k in ACTORS if k not in ("mage", "undead_warden")]
+
+
+def glow_map(kind, key, frames, gdata, errors):
+    """{base frame index: {x, y, w, h, ox, oy}}; without a glow json the glow shares the base layout."""
+    out = {}
+    if gdata is None:
+        for i, f in enumerate(frames):
+            r = f["frame"]
+            out[str(i)] = {"x": r["x"], "y": r["y"], "w": r["w"], "h": r["h"], "ox": f["spriteSourceSize"]["x"], "oy": f["spriteSourceSize"]["y"]}
+        return out
+    byname = {f["filename"]: f for f in gdata["frames"]}
+    for i, f in enumerate(frames):
+        g = byname.get(f["filename"] + "_glow") or byname.get(f["filename"])
+        if g is None:
+            continue
+        r, o = g["frame"], g["spriteSourceSize"]
+        out[str(i)] = {"x": r["x"], "y": r["y"], "w": r["w"], "h": r["h"], "ox": o["x"], "oy": o["y"]}
+    if not out:
+        errors.append(f"{kind}/{key}: no glow frame matches a base frame")
+    return out
+
+
 def import_actors(a):
     root = (a.source or [DRIVE if DRIVE.is_dir() else FALLBACK])[0]
     errors, copies, actors = [], [], {}
     for kind, spec in ACTORS.items():
         ent = {"rows": spec["rows"], "mirror": not any(v[2] for v in spec["sheets"].values()),
                "sheets": {}, "tags": {}}
-        for key, (src, dstem, left, want) in spec["sheets"].items():
+        for key, (src, dstem, left, want, *rest) in spec["sheets"].items():
+            alias = rest[0] if rest else {}
             jp, pp = root / (src + ".json"), root / (src + ".png")
             if not jp.is_file() or not pp.is_file():
                 errors.append(f"{kind}/{key}: missing {src}.json/.png")
@@ -186,6 +318,14 @@ def import_actors(a):
                         sh.update({"left_png": A + dstem + "_left.png", "left_json": A + dstem + "_left.json",
                                    "left_pivot": [lpv["x"], lpv["y"]], "left_hurtbox": lhb})
                     copies += [(lj, a.dest / "actors" / (dstem + "_left.json")), (lp, a.dest / "actors" / (dstem + "_left.png"))]
+            gp = root / (src + "_glow.png")
+            if gp.is_file():
+                gj = root / (src + "_glow.json")
+                copies.append((gp, a.dest / "actors" / (dstem + "_glow.png")))
+                sh["glow_png"] = A + dstem + "_glow.png"
+                sh["glow"] = glow_map(kind, key, frames, json.loads(gj.read_text()) if gj.is_file() else None, errors)
+                if gj.is_file():
+                    copies.append((gj, a.dest / "actors" / (dstem + "_glow.json")))
             ent["sheets"][key] = sh
             for n in (want if want is not None else list(tags)):
                 if n not in tags:
@@ -193,6 +333,22 @@ def import_actors(a):
                     continue
                 f, t, ms = tags[n]
                 ent["tags"][n] = {"sheet": key, "from": f, "to": t, "frames": t - f + 1, "ms": ms}
+            for n, (jt, *sub) in alias.items():
+                if jt not in tags:
+                    errors.append(f"{kind}/{key}: alias {n} -> tag {jt} not in json")
+                    continue
+                f, t, ms = tags[jt]
+                if sub:
+                    f, t = tags[jt][0] + sub[0], tags[jt][0] + sub[1]
+                    if not (tags[jt][0] <= f <= t <= tags[jt][1]):
+                        errors.append(f"{kind}/{key}: alias {n} sub-range outside tag {jt}")
+                        continue
+                    ms = [frames[i]["duration"] for i in range(f, t + 1)]
+                ent["tags"][n] = {"sheet": key, "from": f, "to": t, "frames": t - f + 1, "ms": ms, "src": jt}
+        if kind in ENEMY_KINDS:
+            for n in REQUIRED_ENEMY_TAGS:
+                if n not in ent["tags"]:
+                    errors.append(f"{kind}: missing required enemy tag {n}")
         actors[kind] = ent
     if errors:
         print("import_art_exports --actors: FAILED\n  " + "\n  ".join(errors), file=sys.stderr)
@@ -216,29 +372,47 @@ def main():
     ap.add_argument("--dest", type=Path, default=REPO / "art/export")
     ap.add_argument("--supersede", action="append", default=[], metavar="ROW",
                     help="on a duplicate stem the entry from this row replaces the earlier one")
+    ap.add_argument("--row-dir", action="append", default=[], metavar="ROW=RELPATH",
+                    help="use <source>/RELPATH instead of <source>/ROW for this row")
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--actors", action="store_true", help="import actor animation sheets only (AD-065)")
     a = ap.parse_args()
     if a.actors:
         return import_actors(a)
     sources = a.source or [DRIVE if DRIVE.is_dir() else FALLBACK]
+    row_dirs = dict(r.split("=", 1) for r in a.row_dir)
     errors, assets, copies = [], {}, []
     for row in a.rows:
-        rowdir = find_row(sources, row)
+        rowdir = find_row(sources, row, row_dirs)
         if rowdir is None:
             errors.append(f"{row}: export dir not found in {[str(s) for s in sources]}")
             continue
         cards = load_cards(rowdir)
+        for src_row in CARD_FROM.get(row, []):
+            srcdir = find_row(sources, src_row, row_dirs)
+            cards = {**(load_cards(srcdir) if srcdir else {}), **cards}
+        if row == ARTIFACT_ROW:
+            assets.update(artifact_entry(row, rowdir, a.dest, copies, errors))
+            continue
         for j in sorted((rowdir / "export").glob("*.json")):
+            if is_card_json(j):
+                continue
+            if j.stem == "manifest":
+                copies.append((j, a.dest / "vfx" / (rowdir.name.lower() + "_manifest.json")))
+                continue
             if is_side_file(j.stem, cards, rowdir):
                 side = a.dest / category(j.stem) / j.name
                 copies.append((j, side))
+                if j.with_suffix(".png").is_file():
+                    copies.append((j.with_suffix(".png"), side.with_suffix(".png")))
                 continue
             e = build_entry(j.stem, row, rowdir, cards, errors)
             if e is None:
                 continue
             if j.stem in assets:
                 if row in a.supersede:
+                    if "glow" in assets[j.stem] and not (j.with_name(j.stem + "_glow.png")).is_file():
+                        e["glow"] = assets[j.stem]["glow"]  # AD-123 atlas: the AD-110 glow stays valid
                     dst = a.dest / e["category"] / j.stem
                     copies = [c for c in copies if c[1].with_suffix("") != dst]
                 else:
@@ -247,6 +421,21 @@ def main():
             copies.append((j, a.dest / e["category"] / j.name))
             if e["png"]:
                 copies.append((j.with_suffix(".png"), a.dest / e["category"] / (j.stem + ".png")))
+            gp = j.with_name(j.stem + "_glow.png")
+            if e["png"] and gp.is_file():
+                e["glow"] = f"res://art/export/{e['category']}/{gp.name}"
+                copies.append((gp, a.dest / e["category"] / gp.name))
+            mp = j.with_name(j.stem + "_mask.png")
+            if e["png"] and mp.is_file():
+                e["mask"] = f"res://art/export/{e['category']}/{mp.name}"
+                copies.append((mp, a.dest / e["category"] / mp.name))
+        for srow, orow, sub, prefix in SIDE_PNGS:
+            if row == srow:
+                od = find_row(sources, orow, row_dirs)
+                files = sorted((od / sub).glob(prefix + "*.png")) if od else []
+                if not files:
+                    errors.append(f"{row}: no {prefix}*.png in {orow}/{sub}")
+                copies += [(f, a.dest / category(f.stem) / f.name) for f in files]
     if errors:
         print("import_art_exports: FAILED\n  " + "\n  ".join(errors), file=sys.stderr)
         return 1

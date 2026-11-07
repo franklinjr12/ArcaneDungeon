@@ -1,0 +1,554 @@
+{
+ "screen": "reward",
+ "canvas": [
+  640,
+  360
+ ],
+ "safe_area": {
+  "x": 16,
+  "y": 9,
+  "w": 608,
+  "h": 342
+ },
+ "status": "CANDIDATE",
+ "skin": "AD-095 kit (skin A, Franklin 2026-11-04)",
+ "coordinate_origin": "top-left, px at 640x360 (engine scales x2 = 1280x720 exactly)",
+ "note": "rects are the final sprite/text bounds; 9-slice sprites are stretched with the margins in ad_ui_kit.json; labels are engine text (m5x7) positioned at x,y (top-left of the glyph box)",
+ "fonts": {
+  "label": "arc_fnt_m5x7",
+  "small": "arc_fnt_silkscreen"
+ },
+ "focus_order": [
+  "btn_take_1",
+  "btn_take_2",
+  "btn_take_3",
+  "btn_skip"
+ ],
+ "widgets": [
+  {
+   "id": "modal_backdrop",
+   "type": "backdrop",
+   "x": 0,
+   "y": 0,
+   "w": 640,
+   "h": 360,
+   "sprite": "ad_ui_modal_backdrop_25",
+   "tiled": true
+  },
+  {
+   "id": "title_header",
+   "type": "header",
+   "x": 220,
+   "y": 10,
+   "w": 200,
+   "h": 16,
+   "sprite": "ad_ui_header"
+  },
+  {
+   "id": "title",
+   "type": "label",
+   "x": 271,
+   "y": 15,
+   "w": 98,
+   "h": 7,
+   "text": "CHOOSE A REWARD"
+  },
+  {
+   "id": "subtitle",
+   "type": "label",
+   "x": 242,
+   "y": 34,
+   "w": 156,
+   "h": 7,
+   "text": "ROOM 3 CLEARED   TAKE ONE"
+  },
+  {
+   "id": "card_1",
+   "type": "card",
+   "x": 88,
+   "y": 50,
+   "w": 64,
+   "h": 92,
+   "sprite": "ad_ui_card_rune_rare",
+   "card": "rune",
+   "rarity": "rare",
+   "state": "normal",
+   "regions": {
+    "header": [
+     93,
+     55,
+     54,
+     11
+    ],
+    "art": [
+     100,
+     70,
+     40,
+     40
+    ],
+    "icon": [
+     104,
+     74,
+     32,
+     32
+    ],
+    "text": [
+     93,
+     115,
+     54,
+     18
+    ]
+   }
+  },
+  {
+   "id": "card_1_rarity",
+   "type": "label",
+   "x": 104,
+   "y": 58,
+   "w": 27,
+   "h": 7,
+   "text": "RARE"
+  },
+  {
+   "id": "card_1_name0",
+   "type": "label",
+   "x": 106,
+   "y": 117,
+   "w": 27,
+   "h": 7,
+   "text": "COLD"
+  },
+  {
+   "id": "info_1",
+   "type": "tooltip",
+   "x": 40,
+   "y": 148,
+   "w": 160,
+   "h": 76,
+   "sprite": "ad_ui_panel_tooltip"
+  },
+  {
+   "id": "info_1_title",
+   "type": "label",
+   "x": 48,
+   "y": 155,
+   "w": 27,
+   "h": 7,
+   "text": "COLD"
+  },
+  {
+   "id": "info_1_tag",
+   "type": "label",
+   "x": 48,
+   "y": 165,
+   "w": 59,
+   "h": 7,
+   "text": "RARE RUNE"
+  },
+  {
+   "id": "divider_11",
+   "type": "divider",
+   "x": 48,
+   "y": 175,
+   "w": 144,
+   "h": 3,
+   "sprite": "ad_ui_divider_plain",
+   "tiled": true
+  },
+  {
+   "id": "info_1_desc_0",
+   "type": "label",
+   "x": 48,
+   "y": 181,
+   "w": 105,
+   "h": 7,
+   "text": "ESSENCE. APPLIES"
+  },
+  {
+   "id": "info_1_desc_1",
+   "type": "label",
+   "x": 48,
+   "y": 190,
+   "w": 115,
+   "h": 7,
+   "text": "CHILLED. 3 CHILLED"
+  },
+  {
+   "id": "info_1_desc_2",
+   "type": "label",
+   "x": 48,
+   "y": 199,
+   "w": 139,
+   "h": 7,
+   "text": "STACKS = FROZEN. WET +"
+  },
+  {
+   "id": "info_1_desc_3",
+   "type": "label",
+   "x": 48,
+   "y": 208,
+   "w": 135,
+   "h": 7,
+   "text": "COLD FREEZES AT ONCE."
+  },
+  {
+   "id": "btn_take_1",
+   "type": "button",
+   "x": 72,
+   "y": 232,
+   "w": 96,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "TAKE",
+   "action": "take_1"
+  },
+  {
+   "id": "btn_take_1_label",
+   "type": "label",
+   "x": 106,
+   "y": 240,
+   "w": 27,
+   "h": 7,
+   "text": "TAKE"
+  },
+  {
+   "id": "card_2",
+   "type": "card",
+   "x": 288,
+   "y": 46,
+   "w": 64,
+   "h": 92,
+   "sprite": "ad_ui_card_artifact_epic",
+   "card": "artifact",
+   "rarity": "epic",
+   "state": "selected",
+   "regions": {
+    "header": [
+     293,
+     51,
+     54,
+     11
+    ],
+    "art": [
+     300,
+     66,
+     40,
+     40
+    ],
+    "icon": [
+     304,
+     70,
+     32,
+     32
+    ],
+    "text": [
+     293,
+     111,
+     54,
+     18
+    ]
+   }
+  },
+  {
+   "id": "card_2_rarity",
+   "type": "label",
+   "x": 304,
+   "y": 54,
+   "w": 26,
+   "h": 7,
+   "text": "EPIC"
+  },
+  {
+   "id": "card_2_name0",
+   "type": "label",
+   "x": 296,
+   "y": 113,
+   "w": 47,
+   "h": 7,
+   "text": "GRAVITY"
+  },
+  {
+   "id": "card_2_name1",
+   "type": "label",
+   "x": 306,
+   "y": 122,
+   "w": 27,
+   "h": 7,
+   "text": "LENS"
+  },
+  {
+   "id": "info_2",
+   "type": "tooltip",
+   "x": 240,
+   "y": 148,
+   "w": 160,
+   "h": 76,
+   "sprite": "ad_ui_panel_tooltip"
+  },
+  {
+   "id": "info_2_title",
+   "type": "label",
+   "x": 248,
+   "y": 155,
+   "w": 79,
+   "h": 7,
+   "text": "GRAVITY LENS"
+  },
+  {
+   "id": "info_2_tag",
+   "type": "label",
+   "x": 248,
+   "y": 165,
+   "w": 85,
+   "h": 7,
+   "text": "EPIC ARTIFACT"
+  },
+  {
+   "id": "divider_25",
+   "type": "divider",
+   "x": 248,
+   "y": 175,
+   "w": 144,
+   "h": 3,
+   "sprite": "ad_ui_divider_plain",
+   "tiled": true
+  },
+  {
+   "id": "info_2_desc_0",
+   "type": "label",
+   "x": 248,
+   "y": 181,
+   "w": 142,
+   "h": 7,
+   "text": "ORBITING ORBS DRAG THE"
+  },
+  {
+   "id": "info_2_desc_1",
+   "type": "label",
+   "x": 248,
+   "y": 190,
+   "w": 103,
+   "h": 7,
+   "text": "ENEMIES THEY HIT"
+  },
+  {
+   "id": "info_2_desc_2",
+   "type": "label",
+   "x": 248,
+   "y": 199,
+   "w": 109,
+   "h": 7,
+   "text": "TOWARD THE ORBIT."
+  },
+  {
+   "id": "btn_take_2",
+   "type": "button",
+   "x": 272,
+   "y": 232,
+   "w": 96,
+   "h": 24,
+   "sprite": "ad_ui_btn_focus",
+   "state": "focus",
+   "text": "TAKE",
+   "action": "take_2"
+  },
+  {
+   "id": "btn_take_2_label",
+   "type": "label",
+   "x": 306,
+   "y": 240,
+   "w": 27,
+   "h": 7,
+   "text": "TAKE"
+  },
+  {
+   "id": "card_3",
+   "type": "card",
+   "x": 488,
+   "y": 50,
+   "w": 64,
+   "h": 92,
+   "sprite": "ad_ui_card_upgrade_common",
+   "card": "upgrade",
+   "rarity": "common",
+   "state": "normal",
+   "regions": {
+    "header": [
+     493,
+     55,
+     54,
+     11
+    ],
+    "art": [
+     500,
+     70,
+     40,
+     40
+    ],
+    "icon": [
+     504,
+     74,
+     32,
+     32
+    ],
+    "text": [
+     493,
+     115,
+     54,
+     18
+    ]
+   }
+  },
+  {
+   "id": "card_3_rarity",
+   "type": "label",
+   "x": 504,
+   "y": 58,
+   "w": 41,
+   "h": 7,
+   "text": "COMMON"
+  },
+  {
+   "id": "card_3_name0",
+   "type": "label",
+   "x": 501,
+   "y": 117,
+   "w": 38,
+   "h": 7,
+   "text": "MAX HP"
+  },
+  {
+   "id": "card_3_name1",
+   "type": "label",
+   "x": 513,
+   "y": 126,
+   "w": 13,
+   "h": 7,
+   "text": "+2"
+  },
+  {
+   "id": "info_3",
+   "type": "tooltip",
+   "x": 440,
+   "y": 148,
+   "w": 160,
+   "h": 76,
+   "sprite": "ad_ui_panel_tooltip"
+  },
+  {
+   "id": "info_3_title",
+   "type": "label",
+   "x": 448,
+   "y": 155,
+   "w": 56,
+   "h": 7,
+   "text": "MAX HP +2"
+  },
+  {
+   "id": "info_3_tag",
+   "type": "label",
+   "x": 448,
+   "y": 165,
+   "w": 94,
+   "h": 7,
+   "text": "COMMON UPGRADE"
+  },
+  {
+   "id": "divider_38",
+   "type": "divider",
+   "x": 448,
+   "y": 175,
+   "w": 144,
+   "h": 3,
+   "sprite": "ad_ui_divider_plain",
+   "tiled": true
+  },
+  {
+   "id": "info_3_desc_0",
+   "type": "label",
+   "x": 448,
+   "y": 181,
+   "w": 118,
+   "h": 7,
+   "text": "PERMANENT FOR THIS"
+  },
+  {
+   "id": "info_3_desc_1",
+   "type": "label",
+   "x": 448,
+   "y": 190,
+   "w": 105,
+   "h": 7,
+   "text": "RUN. HEALS 2 NOW."
+  },
+  {
+   "id": "btn_take_3",
+   "type": "button",
+   "x": 472,
+   "y": 232,
+   "w": 96,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "TAKE",
+   "action": "take_3"
+  },
+  {
+   "id": "btn_take_3_label",
+   "type": "label",
+   "x": 506,
+   "y": 240,
+   "w": 27,
+   "h": 7,
+   "text": "TAKE"
+  },
+  {
+   "id": "btn_skip",
+   "type": "button",
+   "x": 232,
+   "y": 290,
+   "w": 176,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "SKIP   +10 COINS",
+   "action": "skip"
+  },
+  {
+   "id": "btn_skip_label",
+   "type": "label",
+   "x": 272,
+   "y": 298,
+   "w": 96,
+   "h": 7,
+   "text": "SKIP   +10 COINS"
+  },
+  {
+   "id": "hint",
+   "type": "label",
+   "x": 193,
+   "y": 324,
+   "w": 254,
+   "h": 7,
+   "text": "LEFT RIGHT CHOOSE   ENTER TAKE   ESC SKIP"
+  },
+  {
+   "id": "coins_txt",
+   "type": "label",
+   "x": 559,
+   "y": 15,
+   "w": 57,
+   "h": 7,
+   "text": "COINS 128"
+  },
+  {
+   "id": "ico_coin",
+   "type": "icon",
+   "x": 20,
+   "y": 11,
+   "w": 16,
+   "h": 16
+  }
+ ]
+}

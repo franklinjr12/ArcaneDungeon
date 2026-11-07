@@ -1,0 +1,776 @@
+{
+ "screen": "compendium_runes",
+ "canvas": [
+  640,
+  360
+ ],
+ "safe_area": {
+  "x": 16,
+  "y": 9,
+  "w": 608,
+  "h": 342
+ },
+ "status": "CANDIDATE",
+ "skin": "AD-095 kit (skin A, Franklin 2026-11-04)",
+ "coordinate_origin": "top-left, px at 640x360 (engine scales x2 = 1280x720 exactly)",
+ "note": "rects are the final sprite/text bounds; 9-slice sprites are stretched with the margins in ad_ui_kit.json; labels are engine text (m5x7) positioned at x,y (top-left of the glyph box)",
+ "fonts": {
+  "label": "arc_fnt_m5x7",
+  "small": "arc_fnt_silkscreen"
+ },
+ "focus_order": [
+  "tab_runes",
+  "tab_reactions",
+  "tab_enemies",
+  "tab_artifacts",
+  "btn_back"
+ ],
+ "widgets": [
+  {
+   "id": "modal_backdrop",
+   "type": "backdrop",
+   "x": 0,
+   "y": 0,
+   "w": 640,
+   "h": 360,
+   "sprite": "ad_ui_modal_backdrop_75",
+   "tiled": true
+  },
+  {
+   "id": "panel",
+   "type": "panel",
+   "x": 16,
+   "y": 18,
+   "w": 608,
+   "h": 332,
+   "sprite": "ad_ui_panel_large"
+  },
+  {
+   "id": "title_header",
+   "type": "header",
+   "x": 220,
+   "y": 10,
+   "w": 200,
+   "h": 16,
+   "sprite": "ad_ui_header"
+  },
+  {
+   "id": "title",
+   "type": "label",
+   "x": 286,
+   "y": 15,
+   "w": 68,
+   "h": 7,
+   "text": "COMPENDIUM"
+  },
+  {
+   "id": "tab_runes",
+   "type": "tab",
+   "x": 32,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_active",
+   "state": "active",
+   "text": "RUNES",
+   "tab": "runes"
+  },
+  {
+   "id": "tab_runes_label",
+   "type": "label",
+   "x": 64,
+   "y": 39,
+   "w": 34,
+   "h": 7,
+   "text": "RUNES"
+  },
+  {
+   "id": "tab_reactions",
+   "type": "tab",
+   "x": 132,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "REACTIONS",
+   "tab": "reactions"
+  },
+  {
+   "id": "tab_reactions_label",
+   "type": "label",
+   "x": 150,
+   "y": 39,
+   "w": 61,
+   "h": 7,
+   "text": "REACTIONS"
+  },
+  {
+   "id": "tab_enemies",
+   "type": "tab",
+   "x": 232,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_hover",
+   "state": "hover",
+   "text": "ENEMIES",
+   "tab": "enemies"
+  },
+  {
+   "id": "tab_enemies_label",
+   "type": "label",
+   "x": 257,
+   "y": 39,
+   "w": 47,
+   "h": 7,
+   "text": "ENEMIES"
+  },
+  {
+   "id": "tab_artifacts",
+   "type": "tab",
+   "x": 332,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "ARTIFACTS",
+   "tab": "artifacts"
+  },
+  {
+   "id": "tab_artifacts_label",
+   "type": "label",
+   "x": 350,
+   "y": 39,
+   "w": 61,
+   "h": 7,
+   "text": "ARTIFACTS"
+  },
+  {
+   "id": "content",
+   "type": "panel",
+   "x": 28,
+   "y": 50,
+   "w": 584,
+   "h": 252,
+   "sprite": "ad_ui_panel_inset"
+  },
+  {
+   "id": "btn_back",
+   "type": "button",
+   "x": 40,
+   "y": 314,
+   "w": 96,
+   "h": 24,
+   "sprite": "ad_ui_btn_focus",
+   "state": "focus",
+   "text": "BACK",
+   "action": "close"
+  },
+  {
+   "id": "btn_back_label",
+   "type": "label",
+   "x": 74,
+   "y": 322,
+   "w": 27,
+   "h": 7,
+   "text": "BACK"
+  },
+  {
+   "id": "progress_txt",
+   "type": "label",
+   "x": 150,
+   "y": 313,
+   "w": 114,
+   "h": 7,
+   "text": "DISCOVERED 14 / 20"
+  },
+  {
+   "id": "progress_bar",
+   "type": "bar",
+   "x": 150,
+   "y": 324,
+   "w": 180,
+   "h": 9,
+   "sprite": "ad_ui_bar_frame_thin"
+  },
+  {
+   "id": "note1",
+   "type": "label",
+   "x": 346,
+   "y": 313,
+   "w": 151,
+   "h": 7,
+   "text": "NO PERMANENT STAT POWER"
+  },
+  {
+   "id": "note2",
+   "type": "label",
+   "x": 346,
+   "y": 323,
+   "w": 178,
+   "h": 7,
+   "text": "MILESTONES UNLOCK NEW RUNES"
+  },
+  {
+   "id": "rune_1",
+   "type": "slot",
+   "x": 36,
+   "y": 56,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_normal",
+   "state": "normal",
+   "discovered": true,
+   "rune": "FIRE"
+  },
+  {
+   "id": "rune_2",
+   "type": "slot",
+   "x": 80,
+   "y": 56,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_normal",
+   "state": "normal",
+   "discovered": true,
+   "rune": "WATER"
+  },
+  {
+   "id": "rune_3",
+   "type": "slot",
+   "x": 124,
+   "y": 56,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_normal",
+   "state": "normal",
+   "discovered": true,
+   "rune": "LIGHTNING"
+  },
+  {
+   "id": "rune_4",
+   "type": "slot",
+   "x": 168,
+   "y": 56,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_selected",
+   "state": "selected",
+   "discovered": true,
+   "rune": "COLD"
+  },
+  {
+   "id": "rune_5",
+   "type": "slot",
+   "x": 212,
+   "y": 56,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_disabled",
+   "state": "disabled",
+   "discovered": false,
+   "rune": "FORCE"
+  },
+  {
+   "id": "rune_6",
+   "type": "slot",
+   "x": 256,
+   "y": 56,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_normal",
+   "state": "normal",
+   "discovered": true,
+   "rune": "PROJECTILE"
+  },
+  {
+   "id": "rune_7",
+   "type": "slot",
+   "x": 36,
+   "y": 100,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_normal",
+   "state": "normal",
+   "discovered": true,
+   "rune": "BURST"
+  },
+  {
+   "id": "rune_8",
+   "type": "slot",
+   "x": 80,
+   "y": 100,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_normal",
+   "state": "normal",
+   "discovered": true,
+   "rune": "ORBITING ORB"
+  },
+  {
+   "id": "rune_9",
+   "type": "slot",
+   "x": 124,
+   "y": 100,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_disabled",
+   "state": "disabled",
+   "discovered": false,
+   "rune": "BEAM"
+  },
+  {
+   "id": "rune_10",
+   "type": "slot",
+   "x": 168,
+   "y": 100,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_disabled",
+   "state": "disabled",
+   "discovered": false,
+   "rune": "FIELD"
+  },
+  {
+   "id": "rune_11",
+   "type": "slot",
+   "x": 212,
+   "y": 100,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_normal",
+   "state": "normal",
+   "discovered": true,
+   "rune": "HOMING"
+  },
+  {
+   "id": "rune_12",
+   "type": "slot",
+   "x": 256,
+   "y": 100,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_normal",
+   "state": "normal",
+   "discovered": true,
+   "rune": "SPLIT"
+  },
+  {
+   "id": "rune_13",
+   "type": "slot",
+   "x": 36,
+   "y": 144,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_hover",
+   "state": "hover",
+   "discovered": true,
+   "rune": "PIERCE"
+  },
+  {
+   "id": "rune_14",
+   "type": "slot",
+   "x": 80,
+   "y": 144,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_disabled",
+   "state": "disabled",
+   "discovered": false,
+   "rune": "CHAIN"
+  },
+  {
+   "id": "rune_15",
+   "type": "slot",
+   "x": 124,
+   "y": 144,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_normal",
+   "state": "normal",
+   "discovered": true,
+   "rune": "EXPAND"
+  },
+  {
+   "id": "rune_16",
+   "type": "slot",
+   "x": 168,
+   "y": 144,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_disabled",
+   "state": "disabled",
+   "discovered": false,
+   "rune": "RAPID"
+  },
+  {
+   "id": "rune_17",
+   "type": "slot",
+   "x": 212,
+   "y": 144,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_normal",
+   "state": "normal",
+   "discovered": true,
+   "rune": "ON HIT"
+  },
+  {
+   "id": "rune_18",
+   "type": "slot",
+   "x": 256,
+   "y": 144,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_normal",
+   "state": "normal",
+   "discovered": true,
+   "rune": "ON KILL"
+  },
+  {
+   "id": "rune_19",
+   "type": "slot",
+   "x": 36,
+   "y": 188,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_disabled",
+   "state": "disabled",
+   "discovered": false,
+   "rune": "ON EXPIRE"
+  },
+  {
+   "id": "rune_20",
+   "type": "slot",
+   "x": 80,
+   "y": 188,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_normal",
+   "state": "normal",
+   "discovered": true,
+   "rune": "TIMER"
+  },
+  {
+   "id": "rune_21",
+   "type": "slot",
+   "x": 124,
+   "y": 188,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_empty",
+   "state": "empty",
+   "discovered": false
+  },
+  {
+   "id": "rune_22",
+   "type": "slot",
+   "x": 168,
+   "y": 188,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_empty",
+   "state": "empty",
+   "discovered": false
+  },
+  {
+   "id": "rune_23",
+   "type": "slot",
+   "x": 212,
+   "y": 188,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_empty",
+   "state": "empty",
+   "discovered": false
+  },
+  {
+   "id": "rune_24",
+   "type": "slot",
+   "x": 256,
+   "y": 188,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_empty",
+   "state": "empty",
+   "discovered": false
+  },
+  {
+   "id": "rune_25",
+   "type": "slot",
+   "x": 36,
+   "y": 232,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_empty",
+   "state": "empty",
+   "discovered": false
+  },
+  {
+   "id": "rune_26",
+   "type": "slot",
+   "x": 80,
+   "y": 232,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_empty",
+   "state": "empty",
+   "discovered": false
+  },
+  {
+   "id": "rune_27",
+   "type": "slot",
+   "x": 124,
+   "y": 232,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_empty",
+   "state": "empty",
+   "discovered": false
+  },
+  {
+   "id": "rune_28",
+   "type": "slot",
+   "x": 168,
+   "y": 232,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_empty",
+   "state": "empty",
+   "discovered": false
+  },
+  {
+   "id": "rune_29",
+   "type": "slot",
+   "x": 212,
+   "y": 232,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_empty",
+   "state": "empty",
+   "discovered": false
+  },
+  {
+   "id": "rune_30",
+   "type": "slot",
+   "x": 256,
+   "y": 232,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_empty",
+   "state": "empty",
+   "discovered": false
+  },
+  {
+   "id": "scroll_up",
+   "type": "scroll",
+   "x": 306,
+   "y": 56,
+   "w": 10,
+   "h": 10,
+   "sprite": "ad_ui_scroll_arrow_up_normal"
+  },
+  {
+   "id": "scroll_track",
+   "type": "scroll",
+   "x": 306,
+   "y": 66,
+   "w": 10,
+   "h": 186,
+   "sprite": "ad_ui_scroll_track_v"
+  },
+  {
+   "id": "scroll_thumb",
+   "type": "scroll",
+   "x": 306,
+   "y": 68,
+   "w": 10,
+   "h": 140,
+   "sprite": "ad_ui_scroll_thumb_v_normal"
+  },
+  {
+   "id": "scroll_down",
+   "type": "scroll",
+   "x": 306,
+   "y": 252,
+   "w": 10,
+   "h": 10,
+   "sprite": "ad_ui_scroll_arrow_down_normal"
+  },
+  {
+   "id": "detail",
+   "type": "tooltip",
+   "x": 328,
+   "y": 56,
+   "w": 276,
+   "h": 238,
+   "sprite": "ad_ui_panel_tooltip"
+  },
+  {
+   "id": "d_name",
+   "type": "label",
+   "x": 336,
+   "y": 64,
+   "w": 27,
+   "h": 7,
+   "text": "COLD"
+  },
+  {
+   "id": "d_tag",
+   "type": "label",
+   "x": 548,
+   "y": 64,
+   "w": 48,
+   "h": 7,
+   "text": "ESSENCE"
+  },
+  {
+   "id": "divider_57",
+   "type": "divider",
+   "x": 336,
+   "y": 76,
+   "w": 260,
+   "h": 3,
+   "sprite": "ad_ui_divider_plain",
+   "tiled": true
+  },
+  {
+   "id": "d_slot",
+   "type": "slot",
+   "x": 336,
+   "y": 86,
+   "w": 40,
+   "h": 40,
+   "sprite": "ad_ui_slot40_selected",
+   "state": "selected"
+  },
+  {
+   "id": "d_desc_0",
+   "type": "label",
+   "x": 386,
+   "y": 90,
+   "w": 178,
+   "h": 7,
+   "text": "APPLIES CHILLED. 3 CHILLED ="
+  },
+  {
+   "id": "d_desc_1",
+   "type": "label",
+   "x": 386,
+   "y": 99,
+   "w": 46,
+   "h": 7,
+   "text": "FROZEN."
+  },
+  {
+   "id": "d_cost",
+   "type": "label",
+   "x": 386,
+   "y": 122,
+   "w": 31,
+   "h": 7,
+   "text": "MP +3"
+  },
+  {
+   "id": "hdr_reactions",
+   "type": "header",
+   "x": 336,
+   "y": 136,
+   "w": 260,
+   "h": 12,
+   "sprite": "ad_ui_header_small"
+  },
+  {
+   "id": "label_63",
+   "type": "label",
+   "x": 435,
+   "y": 139,
+   "w": 61,
+   "h": 7,
+   "text": "REACTIONS"
+  },
+  {
+   "id": "r1",
+   "type": "label",
+   "x": 340,
+   "y": 154,
+   "w": 120,
+   "h": 7,
+   "text": "WET + COLD = FROZEN"
+  },
+  {
+   "id": "r2",
+   "type": "label",
+   "x": 340,
+   "y": 164,
+   "w": 146,
+   "h": 7,
+   "text": "FIRE ON CHILLED = STEAM"
+  },
+  {
+   "id": "r3",
+   "type": "label",
+   "x": 340,
+   "y": 174,
+   "w": 155,
+   "h": 7,
+   "text": "FROZEN + FORCE = SHATTER"
+  },
+  {
+   "id": "hdr_found",
+   "type": "header",
+   "x": 336,
+   "y": 190,
+   "w": 260,
+   "h": 12,
+   "sprite": "ad_ui_header_small"
+  },
+  {
+   "id": "label_68",
+   "type": "label",
+   "x": 435,
+   "y": 193,
+   "w": 61,
+   "h": 7,
+   "text": "DISCOVERY"
+  },
+  {
+   "id": "found",
+   "type": "label",
+   "x": 340,
+   "y": 208,
+   "w": 161,
+   "h": 7,
+   "text": "FIRST SEEN  STAGE 1 ROOM 5"
+  },
+  {
+   "id": "used",
+   "type": "label",
+   "x": 340,
+   "y": 218,
+   "w": 197,
+   "h": 7,
+   "text": "USED IN 9 CASTS   3 SPELLS BUILT"
+  },
+  {
+   "id": "locked_note",
+   "type": "label",
+   "x": 340,
+   "y": 234,
+   "w": 168,
+   "h": 7,
+   "text": "6 RUNES NOT YET DISCOVERED"
+  },
+  {
+   "id": "locked_note2",
+   "type": "label",
+   "x": 340,
+   "y": 244,
+   "w": 237,
+   "h": 7,
+   "text": "FIND THEM IN REWARDS, SHOPS, TREASURE"
+  }
+ ]
+}

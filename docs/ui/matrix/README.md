@@ -64,3 +64,46 @@ Regenerated 2026-11-03 for reward, merchant, workshop_editor and summary (`bash 
 - **Run summary:** a centred modal with a Retry same seed / New seed / Title button row (buttons no longer wrap).
 - **Floating text:** damage numbers, status labels and ARC! stack per actor without overlap; the DEFEATED banner is screen-centre text, not over the mage.
 - **Tests:** the floating-text overlap test (6 damage numbers + a status label on one enemy) and the editor-vs-dummies check in `tests/test_ad_ui_bounds.gd`, plus per-panel coverage in `tests/run_ui_smoke.gd`.
+
+## AD-152 (skin A front-end)
+
+Regenerated 2026-11-06: `bash tools/ui_matrix.sh --godot /usr/local/bin/godot --states "title settings settings_video settings_controls settings_access pause"`; the run ended with `SUMMARY: 78 shots, 0 failed`. Pause was re-shot once after `i18n/strings_en.en.translation` was re-imported (the committed file lacked the new `pause.*` keys). Sheets are in `sheets/<state>.png`.
+
+- **New shot states** (main menu debug hook): `title`, `settings` (audio tab), `settings_audio`, `settings_video`, `settings_controls`, `settings_access`, `compendium`. `pause` is a run state.
+- **Mocks:** `mocks/ad_ui_screen_<menu|settings_audio|settings_video|settings_controls|settings_access|pause>_2x.png`. The 1280x720 shot is compared with the 2x mock; other sizes were checked for clipping and overlap.
+- **Title:** AD-098 illustration, logo and menu panel match the mock layout (New Run, Compendium, Settings, Quit).
+- **Settings (4 tabs):** same tab strip, section headers, rows, side info panel, light preview and footer buttons as the mocks.
+- **Pause:** same panel, run-info line and button stack as the mock; backdrop dim is 50% per game-art (AD-159) rather than the mock's dither.
+
+Known deviations:
+- Engine default font instead of m5x7, so text is mixed case and sized differently from the mock.
+- Settings widgets with no backing setting (frame limit, VSync, particles, glow, show FPS and similar) are drawn disabled.
+- The UI scale slider sits in the mock's Resolution slot; a telemetry toggle is an extra row at the bottom of the accessibility Input section.
+- Pause: Retry, Tips and Controls are removed (Controls moved to the Settings tab). Save+Quit is not visible in the shot (hidden in that state), leaving a gap above Abandon.
+- Title: the water strip is a scripted AD-160 placeholder until the Cistern anchor is signed off.
+- Title: Continue is hidden when there is no save, so the shot shows four buttons.
+- Settings video shot: the light preview uses the in-game test sprite, not the mock's mage.
+
+Review: game-design and game-art review is pending.
+
+## AD-153 (skin A in-run)
+
+Regenerated 2026-11-06: `bash tools/ui_matrix.sh --godot /usr/local/bin/godot --states "combat reward workshop_editor merchant summary summary_win loadout compendium compendium_reactions compendium_enemies compendium_artifacts"`; the run ended with `SUMMARY: 143 shots, 0 failed`. Sheets are in `sheets/<state>.png`. `tests/test_ad_ui_bounds.gd` enforces bounds for the new states at every size.
+
+- **New shot states:** run hook `summary_win` (reached by the `_dev_advance` clear/reward/exit loop until `flow.state == "won"`, so it is deterministic); `loadout` already existed. Main-menu hook: `compendium_runes`, `compendium_reactions`, `compendium_enemies`, `compendium_artifacts` (via `select_tab`); `compendium` stays the default (runes) tab.
+- **Mock to state** (`mocks/ad_ui_screen_<mock>_2x.png`): hud -> `combat`; reward -> `reward`; merchant -> `merchant`; editor -> `workshop_editor`; loadout -> `loadout`; summary_win -> `summary_win`; summary_lose -> `summary`; compendium_<tab> -> `compendium` (runes), `compendium_reactions`, `compendium_enemies`, `compendium_artifacts`.
+
+Known deviations:
+- Engine default font instead of m5x7, so text is mixed case and sized differently from the mocks.
+- Placeholder copy: stand-in text and procedural rune/enemy/reaction art until the AD-159 finals are swapped in (layout unchanged).
+- Summary: stats not tracked by the sim (damage dealt, compendium unlocks, milestone line) are replaced by tracked ones (spells used, coins held); the Final Loadout shows the 4 spell slots only (no artifact row) and spell names are clipped in their cells (for example "BASIC B"); the mock's right-hand hero art and the Compendium button are absent; the stage shows "2" rather than "2 / 2".
+- Loadout: no artifact rarity cards (generic glyphs), upgrades use placeholder rows.
+- Compendium: entries show only the name or `?`; per-entry stats and the milestone list are not tracked, so they are absent.
+- Reward and merchant extras icons fall back to the MVP atlas when the AD-123 atlas lacks an icon.
+
+Review: game-design and game-art review pending.
+
+## AD-164
+
+Sigilwright wordmark (AD-162) imported into the main menu `logo` widget (`assets/ui/logo/`), with an additive `LogoGlow`.
+Command: `bash tools/ui_matrix.sh --godot /usr/local/bin/godot --states title` (2026-11-07). Result: 13 shots, 0 failed. The 1280x720 logo area (x320-960, y48-240) matches the AD-163 2x menu mock (letters, slab, sigil; no old-logo pixels). Menu mocks were replaced with the AD-163 FINAL re-renders.

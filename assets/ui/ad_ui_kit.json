@@ -1,0 +1,2021 @@
+{
+ "task": "AD-095",
+ "status": "CANDIDATE",
+ "skin": "A carved stone + bronze runes (AD-094, Franklin 2026-11-04)",
+ "variant": 1,
+ "revision": 2,
+ "grid": "1 px = 1 game px; all sprites integer-placed, atlas gap 2 px",
+ "palette": "arcane_palette_v02.gpl idx 0-65 (+ key 66); bone tones 67-69 unused",
+ "fonts": {
+  "label": "arc_fnt_m5x7 (CC0, AD-029) x2 on buttons, x1 in rows",
+  "small": "arc_fnt_silkscreen (OFL 1.1, AD-029)"
+ },
+ "atlas": {
+  "png": "ad_ui_kit_atlas.png",
+  "glow_png": "ad_ui_kit_atlas_glow.png",
+  "w": 640,
+  "h": 522,
+  "glow_blend": "additive"
+ },
+ "nine_slice_note": "margins in px of the source sprite: left/top/right/bottom; centre stretches (or tiles for tile=true sprites). Buttons/tabs/headers: stretch horizontally only.",
+ "label_colors": {
+  "normal": [
+   233,
+   242,
+   229
+  ],
+  "hover": [
+   229,
+   195,
+   138
+  ],
+  "pressed": [
+   176,
+   170,
+   161
+  ],
+  "selected": [
+   240,
+   201,
+   92
+  ],
+  "disabled": [
+   149,
+   145,
+   134
+  ],
+  "focus": [
+   229,
+   195,
+   138
+  ]
+ },
+ "sprites": {
+  "ad_ui_panel_large": {
+   "x": 0,
+   "y": 0,
+   "w": 48,
+   "h": 48,
+   "group": "panels",
+   "glow": true,
+   "nine": {
+    "left": 12,
+    "top": 12,
+    "right": 12,
+    "bottom": 12
+   },
+   "note": "carved slab + bronze rune plates; centre is flat stone-1, safe to stretch"
+  },
+  "ad_ui_panel_small": {
+   "x": 50,
+   "y": 0,
+   "w": 32,
+   "h": 32,
+   "group": "panels",
+   "glow": true,
+   "nine": {
+    "left": 8,
+    "top": 8,
+    "right": 8,
+    "bottom": 8
+   },
+   "note": "compact slab for dialogs / cards"
+  },
+  "ad_ui_panel_tooltip": {
+   "x": 84,
+   "y": 0,
+   "w": 20,
+   "h": 20,
+   "group": "panels",
+   "glow": false,
+   "nine": {
+    "left": 5,
+    "top": 5,
+    "right": 5,
+    "bottom": 5
+   },
+   "note": "navy-2 recess, 1 px bronze studs"
+  },
+  "ad_ui_panel_inset": {
+   "x": 106,
+   "y": 0,
+   "w": 16,
+   "h": 16,
+   "group": "panels",
+   "glow": false,
+   "nine": {
+    "left": 4,
+    "top": 4,
+    "right": 4,
+    "bottom": 4
+   },
+   "note": "sunken list / field background"
+  },
+  "ad_ui_modal_backdrop_25": {
+   "x": 124,
+   "y": 0,
+   "w": 4,
+   "h": 4,
+   "group": "panels",
+   "glow": false,
+   "nine": null,
+   "note": "tile 4x4, navy-1 dither at 25%; tile it over the whole screen (binary alpha, no real transparency)",
+   "tile": true
+  },
+  "ad_ui_modal_backdrop_50": {
+   "x": 130,
+   "y": 0,
+   "w": 4,
+   "h": 4,
+   "group": "panels",
+   "glow": false,
+   "nine": null,
+   "note": "tile 4x4, navy-1 dither at 50%; tile it over the whole screen (binary alpha, no real transparency)",
+   "tile": true
+  },
+  "ad_ui_modal_backdrop_75": {
+   "x": 136,
+   "y": 0,
+   "w": 4,
+   "h": 4,
+   "group": "panels",
+   "glow": false,
+   "nine": null,
+   "note": "tile 4x4, navy-1 dither at 75%; tile it over the whole screen (binary alpha, no real transparency)",
+   "tile": true
+  },
+  "ad_ui_btn_normal": {
+   "x": 0,
+   "y": 50,
+   "w": 64,
+   "h": 24,
+   "group": "buttons",
+   "glow": false,
+   "nine": {
+    "left": 13,
+    "top": 11,
+    "right": 13,
+    "bottom": 11
+   },
+   "note": "label centred in the recess; fixed height 24",
+   "label_color": 8
+  },
+  "ad_ui_btn_hover": {
+   "x": 66,
+   "y": 50,
+   "w": 64,
+   "h": 24,
+   "group": "buttons",
+   "glow": true,
+   "nine": {
+    "left": 13,
+    "top": 11,
+    "right": 13,
+    "bottom": 11
+   },
+   "note": "label centred in the recess; fixed height 24",
+   "label_color": 42
+  },
+  "ad_ui_btn_pressed": {
+   "x": 132,
+   "y": 50,
+   "w": 64,
+   "h": 24,
+   "group": "buttons",
+   "glow": false,
+   "nine": {
+    "left": 13,
+    "top": 11,
+    "right": 13,
+    "bottom": 11
+   },
+   "note": "label centred in the recess; fixed height 24",
+   "label_color": 7
+  },
+  "ad_ui_btn_disabled": {
+   "x": 198,
+   "y": 50,
+   "w": 64,
+   "h": 24,
+   "group": "buttons",
+   "glow": false,
+   "nine": {
+    "left": 13,
+    "top": 11,
+    "right": 13,
+    "bottom": 11
+   },
+   "note": "label centred in the recess; fixed height 24",
+   "label_color": 6
+  },
+  "ad_ui_btn_selected": {
+   "x": 264,
+   "y": 50,
+   "w": 64,
+   "h": 24,
+   "group": "buttons",
+   "glow": true,
+   "nine": {
+    "left": 13,
+    "top": 11,
+    "right": 13,
+    "bottom": 11
+   },
+   "note": "label centred in the recess; fixed height 24",
+   "label_color": 51
+  },
+  "ad_ui_btn_focus": {
+   "x": 330,
+   "y": 50,
+   "w": 72,
+   "h": 32,
+   "group": "buttons",
+   "glow": true,
+   "nine": {
+    "left": 17,
+    "top": 15,
+    "right": 17,
+    "bottom": 15
+   },
+   "note": "gamepad focus = hover look + bronze focus ring; sprite is the 64x24 button at +4,+4",
+   "label_color": 42,
+   "inner_offset": [
+    4,
+    4
+   ]
+  },
+  "ad_ui_focus_ring": {
+   "x": 404,
+   "y": 50,
+   "w": 24,
+   "h": 24,
+   "group": "buttons",
+   "glow": true,
+   "nine": {
+    "left": 7,
+    "top": 7,
+    "right": 7,
+    "bottom": 7
+   },
+   "note": "gamepad focus ring, bright frame; place 3-4 px outside the control",
+   "anim": "pulse with focus_ring_dim, 400 ms each"
+  },
+  "ad_ui_focus_ring_dim": {
+   "x": 430,
+   "y": 50,
+   "w": 24,
+   "h": 24,
+   "group": "buttons",
+   "glow": true,
+   "nine": {
+    "left": 7,
+    "top": 7,
+    "right": 7,
+    "bottom": 7
+   },
+   "note": "dim frame of the pulse"
+  },
+  "ad_ui_tab_active": {
+   "x": 0,
+   "y": 84,
+   "w": 40,
+   "h": 16,
+   "group": "tabs",
+   "glow": true,
+   "nine": {
+    "left": 6,
+    "top": 6,
+    "right": 6,
+    "bottom": 4
+   },
+   "note": "tab 16 px high; active tab is open at the bottom and joins the panel",
+   "label_color": 8
+  },
+  "ad_ui_tab_inactive": {
+   "x": 42,
+   "y": 84,
+   "w": 40,
+   "h": 16,
+   "group": "tabs",
+   "glow": false,
+   "nine": {
+    "left": 6,
+    "top": 6,
+    "right": 6,
+    "bottom": 4
+   },
+   "note": "tab 16 px high; active tab is open at the bottom and joins the panel",
+   "label_color": 7
+  },
+  "ad_ui_tab_hover": {
+   "x": 84,
+   "y": 84,
+   "w": 40,
+   "h": 16,
+   "group": "tabs",
+   "glow": true,
+   "nine": {
+    "left": 6,
+    "top": 6,
+    "right": 6,
+    "bottom": 4
+   },
+   "note": "tab 16 px high; active tab is open at the bottom and joins the panel",
+   "label_color": 42
+  },
+  "ad_ui_tab_disabled": {
+   "x": 126,
+   "y": 84,
+   "w": 40,
+   "h": 16,
+   "group": "tabs",
+   "glow": false,
+   "nine": {
+    "left": 6,
+    "top": 6,
+    "right": 6,
+    "bottom": 4
+   },
+   "note": "tab 16 px high; active tab is open at the bottom and joins the panel",
+   "label_color": 6
+  },
+  "ad_ui_scroll_track_v": {
+   "x": 0,
+   "y": 102,
+   "w": 10,
+   "h": 32,
+   "group": "scroll",
+   "glow": false,
+   "nine": {
+    "left": 0,
+    "top": 5,
+    "right": 0,
+    "bottom": 5
+   },
+   "note": "vertical track 10 px wide"
+  },
+  "ad_ui_scroll_track_h": {
+   "x": 12,
+   "y": 102,
+   "w": 32,
+   "h": 10,
+   "group": "scroll",
+   "glow": false,
+   "nine": {
+    "left": 5,
+    "top": 0,
+    "right": 5,
+    "bottom": 0
+   },
+   "note": "horizontal track = vertical rotated"
+  },
+  "ad_ui_scroll_thumb_v_normal": {
+   "x": 46,
+   "y": 102,
+   "w": 10,
+   "h": 20,
+   "group": "scroll",
+   "glow": false,
+   "nine": {
+    "left": 0,
+    "top": 6,
+    "right": 0,
+    "bottom": 6
+   },
+   "note": "thumb"
+  },
+  "ad_ui_scroll_thumb_v_hover": {
+   "x": 58,
+   "y": 102,
+   "w": 10,
+   "h": 20,
+   "group": "scroll",
+   "glow": true,
+   "nine": {
+    "left": 0,
+    "top": 6,
+    "right": 0,
+    "bottom": 6
+   },
+   "note": "thumb"
+  },
+  "ad_ui_scroll_thumb_v_pressed": {
+   "x": 70,
+   "y": 102,
+   "w": 10,
+   "h": 20,
+   "group": "scroll",
+   "glow": false,
+   "nine": {
+    "left": 0,
+    "top": 6,
+    "right": 0,
+    "bottom": 6
+   },
+   "note": "thumb"
+  },
+  "ad_ui_scroll_thumb_v_disabled": {
+   "x": 82,
+   "y": 102,
+   "w": 10,
+   "h": 20,
+   "group": "scroll",
+   "glow": false,
+   "nine": {
+    "left": 0,
+    "top": 6,
+    "right": 0,
+    "bottom": 6
+   },
+   "note": "thumb"
+  },
+  "ad_ui_scroll_thumb_h_normal": {
+   "x": 94,
+   "y": 102,
+   "w": 20,
+   "h": 10,
+   "group": "scroll",
+   "glow": false,
+   "nine": {
+    "left": 6,
+    "top": 0,
+    "right": 6,
+    "bottom": 0
+   },
+   "note": "horizontal thumb"
+  },
+  "ad_ui_scroll_arrow_up_normal": {
+   "x": 116,
+   "y": 102,
+   "w": 10,
+   "h": 10,
+   "group": "scroll",
+   "glow": false,
+   "nine": null,
+   "note": "arrow button 10x10"
+  },
+  "ad_ui_scroll_arrow_up_hover": {
+   "x": 128,
+   "y": 102,
+   "w": 10,
+   "h": 10,
+   "group": "scroll",
+   "glow": true,
+   "nine": null,
+   "note": "arrow button 10x10"
+  },
+  "ad_ui_scroll_arrow_up_pressed": {
+   "x": 140,
+   "y": 102,
+   "w": 10,
+   "h": 10,
+   "group": "scroll",
+   "glow": false,
+   "nine": null,
+   "note": "arrow button 10x10"
+  },
+  "ad_ui_scroll_arrow_up_disabled": {
+   "x": 152,
+   "y": 102,
+   "w": 10,
+   "h": 10,
+   "group": "scroll",
+   "glow": false,
+   "nine": null,
+   "note": "arrow button 10x10"
+  },
+  "ad_ui_scroll_arrow_down_normal": {
+   "x": 164,
+   "y": 102,
+   "w": 10,
+   "h": 10,
+   "group": "scroll",
+   "glow": false,
+   "nine": null,
+   "note": "arrow button 10x10"
+  },
+  "ad_ui_scroll_arrow_down_hover": {
+   "x": 176,
+   "y": 102,
+   "w": 10,
+   "h": 10,
+   "group": "scroll",
+   "glow": true,
+   "nine": null,
+   "note": "arrow button 10x10"
+  },
+  "ad_ui_scroll_arrow_down_pressed": {
+   "x": 188,
+   "y": 102,
+   "w": 10,
+   "h": 10,
+   "group": "scroll",
+   "glow": false,
+   "nine": null,
+   "note": "arrow button 10x10"
+  },
+  "ad_ui_scroll_arrow_down_disabled": {
+   "x": 200,
+   "y": 102,
+   "w": 10,
+   "h": 10,
+   "group": "scroll",
+   "glow": false,
+   "nine": null,
+   "note": "arrow button 10x10"
+  },
+  "ad_ui_slider_track": {
+   "x": 0,
+   "y": 136,
+   "w": 32,
+   "h": 8,
+   "group": "slider",
+   "glow": false,
+   "nine": {
+    "left": 4,
+    "top": 4,
+    "right": 4,
+    "bottom": 4
+   },
+   "note": "groove"
+  },
+  "ad_ui_slider_fill": {
+   "x": 34,
+   "y": 136,
+   "w": 32,
+   "h": 8,
+   "group": "slider",
+   "glow": false,
+   "nine": {
+    "left": 4,
+    "top": 4,
+    "right": 4,
+    "bottom": 4
+   },
+   "note": "bronze fill, clip to the value"
+  },
+  "ad_ui_slider_grab_normal": {
+   "x": 68,
+   "y": 136,
+   "w": 10,
+   "h": 14,
+   "group": "slider",
+   "glow": false,
+   "nine": null,
+   "note": "grabber 10x14"
+  },
+  "ad_ui_slider_grab_hover": {
+   "x": 80,
+   "y": 136,
+   "w": 10,
+   "h": 14,
+   "group": "slider",
+   "glow": true,
+   "nine": null,
+   "note": "grabber 10x14"
+  },
+  "ad_ui_slider_grab_pressed": {
+   "x": 92,
+   "y": 136,
+   "w": 10,
+   "h": 14,
+   "group": "slider",
+   "glow": true,
+   "nine": null,
+   "note": "grabber 10x14"
+  },
+  "ad_ui_slider_grab_disabled": {
+   "x": 104,
+   "y": 136,
+   "w": 10,
+   "h": 14,
+   "group": "slider",
+   "glow": false,
+   "nine": null,
+   "note": "grabber 10x14"
+  },
+  "ad_ui_toggle_off_normal": {
+   "x": 0,
+   "y": 152,
+   "w": 28,
+   "h": 14,
+   "group": "toggle",
+   "glow": false,
+   "nine": null,
+   "note": "switch 28x14"
+  },
+  "ad_ui_check_off_normal": {
+   "x": 30,
+   "y": 152,
+   "w": 14,
+   "h": 14,
+   "group": "toggle",
+   "glow": false,
+   "nine": null,
+   "note": "checkbox 14x14"
+  },
+  "ad_ui_toggle_off_hover": {
+   "x": 46,
+   "y": 152,
+   "w": 28,
+   "h": 14,
+   "group": "toggle",
+   "glow": false,
+   "nine": null,
+   "note": "switch 28x14"
+  },
+  "ad_ui_check_off_hover": {
+   "x": 76,
+   "y": 152,
+   "w": 14,
+   "h": 14,
+   "group": "toggle",
+   "glow": false,
+   "nine": null,
+   "note": "checkbox 14x14"
+  },
+  "ad_ui_toggle_off_disabled": {
+   "x": 92,
+   "y": 152,
+   "w": 28,
+   "h": 14,
+   "group": "toggle",
+   "glow": false,
+   "nine": null,
+   "note": "switch 28x14"
+  },
+  "ad_ui_check_off_disabled": {
+   "x": 122,
+   "y": 152,
+   "w": 14,
+   "h": 14,
+   "group": "toggle",
+   "glow": false,
+   "nine": null,
+   "note": "checkbox 14x14"
+  },
+  "ad_ui_toggle_on_normal": {
+   "x": 138,
+   "y": 152,
+   "w": 28,
+   "h": 14,
+   "group": "toggle",
+   "glow": true,
+   "nine": null,
+   "note": "switch 28x14"
+  },
+  "ad_ui_check_on_normal": {
+   "x": 168,
+   "y": 152,
+   "w": 14,
+   "h": 14,
+   "group": "toggle",
+   "glow": true,
+   "nine": null,
+   "note": "checkbox 14x14"
+  },
+  "ad_ui_toggle_on_hover": {
+   "x": 184,
+   "y": 152,
+   "w": 28,
+   "h": 14,
+   "group": "toggle",
+   "glow": true,
+   "nine": null,
+   "note": "switch 28x14"
+  },
+  "ad_ui_check_on_hover": {
+   "x": 214,
+   "y": 152,
+   "w": 14,
+   "h": 14,
+   "group": "toggle",
+   "glow": true,
+   "nine": null,
+   "note": "checkbox 14x14"
+  },
+  "ad_ui_toggle_on_disabled": {
+   "x": 230,
+   "y": 152,
+   "w": 28,
+   "h": 14,
+   "group": "toggle",
+   "glow": false,
+   "nine": null,
+   "note": "switch 28x14"
+  },
+  "ad_ui_check_on_disabled": {
+   "x": 260,
+   "y": 152,
+   "w": 14,
+   "h": 14,
+   "group": "toggle",
+   "glow": false,
+   "nine": null,
+   "note": "checkbox 14x14"
+  },
+  "ad_ui_dropdown_normal": {
+   "x": 0,
+   "y": 168,
+   "w": 64,
+   "h": 18,
+   "group": "dropdown",
+   "glow": false,
+   "nine": {
+    "left": 6,
+    "top": 8,
+    "right": 15,
+    "bottom": 8
+   },
+   "note": "arrow plate is baked in the right margin",
+   "label_color": 8
+  },
+  "ad_ui_dropdown_hover": {
+   "x": 66,
+   "y": 168,
+   "w": 64,
+   "h": 18,
+   "group": "dropdown",
+   "glow": true,
+   "nine": {
+    "left": 6,
+    "top": 8,
+    "right": 15,
+    "bottom": 8
+   },
+   "note": "arrow plate is baked in the right margin",
+   "label_color": 8
+  },
+  "ad_ui_dropdown_open": {
+   "x": 132,
+   "y": 168,
+   "w": 64,
+   "h": 18,
+   "group": "dropdown",
+   "glow": true,
+   "nine": {
+    "left": 6,
+    "top": 8,
+    "right": 15,
+    "bottom": 8
+   },
+   "note": "arrow plate is baked in the right margin",
+   "label_color": 8
+  },
+  "ad_ui_dropdown_disabled": {
+   "x": 198,
+   "y": 168,
+   "w": 64,
+   "h": 18,
+   "group": "dropdown",
+   "glow": false,
+   "nine": {
+    "left": 6,
+    "top": 8,
+    "right": 15,
+    "bottom": 8
+   },
+   "note": "arrow plate is baked in the right margin",
+   "label_color": 6
+  },
+  "ad_ui_list_item_normal": {
+   "x": 264,
+   "y": 168,
+   "w": 32,
+   "h": 14,
+   "group": "dropdown",
+   "glow": false,
+   "nine": {
+    "left": 2,
+    "top": 2,
+    "right": 2,
+    "bottom": 2
+   },
+   "note": "list row, put on panel_inset",
+   "label_color": 8
+  },
+  "ad_ui_list_item_hover": {
+   "x": 298,
+   "y": 168,
+   "w": 32,
+   "h": 14,
+   "group": "dropdown",
+   "glow": false,
+   "nine": {
+    "left": 2,
+    "top": 2,
+    "right": 2,
+    "bottom": 2
+   },
+   "note": "list row, put on panel_inset",
+   "label_color": 42
+  },
+  "ad_ui_list_item_selected": {
+   "x": 332,
+   "y": 168,
+   "w": 32,
+   "h": 14,
+   "group": "dropdown",
+   "glow": true,
+   "nine": {
+    "left": 2,
+    "top": 2,
+    "right": 2,
+    "bottom": 2
+   },
+   "note": "list row, put on panel_inset",
+   "label_color": 51
+  },
+  "ad_ui_keycap_normal": {
+   "x": 0,
+   "y": 188,
+   "w": 18,
+   "h": 18,
+   "group": "keycap",
+   "glow": false,
+   "nine": {
+    "left": 5,
+    "top": 5,
+    "right": 5,
+    "bottom": 5
+   },
+   "note": "key plate, text in ui-text-3 centred 1 px above the lip"
+  },
+  "ad_ui_keycap_pressed": {
+   "x": 20,
+   "y": 188,
+   "w": 18,
+   "h": 18,
+   "group": "keycap",
+   "glow": true,
+   "nine": {
+    "left": 5,
+    "top": 5,
+    "right": 5,
+    "bottom": 5
+   },
+   "note": "key plate, text in ui-text-3 centred 1 px above the lip"
+  },
+  "ad_ui_rebind_idle": {
+   "x": 40,
+   "y": 188,
+   "w": 64,
+   "h": 20,
+   "group": "keycap",
+   "glow": false,
+   "nine": {
+    "left": 8,
+    "top": 8,
+    "right": 8,
+    "bottom": 8
+   },
+   "note": "rebind field; listening = bronze corner brackets, conflict = red hatch + red edge (shape differs, not only colour)"
+  },
+  "ad_ui_rebind_hover": {
+   "x": 106,
+   "y": 188,
+   "w": 64,
+   "h": 20,
+   "group": "keycap",
+   "glow": true,
+   "nine": {
+    "left": 8,
+    "top": 8,
+    "right": 8,
+    "bottom": 8
+   },
+   "note": "rebind field; listening = bronze corner brackets, conflict = red hatch + red edge (shape differs, not only colour)"
+  },
+  "ad_ui_rebind_listening": {
+   "x": 172,
+   "y": 188,
+   "w": 64,
+   "h": 20,
+   "group": "keycap",
+   "glow": true,
+   "nine": {
+    "left": 8,
+    "top": 8,
+    "right": 8,
+    "bottom": 8
+   },
+   "note": "rebind field; listening = bronze corner brackets, conflict = red hatch + red edge (shape differs, not only colour)"
+  },
+  "ad_ui_rebind_conflict": {
+   "x": 238,
+   "y": 188,
+   "w": 64,
+   "h": 20,
+   "group": "keycap",
+   "glow": false,
+   "nine": {
+    "left": 8,
+    "top": 8,
+    "right": 8,
+    "bottom": 8
+   },
+   "note": "rebind field; listening = bronze corner brackets, conflict = red hatch + red edge (shape differs, not only colour)"
+  },
+  "ad_ui_rebind_disabled": {
+   "x": 304,
+   "y": 188,
+   "w": 64,
+   "h": 20,
+   "group": "keycap",
+   "glow": false,
+   "nine": {
+    "left": 8,
+    "top": 8,
+    "right": 8,
+    "bottom": 8
+   },
+   "note": "rebind field; listening = bronze corner brackets, conflict = red hatch + red edge (shape differs, not only colour)"
+  },
+  "ad_ui_bar_frame": {
+   "x": 0,
+   "y": 210,
+   "w": 64,
+   "h": 12,
+   "group": "bars",
+   "glow": false,
+   "nine": {
+    "left": 4,
+    "top": 5,
+    "right": 4,
+    "bottom": 5
+   },
+   "note": "HP / mana frame"
+  },
+  "ad_ui_bar_frame_thin": {
+   "x": 66,
+   "y": 210,
+   "w": 64,
+   "h": 9,
+   "group": "bars",
+   "glow": false,
+   "nine": {
+    "left": 4,
+    "top": 4,
+    "right": 4,
+    "bottom": 4
+   },
+   "note": "XP-like frame"
+  },
+  "ad_ui_bar_fill_hp": {
+   "x": 132,
+   "y": 210,
+   "w": 16,
+   "h": 6,
+   "group": "bars",
+   "glow": true,
+   "nine": {
+    "left": 2,
+    "top": 0,
+    "right": 2,
+    "bottom": 0
+   },
+   "note": "fill strip: set width = value; inner area of the frame is (w-6) x (h-6) at +3,+3"
+  },
+  "ad_ui_bar_fill_mana": {
+   "x": 150,
+   "y": 210,
+   "w": 16,
+   "h": 6,
+   "group": "bars",
+   "glow": true,
+   "nine": {
+    "left": 2,
+    "top": 0,
+    "right": 2,
+    "bottom": 0
+   },
+   "note": "fill strip: set width = value; inner area of the frame is (w-6) x (h-6) at +3,+3"
+  },
+  "ad_ui_bar_fill_xp": {
+   "x": 168,
+   "y": 210,
+   "w": 16,
+   "h": 3,
+   "group": "bars",
+   "glow": true,
+   "nine": {
+    "left": 2,
+    "top": 0,
+    "right": 2,
+    "bottom": 0
+   },
+   "note": "fill strip: set width = value; inner area of the frame is (w-6) x (h-6) at +3,+3"
+  },
+  "ad_ui_slot24_ready": {
+   "x": 0,
+   "y": 224,
+   "w": 24,
+   "h": 24,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "spell slot, 16x16 icon at +4,+4"
+  },
+  "ad_ui_slot24_hover": {
+   "x": 26,
+   "y": 224,
+   "w": 24,
+   "h": 24,
+   "group": "slots",
+   "glow": true,
+   "nine": null,
+   "note": "spell slot, 16x16 icon at +4,+4"
+  },
+  "ad_ui_slot24_selected": {
+   "x": 52,
+   "y": 224,
+   "w": 24,
+   "h": 24,
+   "group": "slots",
+   "glow": true,
+   "nine": null,
+   "note": "spell slot, 16x16 icon at +4,+4"
+  },
+  "ad_ui_slot24_cooldown": {
+   "x": 78,
+   "y": 224,
+   "w": 24,
+   "h": 24,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "spell slot, 16x16 icon at +4,+4"
+  },
+  "ad_ui_slot24_no_mana": {
+   "x": 104,
+   "y": 224,
+   "w": 24,
+   "h": 24,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "spell slot, 16x16 icon at +4,+4"
+  },
+  "ad_ui_slot24_empty": {
+   "x": 130,
+   "y": 224,
+   "w": 24,
+   "h": 24,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "spell slot, 16x16 icon at +4,+4"
+  },
+  "ad_ui_slot24_disabled": {
+   "x": 156,
+   "y": 224,
+   "w": 24,
+   "h": 24,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "spell slot, 16x16 icon at +4,+4"
+  },
+  "ad_ui_slot24_cooldown_sweep_0": {
+   "x": 182,
+   "y": 224,
+   "w": 16,
+   "h": 16,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "overlay on the 16x16 icon area, clockwise sweep step 0/8"
+  },
+  "ad_ui_slot24_cooldown_sweep_1": {
+   "x": 200,
+   "y": 224,
+   "w": 16,
+   "h": 16,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "overlay on the 16x16 icon area, clockwise sweep step 1/8"
+  },
+  "ad_ui_slot24_cooldown_sweep_2": {
+   "x": 218,
+   "y": 224,
+   "w": 16,
+   "h": 16,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "overlay on the 16x16 icon area, clockwise sweep step 2/8"
+  },
+  "ad_ui_slot24_cooldown_sweep_3": {
+   "x": 236,
+   "y": 224,
+   "w": 16,
+   "h": 16,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "overlay on the 16x16 icon area, clockwise sweep step 3/8"
+  },
+  "ad_ui_slot24_cooldown_sweep_4": {
+   "x": 254,
+   "y": 224,
+   "w": 16,
+   "h": 16,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "overlay on the 16x16 icon area, clockwise sweep step 4/8"
+  },
+  "ad_ui_slot24_cooldown_sweep_5": {
+   "x": 272,
+   "y": 224,
+   "w": 16,
+   "h": 16,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "overlay on the 16x16 icon area, clockwise sweep step 5/8"
+  },
+  "ad_ui_slot24_cooldown_sweep_6": {
+   "x": 290,
+   "y": 224,
+   "w": 16,
+   "h": 16,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "overlay on the 16x16 icon area, clockwise sweep step 6/8"
+  },
+  "ad_ui_slot24_cooldown_sweep_7": {
+   "x": 308,
+   "y": 224,
+   "w": 16,
+   "h": 16,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "overlay on the 16x16 icon area, clockwise sweep step 7/8"
+  },
+  "ad_ui_slot40_normal": {
+   "x": 326,
+   "y": 224,
+   "w": 40,
+   "h": 40,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "item / artifact slot, 32x32 icon at +4,+4"
+  },
+  "ad_ui_slot40_hover": {
+   "x": 368,
+   "y": 224,
+   "w": 40,
+   "h": 40,
+   "group": "slots",
+   "glow": true,
+   "nine": null,
+   "note": "item / artifact slot, 32x32 icon at +4,+4"
+  },
+  "ad_ui_slot40_selected": {
+   "x": 410,
+   "y": 224,
+   "w": 40,
+   "h": 40,
+   "group": "slots",
+   "glow": true,
+   "nine": null,
+   "note": "item / artifact slot, 32x32 icon at +4,+4"
+  },
+  "ad_ui_slot40_empty": {
+   "x": 452,
+   "y": 224,
+   "w": 40,
+   "h": 40,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "item / artifact slot, 32x32 icon at +4,+4"
+  },
+  "ad_ui_slot40_disabled": {
+   "x": 494,
+   "y": 224,
+   "w": 40,
+   "h": 40,
+   "group": "slots",
+   "glow": false,
+   "nine": null,
+   "note": "item / artifact slot, 32x32 icon at +4,+4"
+  },
+  "ad_ui_card_icon_common": {
+   "x": 0,
+   "y": 266,
+   "w": 40,
+   "h": 44,
+   "group": "cards",
+   "glow": false,
+   "nine": null,
+   "note": "frames a 32 px AD-115 icon at +4,+4; pips = rarity (1 common .. 4 epic), colour is not the only cue",
+   "icon_offset": [
+    4,
+    4
+   ],
+   "rarity": "common"
+  },
+  "ad_ui_card_icon_uncommon": {
+   "x": 42,
+   "y": 266,
+   "w": 40,
+   "h": 44,
+   "group": "cards",
+   "glow": true,
+   "nine": null,
+   "note": "frames a 32 px AD-115 icon at +4,+4; pips = rarity (1 common .. 4 epic), colour is not the only cue",
+   "icon_offset": [
+    4,
+    4
+   ],
+   "rarity": "uncommon"
+  },
+  "ad_ui_card_icon_rare": {
+   "x": 84,
+   "y": 266,
+   "w": 40,
+   "h": 44,
+   "group": "cards",
+   "glow": true,
+   "nine": null,
+   "note": "frames a 32 px AD-115 icon at +4,+4; pips = rarity (1 common .. 4 epic), colour is not the only cue",
+   "icon_offset": [
+    4,
+    4
+   ],
+   "rarity": "rare"
+  },
+  "ad_ui_card_icon_epic": {
+   "x": 126,
+   "y": 266,
+   "w": 40,
+   "h": 44,
+   "group": "cards",
+   "glow": true,
+   "nine": null,
+   "note": "frames a 32 px AD-115 icon at +4,+4; pips = rarity (1 common .. 4 epic), colour is not the only cue",
+   "icon_offset": [
+    4,
+    4
+   ],
+   "rarity": "epic"
+  },
+  "ad_ui_card_rune_common": {
+   "x": 168,
+   "y": 266,
+   "w": 64,
+   "h": 92,
+   "group": "cards",
+   "glow": true,
+   "nine": null,
+   "note": "full card 64x92: header 5,5,54x11 | art 12,20,40x40 (icon at +16,+24) | text 5,65,54x18 | pips",
+   "rarity": "common",
+   "card": "rune",
+   "regions": {
+    "header": [
+     5,
+     5,
+     54,
+     11
+    ],
+    "header_text": [
+     16,
+     6,
+     43,
+     9
+    ],
+    "art": [
+     12,
+     20,
+     40,
+     40
+    ],
+    "icon": [
+     16,
+     24,
+     32,
+     32
+    ],
+    "text": [
+     5,
+     65,
+     54,
+     18
+    ],
+    "pips": [
+     19,
+     85,
+     26,
+     5
+    ]
+   }
+  },
+  "ad_ui_card_rune_uncommon": {
+   "x": 234,
+   "y": 266,
+   "w": 64,
+   "h": 92,
+   "group": "cards",
+   "glow": true,
+   "nine": null,
+   "note": "full card 64x92: header 5,5,54x11 | art 12,20,40x40 (icon at +16,+24) | text 5,65,54x18 | pips",
+   "rarity": "uncommon",
+   "card": "rune",
+   "regions": {
+    "header": [
+     5,
+     5,
+     54,
+     11
+    ],
+    "header_text": [
+     16,
+     6,
+     43,
+     9
+    ],
+    "art": [
+     12,
+     20,
+     40,
+     40
+    ],
+    "icon": [
+     16,
+     24,
+     32,
+     32
+    ],
+    "text": [
+     5,
+     65,
+     54,
+     18
+    ],
+    "pips": [
+     19,
+     85,
+     26,
+     5
+    ]
+   }
+  },
+  "ad_ui_card_rune_rare": {
+   "x": 300,
+   "y": 266,
+   "w": 64,
+   "h": 92,
+   "group": "cards",
+   "glow": true,
+   "nine": null,
+   "note": "full card 64x92: header 5,5,54x11 | art 12,20,40x40 (icon at +16,+24) | text 5,65,54x18 | pips",
+   "rarity": "rare",
+   "card": "rune",
+   "regions": {
+    "header": [
+     5,
+     5,
+     54,
+     11
+    ],
+    "header_text": [
+     16,
+     6,
+     43,
+     9
+    ],
+    "art": [
+     12,
+     20,
+     40,
+     40
+    ],
+    "icon": [
+     16,
+     24,
+     32,
+     32
+    ],
+    "text": [
+     5,
+     65,
+     54,
+     18
+    ],
+    "pips": [
+     19,
+     85,
+     26,
+     5
+    ]
+   }
+  },
+  "ad_ui_card_rune_epic": {
+   "x": 366,
+   "y": 266,
+   "w": 64,
+   "h": 92,
+   "group": "cards",
+   "glow": true,
+   "nine": null,
+   "note": "full card 64x92: header 5,5,54x11 | art 12,20,40x40 (icon at +16,+24) | text 5,65,54x18 | pips",
+   "rarity": "epic",
+   "card": "rune",
+   "regions": {
+    "header": [
+     5,
+     5,
+     54,
+     11
+    ],
+    "header_text": [
+     16,
+     6,
+     43,
+     9
+    ],
+    "art": [
+     12,
+     20,
+     40,
+     40
+    ],
+    "icon": [
+     16,
+     24,
+     32,
+     32
+    ],
+    "text": [
+     5,
+     65,
+     54,
+     18
+    ],
+    "pips": [
+     19,
+     85,
+     26,
+     5
+    ]
+   }
+  },
+  "ad_ui_card_artifact_common": {
+   "x": 432,
+   "y": 266,
+   "w": 64,
+   "h": 92,
+   "group": "cards",
+   "glow": true,
+   "nine": null,
+   "note": "full card 64x92: header 5,5,54x11 | art 12,20,40x40 (icon at +16,+24) | text 5,65,54x18 | pips",
+   "rarity": "common",
+   "card": "artifact",
+   "regions": {
+    "header": [
+     5,
+     5,
+     54,
+     11
+    ],
+    "header_text": [
+     16,
+     6,
+     43,
+     9
+    ],
+    "art": [
+     12,
+     20,
+     40,
+     40
+    ],
+    "icon": [
+     16,
+     24,
+     32,
+     32
+    ],
+    "text": [
+     5,
+     65,
+     54,
+     18
+    ],
+    "pips": [
+     19,
+     85,
+     26,
+     5
+    ]
+   }
+  },
+  "ad_ui_card_artifact_uncommon": {
+   "x": 498,
+   "y": 266,
+   "w": 64,
+   "h": 92,
+   "group": "cards",
+   "glow": true,
+   "nine": null,
+   "note": "full card 64x92: header 5,5,54x11 | art 12,20,40x40 (icon at +16,+24) | text 5,65,54x18 | pips",
+   "rarity": "uncommon",
+   "card": "artifact",
+   "regions": {
+    "header": [
+     5,
+     5,
+     54,
+     11
+    ],
+    "header_text": [
+     16,
+     6,
+     43,
+     9
+    ],
+    "art": [
+     12,
+     20,
+     40,
+     40
+    ],
+    "icon": [
+     16,
+     24,
+     32,
+     32
+    ],
+    "text": [
+     5,
+     65,
+     54,
+     18
+    ],
+    "pips": [
+     19,
+     85,
+     26,
+     5
+    ]
+   }
+  },
+  "ad_ui_card_artifact_rare": {
+   "x": 564,
+   "y": 266,
+   "w": 64,
+   "h": 92,
+   "group": "cards",
+   "glow": true,
+   "nine": null,
+   "note": "full card 64x92: header 5,5,54x11 | art 12,20,40x40 (icon at +16,+24) | text 5,65,54x18 | pips",
+   "rarity": "rare",
+   "card": "artifact",
+   "regions": {
+    "header": [
+     5,
+     5,
+     54,
+     11
+    ],
+    "header_text": [
+     16,
+     6,
+     43,
+     9
+    ],
+    "art": [
+     12,
+     20,
+     40,
+     40
+    ],
+    "icon": [
+     16,
+     24,
+     32,
+     32
+    ],
+    "text": [
+     5,
+     65,
+     54,
+     18
+    ],
+    "pips": [
+     19,
+     85,
+     26,
+     5
+    ]
+   }
+  },
+  "ad_ui_card_artifact_epic": {
+   "x": 0,
+   "y": 360,
+   "w": 64,
+   "h": 92,
+   "group": "cards",
+   "glow": true,
+   "nine": null,
+   "note": "full card 64x92: header 5,5,54x11 | art 12,20,40x40 (icon at +16,+24) | text 5,65,54x18 | pips",
+   "rarity": "epic",
+   "card": "artifact",
+   "regions": {
+    "header": [
+     5,
+     5,
+     54,
+     11
+    ],
+    "header_text": [
+     16,
+     6,
+     43,
+     9
+    ],
+    "art": [
+     12,
+     20,
+     40,
+     40
+    ],
+    "icon": [
+     16,
+     24,
+     32,
+     32
+    ],
+    "text": [
+     5,
+     65,
+     54,
+     18
+    ],
+    "pips": [
+     19,
+     85,
+     26,
+     5
+    ]
+   }
+  },
+  "ad_ui_card_upgrade_common": {
+   "x": 66,
+   "y": 360,
+   "w": 64,
+   "h": 92,
+   "group": "cards",
+   "glow": true,
+   "nine": null,
+   "note": "full card 64x92: header 5,5,54x11 | art 12,20,40x40 (icon at +16,+24) | text 5,65,54x18 | pips",
+   "rarity": "common",
+   "card": "upgrade",
+   "regions": {
+    "header": [
+     5,
+     5,
+     54,
+     11
+    ],
+    "header_text": [
+     16,
+     6,
+     43,
+     9
+    ],
+    "art": [
+     12,
+     20,
+     40,
+     40
+    ],
+    "icon": [
+     16,
+     24,
+     32,
+     32
+    ],
+    "text": [
+     5,
+     65,
+     54,
+     18
+    ],
+    "pips": [
+     19,
+     85,
+     26,
+     5
+    ]
+   }
+  },
+  "ad_ui_card_upgrade_uncommon": {
+   "x": 132,
+   "y": 360,
+   "w": 64,
+   "h": 92,
+   "group": "cards",
+   "glow": true,
+   "nine": null,
+   "note": "full card 64x92: header 5,5,54x11 | art 12,20,40x40 (icon at +16,+24) | text 5,65,54x18 | pips",
+   "rarity": "uncommon",
+   "card": "upgrade",
+   "regions": {
+    "header": [
+     5,
+     5,
+     54,
+     11
+    ],
+    "header_text": [
+     16,
+     6,
+     43,
+     9
+    ],
+    "art": [
+     12,
+     20,
+     40,
+     40
+    ],
+    "icon": [
+     16,
+     24,
+     32,
+     32
+    ],
+    "text": [
+     5,
+     65,
+     54,
+     18
+    ],
+    "pips": [
+     19,
+     85,
+     26,
+     5
+    ]
+   }
+  },
+  "ad_ui_card_upgrade_rare": {
+   "x": 198,
+   "y": 360,
+   "w": 64,
+   "h": 92,
+   "group": "cards",
+   "glow": true,
+   "nine": null,
+   "note": "full card 64x92: header 5,5,54x11 | art 12,20,40x40 (icon at +16,+24) | text 5,65,54x18 | pips",
+   "rarity": "rare",
+   "card": "upgrade",
+   "regions": {
+    "header": [
+     5,
+     5,
+     54,
+     11
+    ],
+    "header_text": [
+     16,
+     6,
+     43,
+     9
+    ],
+    "art": [
+     12,
+     20,
+     40,
+     40
+    ],
+    "icon": [
+     16,
+     24,
+     32,
+     32
+    ],
+    "text": [
+     5,
+     65,
+     54,
+     18
+    ],
+    "pips": [
+     19,
+     85,
+     26,
+     5
+    ]
+   }
+  },
+  "ad_ui_card_upgrade_epic": {
+   "x": 264,
+   "y": 360,
+   "w": 64,
+   "h": 92,
+   "group": "cards",
+   "glow": true,
+   "nine": null,
+   "note": "full card 64x92: header 5,5,54x11 | art 12,20,40x40 (icon at +16,+24) | text 5,65,54x18 | pips",
+   "rarity": "epic",
+   "card": "upgrade",
+   "regions": {
+    "header": [
+     5,
+     5,
+     54,
+     11
+    ],
+    "header_text": [
+     16,
+     6,
+     43,
+     9
+    ],
+    "art": [
+     12,
+     20,
+     40,
+     40
+    ],
+    "icon": [
+     16,
+     24,
+     32,
+     32
+    ],
+    "text": [
+     5,
+     65,
+     54,
+     18
+    ],
+    "pips": [
+     19,
+     85,
+     26,
+     5
+    ]
+   }
+  },
+  "ad_ui_header": {
+   "x": 0,
+   "y": 454,
+   "w": 96,
+   "h": 16,
+   "group": "headers",
+   "glow": true,
+   "nine": {
+    "left": 14,
+    "top": 7,
+    "right": 14,
+    "bottom": 7
+   },
+   "note": "section header; text recess is 2 px inside the end plates"
+  },
+  "ad_ui_header_small": {
+   "x": 98,
+   "y": 454,
+   "w": 64,
+   "h": 12,
+   "group": "headers",
+   "glow": false,
+   "nine": {
+    "left": 8,
+    "top": 5,
+    "right": 8,
+    "bottom": 5
+   },
+   "note": "sub-section header"
+  },
+  "ad_ui_divider_h": {
+   "x": 0,
+   "y": 472,
+   "w": 32,
+   "h": 5,
+   "group": "dividers",
+   "glow": false,
+   "nine": {
+    "left": 5,
+    "top": 0,
+    "right": 5,
+    "bottom": 0
+   },
+   "note": "horizontal rule with bronze diamond ends"
+  },
+  "ad_ui_divider_v": {
+   "x": 34,
+   "y": 472,
+   "w": 5,
+   "h": 32,
+   "group": "dividers",
+   "glow": false,
+   "nine": {
+    "left": 0,
+    "top": 5,
+    "right": 0,
+    "bottom": 5
+   },
+   "note": "vertical rule"
+  },
+  "ad_ui_divider_plain": {
+   "x": 41,
+   "y": 472,
+   "w": 8,
+   "h": 3,
+   "group": "dividers",
+   "glow": false,
+   "nine": null,
+   "note": "tileable 8x3 line",
+   "tile": true
+  },
+  "ad_ui_divider_ornament": {
+   "x": 51,
+   "y": 472,
+   "w": 48,
+   "h": 9,
+   "group": "dividers",
+   "glow": true,
+   "nine": null,
+   "note": "fixed centre ornament 48x9"
+  },
+  "ad_ui_cursor_arrow": {
+   "x": 0,
+   "y": 506,
+   "w": 16,
+   "h": 16,
+   "group": "cursor",
+   "glow": false,
+   "nine": null,
+   "note": "hotspot (1,1)",
+   "hotspot": [
+    1,
+    1
+   ]
+  },
+  "ad_ui_cursor_hover": {
+   "x": 18,
+   "y": 506,
+   "w": 16,
+   "h": 16,
+   "group": "cursor",
+   "glow": true,
+   "nine": null,
+   "note": "hotspot (1,1)",
+   "hotspot": [
+    1,
+    1
+   ]
+  },
+  "ad_ui_cursor_pressed": {
+   "x": 36,
+   "y": 506,
+   "w": 16,
+   "h": 16,
+   "group": "cursor",
+   "glow": false,
+   "nine": null,
+   "note": "hotspot (1,1)",
+   "hotspot": [
+    1,
+    1
+   ]
+  },
+  "ad_ui_cursor_disabled": {
+   "x": 54,
+   "y": 506,
+   "w": 16,
+   "h": 16,
+   "group": "cursor",
+   "glow": false,
+   "nine": null,
+   "note": "hotspot (1,1)",
+   "hotspot": [
+    1,
+    1
+   ]
+  },
+  "ad_ui_cursor_beam": {
+   "x": 72,
+   "y": 506,
+   "w": 7,
+   "h": 14,
+   "group": "cursor",
+   "glow": false,
+   "nine": null,
+   "note": "text I-beam, hotspot (3,7)",
+   "hotspot": [
+    3,
+    7
+   ]
+  }
+ }
+}

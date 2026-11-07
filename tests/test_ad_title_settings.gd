@@ -21,7 +21,7 @@ func run(t) -> void:
 	(Engine.get_main_loop() as SceneTree).root.add_child(screen)
 	var keys: Array = screen.volume_sliders.keys()
 	keys.sort()
-	t.equal(keys, ["Ambience", "Master", "SFX", "UI"], "AD-067 one slider per bus")
+	t.equal(keys, ["Ambience", "Master", "Music", "SFX", "UI"], "AD-067 one slider per bus")
 	t.check(screen.flash_toggle != null and screen.shake_toggle != null and screen.telemetry_toggle != null, "AD-067 toggles exist")
 	t.check(not screen.flash_toggle.button_pressed and not screen.shake_toggle.button_pressed and not screen.telemetry_toggle.button_pressed, "AD-067 toggles start unpressed")
 	screen.volume_sliders["SFX"].value = 0.35
@@ -34,7 +34,8 @@ func run(t) -> void:
 	t.check(svc2.settings.reduce_flashes, "AD-067 reduce_flashes persists")
 	t.check(not svc2.settings.screen_shake, "AD-067 reduce shake stored as screen_shake=false")
 	t.check(svc2.settings.telemetry_opt_in, "AD-067 telemetry opt-in persists")
-	t.check(screen.lighting_option != null and screen.lighting_option.item_count == 3, "AD-148 lighting option has 3 items")
+	t.check(screen.lighting_option != null and screen.lighting_option.item_count == 2, "AD-152 light quality option has high/low")
+	_tabs(t, screen, svc)
 	var hits := []
 	screen.back_requested.connect(func(): hits.append(1))
 	screen.back_button.pressed.emit()
@@ -45,6 +46,47 @@ func run(t) -> void:
 	_clean()
 	DirAccess.remove_absolute(DIR)
 	_title(t)
+
+## AD-152: tabbed skin A settings screen.
+func _tabs(t, screen, svc) -> void:
+	for id in ["audio", "video", "controls", "access"]:
+		screen.select_tab(id)
+		var shown := []
+		for other in screen.tab_pages:
+			if screen.tab_pages[other].visible:
+				shown.append(other)
+		t.equal(shown, [id], "AD-152 select_tab %s shows only its page" % id)
+		t.equal(screen.current_tab, id, "AD-152 current_tab %s" % id)
+		t.check(screen.tab_buttons[id].active, "AD-152 tab button %s active" % id)
+	screen.select_tab("bogus")
+	t.equal(screen.current_tab, "access", "AD-152 unknown tab id ignored")
+	screen.select_tab("video")
+	t.check(screen.lighting_toggle.button_pressed and svc.settings.lighting == "high", "AD-152 lighting toggle starts on (high)")
+	screen.lighting_toggle.button_pressed = false
+	t.equal(svc.settings.lighting, "off", "AD-152 lighting toggle off sets lighting off")
+	t.check(screen.lighting_option.disabled, "AD-152 light quality disabled while lighting is off")
+	screen.lighting_toggle.button_pressed = true
+	screen.lighting_option.item_selected.emit(1)
+	t.equal(svc.settings.lighting, "low", "AD-152 light quality low while on")
+	screen.reset_button.pressed.emit()
+	t.equal(svc.settings.lighting, "high", "AD-152 defaults button resets lighting")
+	t.check(screen.lighting_toggle.button_pressed and screen.volume_sliders["SFX"].value == 1.0, "AD-152 defaults refreshes controls")
+	t.check(screen.disabled_widgets.size() >= 12, "AD-152 unbacked widgets tracked")
+	for c in screen.disabled_widgets:
+		var off: bool = (not c.editable) if c is HSlider else c.disabled
+		t.check(off, "AD-152 unbacked widget disabled: %s" % c.get_path())
+	t.check(screen.apply_button != null and screen.reset_keys_button != null, "AD-152 apply and reset-keys buttons exist")
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_E
+	key.pressed = true
+	screen.select_tab("audio")
+	screen._unhandled_input(key)
+	t.equal(screen.current_tab, "video", "AD-152 E steps to the next tab")
+	var page_up := InputEventAction.new()
+	page_up.action = "ui_page_up"
+	page_up.pressed = true
+	screen._unhandled_input(page_up)
+	t.equal(screen.current_tab, "audio", "AD-152 ui_page_up steps back")
 
 func _title(t) -> void:
 	var root = (Engine.get_main_loop() as SceneTree).root
@@ -70,9 +112,29 @@ func _title(t) -> void:
 		t.check(first_btn.name == "ContinueButton" and first_btn.text == "Continue", "AD-146 Continue is first when a run save exists")
 		with_save.free()
 		run_save.delete_run()
+	t.check(menu.find_child("Logo", true, false) != null, "AD-152 title logo exists")
+	var logo = menu.find_child("Logo", true, false)
+	t.equal(logo.texture.resource_path, "res://assets/ui/logo/ad_key_logo.png", "AD-164 logo is the Sigilwright wordmark")
+	t.equal(logo.texture.get_size(), Vector2(320, 96), "AD-164 logo texture size")
+	if menu.get_viewport_rect().size == Vector2(1280, 720):
+		t.equal(logo.size, Vector2(640, 192), "AD-164 logo is x2 at 1280x720")
+	else:
+		var logo_scale: Vector2 = logo.size / Vector2(320, 96)
+		t.check(logo_scale.x == floorf(logo_scale.x) and logo_scale.x == logo_scale.y, "AD-164 logo integer scale")
+	t.check(menu.find_child("LogoGlow", true, false) != null, "AD-164 logo glow exists")
+	for layer in ["par_far", "par_mid", "par_near"]:
+		t.check(menu.find_child(layer, true, false) != null, "AD-152 parallax layer " + layer)
+	var vp_rect := Rect2(Vector2.ZERO, menu.get_viewport_rect().size)
+	var inside := true
+	for b in menu.find_children("*", "Button", true, false):
+		inside = inside and vp_rect.encloses(b.get_global_rect())
+	t.check(inside, "AD-152 title buttons inside viewport")
+	var bs = menu.find_child("BuildStamp", true, false)
+	t.check(bs != null and bs.text != "" and bs.mouse_filter == Control.MOUSE_FILTER_IGNORE, "AD-157 title build stamp label")
 	menu.open_settings()
 	t.check(menu.settings_screen.visible and not menu.panel.visible, "AD-067 settings replaces title panel")
 	menu.settings_screen.back_requested.emit()
+	t.check(menu.settings_screen.open_logs_button != null, "AD-157 settings has Open log folder button")
 	t.check(menu.panel.visible and not menu.settings_screen.visible, "AD-067 back restores title panel")
 	menu.open_settings()
 	var vp = menu.get_viewport()
