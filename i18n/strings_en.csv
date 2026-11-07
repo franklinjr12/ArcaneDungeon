@@ -531,7 +531,7 @@ settings.help.telegraphs,Makes enemy attack warnings larger and brighter.
 settings.help.hold_cast,Hold the cast button instead of clicking repeatedly.
 settings.help.aim_assist,Nudges spells toward the nearest enemy.
 settings.help.visual_cues,Shows an icon on screen for important sounds.
-settings.help.telemetry,Writes anonymous play stats to a local file only. Nothing is sent anywhere.
+settings.help.telemetry,"When on, anonymous play stats and session/crash logs are saved locally to the log folder. Nothing is sent anywhere."
 run.reward.title,CHOOSE A REWARD
 run.reward.subtitle,ROOM %d CLEARED   TAKE ONE
 run.reward.take,TAKE
@@ -567,3 +567,6 @@ run.summary.l_kills,ENEMIES DEFEATED
 run.summary.l_spells,SPELLS USED
 run.summary.l_coins,COINS HELD
 run.summary.loadout,FINAL LOADOUT
+menu.build_stamp,Build %s
+settings.open_logs,Open log folder
+settings.help.open_logs,"Opens the folder with your local session and crash logs. Send these files to Franklin. Nothing is uploaded."
