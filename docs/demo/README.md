@@ -33,6 +33,8 @@ Verified on 2026-11-07 with Godot 4.7.1 (no export templates installed on that m
 `--export-release` binary was not produced there; only the pack).
 
 ## 5. What testers do
+Full checklist: [FRANKLIN_TEST.md](FRANKLIN_TEST.md).
+
 1. Settings > Accessibility > turn on **Local telemetry (opt-in)**.
 2. Play.
 3. Settings > Accessibility > **Open log folder**.
