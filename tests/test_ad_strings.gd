@@ -25,7 +25,7 @@ func run(t) -> void:
 	var keys := _load_csv(t)
 	_scan_ui(t, keys)
 	_check_flavour(t, keys)
-	t.equal(TranslationServer.translate("menu.title"), "ARCANE DUNGEON", "AD-124 translation loaded")
+	t.equal(TranslationServer.translate("menu.title"), "SIGILWRIGHT", "AD-124 translation loaded")
 
 func _load_csv(t) -> Dictionary:
 	var keys := {}
