@@ -33,6 +33,8 @@ Verified on 2026-11-07 with Godot 4.7.1 (no export templates installed on that m
 `--export-release` binary was not produced there; only the pack).
 
 ## 5. What testers do
+Full checklist: [FRANKLIN_TEST.md](FRANKLIN_TEST.md).
+
 1. Settings > Accessibility > turn on **Local telemetry (opt-in)**.
 2. Play.
 3. Settings > Accessibility > **Open log folder**.
@@ -55,3 +57,5 @@ reads the session JSON (`--observations` is required: a manually anonymised obse
 
 ## 8. Validate before shipping
     python3 scripts/validate_godot.py --godot /usr/local/bin/godot
+
+QA sweep results and known issues: [docs/benchmarks/ad_demo_qa.md](../benchmarks/ad_demo_qa.md) (scripts: `tests/qa/demo_smoke.gd`, `tests/qa/demo_perf_probe.gd`).
