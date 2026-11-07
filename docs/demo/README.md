@@ -55,3 +55,5 @@ reads the session JSON (`--observations` is required: a manually anonymised obse
 
 ## 8. Validate before shipping
     python3 scripts/validate_godot.py --godot /usr/local/bin/godot
+
+QA sweep results and known issues: [docs/benchmarks/ad_demo_qa.md](../benchmarks/ad_demo_qa.md) (scripts: `tests/qa/demo_smoke.gd`, `tests/qa/demo_perf_probe.gd`).
