@@ -1,4 +1,6 @@
-# ArcaneDungeon — Documentation Index
+# Sigilwright — Documentation Index
+
+Sigilwright is the final player-facing game title (AD-161); the repository, folders, res:// paths, save/user:// ids and the AD board prefix keep the internal name ArcaneDungeon.
 
 Godot 4.7.1 stable (pinned) GL Compatibility M0–M3 playable prototypes are implemented for review: magic sandbox, combat arena, and linear dungeon → mini-boss → workshop → stage-two vertical slice. M4 TASK-049–053 automated validation/telemetry/onboarding is implemented; a first reference-inspired sprite, effects, environment and UI art pass is implemented; human playtesting and owner go/no-go remain absent.
 

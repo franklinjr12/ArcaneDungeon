@@ -176,7 +176,7 @@ run.btn.apply,Apply valid formula
 run.notice.formula_applied,Formula applied
 run.notice.formula_cancelled,Formula cancelled
 run.notice.duration, / %.1f s
-menu.title,ARCANE DUNGEON
+menu.title,SIGILWRIGHT
 menu.subtitle,SPELLFORGE  •  THE FIRST DESCENT
 menu.continue,Continue
 menu.new_run,New Run
@@ -230,7 +230,7 @@ settings.mode.windowed,Windowed
 settings.mode.fullscreen,Fullscreen
 settings.mode.borderless,Borderless
 combat.back_to_menu,Back to Menu
-combat.header,ARCANE DUNGEON / M2 COMBAT
+combat.header,SIGILWRIGHT / M2 COMBAT
 combat.tips,"WASD/Arrows Move   Mouse Aim
 LMB / RMB / Q / E: Cast slot 1-4
 SPACE Dash   ESC Pause
