@@ -7,6 +7,7 @@ extends Control
 ##  access: colour-blind mode, text size (UI scale lives in the video tab), strong telegraphs, hold to cast, aim assist,
 ##  visual sound cues.  The Music slider is disabled only if no Music audio bus exists; Pause stays fixed to Esc.
 const VisualTheme = preload("res://ui/pixel_theme.gd")
+const ExperimentLog = preload("res://debug/experiment_log.gd")
 const SkinA = preload("res://ui/skin_a.gd")
 const Settings = preload("res://game/core/settings.gd")
 const InputActions = preload("res://ui/input_actions.gd")
@@ -242,6 +243,7 @@ var music_slider: HSlider
 var flash_toggle: Button
 var shake_toggle: Button
 var telemetry_toggle: Button
+var open_logs_button: Button
 var lighting_toggle: Button
 var back_button: Button
 var apply_button: Button
@@ -763,6 +765,15 @@ func _build_access(page: Control) -> void:
 	telemetry_toggle = _toggle(tab, page, "", "settings.telemetry", "telemetry", _settings.telemetry_opt_in, func(on: bool):
 		_settings.telemetry_opt_in = on
 		_save(), {"x": last["x"], "y": last["y"] + 18, "w": last["w"], "h": last["h"]})
+	var logs_rect := {"x": last["x"], "y": last["y"] + 36, "w": last["w"], "h": last["h"]}
+	open_logs_button = _button(page, "btn_open_logs", tr("settings.open_logs"), tab)
+	_items[_items.size() - 1]["w"] = logs_rect
+	open_logs_button.disabled = _read_only
+	open_logs_button.pressed.connect(func():
+		DirAccess.make_dir_recursive_absolute(ExperimentLog.LOG_DIR)
+		if DisplayServer.get_name() != "headless":
+			OS.shell_open(ExperimentLog.log_dir_path()))
+	_help_hook(open_logs_button, tab, "open_logs", "settings.open_logs")
 	for c in [flash_toggle, shake_toggle, telemetry_toggle]:
 		c.disabled = _read_only
 	for pair in [[flash_toggle, func(): return _settings.reduce_flashes], [shake_toggle, func(): return not _settings.screen_shake], [telemetry_toggle, func(): return _settings.telemetry_opt_in]]:

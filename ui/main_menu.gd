@@ -3,6 +3,7 @@ const VisualTheme = preload("res://ui/pixel_theme.gd")
 const SkinA = preload("res://ui/skin_a.gd")
 const ReduceMotion = preload("res://ui/reduce_motion.gd")
 const SettingsScreen = preload("res://ui/settings_screen.gd")
+const BuildInfo = preload("res://game/core/build_info.gd")
 const CompendiumScreen = preload("res://ui/compendium_screen.gd")
 ## AD-067: GDD §8 Title screen. Sandbox/Arena are shown only in debug builds.
 const TEXT := {
@@ -80,6 +81,14 @@ func _ready() -> void:
 		_debug_box.add_child(debug_label)
 		_button(_debug_box, "SandboxButton", tr(TEXT["sandbox"])).pressed.connect(_switch_scene.bind("res://scenes/sandbox.tscn"))
 		_button(_debug_box, "ArenaButton", tr(TEXT["arena"])).pressed.connect(_switch_scene.bind("res://scenes/arena.tscn"))
+	var stamp := Label.new()
+	stamp.name = "BuildStamp"
+	stamp.text = tr("menu.build_stamp") % BuildInfo.label()
+	stamp.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stamp.add_theme_font_size_override("font_size", 10)
+	stamp.modulate = Color(1, 1, 1, 0.7)
+	add_child(stamp)
+	stamp.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 6)
 	_link_focus()
 	get_viewport().size_changed.connect(_relayout)
 	_relayout()

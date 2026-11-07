@@ -3,6 +3,9 @@ extends RefCounted
 const SCHEMA := 1
 const KINDS := ["formula_edit","rune_choice","test_cast","dungeon_cast","reaction",
 	"death","room_clear","editor_open","editor_close","room_enter","purchase","run_restart","slice_complete","session_start","prompt_shown"]
+const BuildInfo = preload("res://game/core/build_info.gd")
+const ErrorLog = preload("res://game/core/error_log.gd")
+const LOG_DIR := "user://logs"
 const SESSION_LOCK := "user://arcane_session.lock"
 var enabled := false
 var records: Array = []
@@ -41,19 +44,54 @@ static func signature(formula: Dictionary) -> String:
 		parts.append(str(payload.get("manifestation_id","")))
 	return "|".join(parts).sha256_text().substr(0,16)
 
+static func log_dir_path() -> String:
+	return ProjectSettings.globalize_path(LOG_DIR)
+
+static func _stamp_name() -> String:
+	var d := Time.get_datetime_dict_from_system()
+	return "%04d%02d%02d-%02d%02d%02d" % [d["year"],d["month"],d["day"],d["hour"],d["minute"],d["second"]]
+
+func write_session_log(dir: String = LOG_DIR) -> Error:
+	if not enabled:
+		return ERR_UNAVAILABLE
+	DirAccess.make_dir_recursive_absolute(dir)
+	var file := FileAccess.open("%s/session_%s.json" % [dir,_stamp_name()],FileAccess.WRITE)
+	if file == null:
+		return FileAccess.get_open_error()
+	var data := snapshot()
+	data["build"] = BuildInfo.as_dict()
+	file.store_string(JSON.stringify(data,"\t"))
+	return OK
+
+func _write_crash_log(dir: String) -> void:
+	DirAccess.make_dir_recursive_absolute(dir)
+	var file := FileAccess.open("%s/crash_%s.txt" % [dir,_stamp_name()],FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_line(BuildInfo.label())
+	file.store_line("previous session did not exit cleanly")
+	if FileAccess.file_exists(ErrorLog.PATH):
+		var lines := FileAccess.get_file_as_string(ErrorLog.PATH).strip_edges().split("\n")
+		for line in lines.slice(maxi(0,lines.size()-50)):
+			file.store_line(line)
+
 ## Crash = previous session left its lock behind. Local file with a schema int only, no identity.
-func begin_session(lock_path: String = SESSION_LOCK) -> void:
+func begin_session(lock_path: String = SESSION_LOCK, dir: String = LOG_DIR) -> void:
 	if not enabled:
 		return
 	if FileAccess.file_exists(lock_path):
 		_crashes += 1
+		_write_crash_log(dir)
 	var file := FileAccess.open(lock_path,FileAccess.WRITE)
 	if file != null:
 		file.store_string(str(SCHEMA))
 	record("session_start")
 
-func end_session(lock_path: String = SESSION_LOCK) -> void:
-	if enabled and FileAccess.file_exists(lock_path):
+func end_session(lock_path: String = SESSION_LOCK, dir: String = LOG_DIR) -> void:
+	if not enabled:
+		return
+	write_session_log(dir)
+	if FileAccess.file_exists(lock_path):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(lock_path))
 
 func mark_tick(_sim_tick: int) -> void:

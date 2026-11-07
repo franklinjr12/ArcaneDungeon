@@ -120,9 +120,12 @@ func _title(t) -> void:
 	for b in menu.find_children("*", "Button", true, false):
 		inside = inside and vp_rect.encloses(b.get_global_rect())
 	t.check(inside, "AD-152 title buttons inside viewport")
+	var bs = menu.find_child("BuildStamp", true, false)
+	t.check(bs != null and bs.text != "" and bs.mouse_filter == Control.MOUSE_FILTER_IGNORE, "AD-157 title build stamp label")
 	menu.open_settings()
 	t.check(menu.settings_screen.visible and not menu.panel.visible, "AD-067 settings replaces title panel")
 	menu.settings_screen.back_requested.emit()
+	t.check(menu.settings_screen.open_logs_button != null, "AD-157 settings has Open log folder button")
 	t.check(menu.panel.visible and not menu.settings_screen.visible, "AD-067 back restores title panel")
 	menu.open_settings()
 	var vp = menu.get_viewport()
