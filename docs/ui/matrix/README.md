@@ -102,3 +102,8 @@ Known deviations:
 - Reward and merchant extras icons fall back to the MVP atlas when the AD-123 atlas lacks an icon.
 
 Review: game-design and game-art review pending.
+
+## AD-164
+
+Sigilwright wordmark (AD-162) imported into the main menu `logo` widget (`assets/ui/logo/`), with an additive `LogoGlow`.
+Command: `bash tools/ui_matrix.sh --godot /usr/local/bin/godot --states title` (2026-11-07). Result: 13 shots, 0 failed. The 1280x720 logo area (x320-960, y48-240) matches the AD-163 2x menu mock (letters, slab, sigil; no old-logo pixels). Menu mocks were replaced with the AD-163 FINAL re-renders.
