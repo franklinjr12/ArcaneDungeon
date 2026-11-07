@@ -113,6 +113,15 @@ func _title(t) -> void:
 		with_save.free()
 		run_save.delete_run()
 	t.check(menu.find_child("Logo", true, false) != null, "AD-152 title logo exists")
+	var logo = menu.find_child("Logo", true, false)
+	t.equal(logo.texture.resource_path, "res://assets/ui/logo/ad_key_logo.png", "AD-164 logo is the Sigilwright wordmark")
+	t.equal(logo.texture.get_size(), Vector2(320, 96), "AD-164 logo texture size")
+	if menu.get_viewport_rect().size == Vector2(1280, 720):
+		t.equal(logo.size, Vector2(640, 192), "AD-164 logo is x2 at 1280x720")
+	else:
+		var logo_scale: Vector2 = logo.size / Vector2(320, 96)
+		t.check(logo_scale.x == floorf(logo_scale.x) and logo_scale.x == logo_scale.y, "AD-164 logo integer scale")
+	t.check(menu.find_child("LogoGlow", true, false) != null, "AD-164 logo glow exists")
 	for layer in ["par_far", "par_mid", "par_near"]:
 		t.check(menu.find_child(layer, true, false) != null, "AD-152 parallax layer " + layer)
 	var vp_rect := Rect2(Vector2.ZERO, menu.get_viewport_rect().size)

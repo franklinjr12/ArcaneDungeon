@@ -25,11 +25,13 @@ var compendium_screen: Control = null
 var panel: Panel
 
 const TITLE_DIR := "res://assets/ui/title/"
+const LOGO_DIR := "res://assets/ui/logo/"
 const PARALLAX := [["par_far", 2.0], ["par_mid", 5.0], ["par_near", 10.0]]
 const OVERSCAN := 16.0
 const BUTTON_IDS := {"btn_continue": "ContinueButton", "btn_new_run": "NewRunButton", "btn_compendium": "CompendiumButton", "btn_settings": "SettingsButton", "btn_quit": "QuitButton"}
 var _layers: Array = []  # {rect, depth}
 var _logo: TextureRect
+var _logo_glow: TextureRect
 var _buttons: Dictionary = {}  # layout id -> Button
 var _debug_box: VBoxContainer
 var _drift := true
@@ -46,11 +48,22 @@ func _ready() -> void:
 	_build_backdrop()
 	_logo = TextureRect.new()
 	_logo.name = "Logo"
-	_logo.texture = load(TITLE_DIR + "ad_key_logo.png")
+	_logo.texture = load(LOGO_DIR + "ad_key_logo.png")
 	_logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_logo.stretch_mode = TextureRect.STRETCH_SCALE
 	_logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(_logo)
+	_logo_glow = TextureRect.new()
+	_logo_glow.name = "LogoGlow"
+	var glow_mat := CanvasItemMaterial.new()
+	glow_mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	_logo_glow.material = glow_mat
+	_logo_glow.texture = load(LOGO_DIR + "ad_key_logo_glow.png")
+	_logo_glow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_logo_glow.stretch_mode = TextureRect.STRETCH_SCALE
+	_logo_glow.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_logo_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_logo_glow)
 	panel = Panel.new()
 	panel.name = "MenuPanel"
 	panel.add_theme_stylebox_override("panel", SkinA.stylebox("ad_ui_panel_large"))
@@ -140,6 +153,7 @@ func _relayout() -> void:
 		widgets[w.get("id", "")] = w
 	if widgets.has("logo"):
 		SkinA.place(_logo, widgets["logo"], sc, origin)
+		SkinA.place(_logo_glow, widgets["logo"], sc, origin)
 	if widgets.has("menu_panel"):
 		SkinA.place(panel, widgets["menu_panel"], sc, origin)
 	for id in _buttons:
@@ -197,11 +211,13 @@ func open_settings() -> void:
 	settings_screen.show()
 	panel.hide()
 	_logo.hide()
+	_logo_glow.hide()
 
 func _close_settings() -> void:
 	settings_screen.hide()
 	panel.show()
 	_logo.show()
+	_logo_glow.show()
 	panel.get_node("SettingsButton").grab_focus()
 
 func open_compendium() -> void:
@@ -213,11 +229,13 @@ func open_compendium() -> void:
 	compendium_screen.show()
 	panel.hide()
 	_logo.hide()
+	_logo_glow.hide()
 
 func _close_compendium() -> void:
 	compendium_screen.hide()
 	panel.show()
 	_logo.show()
+	_logo_glow.show()
 	panel.get_node("CompendiumButton").grab_focus()
 
 ## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.
