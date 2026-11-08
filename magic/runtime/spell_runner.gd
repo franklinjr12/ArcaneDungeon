@@ -516,9 +516,11 @@ func advance_one_tick() -> void:
 		_deferred_burst_cleanup.clear()
 	_prune_chain_seen()
 	_tick_statuses()
-	visuals = visuals.filter(func(v): return int(v["until"]) > clock.tick)
-	var min_tick: int = clock.tick-int(settings["sandbox"]["dps_window_ticks"])
-	recent_damage = recent_damage.filter(func(v): return int(v["tick"]) >= min_tick)
+	if not visuals.is_empty():
+		visuals = visuals.filter(func(v): return int(v["until"]) > clock.tick)
+	if not recent_damage.is_empty():
+		var min_tick: int = clock.tick-int(settings["sandbox"]["dps_window_ticks"])
+		recent_damage = recent_damage.filter(func(v): return int(v["tick"]) >= min_tick)
 
 ## AD-143 Gravity Lens: orb hits pull the target toward the orbit centre (the caster) through the knockback impulse.
 func _gravity_pull(target_id: int) -> void:
