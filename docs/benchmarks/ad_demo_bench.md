@@ -549,6 +549,7 @@ Results folder (not committed): `/tmp/ad175/iter1` (24 files, 8 seeds x 3 builds
 | AD-169 kept (4 seeds, slow bench) | AD-169 step 1 values | 1/4 / 3/4 / 4/4 | typical 7.49, skilled 7.94 | 0/4 | 16.0 / 10.4 / 10.5 | 113.0 |
 | 1 (8 seeds) | enemies.*.hp x3.5, mini-boss hp 2000, ruins_warden 9000, cistern_boss 9500 | 0/8 / 0/8 / 0/8 | none (no wins) | 8/8 (all stage1_rooms) | 23.5 / 19.7 / 20.3 | 73.0 (weak 68.7, typical 69.9, skilled 73.0) |
 | 2 (8 seeds) | enemies.*.hp x2.3 more (x8 vs AD-169); normal-enemy damage x0.25 (damage/explode_damage); bosses, mini-boss, waves, regen unchanged | 0/8 / 0/8 / 0/8 | none (no wins) | 8/8 (all stage1_rooms; 0-4 rooms cleared) | 20.95 / 20.16 / 21.49 | 160.8 (weak 155.0, typical 158.8, skilled 160.8) |
+| 3 (8 seeds) | normal-enemy damage x0.17 more (x0.0425 vs AD-169); regen_mana_per_tick 1.5 -> 1.8; ruins_warden radial/shot damage 7/12 -> 12/16; hp unchanged | 0/8 / 0/8 / 0/8 | none (no wins) | 8/8 (all stage1_boss = ruins_boss, 5-6 rooms cleared) | 10.24 / 10.35 / 10.62 | 149.7 (weak 149.7, typical 143.5, skilled 146.7) |
 
 Outcome: all 24 runs died in stage 1 combat rooms (total run 0.45-2.93 min). No run reached ruins_boss, cistern_challenge_v1, stage 2 or cistern_boss, so those encounters have no measurement in iteration 1. Deaths by room: ruins_c03 4, ruins_c04 5, ruins_c08 6, ruins_c02 4, ruins_c07 2, ruins_c06 2, ruins_c05 1. Player max HP (150) carries over between rooms and enemy damage is unchanged, so about x3.5 longer fights deliver about x3.5 more damage per room.
 
@@ -614,3 +615,38 @@ Data commit: the commit titled "AD-175: iteration 2 retune and 8-seed bench". Re
 Cleared combat rooms (46 clears): median 117.6 s, min 76.2, max 160.8 (per room median: c01 116.9, c02 156.0, c03 85.6, c04 135.8, c05 98.5, c06 122.1, c07 98.8, c08 129.0). Length target is met except the 12-enemy rooms (c02, c04) which run long. Damage taken per room is still 6-150 HP (median about 40) against 150 HP total with no healing between rooms, so every run dies after 0-4 rooms (total 1.5-7.9 min). No run reaches ruins_boss, the optional room or stage 2, so those stay unmeasured.
 
 Reading for iteration 3: room length is right, survivability is not. About 8 HP per room is affordable, so normal-enemy damage needs about another x0.17. Mana-starved median is 20.2-21.5%, so regen 1.5 -> 1.8 (also shortens the 12-enemy rooms by about 10%). Weak must still die at ruins_boss once rooms are survivable, so ruins_warden damage goes to 12/16.
+
+### Iteration 3 (8 seeds, 3 builds)
+
+Data commit: the commit titled "AD-175: iteration 3 retune and 8-seed bench". Results folder (not committed): `/tmp/ad175/iter3` (24 files). This is the last iteration (hard limit 3).
+
+| file | key | old | new | why |
+|---|---|---|---|---|
+| combat/combat_tuning_v1.json | enemies.*.damage (same 11 enemies as iteration 2) | 2, 1.5, 1.25, 4, 2.25, 4.5, 1.75, 1, 1.75, 2.75, 1.5 | 0.34, 0.26, 0.21, 0.68, 0.38, 0.77, 0.3, 0.17, 0.3, 0.47, 0.26 | about 8 HP per room is affordable (150 HP, no healing between rooms); iteration 2 lost about 40 per room |
+| combat/combat_tuning_v1.json | enemies.corpse_bloat explode_damage | 5.5 | 0.94 | same |
+| magic/data/magic_balance_v1.json | combat.regen_mana_per_tick | 1.5 | 1.8 | starved median was 20.2-21.5% |
+| world/data/run_v2.json | bosses.ruins_warden.radial_damage / shot_damage | 7 / 12 | 12 / 16 | weak must die in stage 1 or at ruins_boss (lever 3) |
+
+Cleared combat rooms (132 clears): median 114.2 s, min 70.3, max 149.7, 75% inside 90-150 s (c03 77.7, c05 89.5, c07 86.6 median are slightly short; c02 140.5, c04 121.9, c06 114.5, c08 117.2, c01 105.6). Damage taken per combat room is now 1-22 HP (median 2-19 per room). Mana-starved median 10.2-10.6% (regen overshoots the < 20% target; kept because it is the measured fix).
+
+All 24 runs now reach ruins_boss and die there (median 69.9 s, min 48.5, max 128.3 s until death; HP lost 76-100). So the boss is the only killer, but for all three builds, not only weak. The optional room, stage 2 and cistern_boss are still not reached, so they have no measurement.
+
+### Iteration 3 against the targets (8 seeds, not 20)
+
+| target | iteration 3 | status |
+|---|---|---|
+| winning run 30-40 min | no wins (runs end at 9.4-13.4 min) | NOT MET |
+| combat rooms 90-150 s | median 114.2 s, 75% of clears in window | MET (median), 3 rooms slightly short |
+| optional room 60-120 s / mini-boss 60-120 s | not reached | NOT MEASURED |
+| ruins_boss 120-180 s | player dies at 69.9 s median | NOT MET |
+| cistern_boss 150-210 s | not reached | NOT MEASURED |
+| mana-starved < 20% median | 10.2 / 10.4 / 10.6 | MET |
+| weak dies in stage 1 or at ruins_boss | 8/8 | MET |
+| typical wins >= 4/8, skilled >= 6/8 | 0/8, 0/8 | NOT MET |
+| no room > 4 min | max 149.7 s | MET |
+
+### Best iteration
+
+Best iteration: 3 (4 of 9 targets met, against 2 for iteration 2 and 2 for iteration 1; its combat rooms are also the closest to the 90-150 s window). Data commit: the commit titled "AD-175: iteration 3 retune and 8-seed bench" (the data in HEAD equals it); results folder `/tmp/ad175/iter3`.
+
+Next lever (for the 20-seed confirmation step / a later task): ruins_warden. Raising its damage to 12/16 made it kill every build in 70 s. Target 120-180 s needs about x2.1 HP (9000 -> ~19000), and then its damage must come down to roughly 4/6 so that typical and skilled (who enter the boss with about 90 HP) survive 150 s; keep weak dying there by not giving it the merchant HP upgrades it skips. Then re-measure the optional room and cistern_boss, which no run reaches yet, and scale cistern_boss damage the same way. Optionally lift c03/c05/c07 enemy HP about x1.15.
