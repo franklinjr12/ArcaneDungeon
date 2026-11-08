@@ -46,3 +46,7 @@ func from_dict(fields: Dictionary, channels: Dictionary = {}) -> Dictionary:
 
 func snapshot() -> Dictionary:
 	return _data.duplicate(true)
+
+## Read-only access to the payload without a copy; callers must not retain or mutate it.
+func view() -> Dictionary:
+	return _data

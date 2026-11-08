@@ -437,11 +437,11 @@ func _queue_hit(root: Dictionary, target_id: int, location: Vector2, ctx: Dictio
 	var fields: Dictionary = {"type":"hit","cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
 		"formula_id":ctx["formula_id"],"parent_effect_id":effect_id,"source_id":ctx["caster_id"],
 		"target_id":target_id,"position":location,"depth":ctx["depth"]}
-	var pushed: Dictionary = queue.push(fields)
-	if pushed["accepted"]:
-		_contexts[int(pushed["event"]["event_id"])] = {"plan":root,"context":ctx.duplicate(),
+	var event_id: int = queue.push_id(fields)
+	if event_id >= 0:
+		_contexts[event_id] = {"plan":root,"context":ctx.duplicate(),
 			"on_hit":attached_trigger,"effect_id":effect_id,"location":location,"chained":chained}
-		if not chained and "mod.chain" in _modifier_ids(root):
+		if not chained and _has_modifier(root,"mod.chain"):
 			var seen: Dictionary = _chain_seen.get(int(ctx["root_cast_id"]),{})
 			seen[target_id] = true
 			_chain_seen[int(ctx["root_cast_id"])] = seen
@@ -648,10 +648,10 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 		var react_ctx := {"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
 			"formula_id":ctx["formula_id"],"parent_effect_id":detail["effect_id"],
 			"source_id":target.id,"target_id":result["reaction"]["target_id"],"depth":ctx["depth"]}
-		var item = queue.push(react_ctx.merged({"type":"reaction"}))
-		if item["accepted"]:
-			_contexts[int(item["event"]["event_id"])] = {"arc":result["reaction"],"context":ctx.duplicate()}
-	if not bool(detail.get("chained",false)) and "mod.chain" in _modifier_ids(effect_plan):
+		var item_id: int = queue.push_id(react_ctx.merged({"type":"reaction"}))
+		if item_id >= 0:
+			_contexts[item_id] = {"arc":result["reaction"],"context":ctx.duplicate()}
+	if not bool(detail.get("chained",false)) and _has_modifier(effect_plan,"mod.chain"):
 		_chain_from(target,effect_plan,ctx,detail)
 	# Only depth-0 (root) contexts fire triggers, so payload Bursts can never recurse.
 	var trigger: Dictionary = detail["on_hit"]
@@ -673,10 +673,10 @@ func _fire_trigger(trigger_plan: Dictionary, ctx: Dictionary, parent_effect_id: 
 	var child: Dictionary = ctx.duplicate()
 	child["parent_effect_id"] = parent_effect_id
 	child["depth"] = int(ctx["depth"])+1
-	var spawned = queue.push({"type":"trigger","cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
+	var spawned_id: int = queue.push_id({"type":"trigger","cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
 		"formula_id":ctx["formula_id"],"source_id":ctx["caster_id"],"target_id":target_id,
 		"parent_effect_id":parent_effect_id,"depth":child["depth"],"position":location})
-	if not spawned["accepted"]:
+	if spawned_id < 0:
 		return false
 	var record := {"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
 		"formula_id":ctx["formula_id"],"parent_effect_id":parent_effect_id,"depth":child["depth"],"tick":clock.tick}
@@ -686,7 +686,7 @@ func _fire_trigger(trigger_plan: Dictionary, ctx: Dictionary, parent_effect_id: 
 		if trigger_id == "trigger.on_kill":
 			record["target_id"] = target_id
 	trace.record("trigger",record)
-	_contexts[int(spawned["event"]["event_id"])] = {
+	_contexts[spawned_id] = {
 		"effect":trigger_plan["effect"],"location":location,"context":child}
 	return true
 
@@ -749,11 +749,11 @@ func _storm_jump(event: Dictionary, detail: Dictionary, arc: Dictionary, from) -
 	next_arc["target_id"] = near[0].id
 	next_arc["jumps_left"] = int(arc["jumps_left"])-1
 	next_arc["seen"] = seen+[near[0].id]
-	var item = queue.push({"type":"reaction","cast_id":event["cast_id"],"root_cast_id":event["root_cast_id"],
+	var item_id: int = queue.push_id({"type":"reaction","cast_id":event["cast_id"],"root_cast_id":event["root_cast_id"],
 		"formula_id":event["formula_id"],"parent_effect_id":event.get("parent_effect_id",0),
 		"source_id":from.id,"target_id":near[0].id,"depth":event["depth"]})
-	if item["accepted"]:
-		_contexts[int(item["event"]["event_id"])] = {"arc":next_arc,"context":detail["context"].duplicate()}
+	if item_id >= 0:
+		_contexts[item_id] = {"arc":next_arc,"context":detail["context"].duplicate()}
 
 ## Deterministic knockback: id-ordered, wall/bounds-safe, fixed-tick decay (all rates from data).
 func _advance_knockback() -> void:
@@ -819,6 +819,12 @@ func _modifier_ids(plan: Dictionary) -> Array:
 	for modifier in plan.get("modifiers",[]):
 		result.append(modifier["id"])
 	return result
+
+func _has_modifier(plan: Dictionary, id: String) -> bool:
+	for modifier in plan.get("modifiers",[]):
+		if modifier["id"] == id:
+			return true
+	return false
 
 func _active_orb_count() -> int:
 	return _active_count("orb")

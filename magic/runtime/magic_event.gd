@@ -31,6 +31,10 @@ func from_dict(fields: Dictionary) -> Dictionary:
 func snapshot() -> Dictionary:
 	return _value.duplicate(true)
 
+## Read-only access to the stored record without a copy; callers must not retain or mutate it.
+func view() -> Dictionary:
+	return _value
+
 static func _normalize_position(value: Variant) -> Dictionary:
 	if typeof(value) == TYPE_VECTOR2:
 		return {"x":value.x,"y":value.y}

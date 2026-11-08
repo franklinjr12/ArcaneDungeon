@@ -32,11 +32,12 @@ func _init(spec: Dictionary) -> void:
 	position = spec["position"]
 	direction = spec["direction"].normalized()
 	var params: Dictionary = spec["root"]["params"]
-	root = spec["root"].duplicate(true)
+	# The plan is a fresh per-cast snapshot and nothing writes root/on_hit, so projectiles share it.
+	root = spec["root"]
 	for modifier in root.get("modifiers",[]):
 		if modifier["id"] == "mod.homing":
 			homing = true
-	on_hit = spec.get("on_hit",{}).duplicate(true)
+	on_hit = spec.get("on_hit",{})
 	speed = float(params["speed"])
 	radius = float(params["radius"])
 	life_ticks = int(params["lifetime_ticks"])
