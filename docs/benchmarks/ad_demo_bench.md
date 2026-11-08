@@ -650,3 +650,8 @@ All 24 runs now reach ruins_boss and die there (median 69.9 s, min 48.5, max 128
 Best iteration: 3 (4 of 9 targets met, against 2 for iteration 2 and 2 for iteration 1; its combat rooms are also the closest to the 90-150 s window). Data commit: the commit titled "AD-175: iteration 3 retune and 8-seed bench" (the data in HEAD equals it); results folder `/tmp/ad175/iter3`.
 
 Next lever (for the 20-seed confirmation step / a later task): ruins_warden. Raising its damage to 12/16 made it kill every build in 70 s. Target 120-180 s needs about x2.1 HP (9000 -> ~19000), and then its damage must come down to roughly 4/6 so that typical and skilled (who enter the boss with about 90 HP) survive 150 s; keep weak dying there by not giving it the merchant HP upgrades it skips. Then re-measure the optional room and cistern_boss, which no run reaches yet, and scale cistern_boss damage the same way. Optionally lift c03/c05/c07 enemy HP about x1.15.
+
+### Suite status at the best iteration
+
+Full suite (`tests/run_tests.gd`) on the baseline 859e6c8: 19586 passed / 0 failed. At the iteration 3 data: 21818 passed / 7 failed, all because tests read the live `combat_tuning_v1.json` and use fixed kill damage (1000) or fixed explode/buff values that the new HP and damage no longer satisfy: AD-136 explode_on_death x2 and support_buff clears after the supporter dies (`tests/test_ad_enemy_v2.gd`), TASK-036 door open / exit unlocked, TASK-041 rune reward, TASK-050 one reward after kill (`tests/test_m3_core.gd` and the reward tests). Not fixed in this step (data-only, tests out of scope): they need either the frozen fixture enabled for those cases or kill damage scaled above the new HP (bone_thrall 2990). To be done before the 20-seed confirmation closes the task.
+
