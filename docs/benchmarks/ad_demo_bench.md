@@ -410,3 +410,78 @@ Per room (typical, seed 20261022): combat rooms 17.6-31.1 s with 3-4 waves, ruin
 Why the length was held back: `combat/combat_session.gd` step() calls `sim.trace.filter_records(-1,"","reaction")` every tick, and `debug/debug_trace.gd` keeps every cast/hit record until the next room reset. So each tick costs more the longer a room has been fought. Measured on this host: ~1.5 ms/tick at room start, 12-15 ms/tick after ~45 s of fighting, even with no enemy alive. One data-tuned attempt with 80-100 s rooms ran slower than real time (126 s wall for an 80 s room), and the 1-seed typical check exceeded its 900 s budget. Rooms and bosses were therefore sized so that two full typical runs finish in about 8.5 min wall.
 
 Next lever (code, out of scope for a data-only step): count reactions incrementally instead of re-filtering the whole trace each tick (or cap the trace, or create the bench sim with `record_trace=false`). After that the room/boss HP above can be raised about 3-4x toward the 30-40 min target without breaking the check budget.
+
+## AD-169 bench iterations (step 2)
+
+**Scope reached: 1 REDUCED iteration (4 seeds x 3 builds), not 3 full 20-seed iterations.** The agent step that ran this had a 90-minute wall limit. One full 20-seed iteration is 21 plays per build (20 seeds plus the determinism replay) at about 5-8 min wall each on this 2-core host with three builds in parallel, so about 2.5-3 h wall. It does not fit, so the full bench was NOT run and the 20-seed targets (weak early deaths >= 11/20, typical >= 10/20, skilled >= 15/20) are not measured. The table below is 4 seeds (20261022-20261025). Nothing in it replaces the 20-seed run.
+
+Data kept: iteration 1 unchanged (the AD-169 step 1 values; see "Key changes (old -> new)" above, old = pre-AD-169 values, new = the kept values). No second iteration was run, so there is no alternative to compare with and no data changed in this step.
+
+### Commands and wall time
+
+```
+godot --headless --path . --import
+godot --headless --path . --script res://tests/bench/run_bench.gd -- --seeds=4 --builds=weak      # likewise typical, skilled, three parallel processes
+```
+
+| build | plays | wall |
+|---|---|---|
+| weak | 5 (4 seeds + determinism replay) | 1664 s |
+| typical | 5 | 2032 s |
+| skilled | 5 | 2302 s |
+
+`AD_DEMO_BENCH nondeterministic` did not appear in any output. Full command for the follow-up: same line without `--seeds=4`, budget roughly 3 h for all three builds in parallel.
+
+### Iteration table
+
+| iter | data changed | wins (weak / typical / skilled) | median win min | weak early deaths | starved % median (weak / typ / skilled) | max room s |
+|---|---|---|---|---|---|---|
+| 1 (4 seeds, reduced) | AD-169 step 1 values | 1/4 / 3/4 / 4/4 | typical 7.49, skilled 7.94 | 0/4 (died at stage2_boss 3x; cistern_boss is not "first boss") | 16.0 / 10.4 / 10.5 | 113.0 (skilled cistern_boss) |
+| 2, 3 | not run (time limit) | - | - | - | - | - |
+
+### Kept iteration: BENCH_MD tables (4 seeds)
+
+| build | wins | win total min (median/min/max) | dies stage 1 or first boss | max room s | starved % median | starved % max |
+|---|---|---|---|---|---|---|
+| weak | 1/4 | 6.318 / 6.318 / 6.318 | 0/4 | 66.7 | 15.997 | 19.334 |
+| typical | 3/4 | 7.488 / 7.11 / 7.533 | 0/4 | 72.767 | 10.418 | 15.402 |
+| skilled | 4/4 | 7.941 / 7.503 / 8.268 | 0/4 | 112.95 | 10.49 | 11.464 |
+
+Per-seed rows: weak dead stage2_boss on 20261022, 20261023, 20261025, won 20261024; typical dead stage2_boss on 20261023, won the other three; skilled won all four. Raw per-room tables stayed in `$TMPDIR/r1_<build>.txt` (not committed); the per-encounter summary is below.
+
+### Per-encounter-type timing (seconds of sim, all builds pooled from the per-room medians/min/max)
+
+| encounter | rooms | median s | min s | max s | target s | status |
+|---|---|---|---|---|---|---|
+| combat rooms | ruins_c01-c08, cistern_p01-p10 | 17.7-34.7 (per-room medians) | 17.1 | 41.0 | 90-150 | NOT MET |
+| optional room | cistern_challenge_v1 (typical, skilled) | 49.5 / 67.2 | 17.1 | 75.7 | 60-120 | typical median below, skilled in range; min below |
+| mini-boss | `mini_boss_slot` inside cistern_challenge_v1; not timed separately by the bench | - | - | - | 60-120 | NOT MEASURED |
+| ruins_boss | ruins_boss | 38.9 / 38.7 / 34.4 (weak / typ / skilled) | 26.1 | 49.1 | 120-180 | NOT MET |
+| cistern_boss (final) | cistern_boss | 46.5 / 59.4 / 86.8 | 4.4 (weak death) | 113.0 | 150-210 | NOT MET |
+
+### BEFORE / AFTER per target (before = 20 seeds from "Before (pre-AD-156 tuning)"; after = 4 seeds, iteration 1)
+
+| target | before | after (4 seeds) | MET/NOT MET |
+|---|---|---|---|
+| winning run 30-40 min sim (typical, skilled median) | 0/20 wins, median n/a | typical 7.49 min, skilled 7.94 min | NOT MET |
+| combat rooms 90-150 s, 3-4 waves | 0.5-21 s, 1-2 waves | 17-41 s, 3-4 waves | waves MET, length NOT MET |
+| optional room 60-120 s | cistern_challenge_v1 26-116 s (median 58 s) | 17-76 s (median 49-67 s) | NOT MET (partly in range, min below) |
+| mini-boss 60-120 s | not measured | not measured | NOT MEASURED |
+| ruins_boss 120-180 s | 10.9-39.7 s (median 23 s) | 26-49 s (median 34-39 s) | NOT MET |
+| cistern_boss 150-210 s | 4.2-96.7 s (median 41 s) | 45-113 s (median 59-87 s winning builds) | NOT MET |
+| mana-starved < 20% (median per build) | 56.8-57.3% | 10.4-16.0% | MET (4 seeds) |
+| weak dies in stage 1 or at ruins_boss on >= 11/20 | 0/20 | 0/4 (3 of 4 died at stage2_boss = cistern_boss; 1 win) | NOT MET |
+| typical wins >= 10/20 | 0/20 | 3/4 (not a 20-seed number) | NOT VERIFIED (trend only) |
+| skilled wins >= 15/20 | 0/20 | 4/4 (not a 20-seed number) | NOT VERIFIED (trend only) |
+| no room > 4 min | PASS (116.1 s) | PASS (113.0 s) | MET |
+
+### **TARGETS NOT MET**
+
+Next levers, concrete (all depend on the code fix named in the previous section; without it the sim is slower than real time past ~60 s per room):
+
+1. Code first (out of scope for a data step): `combat/combat_session.gd` step() calls `sim.trace.filter_records(-1,"","reaction")` every tick; count reactions incrementally or build the bench sim with `record_trace=false`. Then re-run a full 20-seed iteration (about 3 h).
+2. Then data, in lever order: `combat/combat_tuning_v1.json` enemies.*.hp x3-4 (bone_thrall 370 -> ~1300, fallen_adept 195 -> ~700, grave_hound 210 -> ~750, cistern_* similarly) to take combat rooms from ~20-35 s to the 90-150 s window.
+3. `world/data/run_v2.json` bosses.ruins_warden.hp 2600 -> ~9000 (target 120-180 s from ~39 s) and bosses.cistern_boss.hp 3200 -> ~9500 (target 150-210 s from ~59-87 s), `combat/combat_tuning_v1.json` mini_bosses.cistern_crystal_elite.hp 700 -> ~2000. Keep enemy and boss damage where it is or lower it a little, because the weak build already dies at cistern_boss and the player max HP (150) is not data-tunable.
+4. Weak build: it must die in stage 1 or at ruins_boss, but dies at cistern_boss. Raise `world/data/run_v2.json` bosses.ruins_warden radial_damage/shot_damage (7/12 toward 12/16), or lower stage-1 room survivability, and re-measure on 20 seeds.
+
+Also: `tests/bench/boss_pacing_bench.gd` still checks the old 90-180 s final-boss window (the final boss target is now 150-210 s). It is not part of the suites and out of scope here.
