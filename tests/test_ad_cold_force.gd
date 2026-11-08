@@ -234,6 +234,9 @@ func _reason_count(run, reason: String) -> int:
 	return count
 
 func _golden_tests(t) -> void:
+	t.with_frozen_balance(func(): _golden_body(t))
+
+func _golden_body(t) -> void:
 	var expected: Dictionary = t.fixture("ad_cold_force_traces_v1.json")
 	for scenario in Golden.SCENARIOS:
 		var played: Dictionary = Golden.play(scenario)

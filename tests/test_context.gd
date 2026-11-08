@@ -47,14 +47,15 @@ func frozen_json(file_name: String) -> Variant:
 	check(error == OK, "frozen balance valid JSON: " + file_name)
 	return parser.data if error == OK else null
 
-func with_frozen_balance(body: Callable) -> void:
+static func set_frozen_balance(on: bool) -> void:
 	var runner = load("res://magic/runtime/spell_runner.gd")
 	var session = load("res://combat/combat_session.gd")
 	var difficulty = load("res://game/core/difficulty.gd")
-	runner.config_override = frozen_path("magic_balance_v1.json")
-	session.tuning_override = frozen_path("combat_tuning_v1.json")
-	difficulty.file_override = frozen_path("difficulty_v1.json")
+	runner.config_override = FROZEN_DIR + "magic_balance_v1.json" if on else ""
+	session.tuning_override = FROZEN_DIR + "combat_tuning_v1.json" if on else ""
+	difficulty.file_override = FROZEN_DIR + "difficulty_v1.json" if on else ""
+
+func with_frozen_balance(body: Callable) -> void:
+	set_frozen_balance(true)
 	body.call()
-	runner.config_override = ""
-	session.tuning_override = ""
-	difficulty.file_override = ""
+	set_frozen_balance(false)

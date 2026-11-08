@@ -328,6 +328,9 @@ func _determinism(t) -> void:
 	t.check(traces[0].contains("trigger.timer") and traces[0].contains("trigger.on_kill"),"AD-134 determinism traces include both triggers")
 
 func _golden_tests(t) -> void:
+	t.with_frozen_balance(func(): _golden_body(t))
+
+func _golden_body(t) -> void:
 	var expected: Dictionary = t.fixture("ad_triggers_traces_v1.json")
 	for scenario in Golden.SCENARIOS:
 		var played: Dictionary = Golden.play(scenario)

@@ -264,6 +264,9 @@ func _stress(t) -> void:
 	t.equal(r._chain_seen.size(),0,"AD-133 chain beam stress empties the seen set")
 
 func _golden_tests(t) -> void:
+	t.with_frozen_balance(func(): _golden_body(t))
+
+func _golden_body(t) -> void:
 	var expected: Dictionary = t.fixture("ad_modifiers_traces_v1.json")
 	for scenario in Golden.SCENARIOS:
 		var played: Dictionary = Golden.play(scenario)
