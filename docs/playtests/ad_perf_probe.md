@@ -213,3 +213,40 @@ godot --headless --path . --script res://tests/qa/demo_perf_probe.gd -- --rooms=
 5. Homing steer plus projectile advance: 0.57-0.91 ms each (4-11% each) in `spell_runner.gd` / `magic/runtime/projectile_effect.gd`. Next: `clear_sight` from `enemy.advance` (the sight check, shared with hotspot 1), then the visuals/recent_damage filters (0.43-0.81 ms, 4-7%).
 
 **Editable-file scope.** These files are outside this task's editable files: `world/run_flow.gd`, `world/arena_geometry.gd`, `combat/enemy_behaviours/` and `magic/compile/`. Hotspots 1, 2 and 3 live mainly there, so fixes must happen in the editable callers (for example caching around the call sites in `combat/`, `magic/runtime/`) or need a planner decision.
+
+### Step 5/5: final before/after (AD-174)
+
+Final probe: 3 runs per room (`/tmp/ad174/after_N.txt`), median per room, taken after waiting for the 1-minute load to drop under 1.0. `AD_DEMO_PERF_HOST` 1-minute load for the 3 after runs: 0.99, 0.89, 0.99 (baseline: 0.93, 1.01, 1.07). The difference is under 0.5, so the ratios are comparable, but the host was not fully idle (about 1 busy core of 2), so treat them as approximate.
+
+| room | base p50 / p95 / max ms | after p50 / p95 / max ms | p95 reduction | vs 8 ms proxy | vs 4 ms budget |
+|---|---|---|---|---|---|
+| cistern_boss | 9.486 / 12.914 / 22.190 | 5.488 / 8.414 / 10.273 | 34.8% | FAIL (8.41) | FAIL |
+| ruins_boss | 6.406 / 10.253 / 13.065 | 3.317 / 7.715 / 9.780 | 24.8% | PASS | FAIL |
+| ruins_c07 | 7.224 / 11.499 / 15.741 | 3.672 / 8.300 / 12.218 | 27.8% | FAIL (8.30) | FAIL |
+| cistern_p10 | 12.188 / 16.581 / 23.306 | 5.662 / 13.067 / 18.635 | 21.2% | FAIL (13.07) | FAIL |
+
+**Result: the 8 ms proxy is NOT reached.** Only ruins_boss passes. Behaviour is unchanged: `--verify-digests` matches in all rooms, `--check-equivalence` passes, the suite reports 19586 passed / 0 failed, `tests/fixtures` is untouched.
+
+**Fixes by commit.**
+
+| commit | fix |
+|---|---|
+| `6d0e16e` | memoize `check_slot`, cut per-event deep copies |
+| `89b2eb8` | nearest-target query and swept wall broad-phase |
+| `38516fb` | cached navigation geometry and enemy AI trims |
+| step 5 commit `AD-174: trace and VFX bookkeeping, before/after table` | `DebugTrace.record` integer-field dictionary lookup; `trace.enabled` guards in `_trace_spawn` and the `hit` record; plain loops for the visuals, recent_damage and feedback filters |
+
+**Remaining top 3 hotspots** (re-profiled with temporary `Time.get_ticks_usec()` accumulators, since reverted; mean ms per tick / share of the mean flow tick; instrumented run, so absolute values differ slightly from the table). Columns: cistern_boss, ruins_boss, ruins_c07, cistern_p10; mean flow tick 5.55 / 4.01 / 4.20 / 6.63 ms.
+
+| # | hotspot | cistern_boss | ruins_boss | ruins_c07 | cistern_p10 |
+|---|---|---|---|---|---|
+| 1 | `sim.step` (SpellRunner homing steer, projectile advance, queue drain/`_hit`) | 2.72 / 49% | 2.45 / 61% | 2.59 / 62% | 2.79 / 42% |
+| 2 | `RunFlow.step` reaction scan (`world/run_flow.gd` ~line 414) | 1.25 / 23% | 0.61 / 15% | 0.55 / 13% | 1.89 / 29% |
+| 3 | `enemy.advance` (includes `navigate_direction` 0.55 / 0.18 / 0.27 / 0.67) | 0.95 / 17% | 0.46 / 11% | 0.60 / 14% | 1.13 / 17% |
+
+Follow-ups (files outside this task's scope, not edited):
+- `world/run_flow.gd` line 414: `filter_records(-1,"","reaction")` deep-copies every record each tick to read the new reactions. Proposed fix: use `trace.count_of("reaction")` and read only the records from `_prior_reactions` onward (an index-based accessor on the trace). This is the biggest single cheap win, up to 1.9 ms in cistern_p10.
+- `world/arena_geometry.gd` / `combat/enemy_behaviours/`: `navigate_direction` still costs 0.18-0.67 ms. Proposed fix: cache the path per enemy and re-plan only when the target moves more than a tile or the enemy is blocked.
+- `sim.step` (0.42-0.62 of the tick) is mostly `magic/runtime/` homing and projectile work. Proposed fix: a spatial grid for homing target selection, and projectile-advance batching. `magic/compile/` is not on this list any more because `check_slot` is memoized.
+
+**Proxy note.** The 8 ms proxy assumes the reference PC (i5 11th gen / GTX 1660) is about 2x this host per core. That is unconfirmed until Franklin measures on the reference machine. The real budget remains 4 ms.
