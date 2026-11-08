@@ -4,7 +4,7 @@ const Session = preload("res://combat/combat_session.gd")
 const Registry = preload("res://combat/enemy_behaviours/registry.gd")
 
 func run(t) -> void:
-	_golden(t)
+	t.with_frozen_balance(func(): _golden(t))
 	_chase(t)
 	_keep_distance(t)
 	_melee_attack(t)

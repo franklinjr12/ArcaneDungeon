@@ -3,6 +3,9 @@ const Baseline = preload("res://tests/m2_baseline_driver.gd")
 const Geometry = preload("res://world/arena_geometry.gd")
 const Session = preload("res://combat/combat_session.gd")
 func run(t) -> void:
+	t.with_frozen_balance(func(): _body(t))
+
+func _body(t) -> void:
 	var cases: Dictionary = t.fixture("m2_baseline_v1.json")
 	t.equal(cases["schema_version"],1,"TASK-035 explicit versioned combat baseline")
 	t.equal(cases["cases"].size(),6,"TASK-035 3 scenarios tested with 2 starter loadouts")

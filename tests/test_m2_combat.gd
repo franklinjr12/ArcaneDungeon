@@ -5,6 +5,9 @@ const Geometry = preload("res://world/arena_geometry.gd")
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 
 func run(t) -> void:
+	t.with_frozen_balance(func(): _body(t))
+
+func _body(t) -> void:
 	var game = Session.new(701,"single",0)
 	t.check(game.initialized,"TASK-026 combat session initializes using M1 runner")
 	t.equal(game.alive_enemies(),1,"TASK-035 single bone thrall scenario spawns")

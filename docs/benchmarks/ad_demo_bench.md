@@ -303,3 +303,13 @@ BENCH_MD_END
 - The weak build reaches the stage 2 boss (likely because the starter spells out-damage stage 1 enemies; not verified). It would need higher stage 1 and ruins_boss damage plus lower starter spell damage. Enemy/boss damage keys are pinned by the TASK-035, AD-136 and AD-142 golden traces.
 - Mana-starved needs regen above 0.3/tick or cheaper starter spells. `regen_mana_per_tick` is read by the TASK-035 golden traces and AD-142's fight-length checks.
 - To unblock: regenerate those golden traces (tests/ad_*_golden_generator.gd and the TASK-035 expectations) in a follow-up that is allowed to edit tests, then apply: regen 0.9 or higher, enemy HP x4-x10, boss HP x3, with matching damage changes, and re-run the bench.
+
+## Boss pacing (AD-167)
+
+The Drowned Archivist fight-length window (90-180 s, builds 0 and 2, live balance data) moved out of `tests/test_ad_final_boss.gd` so unit tests can run on the frozen balance fixture. Run:
+
+```
+/usr/local/bin/godot --headless --path . --script res://tests/bench/boss_pacing_bench.gd
+```
+
+Prints `BOSS_PACING build=<n> tick=<t> seconds=<s> target=90-180 PASS|FAIL` per build and exits 1 if any build is out of range.
