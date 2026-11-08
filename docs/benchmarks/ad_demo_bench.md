@@ -332,3 +332,81 @@ godot --headless --path . --script res://tests/run_tests.gd
 | scratch `regen_mana_per_tick` 0.9 (not committed) | 19211 passed / 1 failed / 69 suites | 1 (only that failure; the intentional failure probe is expected) |
 
 AD-156 saw 23 failures with this change; every golden/scenario check is now green and the m2 baseline replay did not fail. The one remaining failure is `AD-167 frozen magic_balance_v1.json equals live` (`tests/test_balance_frozen.gd`), a non-golden drift guard that deliberately flags the fixture differing from live data. When tuning is approved, refresh the fixture in the same change that lands the new values.
+
+## AD-169 pacing tuning
+
+Iteration 1 (probe-tuned, data only). All values below are PROPOSED; not approved final balance.
+
+### Key changes (old -> new)
+
+Rooms: every combat room now has 3-4 waves of up to 3 enemies. All of them are `start` waves 420 ticks (7 s) apart (`delay_ticks` 0/420/840/1260), so waves arrive in sequence even when the player clears early. `on_clear` waves are not used because `clear_triggered` is set once and every pending `on_clear` wave then releases on the same clock. Spawn points reuse positions that already pass the room validator.
+
+| file | key | old | new | lever | why |
+|---|---|---|---|---|---|
+| world/data/run_v2.json | room_templates.ruins_c01 waves | 1 wave (1 bone_thrall) | 3 waves x 3 (bone_thrall) | 1 waves | 3-4 waves per room |
+| world/data/run_v2.json | room_templates.ruins_c02 waves | 1 wave (2) | 4 waves x 3 (bone_thrall) | 1 waves | same |
+| world/data/run_v2.json | room_templates.ruins_c03 waves | 1 wave (1 fallen_adept) | 3 waves x 3 (fallen_adept) | 1 waves | same |
+| world/data/run_v2.json | room_templates.ruins_c04 waves | 1 wave (2) | 4 waves x 3 (thrall/adept mix) | 1 waves | same |
+| world/data/run_v2.json | room_templates.ruins_c05 waves | 1 wave (2) | 3 waves x 3 (hound/thrall mix) | 1 waves | same |
+| world/data/run_v2.json | room_templates.ruins_c06 waves | 2 waves (2+1) | 4 waves x 3 (thrall/adept/hound) | 1 waves | same |
+| world/data/run_v2.json | room_templates.ruins_c07 waves | 2 waves (2+1) | 3 waves x 3 (adept/thrall) | 1 waves | same |
+| world/data/run_v2.json | room_templates.ruins_c08 waves | 1 wave (3) | 4 waves x 3 (thrall/adept/hound) | 1 waves | same |
+| world/data/rooms_cistern_v1.json | cistern_p01, p03, p05, p07, p09 waves | 1 wave (3-4) | 3 waves x 3 (same kinds) | 1 waves | same |
+| world/data/rooms_cistern_v1.json | cistern_p02, p06, p08 waves | 1 wave (3) | 4 waves x 3 (same kinds) | 1 waves | same |
+| world/data/rooms_cistern_v1.json | cistern_p04 waves | 2 waves (2+2) | 4 waves (2/2/2/3) | 1 waves | same |
+| world/data/rooms_cistern_v1.json | cistern_p10 waves | 2 waves (4+1) | 4 waves (3/1/3/3) | 1 waves | same; wisp always has a partner |
+| combat/combat_tuning_v1.json | enemies.bone_thrall hp / damage | 95 / 14 | 370 / 8 | 2 enemy | longer TTK; more enemies at once, so less damage each |
+| combat/combat_tuning_v1.json | enemies.fallen_adept hp / damage | 80 / 11 | 195 / 6 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.grave_hound hp / damage | 85 / 9 | 210 / 5 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.cistern_slime hp / damage | 120 / 12 | 350 / 7 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.cistern_slimelet hp / damage | 32 / 7 | 90 / 4 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.drowned_acolyte hp | 60 | 155 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.deep_eel hp / damage | 70 / 12 | 180 / 7 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.rust_golem hp / damage | 220 / 20 | 325 / 11 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.lantern_wisp hp | 45 | 115 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.storm_crystal hp / damage | 90 / 10 | 215 / 6 | 2 enemy | same |
+| combat/combat_tuning_v1.json | mini_bosses.cistern_crystal_elite hp / pulse / radial / shot damage | 280 / 12 / 8 / 10 | 700 / 7 / 5 / 6 | 4 boss | mini-boss length |
+| magic/data/magic_balance_v1.json | combat.regen_mana_per_tick | 0.3 | 1.5 | 3 mana | starved < 20% (0.9 gave ~31% in AD-156) |
+| world/data/run_v2.json | bosses.ruins_warden hp / radial_damage / shot_damage | 590 / 9 / 16 | 2600 / 7 / 12 | 4 boss | longer stage boss, survivable |
+| world/data/run_v2.json | bosses.cistern_boss hp / water_bolt_damage / storm_pulse_damage | 950 / 10 / 14 | 3200 / 6 / 8 | 4 boss | longer final boss, survivable |
+| world/data/run_v2.json | merchant.max_hp_upgrade_amount | 25 | 70 | 4 survival | typical (buys HP) survives the longer fights |
+
+Not changed: `stages[].combat_rooms` (5/6), `max_active_enemies` (8), `game/data/difficulty_v1.json`, `magic/data/runes_v2.json`, boss phase thresholds, `world/data/rooms_ruins_v1.json` (not loaded by the run).
+
+### Drift guard relaxed
+
+`tests/test_balance_frozen.gd` no longer requires frozen == live by value. The check `AD-167 frozen <file> has the same structure as live` now walks both JSON trees and requires the same nested keys and value types. Scalar arrays must have the same length; wave and enemy lists may grow, and each live element must match the shape of the frozen element at the same index (or the last frozen element). Why: live tuning changes values on purpose, and the fixture README says live tuning must not refresh `tests/fixtures/balance_frozen/`. The guard still catches renamed, missing or retyped keys, which would make the frozen fixture stale for the golden/scenario suites. The override checks are unchanged.
+
+### Probe results (subset, not the full set)
+
+Command (`$TMPDIR/probe2.gd` is a scratch subclass of `run_bench.gd` that plays one `_play` per build and prints per-room lines; `_play`, the bot and the metrics are the bench's own):
+
+```
+godot --headless --path . --script $TMPDIR/probe2.gd -- --build=<weak|typical|skilled> --seed=20261022
+godot --headless --path . --script res://tests/bench/run_bench.gd -- --seeds=1 --builds=typical   # coordinator check
+```
+
+| build | seed | outcome | total min | starved % | wall |
+|---|---|---|---|---|---|
+| weak | 20261022 | dead (stage2_boss, cistern_boss) | 5.97 | 15.6 | 191 s |
+| typical | 20261022 | won | 7.11 | 15.4 | 264 s |
+| skilled | 20261022 | won | 8.25 | 11.0 | 343 s |
+
+Per build on the probe seed: weak 0/1 wins, typical 1/1, skilled 1/1. Median total min = the single value. Validation: `python3 scripts/validate_godot.py --godot /usr/local/bin/godot` exit 0, 19559 passed / 0 failed / 69 suites.
+
+Per room (typical, seed 20261022): combat rooms 17.6-31.1 s with 3-4 waves, ruins_boss 27.1 s, cistern_challenge_v1 48.8 s, cistern_boss 57.7 s. The coordinator check (`--seeds=1 --builds=typical`, which plays the seed twice for the determinism check) took 506 s wall including `--import`; it exits 0.
+
+### TARGETS NOT MET: run length is capped by sim cost, not by data
+
+| target | probe result | status |
+|---|---|---|
+| winning run 30-40 min sim | typical 7.1 min (won) | NOT MET |
+| combat rooms 90-150 s, 3-4 waves | 18-31 s, 3-4 waves | waves MET, length NOT MET |
+| stage boss 120-180 s / final boss 150-210 s | 27 s / 58 s | NOT MET |
+| mana-starved < 20% | 15.4-15.6% | MET (probe) |
+| weak dies in stage 1 or at ruins_boss | weak dies at cistern_boss (seed 20261022) | NOT MET on the probe seed |
+| typical >= 10/20 wins, skilled >= 15/20 | typical and skilled won seed 20261022 | needs the 20-seed run |
+
+Why the length was held back: `combat/combat_session.gd` step() calls `sim.trace.filter_records(-1,"","reaction")` every tick, and `debug/debug_trace.gd` keeps every cast/hit record until the next room reset. So each tick costs more the longer a room has been fought. Measured on this host: ~1.5 ms/tick at room start, 12-15 ms/tick after ~45 s of fighting, even with no enemy alive. One data-tuned attempt with 80-100 s rooms ran slower than real time (126 s wall for an 80 s room), and the 1-seed typical check exceeded its 900 s budget. Rooms and bosses were therefore sized so that two full typical runs finish in about 8.5 min wall.
+
+Next lever (code, out of scope for a data-only step): count reactions incrementally instead of re-filtering the whole trace each tick (or cap the trace, or create the bench sim with `record_trace=false`). After that the room/boss HP above can be raised about 3-4x toward the 30-40 min target without breaking the check budget.

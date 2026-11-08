@@ -108,8 +108,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 30,
+     "trigger": "start",
+     "delay_ticks": 420,
      "enemies": [
       [
        "fallen_adept",
@@ -129,8 +129,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 3000,
+     "trigger": "start",
+     "delay_ticks": 840,
      "enemies": [
       [
        "bone_thrall",
@@ -256,8 +256,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 30,
+     "trigger": "start",
+     "delay_ticks": 420,
      "enemies": [
       [
        "fallen_adept",
@@ -277,8 +277,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 2400,
+     "trigger": "start",
+     "delay_ticks": 840,
      "enemies": [
       [
        "grave_hound",
@@ -298,8 +298,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 3900,
+     "trigger": "start",
+     "delay_ticks": 1260,
      "enemies": [
       [
        "fallen_adept",
@@ -401,17 +401,12 @@
        "grave_hound",
        1100,
        200
-      ],
-      [
-       "drowned_acolyte",
-       1080,
-       700
       ]
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 30,
+     "trigger": "start",
+     "delay_ticks": 420,
      "enemies": [
       [
        "drowned_acolyte",
@@ -427,17 +422,12 @@
        "bone_thrall",
        450,
        700
-      ],
-      [
-       "cistern_slime",
-       450,
-       200
       ]
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 3000,
+     "trigger": "start",
+     "delay_ticks": 840,
      "enemies": [
       [
        "bone_thrall",
@@ -453,11 +443,6 @@
        "drowned_acolyte",
        1080,
        700
-      ],
-      [
-       "cistern_slime",
-       450,
-       200
       ]
      ]
     }
@@ -568,8 +553,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 30,
+     "trigger": "start",
+     "delay_ticks": 420,
      "enemies": [
       [
        "grave_hound",
@@ -584,8 +569,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 2400,
+     "trigger": "start",
+     "delay_ticks": 840,
      "enemies": [
       [
        "drowned_acolyte",
@@ -600,8 +585,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 3900,
+     "trigger": "start",
+     "delay_ticks": 1260,
      "enemies": [
       [
        "grave_hound",
@@ -617,11 +602,6 @@
        "cistern_slime",
        420,
        500
-      ],
-      [
-       "drowned_acolyte",
-       1050,
-       300
       ]
      ]
     }
@@ -739,8 +719,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 30,
+     "trigger": "start",
+     "delay_ticks": 420,
      "enemies": [
       [
        "drowned_acolyte",
@@ -760,8 +740,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 3000,
+     "trigger": "start",
+     "delay_ticks": 840,
      "enemies": [
       [
        "deep_eel",
@@ -865,8 +845,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 30,
+     "trigger": "start",
+     "delay_ticks": 420,
      "enemies": [
       [
        "storm_crystal",
@@ -886,8 +866,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 2400,
+     "trigger": "start",
+     "delay_ticks": 840,
      "enemies": [
       [
        "drowned_acolyte",
@@ -907,8 +887,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 3900,
+     "trigger": "start",
+     "delay_ticks": 1260,
      "enemies": [
       [
        "storm_crystal",
@@ -1014,8 +994,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 30,
+     "trigger": "start",
+     "delay_ticks": 420,
      "enemies": [
       [
        "deep_eel",
@@ -1035,8 +1015,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 3000,
+     "trigger": "start",
+     "delay_ticks": 840,
      "enemies": [
       [
        "fallen_adept",
@@ -1204,8 +1184,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 30,
+     "trigger": "start",
+     "delay_ticks": 420,
      "enemies": [
       [
        "storm_crystal",
@@ -1225,8 +1205,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 2400,
+     "trigger": "start",
+     "delay_ticks": 840,
      "enemies": [
       [
        "rust_golem",
@@ -1246,8 +1226,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 3900,
+     "trigger": "start",
+     "delay_ticks": 1260,
      "enemies": [
       [
        "storm_crystal",
@@ -1362,8 +1342,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 30,
+     "trigger": "start",
+     "delay_ticks": 420,
      "enemies": [
       [
        "deep_eel",
@@ -1383,8 +1363,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 3000,
+     "trigger": "start",
+     "delay_ticks": 840,
      "enemies": [
       [
        "lantern_wisp",
@@ -1513,17 +1493,12 @@
        "drowned_acolyte",
        820,
        250
-      ],
-      [
-       "lantern_wisp",
-       820,
-       680
       ]
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 30,
+     "trigger": "start",
+     "delay_ticks": 420,
      "enemies": [
       [
        "deep_eel",
@@ -1533,8 +1508,8 @@
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 2400,
+     "trigger": "start",
+     "delay_ticks": 840,
      "enemies": [
       [
        "rust_golem",
@@ -1550,17 +1525,12 @@
        "lantern_wisp",
        820,
        680
-      ],
-      [
-       "cistern_slime",
-       500,
-       200
       ]
      ]
     },
     {
-     "trigger": "on_clear",
-     "delay_ticks": 3900,
+     "trigger": "start",
+     "delay_ticks": 1260,
      "enemies": [
       [
        "deep_eel",
@@ -1576,16 +1546,6 @@
        "rust_golem",
        500,
        720
-      ],
-      [
-       "drowned_acolyte",
-       820,
-       250
-      ],
-      [
-       "lantern_wisp",
-       820,
-       680
       ]
      ]
     }
