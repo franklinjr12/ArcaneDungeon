@@ -54,6 +54,7 @@ var reduce_flashes := false
 var audio_sink: Callable
 var _audio_hits := 0
 var _audio_extinguish := 0
+var _audio_status_seen := 0
 var _audio_dashes := 0
 var _audio_trace := {"reaction":0,"artifact":0,"trigger":0}
 var _audio_env := 0
@@ -106,6 +107,7 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	_death_ids.clear()
 	_audio_hits = 0
 	_audio_extinguish = 0
+	_audio_status_seen = 0
 	_audio_dashes = 0
 	_audio_trace = {"reaction":0,"artifact":0,"trigger":0}
 	_audio_env = 0
@@ -332,7 +334,7 @@ func step() -> void:
 		state = "cleared"
 		clear_tick = sim.clock.tick
 		_notify("ARENA CLEARED - 1/2/3 next, R replay",sim.actor.position)
-	var new_reactions: int = sim.trace.filter_records(-1,"","reaction").size()
+	var new_reactions: int = sim.trace.count_of("reaction")
 	if new_reactions > reactions:
 		_notify("ARC x%d" % [new_reactions-reactions],sim.actor.position)
 		reactions = new_reactions
@@ -342,14 +344,13 @@ func step() -> void:
 
 ## AD-020: derive audio cues from this tick's trace/AI changes. Reads only; mutates audio cursors.
 func _audio_step(before: Array) -> void:
-	var hits: int = sim.trace.filter_records(-1,"","hit").size()
+	var hits: int = sim.trace.count_of("hit")
 	if hits > _audio_hits:
 		_cue("sfx.hit.generic",sim.actor.position)
 	_audio_hits = hits
 	var keys := {}
 	for type in _audio_trace:
-		var records: Array = sim.trace.filter_records(-1,"",type)
-		for entry in records.slice(int(_audio_trace[type])):
+		for entry in sim.trace.records_since(type,int(_audio_trace[type])):
 			var reason := str(entry.get("reason",""))
 			match type:
 				"reaction":
@@ -358,7 +359,7 @@ func _audio_step(before: Array) -> void:
 					keys["artifact:" + reason.trim_prefix("artifact.")] = true
 				"trigger":
 					keys["trigger:" + (reason if reason != "" else "trigger.on_hit")] = true
-		_audio_trace[type] = records.size()
+		_audio_trace[type] = sim.trace.count_of(type)
 	for key in keys:
 		_event_cue(key,sim.actor.position,"sfx.react.arc" if key.begins_with("reaction:") else "")
 	if env_props != null:
@@ -368,10 +369,14 @@ func _audio_step(before: Array) -> void:
 		_audio_env = env_props.events.size()
 		for key in env_keys:
 			_event_cue(key,sim.actor.position)
-	var removed := 0
-	for entry in sim.trace.filter_records(-1,"","status"):
+	if _audio_status_seen > sim.trace.count_of("status"):
+		_audio_status_seen = 0
+		_audio_extinguish = 0
+	var removed := _audio_extinguish
+	for entry in sim.trace.records_since("status",_audio_status_seen):
 		if str(entry.get("reason","")) == "burning:removed":
 			removed += 1
+	_audio_status_seen = sim.trace.count_of("status")
 	if removed > _audio_extinguish:
 		_event_cue("status:burning:removed",sim.actor.position,"sfx.react.extinguish")
 	_audio_extinguish = removed
