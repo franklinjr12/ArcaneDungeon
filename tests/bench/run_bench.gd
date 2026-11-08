@@ -1,5 +1,7 @@
 extends SceneTree
 ## AD-156: deterministic full-run (2-stage) benchmark. Scripted player only; no gameplay change.
+## AD-168: pacing diagnostics (report only): per room fight seconds, waves, enemy HP, player DPS, mana spent/regen, TTK per enemy kind,
+## damage taken, boss seconds per phase and a scripted-player sanity check (hit rate, idle ticks). Printed as DIAG_MD_BEGIN/END.
 ## Run: godot --headless --path . --script res://tests/bench/run_bench.gd [-- --seeds=N --builds=weak,typical,skilled]
 const Flow = preload("res://world/run_flow.gd")
 const SEEDS := [20261022, 20261023, 20261024, 20261025, 20261026, 20261027, 20261028, 20261029, 20261030, 20261031,
@@ -72,6 +74,9 @@ func _run() -> void:
 	print("BENCH_MD_BEGIN")
 	print(_markdown(result))
 	print("BENCH_MD_END")
+	print("DIAG_MD_BEGIN")
+	print(_diag_markdown(result))
+	print("DIAG_MD_END")
 	quit(0)
 
 func _r(value: float) -> float:
@@ -148,7 +153,7 @@ func _record(flow, run_seed: int, build: String, outcome: String, rooms: Array, 
 		died_in = "stage%d_%s" % [int(last["stage"]) + 1, "boss" if last["type"] == "boss" else "rooms"]
 	return {"seed": run_seed, "build": build, "outcome": outcome, "death_room": last["room"] if died_in != "" else "",
 		"died_in": died_in, "total_seconds": _r(float(ticks) / rate), "max_room_seconds": _r(float(longest) / rate),
-		"starved_percent": _r(100.0 * starved / maxf(1.0, combat)), "rooms_cleared": flow.rooms_cleared, "rooms": rooms}
+		"starved_percent": _r(100.0 * starved / maxf(1.0, combat)), "rooms_cleared": flow.rooms_cleared, "tick_rate": rate, "rooms": rooms}
 
 func _pick(flow, plan: Dictionary, earned: Array) -> void:
 	var index := 0
@@ -343,11 +348,14 @@ func _fight(flow, rate: int, bot: Dictionary) -> Dictionary:
 	var session = flow.session
 	var slots: int = session.sim.loadout.slots.size()
 	var hp_start: float = session.sim.actor.health.current
+	var received_start: float = session.damage_received
 	var cheapest: float = _cheapest(session, slots)
 	var cap: int = ROOM_CAP_SECONDS * rate
 	var ticks := 0
 	var starved := 0
 	var casts: Dictionary = _cast_slots(flow)
+	var obs := {"seen": [], "ids": {}, "dealt": 0.0, "hits": 0, "spent": 0.0, "regen": 0.0, "idle": 0, "no_sight": 0, "phase": {}}
+	_observe(session, obs, 0)
 	for iteration in cap:
 		if flow.state != "fighting":
 			break
@@ -358,15 +366,83 @@ func _fight(flow, rate: int, bot: Dictionary) -> Dictionary:
 		var slot: int = _choose_slot(session, view, iteration, slots)
 		if session.sim.mana < cheapest:
 			starved += 1
+		var mana_before: float = session.sim.mana
+		if view["foe"] != null:
+			if not view["sight"]:
+				obs["no_sight"] += 1
+			if slot < 0 and not dodge["dash"] and mana_before >= cheapest:
+				obs["idle"] += 1
 		var used_before: int = flow.spells_used
 		flow.step({"move": movement, "aim": view["direction"].rotated(jitter), "dash": dodge["dash"], "cast": slot,
 			"cursor": view["actor"] + (view["cursor"] - view["actor"]).rotated(jitter)})
 		ticks += 1
+		var mana_delta: float = session.sim.mana - mana_before
+		obs["spent" if mana_delta < 0.0 else "regen"] += absf(mana_delta)
+		_observe(session, obs, ticks)
 		if slot >= 0 and flow.spells_used > used_before:
 			casts[str(slot)] += flow.spells_used - used_before
 	var label: String = flow.state if flow.state in ["cleared", "won", "dead"] else "timeout"
-	return {"outcome": label, "ticks": ticks, "sim_seconds": _r(float(ticks) / rate),
-		"hp_lost": _r(hp_start - session.sim.actor.health.current), "mana_starved_ticks": starved, "casts": casts}
+	var seconds: float = float(ticks) / rate
+	var total_casts := 0
+	for key in casts:
+		total_casts += int(casts[key])
+	var total_hp := 0.0
+	var ttk_samples := {}
+	for entry in obs["seen"]:
+		total_hp += entry["max"]
+		if entry["death"] >= 0:
+			if not ttk_samples.has(entry["kind"]):
+				ttk_samples[entry["kind"]] = []
+			ttk_samples[entry["kind"]].append(_r(float(entry["death"] - entry["born"]) / rate))
+	var kinds: Array = ttk_samples.keys()
+	kinds.sort()
+	var ttk_by_kind := {}
+	var ttk_sorted := {}
+	for kind in kinds:
+		var st: Dictionary = _stats(ttk_samples[kind])
+		ttk_by_kind[kind] = {"n": st["n"], "median": st["median"]}
+		ttk_sorted[kind] = ttk_samples[kind]
+	var phases := {}
+	var phase_keys: Array = obs["phase"].keys()
+	phase_keys.sort()
+	for key in phase_keys:
+		phases[str(key)] = _r(float(obs["phase"][key]) / rate)
+	# Waves = encounter director launches (wave_spawn entries); rooms without a director report 0.
+	var waves: int = flow.encounter.launched.size() if flow.encounter != null else 0
+	var denom: float = maxf(0.001, seconds)
+	# hits = (enemy, tick) pairs where an enemy lost HP; mana deltas are net per tick (cost and regen in one tick merge).
+	return {"outcome": label, "ticks": ticks, "sim_seconds": _r(seconds),
+		"hp_lost": _r(hp_start - session.sim.actor.health.current), "mana_starved_ticks": starved, "casts": casts,
+		"fight_seconds": _r(seconds), "waves_spawned": waves, "enemies_spawned": obs["seen"].size(), "total_enemy_hp": _r(total_hp),
+		"damage_dealt": _r(obs["dealt"]), "player_dps": _r(obs["dealt"] / denom), "mana_spent": _r(obs["spent"]),
+		"mana_regen": _r(obs["regen"]), "mana_regen_per_s": _r(obs["regen"] / denom), "ttk_by_kind": ttk_by_kind,
+		"ttk_samples": ttk_sorted, "damage_taken": _r(session.damage_received - received_start), "boss_phase_seconds": phases,
+		"hits": obs["hits"], "hit_rate": _r(float(obs["hits"]) / maxf(1.0, float(total_casts))), "idle_ticks": obs["idle"],
+		"no_sight_ticks": obs["no_sight"], "idle_percent": _r(100.0 * obs["idle"] / maxf(1.0, float(ticks))),
+		"no_sight_percent": _r(100.0 * obs["no_sight"] / maxf(1.0, float(ticks)))}
+
+## Read-only observation after each step: registers new enemies, sums HP lost per enemy, notes deaths and boss phase seconds.
+func _observe(session, obs: Dictionary, tick: int) -> void:
+	for enemy in session.enemies:
+		var id: int = enemy.target.id
+		if not obs["ids"].has(id):
+			obs["ids"][id] = obs["seen"].size()
+			obs["seen"].append({"enemy": enemy, "kind": str(enemy.kind), "born": tick, "max": enemy.target.health.maximum,
+				"hp": enemy.target.health.current, "death": -1})
+	if tick == 0:
+		return
+	for entry in obs["seen"]:
+		var enemy = entry["enemy"]
+		var current: float = enemy.target.health.current
+		if current < entry["hp"]:
+			obs["dealt"] += entry["hp"] - current
+			obs["hits"] += 1
+		entry["hp"] = current
+		if entry["death"] < 0 and not enemy.target.alive():
+			entry["death"] = tick
+		var phase = enemy.get("phase")
+		if phase != null and enemy.target.alive():
+			obs["phase"][int(phase)] = obs["phase"].get(int(phase), 0) + 1
 
 ## Walking ticks count toward total sim time (reported as walk_ticks).
 func _reach_exit(flow, take_optional: bool, bot: Dictionary, max_ticks: int = 1100) -> Dictionary:
@@ -503,3 +579,160 @@ func _room_table(runs: Array) -> Array:
 		var h: Dictionary = _stats(by_room[id]["h"])
 		lines.append("| %s | %d | %s | %s | %s | %s | %s | %s |" % [id, a["n"], a["median"], a["min"], a["max"], h["median"], h["min"], h["max"]])
 	return lines
+
+## --- AD-168 diagnostics -------------------------------------------------------------------------------------------
+
+func _fought(runs: Array) -> Array:
+	var out: Array = []
+	for r in runs:
+		for rec in r["rooms"]:
+			if rec["ticks"] > 0:
+				out.append(rec)
+	return out
+
+func _cell(values: Array) -> String:
+	var st: Dictionary = _stats(values)
+	return "%s / %s / %s" % [st["median"], st["min"], st["max"]]
+
+func _diag_markdown(result: Dictionary) -> String:
+	var lines: Array = ["Cells show median / min / max over the seeds unless noted.", ""]
+	for build in result["builds"]:
+		var runs: Array = _of(result["runs"], build)
+		lines.append("### %s" % build)
+		lines.append("")
+		lines.append_array(_diag_rooms(runs))
+		lines.append_array(_diag_kinds(runs))
+		lines.append_array(_diag_bosses(runs))
+		lines.append_array(_diag_sanity(runs))
+		lines.append_array(_diag_totals(runs))
+	return "\n".join(lines)
+
+func _diag_rooms(runs: Array) -> Array:
+	var by_room: Dictionary = {}
+	for rec in _fought(runs):
+		if not by_room.has(rec["room"]):
+			by_room[rec["room"]] = []
+		by_room[rec["room"]].append(rec)
+	var ids: Array = by_room.keys()
+	ids.sort()
+	var lines: Array = ["Per room:", "", "| room | n | fight s | waves | enemies | enemy HP | player DPS | dmg taken | mana spent | mana regen | starved % |",
+		"|---|---|---|---|---|---|---|---|---|---|---|"]
+	for id in ids:
+		var recs: Array = by_room[id]
+		var starved: Array = recs.map(func(r): return 100.0 * r["mana_starved_ticks"] / maxf(1.0, float(r["ticks"])))
+		lines.append("| %s | %d | %s | %s | %s | %s | %s | %s | %s | %s | %s |" % [id, recs.size(), _cell(_key(recs, "fight_seconds")),
+			_cell(_key(recs, "waves_spawned")), _cell(_key(recs, "enemies_spawned")), _cell(_key(recs, "total_enemy_hp")),
+			_cell(_key(recs, "player_dps")), _cell(_key(recs, "damage_taken")), _cell(_key(recs, "mana_spent")),
+			_cell(_key(recs, "mana_regen")), _cell(starved)])
+	lines.append("")
+	return lines
+
+func _key(recs: Array, key: String) -> Array:
+	return recs.map(func(r): return r[key])
+
+func _diag_kinds(runs: Array) -> Array:
+	var by_kind: Dictionary = {}
+	for rec in _fought(runs):
+		for kind in rec["ttk_samples"]:
+			if not by_kind.has(kind):
+				by_kind[kind] = []
+			by_kind[kind].append_array(rec["ttk_samples"][kind])
+	var kinds: Array = by_kind.keys()
+	kinds.sort()
+	var lines: Array = ["Time to kill per enemy kind (seconds from first sight to death):", "", "| kind | killed | TTK s (median / min / max) |", "|---|---|---|"]
+	for kind in kinds:
+		lines.append("| %s | %d | %s |" % [kind, by_kind[kind].size(), _cell(by_kind[kind])])
+	lines.append("")
+	return lines
+
+func _diag_bosses(runs: Array) -> Array:
+	var by_room: Dictionary = {}
+	for rec in _fought(runs):
+		if rec["boss_phase_seconds"].is_empty():
+			continue
+		if not by_room.has(rec["room"]):
+			by_room[rec["room"]] = {}
+		for phase in rec["boss_phase_seconds"]:
+			if not by_room[rec["room"]].has(phase):
+				by_room[rec["room"]][phase] = []
+			by_room[rec["room"]][phase].append(rec["boss_phase_seconds"][phase])
+	var ids: Array = by_room.keys()
+	ids.sort()
+	var lines: Array = ["Boss seconds per phase (rooms with a phased enemy; mini-bosses included):", "", "| room | phase | n | s (median / min / max) |", "|---|---|---|---|"]
+	for id in ids:
+		var phases: Array = by_room[id].keys()
+		phases.sort()
+		for phase in phases:
+			lines.append("| %s | %s | %d | %s |" % [id, phase, by_room[id][phase].size(), _cell(by_room[id][phase])])
+	lines.append("")
+	return lines
+
+func _diag_sanity(runs: Array) -> Array:
+	var hit: Array = []
+	var idle: Array = []
+	var no_sight: Array = []
+	var casts := 0
+	var ticks := 0
+	for r in runs:
+		var fought: Array = _fought([r])
+		var r_ticks := 0
+		var r_idle := 0
+		var r_sight := 0
+		var r_hits := 0
+		var r_casts := 0
+		for rec in fought:
+			r_ticks += rec["ticks"]
+			r_idle += rec["idle_ticks"]
+			r_sight += rec["no_sight_ticks"]
+			r_hits += rec["hits"]
+			for key in rec["casts"]:
+				r_casts += int(rec["casts"][key])
+		hit.append(float(r_hits) / maxf(1.0, float(r_casts)))
+		idle.append(100.0 * r_idle / maxf(1.0, float(r_ticks)))
+		no_sight.append(100.0 * r_sight / maxf(1.0, float(r_ticks)))
+		casts += r_casts
+		ticks += r_ticks
+	var rate: float = 60.0
+	if not runs.is_empty() and not runs[0]["rooms"].is_empty():
+		rate = maxf(1.0, float(_tick_rate_of(runs[0])))
+	return ["Scripted player sanity (hits = enemy-lost-HP events per tick, so a pierce/burst can exceed 1 per cast):", "",
+		"| hit rate median | idle % median (foe alive, no cast, no dash, mana ok) | no-sight % median | casts per combat minute |", "|---|---|---|---|",
+		"| %s | %s | %s | %s |" % [_stats(hit)["median"], _stats(idle)["median"], _stats(no_sight)["median"],
+		_r(float(casts) / maxf(0.001, float(ticks) / rate / 60.0))], ""]
+
+func _tick_rate_of(run: Dictionary) -> int:
+	return int(run.get("tick_rate", 60))
+
+func _diag_totals(runs: Array) -> Array:
+	var rate: float = float(_tick_rate_of(runs[0])) if not runs.is_empty() else 60.0
+	var total: Array = []
+	var combat: Array = []
+	var walk: Array = []
+	var spent: Array = []
+	var regen: Array = []
+	var hp: Array = []
+	var dps: Array = []
+	for r in runs:
+		var c := 0
+		var w := 0
+		var sp := 0.0
+		var rg := 0.0
+		var h := 0.0
+		var dealt := 0.0
+		for rec in r["rooms"]:
+			c += rec["ticks"]
+			w += rec["walk_ticks"]
+			if rec["ticks"] > 0:
+				sp += rec["mana_spent"]
+				rg += rec["mana_regen"]
+				h += rec["total_enemy_hp"]
+				dealt += rec["damage_dealt"]
+		total.append(r["total_seconds"] / 60.0)
+		combat.append(c / rate / 60.0)
+		walk.append(w / rate / 60.0)
+		spent.append(sp)
+		regen.append(rg)
+		hp.append(h)
+		dps.append(dealt / maxf(0.001, c / rate))
+	return ["Run totals:", "", "| total min | combat min | walk min | mana spent | mana regen | enemy HP faced | overall DPS |", "|---|---|---|---|---|---|---|",
+		"| %s | %s | %s | %s | %s | %s | %s |" % [_cell(total), _cell(combat), _cell(walk), _cell(spent), _cell(regen), _cell(hp), _cell(dps)], ""]
