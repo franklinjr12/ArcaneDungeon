@@ -115,6 +115,8 @@ func _scaled(value: int, key: String) -> int:
 
 ## Runs before sim.step: sweeps each live projectile's step against the props, in list order.
 func pre_step(sim) -> void:
+	if props.is_empty():
+		return
 	var dt := 1.0/float(sim.clock.tick_rate)
 	for entry in sim.active:
 		if entry["kind"] != "projectile" or entry["effect"].expired:
@@ -122,10 +124,14 @@ func pre_step(sim) -> void:
 		var effect = entry["effect"]
 		var start: Vector2 = effect.position
 		var finish: Vector2 = start+effect.direction*effect.speed*dt
-		var essence := str(effect.root["essence"]["id"])
+		var essence := ""
+		var essence_known := false
 		for prop in props:
 			if not _live(prop):
 				continue
+			if not essence_known:
+				essence = str(effect.root["essence"]["id"])
+				essence_known = true
 			if prop["kind"] == "brazier":
 				if bool(prop["rule"].get("lit",false)) and not (prop["rule"].get("ignite_except",[]) as Array).has(essence) \
 						and Projectile._segment_circle_time(start,finish,prop["center"],float(prop["radius"])+effect.radius) >= 0.0:

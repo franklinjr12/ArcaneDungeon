@@ -5,6 +5,10 @@ const ALLOWED_FIELDS := [
 	"event_id","sequence","source_id","target_id","position","depth",
 	"amount","reason","limit","tick"
 ]
+const INT_FIELDS := {
+	"cast_id":true,"root_cast_id":true,"parent_effect_id":true,"effect_id":true,"event_id":true,
+	"sequence":true,"source_id":true,"target_id":true,"depth":true,"amount":true,"limit":true,"tick":true
+}
 var enabled := true
 var _records: Array = []
 
@@ -19,7 +23,7 @@ func record(kind: String, fields: Dictionary = {}) -> void:
 		if key != "type" and fields.has(key):
 			if key == "position":
 				normalized[key] = _position(fields[key])
-			elif key in ["cast_id","root_cast_id","parent_effect_id","effect_id","event_id","sequence","source_id","target_id","depth","amount","limit","tick"]:
+			elif INT_FIELDS.has(key):
 				normalized[key] = int(fields[key])
 			else:
 				normalized[key] = fields[key]

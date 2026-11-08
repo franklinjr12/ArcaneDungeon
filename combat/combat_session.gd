@@ -1,7 +1,7 @@
 extends RefCounted
 ## M2 combat orchestration: reuses M1 SpellRunner and common MagicTarget/Health.
 const Runner = preload("res://magic/runtime/spell_runner.gd")
-const Geometry = preload("res://world/arena_geometry.gd")
+const Geometry = preload("res://combat/cached_geometry.gd")
 const WaterTiles = preload("res://world/water_tiles.gd")
 const EnvProps = preload("res://world/env_props.gd")
 const Player = preload("res://combat/player_combat.gd")
@@ -348,7 +348,11 @@ func step() -> void:
 		reactions = new_reactions
 	var age: int = sim.clock.tick-68
 	if not feedback.is_empty():
-		feedback = feedback.filter(func(v): return int(v["tick"]) >= age)
+		var kept_feedback: Array = []
+		for v in feedback:
+			if int(v["tick"]) >= age:
+				kept_feedback.append(v)
+		feedback = kept_feedback
 	elapsed_frame_ms = float(Time.get_ticks_usec()-start_usec)/1000.0
 
 ## AD-020: derive audio cues from this tick's trace/AI changes. Reads only; mutates audio cursors.
@@ -462,20 +466,19 @@ func spawn_enemy_projectile(source_id: int, origin: Vector2, direction: Vector2,
 	_notify("! SHOT",origin)
 
 func advance_enemy_projectiles() -> void:
+	var lifetime := int(data["enemy_projectile"]["lifetime_ticks"])
 	for projectile in enemy_shots.duplicate():
 		var source = sim.targets.get_target(int(projectile["source_id"]))
 		if source == null or not source.alive():
 			enemy_shots.erase(projectile)
 			continue
 		projectile["age"] += 1
-		if projectile["age"] > int(data["enemy_projectile"]["lifetime_ticks"]):
+		if projectile["age"] > lifetime:
 			enemy_shots.erase(projectile)
 			continue
 		var start: Vector2 = projectile["position"]
 		var destination: Vector2 = start+projectile["direction"]*float(projectile["speed"])/float(sim.clock.tick_rate)
-		var wall_time := 1.0
-		for wall in world.walls:
-			wall_time = minf(wall_time,Projectile.segment_wall_time(start,destination,wall,float(projectile["radius"])))
+		var wall_time := Projectile.sweep_walls(start,destination,world.walls,float(projectile["radius"]),1.0)
 		if not world.bounds.has_point(destination):
 			wall_time = minf(wall_time,Projectile._bounds_exit_time(start,destination,world.bounds))
 		var hit_time: float = Projectile._segment_circle_time(start,destination,sim.actor.position,float(projectile["radius"])+sim.actor.radius)

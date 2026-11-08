@@ -43,6 +43,8 @@ func query(center: Vector2, query_radius: float, attacker_team: int, exclude_ids
 		var distance := center.distance_to(target.position)
 		if distance <= query_radius + target.radius:
 			hits.append(target)
+	if hits.size() < 2:
+		return hits
 	hits.sort_custom(func(a,b):
 		var da: float = center.distance_squared_to(a.position)
 		var db: float = center.distance_squared_to(b.position)
@@ -50,6 +52,25 @@ func query(center: Vector2, query_radius: float, attacker_team: int, exclude_ids
 			return a.id < b.id
 		return da < db)
 	return hits
+
+## Same result as query(center,query_radius,attacker_team)[0] (null when that is empty), without building or sorting the list.
+func nearest(center: Vector2, query_radius: float, attacker_team: int):
+	var best = null
+	var best_d := 0.0
+	for target in _targets.values():
+		if not target.eligible(attacker_team):
+			continue
+		var distance := center.distance_to(target.position)
+		if distance > query_radius + target.radius:
+			continue
+		var d := center.distance_squared_to(target.position)
+		var better := true
+		if best != null:
+			better = target.id < best.id if absf(d-best_d) < 0.000001 else d < best_d
+		if better:
+			best = target
+			best_d = d
+	return best
 
 func advance_movers(dt: float, bounds: Rect2) -> void:
 	for target in all():
