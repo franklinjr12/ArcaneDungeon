@@ -14,6 +14,8 @@ var max_targets: int
 var hit_ids: Dictionary = {}
 var on_hit: Dictionary = {}
 var root: Dictionary = {}
+## Computed once from the root modifiers so the per-tick loop needs no lookup.
+var homing := false
 var expired := false
 var age := 0
 ## AD-143 Rebound Sigil: remaining wall/bounds bounces (0 = expire on contact, as before).
@@ -31,6 +33,9 @@ func _init(spec: Dictionary) -> void:
 	direction = spec["direction"].normalized()
 	var params: Dictionary = spec["root"]["params"]
 	root = spec["root"].duplicate(true)
+	for modifier in root.get("modifiers",[]):
+		if modifier["id"] == "mod.homing":
+			homing = true
 	on_hit = spec.get("on_hit",{}).duplicate(true)
 	speed = float(params["speed"])
 	radius = float(params["radius"])

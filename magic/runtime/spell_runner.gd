@@ -464,7 +464,7 @@ func advance_one_tick() -> void:
 		var effect = entry["effect"]
 		var hits: Array = []
 		if entry["kind"] == "projectile":
-			if "mod.homing" in _modifier_ids(effect.root):
+			if effect.homing:
 				effect.steer(1.0/float(clock.tick_rate),targets,effect.root["params"])
 			hits = effect.advance(1.0/float(clock.tick_rate),targets,bounds,collision_walls)
 		elif entry["kind"] == "orb":
