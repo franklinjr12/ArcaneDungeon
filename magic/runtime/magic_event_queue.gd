@@ -73,7 +73,7 @@ func drain(on_event: Callable, budget: int = 1024) -> Dictionary:
 	while not _pending.is_empty() and count < budget:
 		# FIFO in monotonic event sequence; enqueued during callbacks goes last.
 		var data: Dictionary = _pending.pop_front()
-		on_event.call(data.duplicate(true))
+		on_event.call(data)
 		count += 1
 	_draining = false
 	return {"ok":true,"processed":count,"remaining":_pending.size()}
