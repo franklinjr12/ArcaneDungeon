@@ -45,6 +45,8 @@ func remove(state_id: String) -> bool:
 func tick(now: int, config: Dictionary) -> Array:
 	# Returns due ticks and expirations, never mutates health directly.
 	var events: Array = []
+	if _states.is_empty():
+		return events
 	var keys := _states.keys()
 	keys.sort()
 	for id in keys:

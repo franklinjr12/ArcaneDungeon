@@ -5,7 +5,7 @@ const Clock = preload("res://game/core/simulation_clock.gd")
 const Registry = preload("res://magic/data/rune_registry.gd")
 const Limits = preload("res://magic/runtime/spell_limits.gd")
 const Queue = preload("res://magic/runtime/magic_event_queue.gd")
-const Trace = preload("res://debug/debug_trace.gd")
+const Trace = preload("res://magic/runtime/indexed_trace.gd")
 const Target = preload("res://combat/magic_target.gd")
 const Store = preload("res://combat/target_store.gd")
 const Resolver = preload("res://combat/interaction_resolver.gd")
@@ -367,7 +367,7 @@ func _spawn_root(plan: Dictionary, origin: Vector2, aim: Vector2, context: Dicti
 
 ## Root effect record; the trigger plan rides along so On Kill / On Expire / Timer need no lookup later.
 func _entry(kind: String, effect, context: Dictionary, trigger: Dictionary) -> Dictionary:
-	var entry := {"kind":kind,"effect":effect,"context":context.duplicate(true),"trigger":trigger}
+	var entry := {"kind":kind,"effect":effect,"context":context.duplicate(),"trigger":trigger}
 	if _trigger_id(trigger) == "trigger.timer":
 		entry["timer_next"] = clock.tick+int(trigger["trigger_params"]["interval_ticks"])
 	return entry
@@ -404,7 +404,7 @@ func _spawn_burst(effect_plan: Dictionary, origin: Vector2, context: Dictionary,
 		_spawn_residue(effect_plan,origin,context)
 	# Hold the effect reservation until queued contacts finish resolving.
 	# Releasing here would let same-tick trigger bursts bypass global active limits.
-	_deferred_burst_cleanup.append({"effect_id":effect_id,"context":context.duplicate(true)})
+	_deferred_burst_cleanup.append({"effect_id":effect_id,"context":context.duplicate()})
 	return true
 
 ## AD-143 Residue Crystal: a root Burst leaves a short Field of its essence. Skipped silently over budget.
@@ -439,8 +439,8 @@ func _queue_hit(root: Dictionary, target_id: int, location: Vector2, ctx: Dictio
 		"target_id":target_id,"position":location,"depth":ctx["depth"]}
 	var pushed: Dictionary = queue.push(fields)
 	if pushed["accepted"]:
-		_contexts[int(pushed["event"]["event_id"])] = {"plan":root.duplicate(true),"context":ctx.duplicate(true),
-			"on_hit":attached_trigger.duplicate(true),"effect_id":effect_id,"location":location,"chained":chained}
+		_contexts[int(pushed["event"]["event_id"])] = {"plan":root,"context":ctx.duplicate(),
+			"on_hit":attached_trigger,"effect_id":effect_id,"location":location,"chained":chained}
 		if not chained and "mod.chain" in _modifier_ids(root):
 			var seen: Dictionary = _chain_seen.get(int(ctx["root_cast_id"]),{})
 			seen[target_id] = true
@@ -464,7 +464,7 @@ func advance_one_tick() -> void:
 		var effect = entry["effect"]
 		var hits: Array = []
 		if entry["kind"] == "projectile":
-			if "mod.homing" in _modifier_ids(effect.root):
+			if effect.homing:
 				effect.steer(1.0/float(clock.tick_rate),targets,effect.root["params"])
 			hits = effect.advance(1.0/float(clock.tick_rate),targets,bounds,collision_walls)
 		elif entry["kind"] == "orb":
@@ -516,9 +516,11 @@ func advance_one_tick() -> void:
 		_deferred_burst_cleanup.clear()
 	_prune_chain_seen()
 	_tick_statuses()
-	visuals = visuals.filter(func(v): return int(v["until"]) > clock.tick)
-	var min_tick: int = clock.tick-int(settings["sandbox"]["dps_window_ticks"])
-	recent_damage = recent_damage.filter(func(v): return int(v["tick"]) >= min_tick)
+	if not visuals.is_empty():
+		visuals = visuals.filter(func(v): return int(v["until"]) > clock.tick)
+	if not recent_damage.is_empty():
+		var min_tick: int = clock.tick-int(settings["sandbox"]["dps_window_ticks"])
+		recent_damage = recent_damage.filter(func(v): return int(v["tick"]) >= min_tick)
 
 ## AD-143 Gravity Lens: orb hits pull the target toward the orbit centre (the caster) through the knockback impulse.
 func _gravity_pull(target_id: int) -> void:
@@ -648,7 +650,7 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 			"source_id":target.id,"target_id":result["reaction"]["target_id"],"depth":ctx["depth"]}
 		var item = queue.push(react_ctx.merged({"type":"reaction"}))
 		if item["accepted"]:
-			_contexts[int(item["event"]["event_id"])] = {"arc":result["reaction"],"context":ctx.duplicate(true)}
+			_contexts[int(item["event"]["event_id"])] = {"arc":result["reaction"],"context":ctx.duplicate()}
 	if not bool(detail.get("chained",false)) and "mod.chain" in _modifier_ids(effect_plan):
 		_chain_from(target,effect_plan,ctx,detail)
 	# Only depth-0 (root) contexts fire triggers, so payload Bursts can never recurse.
@@ -685,7 +687,7 @@ func _fire_trigger(trigger_plan: Dictionary, ctx: Dictionary, parent_effect_id: 
 			record["target_id"] = target_id
 	trace.record("trigger",record)
 	_contexts[int(spawned["event"]["event_id"])] = {
-		"effect":trigger_plan["effect"].duplicate(true),"location":location,"context":child}
+		"effect":trigger_plan["effect"],"location":location,"context":child}
 	return true
 
 ## Chain: up to chain_count jumps to the nearest unseen eligible target (ties by id); a target is a chain target once per root cast.
@@ -751,7 +753,7 @@ func _storm_jump(event: Dictionary, detail: Dictionary, arc: Dictionary, from) -
 		"formula_id":event["formula_id"],"parent_effect_id":event.get("parent_effect_id",0),
 		"source_id":from.id,"target_id":near[0].id,"depth":event["depth"]})
 	if item["accepted"]:
-		_contexts[int(item["event"]["event_id"])] = {"arc":next_arc,"context":detail["context"].duplicate(true)}
+		_contexts[int(item["event"]["event_id"])] = {"arc":next_arc,"context":detail["context"].duplicate()}
 
 ## Deterministic knockback: id-ordered, wall/bounds-safe, fixed-tick decay (all rates from data).
 func _advance_knockback() -> void:

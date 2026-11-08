@@ -1,11 +1,15 @@
 extends RefCounted
 const Target = preload("res://combat/magic_target.gd")
 var _targets: Dictionary = {}
+# Id-sorted snapshot, rebuilt lazily. Never mutated in place: a rebuild assigns a new array.
+var _sorted: Array = []
+var _dirty: bool = false
 
 func add(target) -> bool:
 	if _targets.has(target.id):
 		return false
 	_targets[target.id] = target
+	_dirty = true
 	return true
 
 func get_target(target_id: int):
@@ -15,14 +19,19 @@ func remove(target_id: int) -> void:
 	if _targets.has(target_id):
 		_targets[target_id].removed = true
 		_targets.erase(target_id)
+		_dirty = true
 
+## Read-only: callers must not mutate the returned array.
 func all() -> Array:
-	var ids := _targets.keys()
-	ids.sort()
-	var out: Array = []
-	for id in ids:
-		out.append(_targets[id])
-	return out
+	if _dirty:
+		var ids := _targets.keys()
+		ids.sort()
+		var out: Array = []
+		for id in ids:
+			out.append(_targets[id])
+		_sorted = out
+		_dirty = false
+	return _sorted
 
 func query(center: Vector2, query_radius: float, attacker_team: int, exclude_ids: Array = [], required_status: String = "", tick: int = -1) -> Array:
 	var hits: Array = []

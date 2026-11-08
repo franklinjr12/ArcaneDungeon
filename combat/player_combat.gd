@@ -17,6 +17,8 @@ var dashes := 0
 var casts := 0
 var last_message := ""
 var hit_flash := 0
+## Manifestation id per slot, keyed on the compiled plan object so a hot-swapped spell refreshes it.
+var _slot_forms: Dictionary = {}
 ## AD-143 Warding Lantern: remaining shield charges; each absorbs one damage_player call.
 var shield := 0
 
@@ -83,7 +85,11 @@ func process_command(command: Dictionary) -> Dictionary:
 			return empty_result
 		var source: Vector2 = sim.actor.position
 		var cast_aim := facing
-		if str(plan.snapshot()["root"]["manifestation"]["id"]) == "form.burst":
+		var cached: Dictionary = _slot_forms.get(cast_slot,{})
+		if cached.is_empty() or cached["plan"] != plan:
+			cached = {"plan":plan,"form":str(plan.snapshot()["root"]["manifestation"]["id"])}
+			_slot_forms[cast_slot] = cached
+		if cached["form"] == "form.burst":
 			source = command.get("cursor",sim.actor.position+facing*90)
 			if source.distance_to(sim.actor.position) > float(tuning["max_burst_distance"]):
 				last_message = "BURST_OUT_OF_RANGE"

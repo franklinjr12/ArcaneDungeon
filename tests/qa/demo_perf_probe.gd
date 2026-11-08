@@ -15,6 +15,7 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	print("AD_DEMO_PERF_HOST:",_loadavg())
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--ticks="):
 			ticks = maxi(1,int(a.substr(8)))
@@ -170,6 +171,10 @@ func _probe(room_id: String) -> Dictionary:
 			drops += 1
 		elif kind == "cost_paid":
 			casts += 1
+	var win: int = maxi(1,mini(100,samples.size()/2))
+	var p50_first := _median_ms(samples.slice(0,win))
+	var p50_last := _median_ms(samples.slice(samples.size()-win))
+	var trace_records: int = session.sim.trace.snapshot().size()
 	samples.sort()
 	var total := 0
 	for x in samples:
@@ -180,9 +185,19 @@ func _probe(room_id: String) -> Dictionary:
 		"sim_max_ms":float(samples[-1])/1000.0,"sim_mean_ms":snappedf(float(total)/n/1000.0,0.001),
 		"budget_ms":BUDGET_MS,"budget_pass":p95 <= BUDGET_MS,"peak_active_effects":peak_active,
 		"peak_queued_events":peak_pending,"peak_enemies_alive":peak_alive,"budget_drop_records":drops,
-		"casts":casts,"godot":Engine.get_version_info()["string"]})
+		"casts":casts,"sim_p50_first100_ms":p50_first,"sim_p50_last100_ms":p50_last,
+		"trace_records":trace_records,"godot":Engine.get_version_info()["string"]})
 	out["ok"] = spawned > 0 and flow.session != null
 	return out
+
+func _loadavg() -> String:
+	var f := FileAccess.open("/proc/loadavg",FileAccess.READ)
+	return f.get_line().strip_edges() if f != null else "unavailable"
+
+func _median_ms(part: Array) -> float:
+	var a: Array = part.duplicate()
+	a.sort()
+	return float(a[clampi(roundi(a.size()*.5),0,a.size()-1)])/1000.0
 
 func _print_table(results: Array) -> void:
 	print("PERF_MD_BEGIN")
