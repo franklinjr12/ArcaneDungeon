@@ -12,6 +12,8 @@ const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 const Difficulty = preload("res://game/core/difficulty.gd")
 const AudioDirector = preload("res://game/audio/audio_director.gd")
 const TUNING_FILE := "res://combat/combat_tuning_v1.json"
+## Test-only path override (TestContext.with_frozen_balance); empty means TUNING_FILE.
+static var tuning_override := ""
 const SAMPLES_FILE := "res://magic/data/sandbox_samples_v1.json"
 var data: Dictionary = {}
 var samples: Dictionary = {}
@@ -59,7 +61,7 @@ var _audio_dead := false
 const NON_CAST_REJECTIONS := ["DASH_LOCKOUT","CASTER_DEAD","PAUSED","MODAL_OPEN"]
 
 func _init(run_seed: int = 5160, scenario_id: String = "single", starter_index: int = 0) -> void:
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(TUNING_FILE))
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(tuning_override if not tuning_override.is_empty() else TUNING_FILE))
 	var spells = JSON.parse_string(FileAccess.get_file_as_string(SAMPLES_FILE))
 	if typeof(parsed) != TYPE_DICTIONARY or typeof(spells) != TYPE_DICTIONARY:
 		return

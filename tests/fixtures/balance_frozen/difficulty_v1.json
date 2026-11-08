@@ -1,0 +1,18 @@
+{
+  "_comment": "Difficulty multipliers. 1.0 means current values; easy/medium/hard presets will be added for release.",
+  "schema_version": 1,
+  "active": "default",
+  "presets": {
+    "default": {
+      "enemy_hp": 1.0,
+      "enemy_damage": 1.0,
+      "enemy_speed": 1.0,
+      "spawn_density": 1.0,
+      "telegraph_length": 1.0,
+      "reward_rate": 1.0,
+      "coin_rate": 1.0,
+      "player_hp": 1.0,
+      "player_mana": 1.0
+    }
+  }
+}

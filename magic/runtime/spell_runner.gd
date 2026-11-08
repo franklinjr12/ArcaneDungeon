@@ -18,6 +18,8 @@ const Field = preload("res://magic/runtime/field_effect.gd")
 const Compiler = preload("res://magic/compile/spell_compiler.gd")
 const Loadout = preload("res://magic/runtime/spell_loadout.gd")
 const CONFIG := "res://magic/data/magic_balance_v1.json"
+## Test-only path override (TestContext.with_frozen_balance); empty means CONFIG.
+static var config_override := ""
 
 var clock
 var registry
@@ -53,7 +55,7 @@ var artifacts = null:
 			resolver.artifacts = value
 
 func _init(run_seed: int = 12345, record_trace: bool = true) -> void:
-	var data := FileAccess.open(CONFIG,FileAccess.READ)
+	var data := FileAccess.open(config_override if not config_override.is_empty() else CONFIG,FileAccess.READ)
 	if data == null:
 		printerr("M1 balance configuration unavailable")
 		return
