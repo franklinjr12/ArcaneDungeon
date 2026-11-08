@@ -6,6 +6,9 @@ extends SceneTree
 ## spawn the most enemies in total (ties: earliest in the sequence). `--rooms=` overrides with explicit ids.
 ## An exceeded 4 ms p95 budget is reported, not fatal (AD-087 already FAILS it on this host); exit 1 = setup failure only.
 const Flow = preload("res://world/run_flow.gd")
+const TargetStore = preload("res://combat/target_store.gd")
+const MagicTarget = preload("res://combat/magic_target.gd")
+const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 const SEED := 20261022
 const BUDGET_MS := 4.0
 const PROXY_TARGET_MS := 8.0 ## game-design ruling 2026-11-08: VM proxy target until the reference PC is measured
@@ -29,6 +32,9 @@ func _run() -> void:
 			ticks = maxi(1,int(a.substr(8)))
 		elif a == "--verify-digests":
 			verify_digests = true
+		elif a == "--check-equivalence":
+			quit(0 if _check_equivalence() else 1)
+			return
 		elif a.begins_with("--rooms="):
 			room_override = a.substr(8).split(",",false)
 	var flow = Flow.new(SEED,Flow.CONFIG_V2)
@@ -56,6 +62,70 @@ func _run() -> void:
 				print("AD_DEMO_PERF_DIGEST_MISMATCH room=%s ticks=%s digest=%s" % [rid,res.get("ticks"),res.get("digest","")])
 				digest_ok = false
 	quit(0 if all_ok and results.size() >= 3 and digest_ok else 1)
+
+## AD-174: the optimised spatial helpers must equal the plain originals bit for bit. Own RNG, never the sim's.
+const EQUIV_CASES := 5000
+
+func _check_equivalence() -> bool:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 174174
+	for n in EQUIV_CASES:
+		var store := TargetStore.new()
+		var count := rng.randi_range(0,8)
+		for i in count:
+			var t = MagicTarget.new(i+1,rng.randi_range(0,1),Vector2(snappedf(rng.randf_range(0.0,200.0),0.25 if i % 2 == 0 else 0.001),
+				snappedf(rng.randf_range(0.0,200.0),0.25)),10.0,rng.randf_range(2.0,20.0))
+			if rng.randi_range(0,5) == 0:
+				t.position = Vector2(100.0,100.0) # exact distance ties exercise the id tie-break
+			store.add(t)
+		var center := Vector2(rng.randf_range(0.0,200.0),rng.randf_range(0.0,200.0))
+		var radius := rng.randf_range(0.0,120.0)
+		var team := rng.randi_range(0,1)
+		var hits: Array = store.query(center,radius,team)
+		var want = hits[0] if not hits.is_empty() else null
+		var got = store.nearest(center,radius,team)
+		if got != want:
+			print("AD_EQUIV_FAIL nearest case=%d center=%s radius=%s team=%d want=%s got=%s" % [n,center,radius,team,
+				want.id if want != null else -1,got.id if got != null else -1])
+			return false
+	for n in EQUIV_CASES:
+		var walls: Array = []
+		for i in rng.randi_range(0,6):
+			var kind := rng.randi_range(0,3)
+			var pos := Vector2(snappedf(rng.randf_range(0.0,200.0),0.5),snappedf(rng.randf_range(0.0,200.0),0.5))
+			var size := Vector2(snappedf(rng.randf_range(1.0,60.0),0.5),snappedf(rng.randf_range(1.0,60.0),0.5))
+			if kind == 1:
+				size.x = 0.0 # degenerate wall
+			walls.append(Rect2(pos,size))
+		var padding: float = [0.0,0.5,4.0,rng.randf_range(0.0,12.0)][rng.randi_range(0,3)]
+		var start := Vector2(rng.randf_range(-20.0,220.0),rng.randf_range(-20.0,220.0))
+		var finish := start+Vector2(rng.randf_range(-40.0,40.0),rng.randf_range(-40.0,40.0))
+		var shape := rng.randi_range(0,5)
+		if shape == 0:
+			finish = start
+		elif shape == 1:
+			finish.y = start.y
+		elif shape == 2:
+			finish.x = start.x
+		elif not walls.is_empty() and shape == 3:
+			var w: Rect2 = walls[rng.randi_range(0,walls.size()-1)]
+			start = w.get_center() # start inside the rect
+			finish = start+Vector2(rng.randf_range(-80.0,80.0),rng.randf_range(-80.0,80.0))
+		elif not walls.is_empty() and shape == 4:
+			var w: Rect2 = walls[rng.randi_range(0,walls.size()-1)]
+			var gap: float = padding+[0.0,0.005,0.01,0.011,0.05][rng.randi_range(0,4)] # touching / near-touching the padded rect
+			start = Vector2(w.position.x-gap,w.position.y+rng.randf()*w.size.y)
+			finish = start+Vector2([0.0,1.0,-1.0,30.0][rng.randi_range(0,3)],rng.randf_range(-3.0,3.0))
+		var initial: float = [1.0,rng.randf_range(0.0,1.0)][rng.randi_range(0,1)]
+		var want := initial
+		for wall in walls:
+			want = minf(want,Projectile.segment_wall_time(start,finish,wall,padding))
+		var got := Projectile.sweep_walls(start,finish,walls,padding,initial)
+		if got != want:
+			print("AD_EQUIV_FAIL sweep_walls case=%d start=%s finish=%s padding=%s walls=%s initial=%s want=%s got=%s" % [n,start,finish,padding,walls,initial,want,got])
+			return false
+	print("AD_EQUIV_PASS")
+	return true
 
 func _enemy_count(room: Dictionary) -> int:
 	var n := 0

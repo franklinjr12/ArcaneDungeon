@@ -455,7 +455,8 @@ func advance_one_tick() -> void:
 	clock.step_once()
 	loadout.cooldown_tick()
 	mana = minf(float(settings["combat"]["player_max_mana"]),mana+float(settings["combat"]["regen_mana_per_tick"]))
-	targets.advance_movers(1.0/float(clock.tick_rate),bounds)
+	var dt := 1.0/float(clock.tick_rate)
+	targets.advance_movers(dt,bounds)
 	_advance_knockback()
 	if _art("tidewalkers_boots"):
 		_advance_trail()
@@ -465,10 +466,10 @@ func advance_one_tick() -> void:
 		var hits: Array = []
 		if entry["kind"] == "projectile":
 			if effect.homing:
-				effect.steer(1.0/float(clock.tick_rate),targets,effect.root["params"])
-			hits = effect.advance(1.0/float(clock.tick_rate),targets,bounds,collision_walls)
+				effect.steer(dt,targets,effect.root["params"])
+			hits = effect.advance(dt,targets,bounds,collision_walls)
 		elif entry["kind"] == "orb":
-			hits = effect.advance(1.0/float(clock.tick_rate),clock.tick,actor,targets,
+			hits = effect.advance(dt,clock.tick,actor,targets,
 				limits.get_limit("min_rehit_delay_ticks"))
 		elif entry["kind"] == "beam":
 			var pulse: Dictionary = effect.advance(clock.tick,actor,targets,bounds,collision_walls,
