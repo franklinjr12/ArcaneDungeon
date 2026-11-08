@@ -2,8 +2,11 @@ extends SceneTree
 ## AD-156: deterministic full-run (2-stage) benchmark. Scripted player only; no gameplay change.
 ## AD-168: pacing diagnostics (report only): per room fight seconds, waves, enemy HP, player DPS, mana spent/regen, TTK per enemy kind,
 ## damage taken, boss seconds per phase and a scripted-player sanity check (hit rate, idle ticks). Printed as DIAG_MD_BEGIN/END.
-## Run: godot --headless --path . --script res://tests/bench/run_bench.gd [-- --seeds=N --builds=weak,typical,skilled]
+## Run: godot --headless --path . --script res://tests/bench/run_bench.gd [-- --seeds=N|A..B --builds=weak,typical,skilled --results=DIR --trace]
+## --seeds=A..B (0-based inclusive SEEDS indices) = chunk mode: one <seed>_<build>.json per play in --results (default user://bench_results), existing
+## results with a matching fingerprint are skipped (resumable), no replay. --trace records sim traces (off by default; slower).
 const Flow = preload("res://world/run_flow.gd")
+const BalanceRunner = preload("res://magic/runtime/spell_runner.gd")
 const SEEDS := [20261022, 20261023, 20261024, 20261025, 20261026, 20261027, 20261028, 20261029, 20261030, 20261031,
 	20261032, 20261033, 20261034, 20261035, 20261036, 20261037, 20261038, 20261039, 20261040, 20261041]
 ## Reference builds. rune_pick: first = option 0, new_rune = first locked rune else option 0, priority = RUNE_PRIORITY.
@@ -39,6 +42,8 @@ const WEAK_DIES_EARLY_RATIO := 0.55
 const ROOM_MAX_SECONDS := 240.0
 const STARVED_MAX_PERCENT := 20.0
 
+var _record_trace := true
+
 func _initialize() -> void:
 	call_deferred("_run")
 
@@ -48,7 +53,14 @@ func _option(prefix: String, fallback: String) -> String:
 			return arg.substr(prefix.length())
 	return fallback
 
+func _has_flag(flag: String) -> bool:
+	return OS.get_cmdline_user_args().has(flag)
+
 func _run() -> void:
+	_record_trace = _has_flag("--trace")
+	if ".." in _option("--seeds=", ""):
+		_chunk()
+		return
 	var seeds: Array = SEEDS.slice(0, clampi(int(_option("--seeds=", str(SEEDS.size()))), 1, SEEDS.size()))
 	var names: Array = []
 	for build in _option("--builds=", ",".join(BUILDS.keys())).split(","):
@@ -77,6 +89,62 @@ func _run() -> void:
 	print("DIAG_MD_BEGIN")
 	print(_diag_markdown(result))
 	print("DIAG_MD_END")
+	quit(0)
+
+func _fingerprint() -> String:
+	var paths: Array = []
+	for dir in ["res://world/data", "res://combat"]:
+		var names := Array(DirAccess.get_files_at(dir)).filter(func(n): return n.ends_with(".json"))
+		names.sort()
+		for n in names:
+			paths.append(dir + "/" + n)
+	paths.append_array([BalanceRunner.CONFIG, "res://tests/bench/run_bench.gd"])
+	var text := ""
+	for path in paths:
+		text += FileAccess.get_md5(path)
+	return text.md5_text()
+
+func _chunk() -> void:
+	var span: PackedStringArray = _option("--seeds=", "").split("..")
+	if span.size() != 2 or not span[0].is_valid_int() or not span[1].is_valid_int() or int(span[0]) < 0 or int(span[1]) < int(span[0]) or int(span[1]) >= SEEDS.size():
+		printerr("AD_DEMO_BENCH bad --seeds=A..B (0-based inclusive, max %d)" % (SEEDS.size() - 1))
+		quit(1)
+		return
+	var names: Array = []
+	for build in _option("--builds=", ",".join(BUILDS.keys())).split(","):
+		if BUILDS.has(build):
+			names.append(build)
+	if names.is_empty():
+		printerr("AD_DEMO_BENCH no valid builds selected")
+		quit(1)
+		return
+	var dir := ProjectSettings.globalize_path(_option("--results=", "user://bench_results"))
+	DirAccess.make_dir_recursive_absolute(dir)
+	var print_id := _fingerprint()
+	for build in names:
+		for i in range(int(span[0]), int(span[1]) + 1):
+			var run_seed: int = SEEDS[i]
+			var path := "%s/%d_%s.json" % [dir, run_seed, build]
+			if FileAccess.file_exists(path):
+				var old = JSON.parse_string(FileAccess.get_file_as_string(path))
+				if old is Dictionary and old.get("fingerprint", "") == print_id:
+					print("AD_DEMO_BENCH_SKIP seed=%d build=%s" % [run_seed, build])
+					continue
+			var started := Time.get_ticks_msec()
+			var run: Dictionary = _play(run_seed, build)
+			var wall: float = (Time.get_ticks_msec() - started) / 1000.0
+			var file := FileAccess.open(path + ".tmp", FileAccess.WRITE)
+			if file == null:
+				printerr("AD_DEMO_BENCH cannot write " + path)
+				quit(1)
+				return
+			file.store_string(JSON.stringify({"fingerprint": print_id, "trace": _record_trace, "wall_seconds": wall, "run": run}, "\t", true))
+			file.close()
+			if DirAccess.rename_absolute(path + ".tmp", path) != OK:
+				printerr("AD_DEMO_BENCH cannot rename " + path)
+				quit(1)
+				return
+			print("AD_DEMO_BENCH_WALL seed=%d build=%s wall_s=%.1f outcome=%s" % [run_seed, build, wall, run["outcome"]])
 	quit(0)
 
 func _r(value: float) -> float:
@@ -111,6 +179,7 @@ func _play(run_seed: int, build: String) -> Dictionary:
 
 func _enter(flow, plan: Dictionary, earned: Array, rate: int, bot: Dictionary) -> Dictionary:
 	var index: int = flow.run.sequence_index
+	flow.session.sim.trace.enabled = _record_trace
 	var rec := {"room": str(flow.room.values["id"]), "stage": int(flow.rooms[index].get("stage", 0)),
 		"type": str(flow.room.values["type"]), "outcome": "cleared", "ticks": 0, "sim_seconds": 0.0, "hp_lost": 0.0,
 		"mana_starved_ticks": 0, "walk_ticks": 0, "casts": _cast_slots(flow)}
