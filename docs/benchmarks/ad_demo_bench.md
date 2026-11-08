@@ -10,6 +10,22 @@ Plays the whole `world/data/run_v2.json` run (ruins, workshop, cistern, final bo
 
 Seeds: [20261022 .. 20261041] (20 consecutive seeds).
 
+## Chunked workflow (AD-173)
+
+Chunked, resumable, trace-off runs: see [tests/bench/README.md](../../tests/bench/README.md) (`--seeds=A..B`, `--results`, `--jobs=2`, `--summarize`).
+
+Wall time per seed+build, measured on the aarch64 2-core host (AD-169 baseline: about 5-8 min = 300-480 s; target at most 150-240 s):
+
+| run | weak | typical | skilled |
+|---|---|---|---|
+| 1 process, seed 20261022 | 25.9 s | 32.4 s | 34.6 s |
+| `--jobs=2`, seed 20261022 | 29.3 s | 36.4 s | 39.0 s |
+| `--jobs=2`, seed 20261023 | 24.7 s | 30.1 s | 34.5 s |
+
+All are at most 39 s, about 8-12x faster than 300-480 s: target met. `--jobs=2` with 2 seeds x 3 builds finished in 106 s total (about 17.7 s per pair effective).
+
+Equivalence (weak build): the `run` object of seed 20261023 is identical for a `--seeds=1..1` chunk and a `--seeds=0..1` chunk; seed 20261022 is identical with and without `--trace`; the legacy `--seeds=1` `runs[0]` equals the chunk result, and the `--summarize` BENCH_MD block for that pair is byte-identical to the legacy block. No differences found.
+
 ## Reference builds
 
 - `weak`: starter loadout only (run_v2 initial_formulas). Takes the first reward option, never edits spells, never buys, skips optional rooms.
