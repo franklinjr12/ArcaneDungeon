@@ -93,7 +93,7 @@
     "arc_radius": 220,
     "water_conduct_radius": 360,
     "arc_damage_scale": 0.65,
-    "regen_mana_per_tick": 0.3,
+    "regen_mana_per_tick": 1.5,
     "player_max_mana": 120,
     "base_target_hp": 120,
     "player_team": 1,
