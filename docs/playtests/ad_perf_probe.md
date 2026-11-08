@@ -250,3 +250,63 @@ Follow-ups (files outside this task's scope, not edited):
 - `sim.step` (0.42-0.62 of the tick) is mostly `magic/runtime/` homing and projectile work. Proposed fix: a spatial grid for homing target selection, and projectile-advance batching. `magic/compile/` is not on this list any more because `check_slot` is memoized.
 
 **Proxy note.** The 8 ms proxy assumes the reference PC (i5 11th gen / GTX 1660) is about 2x this host per core. That is unconfirmed until Franklin measures on the reference machine. The real budget remains 4 ms.
+
+## AD-176 pacing check: tuned data (report only)
+
+- Date: 2026-11-08
+- Base commit: `be03ccc` (AD-175 round 2 merge; tuned HP and damage data). No gameplay, data, test or probe file was changed.
+- Godot: 4.7.1.stable.official.a13da4feb
+- Host: Neoverse-N1 aarch64, 2 cores. **NOT** the GDD §14 reference hardware (11th-gen i5 / GTX 1660). The 8 ms proxy and the 4 ms budget are judged on this host only.
+- `AD_DEMO_PERF_HOST` (1-min, 5-min, 15-min load at the start of each probe run): run 1 `0.94 1.08 1.38`, run 2 `0.99 1.09 1.38`, run 3 `0.92 1.08 1.36`. Each run started below 1.0 (read just before launch: 0.93, 0.99, 0.92), so no wait was needed. The probe is single-threaded on 2 cores and raised the 1-min load to 1.02-1.19 by the end of each run.
+- Run `--verify-digests` was **not** used: the data retune changes the digests (see the probe header). The digests in the JSON lines are the new tuned values and were not compared.
+- Scratch output was written to `$TMPDIR/ad176/` (not `/tmp`).
+
+**Commands** (repo root, after one `godot --headless --path . --import`, which was needed because `.godot/global_script_class_cache.cfg` was missing in this worktree):
+
+```
+godot --headless --path . --script res://tests/qa/demo_perf_probe.gd -- --ticks=1 > $S/rooms.txt 2>&1
+godot --headless --path . --script res://tests/qa/demo_perf_probe.gd -- --rooms=ruins_c02,cistern_p08,ruins_c08,cistern_p02 > $S/after_N.txt 2>&1    # N = 1, 2, 3
+```
+
+Each run exits 0. Each run covers 6 rooms: the 4 chosen rooms plus both bosses, which the probe always adds. The `BUDGET EXCEEDED` lines are results, not errors.
+
+**How the 4 rooms were chosen.** The sequence for seed 20261022 (`AD_DEMO_PERF_ROOMS`, 16 ids) gives the non-boss combat rooms, which are not optional, a total enemy count from their waves. The enemy counts come from `world/data/run_v2.json` and `world/data/rooms_cistern_v1.json`. The probe's own automatic worst rooms agree with this count:
+
+| pick | room | stage | enemies in all waves | why |
+|---|---|---|---|---|
+| 1 | ruins_c02 | 1 | 12 | automatic worst, stage 1 (ties with ruins_c08; earlier in the sequence) |
+| 2 | cistern_p08 | 2 | 12 | automatic worst, stage 2 (ties with cistern_p02; earlier in the sequence) |
+| 3 | ruins_c08 | 1 | 12 | next by the rule (rank 3; ties with ruins_c02, which is already picked) |
+| 4 | cistern_p02 | 2 | 12 | next by the rule (rank 4; ties with cistern_p08, which is already picked) |
+
+Next in rank, not probed: cistern_p10 (10 enemies), then several rooms with 9. The AD-158 worst rooms (ruins_c07, cistern_p10) are not the wave-count leaders on the current data, so they are not in this run. The two bosses are cistern_boss and ruins_boss.
+
+**Per-room table** (median of the 3 runs, each column taken from the printed JSON or PERF_MD values). Stage is the 1-based value from PERF_MD. `vs 8 ms proxy` and `vs 4 ms budget` use the median p95. The `mean ms` column is `sim_mean_ms`.
+
+| room | stage | peak enemies alive | peak active effects | peak queued events | budget drops | p50 ms | p95 ms | max ms | mean ms | vs 8 ms proxy | vs 4 ms budget | AD-174 p95 ms |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| cistern_boss | 2 | 9 | 57 | 0 | 0 | 5.496 | 8.455 | 9.782 | 5.215 | FAIL (8.455) | FAIL | 8.414 |
+| ruins_boss | 1 | 9 | 53 | 0 | 0 | 3.281 | 7.238 | 10.222 | 3.631 | PASS (7.238) | FAIL | 7.715 |
+| ruins_c02 | 1 | 11 | 57 | 0 | 0 | 4.441 | 11.208 | 16.524 | 5.223 | FAIL (11.208) | FAIL | - |
+| cistern_p08 | 2 | 11 | 49 | 0 | 0 | 6.429 | 14.418 | 20.679 | 7.454 | FAIL (14.418) | FAIL | - |
+| ruins_c08 | 1 | 11 | 54 | 0 | 0 | 3.644 | 7.244 | 9.544 | 3.999 | PASS (7.244) | FAIL | - |
+| cistern_p02 | 2 | 11 | 50 | 0 | 0 | 4.551 | 9.555 | 12.256 | 5.222 | FAIL (9.555) | FAIL | - |
+
+The per-run p95 values (run 1 / 2 / 3) are: cistern_boss 8.455 / 9.139 / 8.169; ruins_boss 7.238 / 8.196 / 7.109; ruins_c02 11.208 / 11.541 / 11.063; cistern_p08 14.418 / 14.908 / 14.379; ruins_c08 7.243 / 7.855 / 7.244; cistern_p02 9.200 / 9.710 / 9.555. Budget drops were 0 in every room and run.
+
+**Real-time room cost.** Only rooms with a measured length in the AD-175 20-seed bench are costed. These are the probe rooms that the bench reached. `median room s` comes from the per-room table ("room | n | median s") in the AD-175 20-seed section of `docs/benchmarks/ad_demo_bench.md`. `sim_mean_ms` is the median from the table above. The last two columns are **derived**, not measured: CPU s = sim_mean_ms × 60 × room_s / 1000; frame share = sim_mean_ms / 16.667.
+
+| room | median room s | sim_mean_ms | sim CPU s per room (derived) | share of 16.667 ms frame (derived) |
+|---|---|---|---|---|
+| ruins_c02 | 141.192 (n 36) | 5.223 | 44.25 | 31.3% |
+| ruins_c08 | 117.85 (n 45) | 3.999 | 28.28 | 24.0% |
+| ruins_boss | 69.933 (n 60; time until player death) | 3.631 | 15.24 | 21.8% |
+| cistern_p08 | not reached in AD-175 bench | 7.454 | not reached in AD-175 bench | not reached in AD-175 bench |
+| cistern_p02 | not reached in AD-175 bench | 5.222 | not reached in AD-175 bench | not reached in AD-175 bench |
+| cistern_boss | not reached in AD-175 bench | 5.215 | not reached in AD-175 bench | not reached in AD-175 bench |
+
+The `ruins_boss` row is a time until death, so its CPU total is for the fight the player lost, not a clear.
+
+**Caveats.**
+
+The probe is a stress scenario: enemies are forced to 1e6 HP and refilled, 8 extra enemies are added, and a cast happens every tick. It measures per-tick cost. It is largely insensitive to the AD-175 HP change, because the HP is refilled. Longer rooms raise the total CPU per room (the derived column above), not the per-tick p95. Any p95 change against AD-174 may be host noise: the AD-174 final and this run were on the same host class, but not under identical load. Only the two bosses have an AD-174 value; their p95 moved by 0.04 ms (cistern_boss) and 0.48 ms (ruins_boss), which is inside the run-to-run spread. The 8 ms proxy is unconfirmed until the reference PC is measured. The 4 ms budget still fails in every room on this host.

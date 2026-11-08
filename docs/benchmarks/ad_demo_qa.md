@@ -74,6 +74,23 @@ PERF_MD (from `perf.txt`):
 
 Comparison with `docs/playtests/ad_perf_probe.md` (AD-087, 2026-11-03, `s1_boss`, same host class): sim p95 was 39.5-42.8 ms in 3 runs. Here p95 is 82-131 ms, about 2-3x higher. The p50 values (35-54 ms) are close to the AD-087 p95. The p95 is much higher than p50 in every room, so the spikes are bursty. This run shared the host with other jobs, so wall-time noise is likely a large part of the gap; it was not re-run in isolation. No budget drops were recorded in any room (`budget_drop_records` 0). The budget verdict is FAIL in all 4 rooms, as it was in AD-087. Measurement only; nothing was optimised.
 
+### AD-176 re-run (tuned data)
+
+Base commit `be03ccc` (AD-175 tuned HP and damage). Worst rooms this time: ruins_c02, cistern_p08, plus ruins_c08 and cistern_p02 (the next two by enemy count), and both bosses. This table is run 1 of 3, the run closest to the median on p95. Medians of the 3 runs and the full method are in `docs/playtests/ad_perf_probe.md` (section "AD-176 pacing check"). Host load was 0.94 at the start of run 1.
+
+PERF_MD (from `after_1.txt`, run 1):
+
+| room | stage | enemies alive peak | p50 ms | p95 ms | max ms | peak effects | drops | verdict | proxy verdict |
+|---|---|---|---|---|---|---|---|---|---|
+| cistern_boss | 2 | 9 | 5.496 | 8.455 | 9.782 | 57 | 0 | FAIL (>4.0 ms) | FAIL (>8.0 ms) |
+| ruins_boss | 1 | 9 | 3.281 | 7.238 | 9.499 | 53 | 0 | FAIL (>4.0 ms) | PASS |
+| ruins_c02 | 1 | 11 | 4.441 | 11.208 | 16.284 | 57 | 0 | FAIL (>4.0 ms) | FAIL (>8.0 ms) |
+| cistern_p08 | 2 | 11 | 6.380 | 14.418 | 19.651 | 49 | 0 | FAIL (>4.0 ms) | FAIL (>8.0 ms) |
+| ruins_c08 | 1 | 11 | 3.548 | 7.243 | 9.544 | 54 | 0 | FAIL (>4.0 ms) | PASS |
+| cistern_p02 | 2 | 11 | 4.551 | 9.200 | 12.256 | 50 | 0 | FAIL (>4.0 ms) | FAIL (>8.0 ms) |
+
+Across the 3 runs, p95 ranged from 7.1 to 14.9 ms (rooms: 7.1 ruins_boss to 14.9 cistern_p08), and the peaks were 11 enemies alive and 57 active effects. The 4 ms budget fails in all 6 rooms, and the 8 ms proxy fails in 4 of 6.
+
 ## 4. UI matrix sweep
 
 (a) Bounds test, in the full suite run (after import): `TEST SUMMARY: 19377 passed / 0 failed / 68 suites`. `SUITE test_ad_ui_bounds.gd` printed `AD-090 UI-BOUNDS REPORT total issues: 0 (report_only=false)`, so bounds are asserted, not report-only. It covers the window-size matrix across menu and run states, including sigil_desk.
@@ -91,11 +108,11 @@ Exit code: **0**. It ran the suite twice: `TEST SUMMARY: 19377 passed / 0 failed
 
 | # | area | symptom | evidence (file/command) | severity | owner decision needed |
 |---|---|---|---|---|---|
-| 1 | perf (sim) | Sim p95 exceeds the 4.0 ms budget in all 4 probed rooms: 82.3 / 93.0 / 91.3 / 130.6 ms on this host. No budget drops. | `/tmp/ad158/perf.txt`; section 3; `docs/playtests/ad_perf_probe.md` | high on this host, unknown on target hardware | Accept until TASK-051 on-hardware run, or order a sim optimisation pass. |
+| 1 | perf (sim) | Sim p95 exceeds the 4.0 ms budget in all 4 probed rooms: 82.3 / 93.0 / 91.3 / 130.6 ms on this host. No budget drops. | `/tmp/ad158/perf.txt`; section 3; `docs/playtests/ad_perf_probe.md`; AD-176 re-run on tuned data (3 runs, 6 rooms): p95 medians 7.2-14.4 ms (per run 7.1-14.9 ms), 1-min load 0.92-0.99 at each start | high on this host, unknown on target hardware | Accept until TASK-051 on-hardware run, or order a sim optimisation pass. |
 | 2 | perf (sign-off) | TASK-051 on-hardware 60 FPS sign-off (GDD §14: 11th-gen i5 / GTX 1660) is still pending. All numbers here come from a Neoverse-N1 host, which is not the reference hardware. | `docs/playtests/ad_perf_probe.md`; header of this file | high | Franklin to run the demo build on the reference machine. |
 | 3 | perf (GPU) | GPU and draw cost are not measured: the headless/dummy renderer skips rendering, so only sim time is covered. | `demo_perf_probe.gd` runs `--headless` | medium | Measure with a real renderer on target hardware. |
 | 4 | balance (AD-156) | Run-length target (30-40 min), weak-dies-early (>= 11/20) and mana-starved (< 20%) targets are NOT MET: typical and skilled win 0/20 in the natural bench, starved 56.8-57.3%. Room length passes. Values are PROPOSED. | `docs/benchmarks/ad_demo_bench.md` (summary table, "Why NOT MET, and the knobs needed") | high for demo pacing | Approve the tuning knobs listed in the bench doc (needs golden-trace updates). The golden-trace blocker is lifted by AD-167: golden/scenario suites read `tests/fixtures/balance_frozen/`, not live data. |
 | 5 | QA coverage | Natural-play smoke (`--natural=1 --seeds=20`) was not run here; route-mode smoke only. Route totals (4.1-6.4 min) do not reflect real play length. | section 1 | low (AD-156 covers natural runs) | None; re-run if the tuning in issue 4 changes. |
 | 6 | tooling | In a fresh worktree without `.godot/`, `run_tests.gd` fails: texture `.ctex` files fail to load (many `FAIL: AD-065/AD-030 png loads`) and `class_name` calls such as `damage_glyph_width` are missing. The first, un-imported run (`/tmp/ad158/suite_noimport.txt`) exited 1. After `godot --headless --path . --import` the suite is 19377 passed / 0 failed. | `/tmp/ad158/suite_noimport.txt`, `/tmp/ad158/suite.txt` | low (environment, not a code bug) | Decide whether the test runner or docs should run the import step automatically. |
 | 7 | UI coverage | `tools/ui_matrix.sh` has no sigil_desk state, and fullscreen is not testable under Xvfb. The screenshots were not visually reviewed in this step. | section 4 | low | Check these by hand in `docs/demo/FRANKLIN_TEST.md`. |
-| 8 | perf (noise) | Perf run shared the host with other jobs; p95 is 2-3x the AD-087 figure. Not re-run in isolation. | section 3 | low | Re-run on an idle host if a trend matters. |
+| 8 | perf (noise) | Perf run shared the host with other jobs; p95 is 2-3x the AD-087 figure. Not re-run in isolation. | section 3; AD-176 re-run: 1-min load 0.94 / 0.99 / 0.92 at the start of runs 1 / 2 / 3, rising to 1.02-1.19 during each run, so the probe kept the host near saturation | low | Re-run on an idle host if a trend matters. |
