@@ -653,5 +653,194 @@ Next lever (for the 20-seed confirmation step / a later task): ruins_warden. Rai
 
 ### Suite status at the best iteration
 
-Full suite (`tests/run_tests.gd`) on the baseline 859e6c8: 19586 passed / 0 failed. At the iteration 3 data: 21818 passed / 7 failed, all because tests read the live `combat_tuning_v1.json` and use fixed kill damage (1000) or fixed explode/buff values that the new HP and damage no longer satisfy: AD-136 explode_on_death x2 and support_buff clears after the supporter dies (`tests/test_ad_enemy_v2.gd`), TASK-036 door open / exit unlocked, TASK-041 rune reward, TASK-050 one reward after kill (`tests/test_m3_core.gd` and the reward tests). Not fixed in this step (data-only, tests out of scope): they need either the frozen fixture enabled for those cases or kill damage scaled above the new HP (bone_thrall 2990). To be done before the 20-seed confirmation closes the task.
+Full suite (`tests/run_tests.gd`) on the baseline 859e6c8: 19586 passed / 0 failed. At the iteration 3 data: 21818 passed / 7 failed, all because tests read the live `combat_tuning_v1.json` and use fixed kill damage (1000) or fixed explode/buff values that the new HP and damage no longer satisfy: AD-136 explode_on_death x2 and support_buff clears after the supporter dies (`tests/test_ad_enemy_v2.gd`), TASK-036 door open / exit unlocked, TASK-041 rune reward, TASK-050 one reward after kill (`tests/test_m3_core.gd` and the reward tests). Not fixed in this step (data-only, tests out of scope): they need either the frozen fixture enabled for those cases or kill damage scaled above the new HP (bone_thrall 2990). Fixed in the confirmation step (see "Suites" below).
 
+
+
+## AD-175 20-seed confirmation and target verdict
+
+Best iteration: 3. HEAD data equals it (`git diff aaff928 HEAD -- combat/combat_tuning_v1.json world/data/run_v2.json world/data/rooms_cistern_v1.json magic/data/magic_balance_v1.json game/data/difficulty_v1.json` prints nothing). No tuning value was changed in this step. All numbers below are 20 seeds (20261022-20261041) x 3 builds = 60 runs, measured, not extrapolated. All values stay PROPOSED, not approved balance.
+
+### Commands and wall time
+
+```
+godot --headless --path . --import
+cp -r /tmp/ad175/iter3 /tmp/ad175/confirm            # seeds 0..7 reused (matching fingerprint, data unchanged)
+G --seeds=0..7 --jobs=2 --results=/tmp/ad175/confirm   # 24 AD_DEMO_BENCH_SKIP
+G --seeds=8..11 --jobs=2 --results=/tmp/ad175/confirm
+G --seeds=12..15 --jobs=2 --results=/tmp/ad175/confirm
+G --seeds=16..19 --jobs=2 --results=/tmp/ad175/confirm
+G --summarize --results=/tmp/ad175/confirm
+```
+
+G = `/usr/local/bin/godot --headless --path . --script res://tests/bench/run_bench.gd --`. Wall time for the bench chunks plus summary: 776 s (36 new seed+build pairs at about 43 s each with 2 jobs). Results folder `/tmp/ad175/confirm` (60 files, not committed). No `AD_DEMO_BENCH_PARTIAL`, no `stale mix`, no `AD_DEMO_BENCH nondeterministic`.
+
+### Iteration table (confirmation row)
+
+| iter | data changed | wins (weak / typical / skilled) | median win min | weak early deaths | starved % median (weak / typ / skilled) | max room s |
+|---|---|---|---|---|---|---|
+| 3 (8 seeds) | see above | 0/8 / 0/8 / 0/8 | none | 8/8 | 10.24 / 10.35 / 10.62 | 149.7 |
+| confirmation (20 seeds, iteration 3 data) | none | 0/20 / 0/20 / 0/20 | none (no wins) | 20/20 (all stage1_boss = ruins_boss, 5-6 rooms cleared) | 10.54 / 10.43 / 10.41 | 160.0 (weak 160.0, typical 153.4, skilled 151.1) |
+
+### BENCH_MD tables (20 seeds, verbatim)
+
+**weak**
+
+| seed | outcome | died in | total min | max room s | starved % | rooms cleared |
+|---|---|---|---|---|---|---|
+| 20261022 | dead | stage1_boss | 10.611 | 140.6 | 9.875 | 5 |
+| 20261023 | dead | stage1_boss | 9.848 | 117.6 | 9.597 | 5 |
+| 20261024 | dead | stage1_boss | 13.245 | 145.517 | 10.162 | 6 |
+| 20261025 | dead | stage1_boss | 10.914 | 117.583 | 10.671 | 6 |
+| 20261026 | dead | stage1_boss | 13.288 | 139.95 | 10.731 | 6 |
+| 20261027 | dead | stage1_boss | 10.644 | 149.717 | 10.311 | 5 |
+| 20261028 | dead | stage1_boss | 11.901 | 137.867 | 10.025 | 5 |
+| 20261029 | dead | stage1_boss | 12.776 | 140.9 | 11.294 | 6 |
+| 20261030 | dead | stage1_boss | 10.357 | 131.583 | 9.961 | 5 |
+| 20261031 | dead | stage1_boss | 9.582 | 160.0 | 10.538 | 5 |
+| 20261032 | dead | stage1_boss | 10.912 | 128.067 | 10.703 | 6 |
+| 20261033 | dead | stage1_boss | 11.976 | 143.95 | 10.525 | 6 |
+| 20261034 | dead | stage1_boss | 12.475 | 144.483 | 10.536 | 5 |
+| 20261035 | dead | stage1_boss | 11.944 | 141.483 | 11.328 | 6 |
+| 20261036 | dead | stage1_boss | 9.907 | 124.883 | 10.654 | 5 |
+| 20261037 | dead | stage1_boss | 10.524 | 113.483 | 9.87 | 5 |
+| 20261038 | dead | stage1_boss | 10.33 | 143.283 | 10.772 | 5 |
+| 20261039 | dead | stage1_boss | 12.913 | 138.2 | 10.906 | 6 |
+| 20261040 | dead | stage1_boss | 10.248 | 133.317 | 9.339 | 5 |
+| 20261041 | dead | stage1_boss | 12.808 | 152.233 | 10.826 | 6 |
+
+**typical**
+
+| seed | outcome | died in | total min | max room s | starved % | rooms cleared |
+|---|---|---|---|---|---|---|
+| 20261022 | dead | stage1_boss | 10.801 | 139.933 | 9.965 | 5 |
+| 20261023 | dead | stage1_boss | 10.469 | 136.817 | 9.348 | 5 |
+| 20261024 | dead | stage1_boss | 13.06 | 139.667 | 10.451 | 6 |
+| 20261025 | dead | stage1_boss | 12.015 | 132.667 | 9.799 | 6 |
+| 20261026 | dead | stage1_boss | 12.515 | 139.35 | 11.032 | 6 |
+| 20261027 | dead | stage1_boss | 11.281 | 143.017 | 10.249 | 5 |
+| 20261028 | dead | stage1_boss | 10.946 | 139.75 | 10.635 | 5 |
+| 20261029 | dead | stage1_boss | 12.468 | 143.483 | 11.211 | 6 |
+| 20261030 | dead | stage1_boss | 10.168 | 125.9 | 9.714 | 5 |
+| 20261031 | dead | stage1_boss | 9.098 | 127.333 | 10.869 | 5 |
+| 20261032 | dead | stage1_boss | 12.59 | 130.667 | 9.857 | 6 |
+| 20261033 | dead | stage1_boss | 11.595 | 136.833 | 10.532 | 6 |
+| 20261034 | dead | stage1_boss | 11.112 | 140.583 | 11.228 | 5 |
+| 20261035 | dead | stage1_boss | 12.363 | 140.267 | 11.377 | 6 |
+| 20261036 | dead | stage1_boss | 10.406 | 135.767 | 9.977 | 5 |
+| 20261037 | dead | stage1_boss | 9.803 | 115.333 | 10.251 | 5 |
+| 20261038 | dead | stage1_boss | 10.771 | 139.217 | 10.407 | 5 |
+| 20261039 | dead | stage1_boss | 13.273 | 153.433 | 10.919 | 6 |
+| 20261040 | dead | stage1_boss | 9.871 | 123.217 | 9.287 | 5 |
+| 20261041 | dead | stage1_boss | 13.134 | 146.117 | 10.926 | 6 |
+
+**skilled**
+
+| seed | outcome | died in | total min | max room s | starved % | rooms cleared |
+|---|---|---|---|---|---|---|
+| 20261022 | dead | stage1_boss | 9.382 | 139.783 | 10.844 | 5 |
+| 20261023 | dead | stage1_boss | 10.442 | 116.067 | 9.2 | 5 |
+| 20261024 | dead | stage1_boss | 12.531 | 140.267 | 10.46 | 6 |
+| 20261025 | dead | stage1_boss | 11.036 | 115.817 | 10.25 | 6 |
+| 20261026 | dead | stage1_boss | 13.444 | 146.717 | 10.838 | 6 |
+| 20261027 | dead | stage1_boss | 11.512 | 144.9 | 10.358 | 5 |
+| 20261028 | dead | stage1_boss | 11.008 | 140.417 | 10.783 | 5 |
+| 20261029 | dead | stage1_boss | 13.134 | 144.267 | 11.077 | 6 |
+| 20261030 | dead | stage1_boss | 10.027 | 111.667 | 9.666 | 5 |
+| 20261031 | dead | stage1_boss | 9.949 | 125.933 | 10.047 | 5 |
+| 20261032 | dead | stage1_boss | 11.198 | 128.067 | 10.301 | 6 |
+| 20261033 | dead | stage1_boss | 12.689 | 136.867 | 10.071 | 6 |
+| 20261034 | dead | stage1_boss | 12.169 | 139.883 | 10.78 | 5 |
+| 20261035 | dead | stage1_boss | 13.079 | 142.667 | 10.831 | 6 |
+| 20261036 | dead | stage1_boss | 9.722 | 115.317 | 10.053 | 5 |
+| 20261037 | dead | stage1_boss | 9.853 | 135.633 | 10.06 | 5 |
+| 20261038 | dead | stage1_boss | 11.368 | 142.267 | 10.62 | 5 |
+| 20261039 | dead | stage1_boss | 13.338 | 143.15 | 10.949 | 6 |
+| 20261040 | dead | stage1_boss | 9.993 | 121.3 | 9.22 | 5 |
+| 20261041 | dead | stage1_boss | 12.846 | 151.133 | 11.094 | 6 |
+
+| build | wins | win total min (median/min/max) | dies stage 1 or first boss | max room s | starved % median | starved % max |
+|---|---|---|---|---|---|---|
+| weak | 0/20 | - | 20/20 | 160.0 | 10.537 | 11.328 |
+| typical | 0/20 | - | 20/20 | 153.433 | 10.429 | 11.377 |
+| skilled | 0/20 | - | 20/20 | 151.133 | 10.409 | 11.094 |
+
+| target | weak | typical | skilled |
+|---|---|---|---|
+| winning run 30-40 min sim | n/a | NO (median 0.0 min, 0 wins) | NO (median 0.0 min, 0 wins) |
+| weak build dies in stage 1 or at the first boss on most seeds | PASS (20/20 dead early, need 11) | n/a | n/a |
+| no room > 4 min | PASS (max 160.0 s) | PASS (max 153.433 s) | PASS (max 151.133 s) |
+| mana-starved < 20% | PASS (median 10.537%) | PASS (median 10.429%) | PASS (median 10.409%) |
+
+| room | n | median s | min s | max s | median HP lost | min HP lost | max HP lost |
+|---|---|---|---|---|---|---|---|
+| ruins_boss | 60 | 69.933 | 42.333 | 128.267 | 92.335 | 65.16 | 115.6 |
+| ruins_c01 | 36 | 106.108 | 103.317 | 110.7 | 0.68 | 0.0 | 8.16 |
+| ruins_c02 | 36 | 141.192 | 136.833 | 149.717 | 1.7 | 0.0 | 19.38 |
+| ruins_c03 | 36 | 77.592 | 69.317 | 110.533 | 11.05 | 3.64 | 21.06 |
+| ruins_c04 | 48 | 124.717 | 112.4 | 160.0 | 9.73 | 5.5 | 22.36 |
+| ruins_c05 | 39 | 89.667 | 83.45 | 97.35 | 8.68 | 3.36 | 19.19 |
+| ruins_c06 | 42 | 114.483 | 106.35 | 132.667 | 19.6 | 11.7 | 30.06 |
+| ruins_c07 | 45 | 86.633 | 75.95 | 114.983 | 7.6 | 2.16 | 12.8 |
+| ruins_c08 | 45 | 117.85 | 109.4 | 135.633 | 18.92 | 11.43 | 27.05 |
+
+### Per-encounter sim seconds (20 seeds, 3 builds pooled)
+
+From the AD_DEMO_BENCH JSON (`rooms[].sim_seconds`). Combat rooms: only rooms with outcome `cleared` (327 clears). The ruins_boss rows are fights the player lost (all 60 runs die there), so the time is the time until death, not a clear time.
+
+| encounter | n | median s | min s | max s | target s | status |
+|---|---|---|---|---|---|---|
+| combat rooms (ruins_c01..c08, cleared) | 327 | 110.4 | 69.3 | 160.0 | 90-150 | median in window; 73% of clears inside 90-150 s; per-room medians c03 77.6, c05 89.7, c07 86.6 below it and c04 max 160.0 above it: NOT MET strictly |
+| optional room cistern_challenge_v1 | 0 | not reached | - | - | 60-120 | NOT MEASURED |
+| mini-boss (proxy: optional room cistern_challenge_v1; the bench has no separate mini-boss timing) | 0 | not reached | - | - | 60-120 | NOT MEASURED |
+| ruins_boss (time until player death) | 60 | 69.9 | 42.3 | 128.3 | 120-180 | NOT MET |
+| cistern_boss (final) | 0 | not reached | - | - | 150-210 | NOT MEASURED |
+
+`ruins_treasure` (non-combat) was cleared in all 40 runs that visited it. ruins_boss HP lost by the player: median 92.3, min 65.2, max 115.6.
+
+### BEFORE / AFTER per target
+
+Before = AD-169 kept iteration (4 seeds, slow bench). After = AD-175 iteration 3 data, 20 seeds.
+
+| target | before (AD-169 kept, 4 seeds) | after (20 seeds) | MET / NOT MET |
+|---|---|---|---|
+| winning run 30-40 min sim | typical 7.49 min, skilled 7.94 min | 0 wins, runs end at 9.1-13.4 min | NOT MET |
+| combat rooms 90-150 s | 17-41 s (per-room medians 17.7-34.7) | median 110.4 s, range 69.3-160.0 s, 73% of clears inside | NOT MET (median in window; edges outside) |
+| optional room 60-120 s | 17-76 s (median 49-67) | not reached | NOT MET (not measured) |
+| mini-boss 60-120 s | not measured | not measured | NOT MET (not measured) |
+| ruins_boss 120-180 s | 26-49 s (median 34-39) | 42.3-128.3 s, median 69.9 (player dies) | NOT MET |
+| cistern_boss 150-210 s | 45-113 s (median 59-87) | not reached | NOT MET (not measured) |
+| mana-starved < 20% median | 16.0 / 10.4 / 10.5 | 10.54 / 10.43 / 10.41 | MET |
+| weak dies in stage 1 or at ruins_boss >= 11/20 | 0/4 | 20/20 | MET (trivially: all builds die there) |
+| typical wins >= 10/20 | 3/4 | 0/20 | NOT MET |
+| skilled wins >= 15/20 | 4/4 | 0/20 | NOT MET |
+| no room > 4 min | 113.0 s | 160.0 s | MET |
+
+### **TARGETS NOT MET**
+
+Per-target table: see "BEFORE / AFTER per target" above. 3 of 11 rows are MET (mana-starved, weak early death, no room > 4 min); combat rooms are met only on the median and the other 7 rows are NOT MET; the stop rule applies, no further iteration was run. Best data (iteration 3) is kept unchanged.
+
+Root cause: at iteration 3 the ruins_warden (HP 9000, damage 12/16) kills every build in a median 69.9 s, so no run reaches the optional room, stage 2 or cistern_boss, and no win can happen. Combat-room pacing is essentially at target.
+
+Next lever (concrete, in this order):
+
+1. `world/data/run_v2.json` `bosses.ruins_warden.hp` 9000 -> 19000 (x2.1 from 69.9 s to about 147 s, inside 120-180 s).
+2. `world/data/run_v2.json` `bosses.ruins_warden.radial_damage` 12 -> 4 and `shot_damage` 16 -> 6, so typical and skilled survive about 150 s (they lose about 1.3 HP/s today). Keep the weak build dying at the ruins boss or in stage 1: do not hand it the merchant HP upgrades; if it survives, raise these two values to 6/9 and re-measure.
+3. Then measure what no run has reached yet: `bosses.cistern_boss.hp` (9500) and its damage, `cistern_challenge_v1`, and the mini-boss, with an 8-seed iteration before another 20-seed confirmation. Scale cistern_boss damage the same way as the ruins boss.
+4. Optional: `combat/combat_tuning_v1.json` enemies.*.hp about x1.15 for the short rooms ruins_c03, c05, c07 (they are the rooms under 90 s).
+5. `tests/bench/boss_pacing_bench.gd` (old 90-180 s final-boss window) is not part of the suites and was not run.
+
+### Suites (frozen fixture from AD-167, `tests/fixtures/balance_frozen/`, unchanged)
+
+Command: `python3 scripts/validate_godot.py --godot /usr/local/bin/godot` (under the host lock; about 10 min wall). Final result: exit 0, deterministic suite `TEST SUMMARY: 21874 passed / 0 failed / 70 suites`; import, navigation, M1/M2/M3 UI smokes and the M4 40-target stress profile PASS. The negative failure probe prints `1 failed` by design (`intentional failure probe`) and counts as PASS (exit=1 expected). The golden/scenario fixture `tests/fixtures/balance_frozen/` is unchanged. Before the test fixes below, the same run gave 21818 passed / 7 failed plus an M3 UI smoke timeout.
+
+All failures were caused only by live-balance dependence (fixed kill damage of 1000 against the new enemy HP such as bone_thrall 2990, or fixed explode/buff values against the new damage); none showed a real defect. Fixed by wrapping the affected parts in `t.with_frozen_balance(...)` (as AD-167 did), assertions unchanged:
+
+| file | wrapped part |
+|---|---|
+| tests/test_m3_core.gd | whole `run` body (`_body`): TASK-036 door open / exit unlocked, TASK-041 rune reward |
+| tests/test_ad_enemy_v2.gd | `_explode_on_death`, `_support_buff` (AD-136) |
+| tests/test_m4_reactions.gd | `_reward_after_kill` (TASK-050 one reward after kill; found on the second validate run) |
+| tests/run_ui_smoke.gd | `TestContext.set_frozen_balance(true)` at start of `_run` (M3 UI smoke: first room clear by 1000-damage kill) |
+
+`tests/test_ad_minibosses.gd` was not changed: it passes on the live data (mini-boss HP is 2000 since iteration 1, and the scripted kills still finish inside the 6000-tick limit). `tests/bench/boss_pacing_bench.gd` is not part of the suites and was not run.

@@ -14,8 +14,8 @@ func run(t) -> void:
 	_phase_walls(t)
 	_summon(t)
 	_shield_front(t)
-	_explode_on_death(t)
-	_support_buff(t)
+	t.with_frozen_balance(func(): _explode_on_death(t)) # AD-175: fixed explode/kill values assume the frozen enemy balance
+	t.with_frozen_balance(func(): _support_buff(t))
 	_composed_determinism(t)
 	_registry(t)
 	_registry_v2(t)
