@@ -117,3 +117,32 @@ Inside `sim.step` (SpellRunner.advance_one_tick), as a share of the whole tick: 
 | 5 | player command issue | `combat/combat_session.gd:issue` (called from `RunFlow.step`) | 4-6% | Profile in step 2. This is the probe's per-tick cast command, so it is partly probe workload. Fix only if it is not the compile or validate path called for every cast. |
 
 **Scope notes.** The trace storage lives in `debug/debug_trace.gd`, which is outside the allowed edit scope. `filter_records` deep-copies each matching entry (`entry.duplicate(true)`) and `snapshot()` copies the whole array. Hotspots 1 and 2 can be fixed inside `combat/combat_session.gd` using cursors over the records. Reading the trace through `snapshot()` would still copy it, so a clean fix needs a cheap read API on the trace (a size or kind-count accessor, or a `filter_records` with a start index). Hotspot 3 sits in `world/run_flow.gd`, also outside the allowed scope. If it stays out of scope, `CombatSession` can expose the per-tick reaction count that `RunFlow` reads. Both points need a decision from the planner before step 2.
+
+### Step 4/4: after-state (before/after)
+
+Date 2026-11-08, after-state commit `8f55aa4` (fixes `ac9988f`..`8f55aa4`), baseline commit `1cbba25`. Same command, same rooms (`--rooms=ruins_c07,cistern_p10`, which still runs all four target rooms), 3 runs, median per room, 600 ticks, seed 20261022.
+
+**Host load.** Baseline: 1-minute load 0.70 / 1.93 / 2.53 (run 1 started at 0.60-0.70; later values include the probe itself). After: waited until the load fell under 1.0 (it reached 0.95 after the wait), then `AD_DEMO_PERF_HOST` logged 0.87 / 0.94 / 0.91. The two states differ by well under 0.5, so the comparison is fair and no baseline worktree re-measure was needed. The host is not fully idle (shared, load around 0.9), so treat it as "near idle", not idle.
+
+| room | base p50 ms | base p95 ms | base max ms | after p50 ms | after p95 ms | after max ms | p95 reduction | vs 50% |
+|---|---|---|---|---|---|---|---|---|
+| cistern_boss | 42.331 | 80.193 | 108.424 | 9.489 | 12.533 | 14.655 | 84.4% | PASS |
+| ruins_boss | 34.370 | 93.125 | 128.097 | 6.364 | 10.288 | 12.913 | 89.0% | PASS |
+| ruins_c07 | 39.087 | 95.904 | 126.372 | 7.231 | 11.334 | 19.638 | 88.2% | PASS |
+| cistern_p10 | 51.687 | 131.433 | 183.529 | 12.037 | 16.299 | 22.386 | 87.6% | PASS |
+
+All four rooms reach the >= 50% p95 reduction target. Tick cost no longer grows with the trace (cistern_p10 p50 first 100 ticks 13.9 ms, last 100 ticks 11.8 ms).
+
+**Fixes mapped to the top-5 hotspots.**
+
+| # | hotspot | status | fix |
+|---|---|---|---|
+| 1 | `_audio_step` trace re-filtering | fixed | by-type trace index plus a `status_seen` cursor (`ac9988f`); resets if the trace is cleared |
+| 2 | `filter_records("reaction")` in `CombatSession.step` | fixed | same index and incremental counting (`ac9988f`) |
+| 3 | `filter_records("reaction")` in `RunFlow.step` | not fixed | `world/run_flow.gd` is out of scope, so this still scans per tick. Follow-up. |
+| 4 | `sim.step` | partly fixed | `TargetStore.all()` cached (`490974e`), projectile homing flag cached (`e04ad44`), per-hit deep copies dropped (`ccddb93`), root essence/form ids memoized and empty `feedback`, `status`, `visuals` and `recent_damage` filters skipped (`971349f`, `8f55aa4`) |
+| 5 | `session.issue` | not separately targeted | partly probe workload; its cost fell with the other changes. |
+
+**Left for follow-up.** Remaining cost is not re-profiled in this step because the target was met. Known candidates outside the allowed files: the `RunFlow.step` reaction scan, and `navigate_direction` visibility-graph search per enemy (`world/arena_geometry.gd`, `combat/enemy_behaviours/`).
+
+**Budget verdict.** The 4 ms budget still FAILS in all four rooms (p95 10.3-16.3 ms). That verdict is host-specific: Neoverse-N1 (aarch64, 2 cores), not the GDD reference hardware. The AD-158 numbers were taken on a shared host, so the comparison base is this section's baseline, not AD-158.
