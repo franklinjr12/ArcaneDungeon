@@ -58,8 +58,18 @@ func _has_flag(flag: String) -> bool:
 
 func _run() -> void:
 	_record_trace = _has_flag("--trace")
+	if _has_flag("--summarize"):
+		_summarize()
+		return
+	if int(_option("--jobs=", "1")) > 1:
+		_spawn_jobs()
+		return
 	if ".." in _option("--seeds=", ""):
 		_chunk()
+		return
+	if _option("--jobs=", "") != "":
+		printerr("AD_DEMO_BENCH --jobs needs --seeds=A..B")
+		quit(1)
 		return
 	var seeds: Array = SEEDS.slice(0, clampi(int(_option("--seeds=", str(SEEDS.size()))), 1, SEEDS.size()))
 	var names: Array = []
@@ -104,21 +114,30 @@ func _fingerprint() -> String:
 		text += FileAccess.get_md5(path)
 	return text.md5_text()
 
-func _chunk() -> void:
+## Parses --seeds=A..B into [A, B]; empty array (after printerr) when it is missing or invalid.
+func _span() -> Array:
 	var span: PackedStringArray = _option("--seeds=", "").split("..")
 	if span.size() != 2 or not span[0].is_valid_int() or not span[1].is_valid_int() or int(span[0]) < 0 or int(span[1]) < int(span[0]) or int(span[1]) >= SEEDS.size():
 		printerr("AD_DEMO_BENCH bad --seeds=A..B (0-based inclusive, max %d)" % (SEEDS.size() - 1))
-		quit(1)
-		return
+		return []
+	return [int(span[0]), int(span[1])]
+
+func _build_names() -> Array:
 	var names: Array = []
 	for build in _option("--builds=", ",".join(BUILDS.keys())).split(","):
 		if BUILDS.has(build):
 			names.append(build)
 	if names.is_empty():
 		printerr("AD_DEMO_BENCH no valid builds selected")
+	return names
+
+func _chunk() -> void:
+	var span: Array = _span()
+	var names: Array = _build_names()
+	if span.is_empty() or names.is_empty():
 		quit(1)
 		return
-	var dir := ProjectSettings.globalize_path(_option("--results=", "user://bench_results"))
+	var dir := _results_dir()
 	DirAccess.make_dir_recursive_absolute(dir)
 	var print_id := _fingerprint()
 	for build in names:
@@ -145,6 +164,127 @@ func _chunk() -> void:
 				quit(1)
 				return
 			print("AD_DEMO_BENCH_WALL seed=%d build=%s wall_s=%.1f outcome=%s" % [run_seed, build, wall, run["outcome"]])
+	quit(0)
+
+func _results_dir() -> String:
+	return ProjectSettings.globalize_path(_option("--results=", "user://bench_results"))
+
+## --jobs=N: the parent plays nothing; it splits the seed range into N contiguous ranges and runs one child process per range.
+func _spawn_jobs() -> void:
+	var span: Array = _span()
+	var names: Array = _build_names()
+	if span.is_empty() or names.is_empty():
+		printerr("AD_DEMO_BENCH --jobs needs --seeds=A..B")
+		quit(1)
+		return
+	var count: int = span[1] - span[0] + 1
+	var jobs: int = clampi(int(_option("--jobs=", "1")), 1, count)
+	var dir := _results_dir()
+	DirAccess.make_dir_recursive_absolute(dir)
+	var pids: Array = []
+	var start: int = span[0]
+	for j in jobs:
+		var size: int = count / jobs + (1 if j < count % jobs else 0)
+		var args := ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--script", "res://tests/bench/run_bench.gd", "--",
+			"--seeds=%d..%d" % [start, start + size - 1], "--builds=" + ",".join(names), "--results=" + dir]
+		if _record_trace:
+			args.append("--trace")
+		var pid := OS.create_process(OS.get_executable_path(), args)
+		if pid == -1:
+			printerr("AD_DEMO_BENCH cannot start child for seeds %d..%d" % [start, start + size - 1])
+			quit(1)
+			return
+		pids.append(pid)
+		start += size
+	var failed := false
+	for pid in pids:
+		while OS.is_process_running(pid):
+			OS.delay_msec(500)
+		var code := OS.get_process_exit_code(pid)
+		if code != 0:
+			printerr("AD_DEMO_BENCH child %d exited %d" % [pid, code])
+			failed = true
+	quit(1 if failed else 0)
+
+func _restore_ints(d: Dictionary, keys: Array) -> void:
+	for key in keys:
+		if d.has(key):
+			d[key] = int(d[key])
+
+func _summarize() -> void:
+	var names: Array = _build_names()
+	var lo := 0
+	var hi: int = SEEDS.size() - 1
+	if _option("--seeds=", "") != "":
+		var span: Array = _span()
+		if span.is_empty():
+			quit(1)
+			return
+		lo = span[0]
+		hi = span[1]
+	if names.is_empty():
+		quit(1)
+		return
+	var wanted: Array = SEEDS.slice(lo, hi + 1)
+	var dir := _results_dir()
+	var files := Array(DirAccess.get_files_at(dir)).filter(func(n): return n.ends_with(".json"))
+	files.sort()
+	var kept: Array = []
+	var prints := {}
+	for name in files:
+		var data = JSON.parse_string(FileAccess.get_file_as_string(dir + "/" + name))
+		if not (data is Dictionary) or not (data.get("run") is Dictionary):
+			continue
+		var run: Dictionary = data["run"]
+		if not names.has(run.get("build", "")) or not wanted.has(int(run.get("seed", -1))):
+			continue
+		_restore_ints(run, ["seed", "rooms_cleared", "tick_rate"])
+		for room in run.get("rooms", []):
+			_restore_ints(room, ["stage", "ticks", "walk_ticks", "mana_starved_ticks", "idle_ticks", "no_sight_ticks", "hits", "waves_spawned", "enemies_spawned"])
+			for slot in room.get("casts", {}):
+				room["casts"][slot] = int(room["casts"][slot])
+			for kind in room.get("ttk_by_kind", {}):
+				_restore_ints(room["ttk_by_kind"][kind], ["n"])
+		prints[str(data.get("fingerprint", ""))] = true
+		kept.append({"run": run, "wall": float(data.get("wall_seconds", 0.0))})
+	if kept.is_empty():
+		printerr("AD_DEMO_BENCH no result files match in " + dir)
+		quit(1)
+		return
+	if prints.size() > 1:
+		printerr("AD_DEMO_BENCH stale mix: %d distinct fingerprints in %s" % [prints.size(), dir])
+		quit(1)
+		return
+	var runs: Array = []
+	var have := {}
+	var wall_total := 0.0
+	for build in names:
+		var mine := kept.filter(func(k): return k["run"]["build"] == build)
+		mine.sort_custom(func(a, b): return a["run"]["seed"] < b["run"]["seed"])
+		for k in mine:
+			runs.append(k["run"])
+			have["%d_%s" % [k["run"]["seed"], build]] = true
+			wall_total += k["wall"]
+	var missing: Array = []
+	for build in names:
+		for run_seed in wanted:
+			if not have.has("%d_%s" % [run_seed, build]):
+				missing.append("%d_%s" % [run_seed, build])
+	var result := {"seeds": wanted, "builds": names, "runs": runs}
+	var partial := ""
+	if not missing.is_empty():
+		partial = "AD_DEMO_BENCH_PARTIAL have=%d want=%d missing=%s" % [runs.size(), wanted.size() * names.size(), ",".join(missing)]
+		print(partial)
+	print("AD_DEMO_BENCH:" + JSON.stringify(result, "", true))
+	print("BENCH_MD_BEGIN")
+	if partial != "":
+		print(partial)
+	print(_markdown(result))
+	print("BENCH_MD_END")
+	print("DIAG_MD_BEGIN")
+	print(_diag_markdown(result))
+	print("DIAG_MD_END")
+	print("AD_DEMO_BENCH_WALL_TOTAL runs=%d total_s=%.1f mean_s=%.1f" % [runs.size(), wall_total, wall_total / runs.size()])
 	quit(0)
 
 func _r(value: float) -> float:
