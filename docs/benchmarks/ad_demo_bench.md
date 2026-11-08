@@ -501,3 +501,89 @@ Next levers, concrete (all depend on the code fix named in the previous section;
 4. Weak build: it must die in stage 1 or at ruins_boss, but dies at cistern_boss. Raise `world/data/run_v2.json` bosses.ruins_warden radial_damage/shot_damage (7/12 toward 12/16), or lower stage-1 room survivability, and re-measure on 20 seeds.
 
 Also: `tests/bench/boss_pacing_bench.gd` still checks the old 90-180 s final-boss window (the final boss target is now 150-210 s). It is not part of the suites and out of scope here.
+
+## AD-175 pacing tuning round 2
+
+Data only. All values below are PROPOSED; not approved balance. **Every number in this section is an 8-seed number (seeds 20261022-20261029, indices 0..7), not a 20-seed number.** Baseline is the AD-169 kept data (enemy damage, mana regen, merchant and wave layout unchanged by this step).
+
+### Key changes (old -> new)
+
+Iteration 1: lever 2 (enemy hp), lever 4 (boss hp), mini-boss hp, all about x3.5. No damage value was touched.
+
+| file | key | old | new | lever | why |
+|---|---|---|---|---|---|
+| combat/combat_tuning_v1.json | enemies.bone_thrall.hp | 370 | 1300 | 2 enemy | combat rooms 90-150 s |
+| combat/combat_tuning_v1.json | enemies.fallen_adept.hp | 195 | 700 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.grave_hound.hp | 210 | 750 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.ossuary_shieldbearer.hp | 150 | 525 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.wailing_spirit.hp | 55 | 190 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.corpse_bloat.hp | 170 | 600 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.cistern_slime.hp | 350 | 1225 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.cistern_slimelet.hp | 90 | 315 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.drowned_acolyte.hp | 155 | 540 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.deep_eel.hp | 180 | 630 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.rust_golem.hp | 325 | 1140 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.lantern_wisp.hp | 115 | 400 | 2 enemy | same |
+| combat/combat_tuning_v1.json | enemies.storm_crystal.hp | 215 | 750 | 2 enemy | same |
+| combat/combat_tuning_v1.json | mini_bosses.cistern_crystal_elite.hp | 700 | 2000 | 4 boss | mini-boss 60-120 s |
+| world/data/run_v2.json | bosses.ruins_warden.hp | 2600 | 9000 | 4 boss | ruins boss 120-180 s |
+| world/data/run_v2.json | bosses.cistern_boss.hp | 3200 | 9500 | 4 boss | final boss 150-210 s |
+
+Not changed: the legacy top-level `boss.hp` (590), every enemy/boss damage value, `magic/data/magic_balance_v1.json`, waves, `tests/fixtures/balance_frozen/`.
+
+### Bench run
+
+```
+godot --headless --path . --import
+G --seeds=0..3 --jobs=2 --results=/tmp/ad175/iter1
+G --seeds=4..7 --jobs=2 --results=/tmp/ad175/iter1
+G --seeds=0..7 --summarize --results=/tmp/ad175/iter1
+```
+
+Results folder (not committed): `/tmp/ad175/iter1` (24 files, 8 seeds x 3 builds). Data commit: the commit titled "AD-175: iteration 1 HP levers and 8-seed bench" on branch task/AD-175-hermes-software-exec-ad (parent 859e6c8). `AD_DEMO_BENCH nondeterministic` did not appear; no `AD_DEMO_BENCH_PARTIAL`. Wall about 6 s per seed+build (fast bench, `record_trace=false`).
+
+### Iteration table
+
+| iter | data changed | wins (weak / typical / skilled) | median win min | weak early deaths | starved % median (weak / typ / skilled) | max room s |
+|---|---|---|---|---|---|---|
+| AD-169 kept (4 seeds, slow bench) | AD-169 step 1 values | 1/4 / 3/4 / 4/4 | typical 7.49, skilled 7.94 | 0/4 | 16.0 / 10.4 / 10.5 | 113.0 |
+| 1 (8 seeds) | enemies.*.hp x3.5, mini-boss hp 2000, ruins_warden 9000, cistern_boss 9500 | 0/8 / 0/8 / 0/8 | none (no wins) | 8/8 (all stage1_rooms) | 23.5 / 19.7 / 20.3 | 73.0 (weak 68.7, typical 69.9, skilled 73.0) |
+
+Outcome: all 24 runs died in stage 1 combat rooms (total run 0.45-2.93 min). No run reached ruins_boss, cistern_challenge_v1, stage 2 or cistern_boss, so those encounters have no measurement in iteration 1. Deaths by room: ruins_c03 4, ruins_c04 5, ruins_c08 6, ruins_c02 4, ruins_c07 2, ruins_c06 2, ruins_c05 1. Player max HP (150) carries over between rooms and enemy damage is unchanged, so about x3.5 longer fights deliver about x3.5 more damage per room.
+
+### Per-encounter sim seconds (8 seeds, 3 builds pooled)
+
+Cleared combat rooms only (31 clears out of 24 runs; the room each run died in is a partial fight and is excluded, its median is 3.6-36.9 s per room).
+
+| encounter | n | median s | min s | max s | target s | status |
+|---|---|---|---|---|---|---|
+| combat rooms (ruins_c01 / c02 / c04 / c05 / c06 / c07 / c08 cleared) | 31 | 51.7 (per-room medians 45.3-68.7) | 43.9 | 73.0 | 90-150 | NOT MET (below, but longer than AD-169's 17-41 s) |
+| optional room cistern_challenge_v1 (proxy for the mini-boss slot; the bench does not time the mini-boss separately) | 0 | not reached | - | - | 60-120 | NOT MEASURED |
+| mini-boss | 0 | not measured (no bench support) | - | - | 60-120 | NOT MEASURED |
+| ruins_boss | 0 | not reached | - | - | 120-180 | NOT MEASURED |
+| cistern_boss (final) | 0 | not reached | - | - | 150-210 | NOT MEASURED |
+
+Per-room cleared medians (s): ruins_c01 51.2 (n 6), ruins_c02 68.5 (2), ruins_c04 68.7 (5), ruins_c05 45.3 (8), ruins_c06 53.9 (1), ruins_c07 47.8 (5), ruins_c08 57.2 (4). ruins_c03 was never cleared. Enemy HP faced per room 8100-15600 at 9-12 enemies; player DPS 160-240; TTK median bone_thrall 12-14 s, fallen_adept 27-31 s, grave_hound 27-30 s.
+
+### BENCH_MD summary (8 seeds)
+
+| build | wins | win total min (median/min/max) | dies stage 1 or first boss | max room s | starved % median | starved % max |
+|---|---|---|---|---|---|---|
+| weak | 0/8 | - | 8/8 | 68.7 | 23.542 | 26.19 |
+| typical | 0/8 | - | 8/8 | 69.883 | 19.667 | 29.157 |
+| skilled | 0/8 | - | 8/8 | 73.017 | 20.299 | 25.734 |
+
+### Iteration 1 against the targets (8 seeds, not 20)
+
+| target | iteration 1 | status |
+|---|---|---|
+| winning run 30-40 min | no wins (runs end at 0.45-2.93 min) | NOT MET |
+| combat rooms 90-150 s | cleared rooms 43.9-73.0 s | NOT MET |
+| optional room 60-120 s / mini-boss 60-120 s | not reached / not measured | NOT MEASURED |
+| ruins_boss 120-180 s / cistern_boss 150-210 s | not reached | NOT MEASURED |
+| mana-starved < 20% median | 23.5 / 19.7 / 20.3 (weak / typical / skilled) | NOT MET (weak, skilled) |
+| weak dies in stage 1 or at ruins_boss | 8/8 | MET, but trivially: so does everyone |
+| typical wins >= 10/20, skilled >= 15/20 | 0/8, 0/8 | NOT MET (8-seed trend) |
+| no room > 4 min | max 73.0 s | MET |
+
+Reading for the next iteration: pure x3.5 HP makes stage 1 lethal for all builds before any boss is reached, yet cleared rooms are still only 44-73 s. HP alone cannot reach 90-150 s without enemy damage dropping with it (as AD-169 did for its x2-4 step), or the player getting more survivability (merchant `max_hp_upgrade_amount`, regen). Not decided here; iteration 2 should lower enemy damage roughly in proportion to the HP increase and re-measure starvation (longer fights raised it above 20% for weak and skilled).
