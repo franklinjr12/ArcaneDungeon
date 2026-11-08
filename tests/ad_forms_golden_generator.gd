@@ -12,6 +12,7 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	preload("res://tests/test_context.gd").set_frozen_balance(true)
 	var outputs: Dictionary = {}
 	for scenario in SCENARIOS:
 		outputs[scenario] = run_scenario(scenario)

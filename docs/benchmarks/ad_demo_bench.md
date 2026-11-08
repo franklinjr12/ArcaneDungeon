@@ -303,3 +303,32 @@ BENCH_MD_END
 - The weak build reaches the stage 2 boss (likely because the starter spells out-damage stage 1 enemies; not verified). It would need higher stage 1 and ruins_boss damage plus lower starter spell damage. Enemy/boss damage keys are pinned by the TASK-035, AD-136 and AD-142 golden traces.
 - Mana-starved needs regen above 0.3/tick or cheaper starter spells. `regen_mana_per_tick` is read by the TASK-035 golden traces and AD-142's fight-length checks.
 - To unblock: regenerate those golden traces (tests/ad_*_golden_generator.gd and the TASK-035 expectations) in a follow-up that is allowed to edit tests, then apply: regen 0.9 or higher, enemy HP x4-x10, boss HP x3, with matching damage changes, and re-run the bench.
+
+## Boss pacing (AD-167)
+
+The Drowned Archivist fight-length window (90-180 s, builds 0 and 2, live balance data) moved out of `tests/test_ad_final_boss.gd` so unit tests can run on the frozen balance fixture. Run:
+
+```
+/usr/local/bin/godot --headless --path . --script res://tests/bench/boss_pacing_bench.gd
+```
+
+Prints `BOSS_PACING build=<n> tick=<t> seconds=<s> target=90-180 PASS|FAIL` per build and exits 1 if any build is out of range.
+
+## AD-167 frozen balance proof
+
+Golden and scenario suites load `tests/fixtures/balance_frozen/` via `TestContext.with_frozen_balance`; live balance data no longer breaks them.
+
+Commands:
+
+```
+godot --headless --path . --import
+python3 scripts/validate_godot.py --godot /usr/local/bin/godot
+godot --headless --path . --script res://tests/run_tests.gd
+```
+
+| Live data | Suite result | Validate exit |
+|---|---|---|
+| current (`regen_mana_per_tick` 0.3) | 19395 passed / 0 failed, 69 suites | 0 |
+| scratch `regen_mana_per_tick` 0.9 (not committed) | 19211 passed / 1 failed / 69 suites | 1 (only that failure; the intentional failure probe is expected) |
+
+AD-156 saw 23 failures with this change; every golden/scenario check is now green and the m2 baseline replay did not fail. The one remaining failure is `AD-167 frozen magic_balance_v1.json equals live` (`tests/test_balance_frozen.gd`), a non-golden drift guard that deliberately flags the fixture differing from live data. When tuning is approved, refresh the fixture in the same change that lands the new values.

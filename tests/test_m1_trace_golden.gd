@@ -4,6 +4,9 @@ const Runner = preload("res://magic/runtime/spell_runner.gd")
 const Golden = preload("res://tests/m1_trace_golden_generator.gd")
 
 func run(t) -> void:
+	t.with_frozen_balance(func(): _run_frozen(t))
+
+func _run_frozen(t) -> void:
 	var samples: Dictionary = t.fixture("m1_samples.json")
 	var expected: Dictionary = t.fixture("m1_runtime_traces_v1.json")
 	for scenario in ["split","pierce"]:
