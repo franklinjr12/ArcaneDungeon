@@ -255,6 +255,9 @@ func spawn_mini_boss(id: String, at: Vector2, elite: Dictionary = {}):
 	settings["elite_damage_multiplier"] = float(elite.get("damage_multiplier",1.0))
 	return spawn_boss(settings,at)
 
+## Root essence/manifestation ids per slot, keyed on the compiled plan object so a hot-swapped spell refreshes them.
+var _slot_cue_ids: Dictionary = {}
+
 func issue(command: Dictionary) -> Dictionary:
 	if state != "playing":
 		return {"accepted":false,"reason":"COMBAT_ENDED"}
@@ -264,9 +267,14 @@ func issue(command: Dictionary) -> Dictionary:
 	if slot >= 0:
 		var plan = sim.loadout.get_plan(slot)
 		if plan != null:
-			var root: Dictionary = plan.snapshot()["root"]
-			essence = str(root["essence"]["id"]).trim_prefix("essence.")
-			form_id = str(root.get("manifestation",{}).get("id",""))
+			var cached: Dictionary = _slot_cue_ids.get(slot,{})
+			if cached.is_empty() or cached["plan"] != plan:
+				var root: Dictionary = plan.snapshot()["root"]
+				cached = {"plan":plan,"essence":str(root["essence"]["id"]).trim_prefix("essence."),
+					"form":str(root.get("manifestation",{}).get("id",""))}
+				_slot_cue_ids[slot] = cached
+			essence = cached["essence"]
+			form_id = cached["form"]
 	var result: Dictionary = player.process_command(command)
 	if audio_sink.is_valid():
 		if player.dashes > _audio_dashes:
@@ -339,7 +347,8 @@ func step() -> void:
 		_notify("ARC x%d" % [new_reactions-reactions],sim.actor.position)
 		reactions = new_reactions
 	var age: int = sim.clock.tick-68
-	feedback = feedback.filter(func(v): return int(v["tick"]) >= age)
+	if not feedback.is_empty():
+		feedback = feedback.filter(func(v): return int(v["tick"]) >= age)
 	elapsed_frame_ms = float(Time.get_ticks_usec()-start_usec)/1000.0
 
 ## AD-020: derive audio cues from this tick's trace/AI changes. Reads only; mutates audio cursors.
