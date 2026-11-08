@@ -429,6 +429,8 @@ func _spawn_residue(burst_plan: Dictionary, origin: Vector2, context: Dictionary
 	_trace_spawn(context,field.id,origin)
 
 func _trace_spawn(ctx: Dictionary, effect_id: int, at: Vector2) -> void:
+	if not trace.enabled:
+		return
 	trace.record("spawn",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
 		"formula_id":ctx["formula_id"],"parent_effect_id":ctx["parent_effect_id"],
 		"effect_id":effect_id,"depth":ctx["depth"],"position":at,"tick":clock.tick})
@@ -518,10 +520,18 @@ func advance_one_tick() -> void:
 	_prune_chain_seen()
 	_tick_statuses()
 	if not visuals.is_empty():
-		visuals = visuals.filter(func(v): return int(v["until"]) > clock.tick)
+		var kept_visuals: Array = []
+		for v in visuals:
+			if int(v["until"]) > clock.tick:
+				kept_visuals.append(v)
+		visuals = kept_visuals
 	if not recent_damage.is_empty():
 		var min_tick: int = clock.tick-int(settings["sandbox"]["dps_window_ticks"])
-		recent_damage = recent_damage.filter(func(v): return int(v["tick"]) >= min_tick)
+		var kept_damage: Array = []
+		for v in recent_damage:
+			if int(v["tick"]) >= min_tick:
+				kept_damage.append(v)
+		recent_damage = kept_damage
 
 ## AD-143 Gravity Lens: orb hits pull the target toward the orbit centre (the caster) through the knockback impulse.
 func _gravity_pull(target_id: int) -> void:
@@ -625,9 +635,10 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 	_track_damage(float(result["damage"]))
 	if result.has("knockback"):
 		target.impulse += push*float(result["knockback"]["force"])
-	trace.record("hit",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
-		"formula_id":ctx["formula_id"],"effect_id":detail["effect_id"],
-		"target_id":target.id,"amount":roundi(float(result["damage"])),"tick":clock.tick})
+	if trace.enabled:
+		trace.record("hit",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],
+			"formula_id":ctx["formula_id"],"effect_id":detail["effect_id"],
+			"target_id":target.id,"amount":roundi(float(result["damage"])),"tick":clock.tick})
 	visuals.append({"kind":"hit","position":target.position,"radius":20.0,"essence":str(effect_plan["essence"]["id"]),"until":clock.tick+9})
 	for state_change in result["status_events"]:
 		trace.record("status",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],"formula_id":ctx["formula_id"],

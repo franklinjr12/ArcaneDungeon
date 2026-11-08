@@ -348,7 +348,11 @@ func step() -> void:
 		reactions = new_reactions
 	var age: int = sim.clock.tick-68
 	if not feedback.is_empty():
-		feedback = feedback.filter(func(v): return int(v["tick"]) >= age)
+		var kept_feedback: Array = []
+		for v in feedback:
+			if int(v["tick"]) >= age:
+				kept_feedback.append(v)
+		feedback = kept_feedback
 	elapsed_frame_ms = float(Time.get_ticks_usec()-start_usec)/1000.0
 
 ## AD-020: derive audio cues from this tick's trace/AI changes. Reads only; mutates audio cursors.
