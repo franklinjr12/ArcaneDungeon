@@ -7,6 +7,9 @@ const Merchant = preload("res://world/merchant.gd")
 const Session = preload("res://combat/combat_session.gd")
 const Editor = preload("res://magic/editor/spell_editor.gd")
 func run(t) -> void:
+	t.with_frozen_balance(func(): _body(t)) # AD-175: fixed 1000-damage kills assume the frozen enemy HP
+
+func _body(t) -> void:
 	var f = Flow.new(20261022)
 	t.check(f.initialized,"TASK-036 M3 configuration initializes")
 	t.equal(f.state,"fighting","TASK-036 entrance starts locked combat room")

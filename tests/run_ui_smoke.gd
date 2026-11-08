@@ -1,5 +1,6 @@
 extends SceneTree
 const SkinA = preload("res://ui/skin_a.gd")
+const TestContext = preload("res://tests/test_context.gd")
 var failures := 0
 func _initialize() -> void:
 	call_deferred("_run")
@@ -45,6 +46,7 @@ func _esc_event() -> InputEventKey:
 	return ev
 
 func _run() -> void:
+	TestContext.set_frozen_balance(true) # AD-175: scripted kills (1000 damage) assume the frozen enemy HP
 	var save = _install_save_sandbox()
 	var pack = load("res://scenes/run.tscn")
 	expect(pack is PackedScene,"M3 scene loadable")

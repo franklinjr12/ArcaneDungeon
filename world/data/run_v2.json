@@ -206,7 +206,7 @@
     "ruins_warden": {
       "kind": "undead_warden",
       "display_name": "Undead warden",
-      "hp": 2600,
+      "hp": 9000,
       "radius": 49,
       "position": [
         1030,
@@ -217,8 +217,8 @@
       "phase_threshold": 0.5,
       "second_phase_windup_ticks": 33,
       "radial_shots": 8,
-      "radial_damage": 7,
-      "shot_damage": 12,
+      "radial_damage": 12,
+      "shot_damage": 16,
       "shot_speed": 300,
       "shot_spread": 0,
       "telegraph_radius": 190
@@ -227,7 +227,7 @@
       "_note": "AD-142 PROPOSED numbers (Demo Plan default 'Drowned Archivist', pending Franklin)",
       "kind": "drowned_archivist",
       "display_name": "Drowned Archivist",
-      "hp": 3200,
+      "hp": 9500,
       "channel_resistances": {
         "fire": 0.8,
         "water": -0.2,
