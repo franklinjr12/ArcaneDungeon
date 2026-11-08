@@ -548,6 +548,7 @@ Results folder (not committed): `/tmp/ad175/iter1` (24 files, 8 seeds x 3 builds
 |---|---|---|---|---|---|---|
 | AD-169 kept (4 seeds, slow bench) | AD-169 step 1 values | 1/4 / 3/4 / 4/4 | typical 7.49, skilled 7.94 | 0/4 | 16.0 / 10.4 / 10.5 | 113.0 |
 | 1 (8 seeds) | enemies.*.hp x3.5, mini-boss hp 2000, ruins_warden 9000, cistern_boss 9500 | 0/8 / 0/8 / 0/8 | none (no wins) | 8/8 (all stage1_rooms) | 23.5 / 19.7 / 20.3 | 73.0 (weak 68.7, typical 69.9, skilled 73.0) |
+| 2 (8 seeds) | enemies.*.hp x2.3 more (x8 vs AD-169); normal-enemy damage x0.25 (damage/explode_damage); bosses, mini-boss, waves, regen unchanged | 0/8 / 0/8 / 0/8 | none (no wins) | 8/8 (all stage1_rooms; 0-4 rooms cleared) | 20.95 / 20.16 / 21.49 | 160.8 (weak 155.0, typical 158.8, skilled 160.8) |
 
 Outcome: all 24 runs died in stage 1 combat rooms (total run 0.45-2.93 min). No run reached ruins_boss, cistern_challenge_v1, stage 2 or cistern_boss, so those encounters have no measurement in iteration 1. Deaths by room: ruins_c03 4, ruins_c04 5, ruins_c08 6, ruins_c02 4, ruins_c07 2, ruins_c06 2, ruins_c05 1. Player max HP (150) carries over between rooms and enemy damage is unchanged, so about x3.5 longer fights deliver about x3.5 more damage per room.
 
@@ -587,3 +588,29 @@ Per-room cleared medians (s): ruins_c01 51.2 (n 6), ruins_c02 68.5 (2), ruins_c0
 | no room > 4 min | max 73.0 s | MET |
 
 Reading for the next iteration: pure x3.5 HP makes stage 1 lethal for all builds before any boss is reached, yet cleared rooms are still only 44-73 s. HP alone cannot reach 90-150 s without enemy damage dropping with it (as AD-169 did for its x2-4 step), or the player getting more survivability (merchant `max_hp_upgrade_amount`, regen). Not decided here; iteration 2 should lower enemy damage roughly in proportion to the HP increase and re-measure starvation (longer fights raised it above 20% for weak and skilled).
+
+### Iteration 2 (8 seeds, 3 builds)
+
+Data commit: the commit titled "AD-175: iteration 2 retune and 8-seed bench". Results folder (not committed): `/tmp/ad175/iter2` (24 files). Iteration 1 showed cleared rooms at 51.7 s median (target midpoint 120 s), so enemy HP was scaled by 120/51.7 = 2.3. Because stage 1 was already lethal at x3.5, normal-enemy damage was cut to x0.25 (the proportional compensation iteration 1 asked for). `game/data/difficulty_v1.json` enemy_damage was NOT used: `tests/test_ad_difficulty.gd` asserts every live preset value is 1.0, so changing it would turn a suite red. Per-enemy damage in `combat/combat_tuning_v1.json` was edited instead (lever 3 exception: the weak-survives-stage-1 branch does not apply, everyone dies).
+
+| key | old | new |
+|---|---|---|
+| enemies.bone_thrall.hp | 1300 | 2990 |
+| enemies.fallen_adept.hp | 700 | 1610 |
+| enemies.grave_hound.hp | 750 | 1725 |
+| enemies.ossuary_shieldbearer.hp | 525 | 1210 |
+| enemies.wailing_spirit.hp | 190 | 435 |
+| enemies.corpse_bloat.hp | 600 | 1380 |
+| enemies.cistern_slime.hp | 1225 | 2820 |
+| enemies.cistern_slimelet.hp | 315 | 725 |
+| enemies.drowned_acolyte.hp | 540 | 1240 |
+| enemies.deep_eel.hp | 630 | 1450 |
+| enemies.rust_golem.hp | 1140 | 2620 |
+| enemies.lantern_wisp.hp | 400 | 920 |
+| enemies.storm_crystal.hp | 750 | 1725 |
+| enemies.*.damage (bone_thrall, fallen_adept, grave_hound, shieldbearer, wailing_spirit, corpse_bloat, slime, slimelet, acolyte, deep_eel, rust_golem, storm_crystal; zeros stay 0) | 8, 6, 5, 16, 9, 18, 7, 4, 7, 11, 6 | x0.25: 2, 1.5, 1.25, 4, 2.25, 4.5, 1.75, 1, 1.75, 2.75, 1.5 |
+| enemies.corpse_bloat explode_damage | 22 | 5.5 |
+
+Cleared combat rooms (46 clears): median 117.6 s, min 76.2, max 160.8 (per room median: c01 116.9, c02 156.0, c03 85.6, c04 135.8, c05 98.5, c06 122.1, c07 98.8, c08 129.0). Length target is met except the 12-enemy rooms (c02, c04) which run long. Damage taken per room is still 6-150 HP (median about 40) against 150 HP total with no healing between rooms, so every run dies after 0-4 rooms (total 1.5-7.9 min). No run reaches ruins_boss, the optional room or stage 2, so those stay unmeasured.
+
+Reading for iteration 3: room length is right, survivability is not. About 8 HP per room is affordable, so normal-enemy damage needs about another x0.17. Mana-starved median is 20.2-21.5%, so regen 1.5 -> 1.8 (also shortens the 12-enemy rooms by about 10%). Weak must still die at ruins_boss once rooms are survivable, so ruins_warden damage goes to 12/16.
