@@ -9,6 +9,7 @@ const Flow = preload("res://world/run_flow.gd")
 const TargetStore = preload("res://combat/target_store.gd")
 const MagicTarget = preload("res://combat/magic_target.gd")
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
+const BaseGeometry = preload("res://world/arena_geometry.gd")
 const SEED := 20261022
 const BUDGET_MS := 4.0
 const PROXY_TARGET_MS := 8.0 ## game-design ruling 2026-11-08: VM proxy target until the reference PC is measured
@@ -124,7 +125,70 @@ func _check_equivalence() -> bool:
 		if got != want:
 			print("AD_EQUIV_FAIL sweep_walls case=%d start=%s finish=%s padding=%s walls=%s initial=%s want=%s got=%s" % [n,start,finish,padding,walls,initial,want,got])
 			return false
+	for room_id in ["cistern_boss","ruins_boss","ruins_c07","cistern_p10"]:
+		if not _check_geometry(rng,room_id):
+			return false
 	print("AD_EQUIV_PASS")
+	return true
+
+## AD-174: CachedGeometry (session.world) against a plain base Geometry holding copies of the same rects, exact ==.
+const GEOMETRY_CASES := 2500
+
+func _check_geometry(rng: RandomNumberGenerator, room_id: String) -> bool:
+	var flow = Flow.new(SEED,Flow.CONFIG_V2)
+	var idx := -1
+	for i in flow.rooms.size():
+		if str(flow.rooms[i]["id"]) == room_id:
+			idx = i
+	if idx < 0:
+		print("AD_EQUIV_FAIL geometry room missing ",room_id)
+		return false
+	flow.run.sequence_index = idx
+	flow._enter_current()
+	if flow.state != "fighting":
+		print("AD_EQUIV_FAIL geometry room state ",flow.state)
+		return false
+	var session = flow.session
+	var radii: Array = [session.sim.actor.radius]
+	for kind in session.data["enemies"].keys():
+		var radius := float(session.data["enemies"][kind]["radius"])
+		if not radii.has(radius):
+			radii.append(radius)
+	var fast = session.world
+	var plain := BaseGeometry.new({"width":fast.bounds.size.x,"height":fast.bounds.size.y,"walls":[]})
+	plain.bounds = fast.bounds
+	plain.walls = fast.walls.duplicate()
+	plain.ground_blockers = fast.ground_blockers.duplicate()
+	var cases := 0
+	var added := Rect2(Vector2(rng.randf_range(200.0,800.0),rng.randf_range(100.0,500.0)),Vector2(60.0,90.0))
+	for phase in ["base","append","erase"]:
+		if phase == "append":
+			fast.walls.append(added)
+			plain.walls.append(added)
+		elif phase == "erase":
+			fast.walls.erase(added)
+			plain.walls.erase(added)
+		for n in GEOMETRY_CASES:
+			var start := Vector2(rng.randf_range(-10.0,fast.bounds.end.x+10.0),rng.randf_range(-10.0,fast.bounds.end.y+10.0))
+			var finish := Vector2(rng.randf_range(0.0,fast.bounds.end.x),rng.randf_range(0.0,fast.bounds.end.y))
+			if n % 5 == 0:
+				finish = start+Vector2(rng.randf_range(-60.0,60.0),rng.randf_range(-60.0,60.0))
+			var radius: float = radii[rng.randi_range(0,radii.size()-1)]
+			var padding: float = [0.0,radius,rng.randf_range(0.0,12.0)][rng.randi_range(0,2)]
+			var what := ""
+			if fast.navigate_direction(start,finish,radius) != plain.navigate_direction(start,finish,radius):
+				what = "navigate_direction"
+			elif fast.clear_sight(start,finish,padding) != plain.clear_sight(start,finish,padding):
+				what = "clear_sight"
+			elif fast.walk_clear(start,finish,padding) != plain.walk_clear(start,finish,padding):
+				what = "walk_clear"
+			elif fast.valid_position(start,radius) != plain.valid_position(start,radius):
+				what = "valid_position"
+			if what != "":
+				print("AD_EQUIV_FAIL %s room=%s phase=%s case=%d start=%s finish=%s radius=%s padding=%s" % [what,room_id,phase,n,start,finish,radius,padding])
+				return false
+			cases += 1
+	print("AD_EQUIV_GEOMETRY room=%s cases=%d radii=%s" % [room_id,cases,radii])
 	return true
 
 func _enemy_count(room: Dictionary) -> int:

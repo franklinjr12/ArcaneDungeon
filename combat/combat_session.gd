@@ -1,7 +1,7 @@
 extends RefCounted
 ## M2 combat orchestration: reuses M1 SpellRunner and common MagicTarget/Health.
 const Runner = preload("res://magic/runtime/spell_runner.gd")
-const Geometry = preload("res://world/arena_geometry.gd")
+const Geometry = preload("res://combat/cached_geometry.gd")
 const WaterTiles = preload("res://world/water_tiles.gd")
 const EnvProps = preload("res://world/env_props.gd")
 const Player = preload("res://combat/player_combat.gd")
