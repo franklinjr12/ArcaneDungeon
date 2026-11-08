@@ -8,6 +8,14 @@ extends SceneTree
 const Flow = preload("res://world/run_flow.gd")
 const SEED := 20261022
 const BUDGET_MS := 4.0
+const PROXY_TARGET_MS := 8.0 ## game-design ruling 2026-11-08: VM proxy target until the reference PC is measured
+## A legitimate data retune invalidates these digests; --verify-digests is only for no-behaviour-change perf work.
+const BASELINE_DIGESTS := {
+	"cistern_boss":"b5707c8b24f5a60ac5c166fa6b18288e44d4d30ad4b4ebb332e049734781f685",
+	"ruins_boss":"eb50274ac60b600e19b8a2460d42d3f9a499f741b8415f0c02bb4f36c4ed63d2",
+	"ruins_c07":"310039acdbc1a8a375f1c2caf3fa93802d8cca5ab2773595323e313de326b420",
+	"cistern_p10":"37ad1915e27bb88a841c797d0cd06657558fad15d811d6deb66fb7f4fe64501c"}
+var verify_digests := false
 var ticks := 600
 var room_override: Array = []
 
@@ -19,6 +27,8 @@ func _run() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--ticks="):
 			ticks = maxi(1,int(a.substr(8)))
+		elif a == "--verify-digests":
+			verify_digests = true
 		elif a.begins_with("--rooms="):
 			room_override = a.substr(8).split(",",false)
 	var flow = Flow.new(SEED,Flow.CONFIG_V2)
@@ -38,7 +48,14 @@ func _run() -> void:
 		elif not res["budget_pass"]:
 			print("AD_DEMO_PERF: BUDGET EXCEEDED room=%s p95=%.3f ms > %.1f ms" % [id,res["sim_p95_ms"],BUDGET_MS])
 	_print_table(results)
-	quit(0 if all_ok and results.size() >= 3 else 1)
+	var digest_ok := true
+	if verify_digests:
+		for res in results:
+			var rid := str(res["room_id"])
+			if int(res.get("ticks",0)) != 600 or str(res.get("digest","")) != str(BASELINE_DIGESTS.get(rid,"")):
+				print("AD_DEMO_PERF_DIGEST_MISMATCH room=%s ticks=%s digest=%s" % [rid,res.get("ticks"),res.get("digest","")])
+				digest_ok = false
+	quit(0 if all_ok and results.size() >= 3 and digest_ok else 1)
 
 func _enemy_count(room: Dictionary) -> int:
 	var n := 0
@@ -175,6 +192,7 @@ func _probe(room_id: String) -> Dictionary:
 	var p50_first := _median_ms(samples.slice(0,win))
 	var p50_last := _median_ms(samples.slice(samples.size()-win))
 	var trace_records: int = session.sim.trace.snapshot().size()
+	out["digest"] = _digest(session)
 	samples.sort()
 	var total := 0
 	for x in samples:
@@ -183,12 +201,19 @@ func _probe(room_id: String) -> Dictionary:
 	var p95: float = float(samples[clampi(roundi(n*.95),0,n-1)])/1000.0
 	out.merge({"sim_p50_ms":float(samples[clampi(roundi(n*.5),0,n-1)])/1000.0,"sim_p95_ms":p95,
 		"sim_max_ms":float(samples[-1])/1000.0,"sim_mean_ms":snappedf(float(total)/n/1000.0,0.001),
-		"budget_ms":BUDGET_MS,"budget_pass":p95 <= BUDGET_MS,"peak_active_effects":peak_active,
+		"budget_ms":BUDGET_MS,"budget_pass":p95 <= BUDGET_MS,"proxy_pass":p95 <= PROXY_TARGET_MS,"peak_active_effects":peak_active,
 		"peak_queued_events":peak_pending,"peak_enemies_alive":peak_alive,"budget_drop_records":drops,
 		"casts":casts,"sim_p50_first100_ms":p50_first,"sim_p50_last100_ms":p50_last,
 		"trace_records":trace_records,"godot":Engine.get_version_info()["string"]})
 	out["ok"] = spawned > 0 and flow.session != null
 	return out
+
+func _digest(session) -> String:
+	var enemies: Array = []
+	for e in session.enemies:
+		enemies.append([e.target.id,e.state,e.target.position.x,e.target.position.y,e.target.health.current])
+	var end_state := [session.sim.clock.tick,session.sim.actor.position.x,session.sim.actor.position.y,session.sim.mana,enemies]
+	return (session.sim.trace.to_json()+JSON.stringify(end_state)).sha256_text()
 
 func _loadavg() -> String:
 	var f := FileAccess.open("/proc/loadavg",FileAccess.READ)
@@ -201,13 +226,14 @@ func _median_ms(part: Array) -> float:
 
 func _print_table(results: Array) -> void:
 	print("PERF_MD_BEGIN")
-	print("| room | stage | enemies alive peak | p50 ms | p95 ms | max ms | peak effects | drops | verdict |")
-	print("|---|---|---|---|---|---|---|---|---|")
+	print("| room | stage | enemies alive peak | p50 ms | p95 ms | max ms | peak effects | drops | verdict | proxy verdict |")
+	print("|---|---|---|---|---|---|---|---|---|---|")
 	for r in results:
 		if not r.get("ok",false):
-			print("| %s | %s | - | - | - | - | - | - | SETUP FAILED: %s |" % [r["room_id"],r.get("stage","-"),r.get("error","")])
+			print("| %s | %s | - | - | - | - | - | - | SETUP FAILED: %s | - |" % [r["room_id"],r.get("stage","-"),r.get("error","")])
 			continue
-		print("| %s | %d | %d | %.3f | %.3f | %.3f | %d | %d | %s |" % [r["room_id"],r["stage"]+1,r["peak_enemies_alive"],
+		print("| %s | %d | %d | %.3f | %.3f | %.3f | %d | %d | %s | %s |" % [r["room_id"],r["stage"]+1,r["peak_enemies_alive"],
 			r["sim_p50_ms"],r["sim_p95_ms"],r["sim_max_ms"],r["peak_active_effects"],r["budget_drop_records"],
-			"PASS" if r["budget_pass"] else "FAIL (>%.1f ms)" % BUDGET_MS])
+			"PASS" if r["budget_pass"] else "FAIL (>%.1f ms)" % BUDGET_MS,
+			"PASS" if r["proxy_pass"] else "FAIL (>%.1f ms)" % PROXY_TARGET_MS])
 	print("PERF_MD_END")
