@@ -1135,7 +1135,11 @@ func _update_labels() -> void:
 	notice_panel.visible = current_notice != "" and Time.get_ticks_msec() < _notice_until_ms
 	pause_button.disabled = not can_pause()
 	_update_dev_label()
-	if tip != null:
+	if tip != null and _debug_pinned_tip != "":
+		guide.current = _debug_pinned_tip
+		tip.text = tr("run.tip") % guide.tips[_debug_pinned_tip]
+		tip_panel.visible = true
+	elif tip != null:
 		if _settings != null:
 			guide.enabled = _settings.tips_enabled
 		_watch_hint_signals()
@@ -1521,8 +1525,16 @@ func _close_editor(apply_changes: bool) -> void:
 	_redraw_panel()
 
 ## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.
+const DEBUG_TIP_BASE := {"tip_room1":"combat","tip_telegraph":"combat","tip_wet_try_lightning":"combat","tip_first_reward":"reward","tip_first_workshop":"workshop","tip_workshop_empty_slot":"workshop","tip_test_on_dummy":"workshop","tip_spells_are_runes":"sigil_desk"}
+var _debug_pinned_tip := ""
+
 func apply_debug_shot_state(state: String) -> bool:
-	if not OS.is_debug_build() or not state in ["combat","reward","loadout","workshop_editor","merchant","pause","summary","summary_win","sigil_desk"]:
+	if not OS.is_debug_build():
+		return false
+	if DEBUG_TIP_BASE.has(state):
+		_debug_pinned_tip = state.trim_prefix("tip_")
+		state = DEBUG_TIP_BASE[state]
+	if not state in ["combat","reward","loadout","workshop","workshop_editor","merchant","pause","pause_controls","summary","summary_win","sigil_desk"]:
 		return false
 	if state == "sigil_desk":
 		if not flow.prelude and not (flow.prelude_available() and flow.enter_prelude()["ok"]):
@@ -1541,7 +1553,7 @@ func apply_debug_shot_state(state: String) -> bool:
 				if enemy.target.alive():
 					enemy.target.receive_damage(100000,"fire",1,100)
 			flow.step()
-	elif state == "workshop_editor" or state == "merchant":
+	elif state == "workshop_editor" or state == "merchant" or state == "workshop":
 		for i in flow.rooms.size():
 			if str(flow.rooms[i].get("type","")) == "workshop":
 				flow.run.sequence_index = i
@@ -1562,8 +1574,13 @@ func apply_debug_shot_state(state: String) -> bool:
 		_open_editor(1) # slot 0 (Basic Bolt) is locked; slot 1 is the first editable one
 	elif state == "merchant":
 		_set_shop_open(true)
+	elif state == "workshop":
+		_set_shop_open(false)
 	elif state == "pause":
 		open_pause()
+	elif state == "pause_controls":
+		open_pause()
+		pause_menu.open_controls()
 	elif state == "loadout":
 		open_loadout_view()
 	return true

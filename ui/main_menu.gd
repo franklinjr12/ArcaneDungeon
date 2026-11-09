@@ -261,7 +261,7 @@ func _debug_shot_entry() -> void:
 	var state := OS.get_environment("AD_UI_SHOT_STATE")
 	if state == "":
 		return
-	if state in SHOT_RUN_STATES:
+	if state in SHOT_RUN_STATES or state.begins_with("tip_") or state == "pause_controls":
 		get_tree().change_scene_to_file.call_deferred("res://scenes/run.tscn")
 	elif apply_debug_shot_state(state):
 		await _debug_shot_capture()
