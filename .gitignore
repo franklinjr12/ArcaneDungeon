@@ -19,3 +19,6 @@ docs/assets/*.import
 # Python bytecode
 __pycache__/
 *.pyc
+
+# Export output (AD-186)
+build/
