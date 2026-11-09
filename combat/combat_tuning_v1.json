@@ -95,7 +95,7 @@
     },
     "fallen_adept": {
       "display_name": "Fallen adept",
-      "hp": 1610,
+      "hp": 1850,
       "radius": 23,
       "move_speed": 101,
       "perception_radius": 1250,
@@ -114,7 +114,7 @@
     },
     "grave_hound": {
       "display_name": "Grave hound",
-      "hp": 1725,
+      "hp": 1985,
       "radius": 23,
       "move_speed": 154,
       "perception_radius": 1250,

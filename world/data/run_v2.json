@@ -206,7 +206,7 @@
     "ruins_warden": {
       "kind": "undead_warden",
       "display_name": "Undead warden",
-      "hp": 9000,
+      "hp": 19000,
       "radius": 49,
       "position": [
         1030,
@@ -217,8 +217,8 @@
       "phase_threshold": 0.5,
       "second_phase_windup_ticks": 33,
       "radial_shots": 8,
-      "radial_damage": 12,
-      "shot_damage": 16,
+      "radial_damage": 4,
+      "shot_damage": 6,
       "shot_speed": 300,
       "shot_spread": 0,
       "telegraph_radius": 190
