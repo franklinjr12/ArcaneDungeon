@@ -18,6 +18,7 @@ const FeedbackSnapshot = preload("res://ui/feedback_snapshot.gd")
 const LoadoutView = preload("res://ui/loadout_view.gd")
 const EditorView = preload("res://ui/skin_a_editor.gd")
 const MerchantScript = preload("res://world/merchant.gd")
+const PerfOverlay = preload("res://debug/perf_overlay.gd")
 var flow
 var config_path: String = Flow.CONFIG_V2
 var guide = Prompts.new()
@@ -51,6 +52,8 @@ var dev_panel: PanelContainer
 var dev_label: Label
 ## null = resolve from OS.is_debug_build() in _ready (same meaning as main_menu.show_debug_entries); tests set false before add_child.
 var show_dev_tools = null
+## AD-187: set before add_child to run the perf-run fixture (never touches saves, profile or desk).
+var perf_seed = null
 var _notice_seen := ""
 var _notice_until_ms := 0
 var _last_wet_kills := 0
@@ -79,6 +82,8 @@ var cursor := Vector2(400,440)
 var opened_editor_ms := 0
 var refresh_counter := 0
 var editor_open := false
+var last_sim_usec := 0
+var perf_overlay
 var loadout_list: VBoxContainer
 var loadout_slot_buttons: Array = []
 var scene_key := ""
@@ -113,10 +118,12 @@ func _ready() -> void:
 	VisualTheme.apply(self)
 	if show_dev_tools == null:
 		show_dev_tools = OS.is_debug_build()
-	flow = Flow.new(-1, config_path)
+	flow = Flow.new(-1 if perf_seed == null else perf_seed, config_path)
 	var resume_save = get_node_or_null("/root/SaveService")
 	var resumed := false
-	if resume_save != null:
+	if perf_seed != null:
+		resumed = true
+	elif resume_save != null:
 		var wanted: bool = resume_save.resume_requested
 		resume_save.resume_requested = false
 		if wanted:
@@ -138,7 +145,7 @@ func _ready() -> void:
 	var save = get_node_or_null("/root/SaveService")
 	if save != null:
 		_settings = save.settings
-		if _settings.telemetry_opt_in:
+		if _settings.telemetry_opt_in and perf_seed == null:
 			flow.experiment.configure(true)
 			flow.experiment.begin_session()
 		_settings.apply_audio()
@@ -366,6 +373,24 @@ func _build_overlays() -> void:
 	shop_overlay = Overlay.new(true)
 	shop_overlay.director = _director
 	add_child(shop_overlay)
+	perf_overlay = PerfOverlay.new()
+	perf_overlay.settings = _settings
+	perf_overlay.source = self
+	add_child(perf_overlay)
+	if perf_seed != null:
+		perf_overlay.visible = false
+		perf_overlay.set_process(false)
+
+## AD-187: numbers for the Show FPS overlay.
+func perf_stats() -> Dictionary:
+	var enemies := 0
+	var effects := 0
+	if flow != null and flow.session != null:
+		for e in flow.session.enemies:
+			if e.target.alive():
+				enemies += 1
+		effects = flow.session.sim.queue.active_effect_count()
+	return {"sim_ms": last_sim_usec / 1000.0, "enemies": enemies, "effects": effects}
 
 ## Dev-only F3 overlay: only built when show_dev_tools (and debug keys) are on; starts hidden.
 func _build_dev_overlay() -> void:
@@ -523,11 +548,15 @@ func _pause_retry() -> void:
 	_retry_same_seed()
 
 func _autosave() -> void:
+	if perf_seed != null:
+		return
 	var save = get_node_or_null("/root/SaveService")
 	if save != null and flow.can_save():
 		save.save_run(flow.save_payload())
 
 func _drop_save() -> void:
+	if perf_seed != null:
+		return
 	var save = get_node_or_null("/root/SaveService")
 	if save != null:
 		save.delete_run()
@@ -671,12 +700,27 @@ func _process(delta: float) -> void:
 			display_frame_samples.remove_at(0)
 		low_fps = fps if low_fps <= 0.0 else minf(low_fps,fps)
 
+## AD-187: one perf-run tick; mirrors the post-simulation work of _physics_process.
+func perf_step(command: Dictionary) -> void:
+	var sim_start := Time.get_ticks_usec()
+	flow.step(command)
+	last_sim_usec = Time.get_ticks_usec() - sim_start
+	arena_canvas.queue_redraw()
+	portrait_hud.queue_redraw()
+	test_canvas.queue_redraw()
+	refresh_counter += 1
+	if refresh_counter%7 == 0:
+		_update_labels()
+
 func _physics_process(_delta: float) -> void:
+	if perf_seed != null:
+		return
 	if flow == null or not flow.initialized:
 		return
 	if is_paused():
 		cast_pending = -1
 		return
+	var sim_start := Time.get_ticks_usec()
 	if not editor_open:
 		if flow.state == "fighting":
 			var dir := Input.get_vector("move_left","move_right","move_up","move_down")
@@ -693,6 +737,7 @@ func _physics_process(_delta: float) -> void:
 			_move_test_mage(Input.get_vector("move_left","move_right","move_up","move_down"))
 			flow.range_sim.step()
 			_desk_door_walk()
+	last_sim_usec = Time.get_ticks_usec() - sim_start
 	cast_pending = -1
 	arena_canvas.queue_redraw()
 	portrait_hud.queue_redraw()
@@ -1220,6 +1265,8 @@ func _watch_hint_signals() -> void:
 	_last_arcs = arc_now
 
 func _persist_tip(id: String) -> void:
+	if perf_seed != null:
+		return
 	var save = get_node_or_null("/root/SaveService")
 	if save == null:
 		return

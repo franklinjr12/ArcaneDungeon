@@ -4,6 +4,7 @@ const SkinA = preload("res://ui/skin_a.gd")
 const ReduceMotion = preload("res://ui/reduce_motion.gd")
 const SettingsScreen = preload("res://ui/settings_screen.gd")
 const BuildInfo = preload("res://game/core/build_info.gd")
+const PerfRun = preload("res://game/core/perf_run.gd")
 const CompendiumScreen = preload("res://ui/compendium_screen.gd")
 ## AD-067: GDD §8 Title screen. Sandbox/Arena are shown only in debug builds.
 const TEXT := {
@@ -43,6 +44,10 @@ func _ready() -> void:
 	var save_service = get_node_or_null("/root/SaveService")
 	if save_service != null:
 		save_service.settings.apply_display(get_window())
+	if PerfRun.requested():
+		PerfRun.launch(get_tree())
+		visible = false
+		return
 	if show_debug_entries == null:
 		show_debug_entries = OS.is_debug_build()
 	_build_backdrop()

@@ -9,6 +9,7 @@ const Flow = preload("res://world/run_flow.gd")
 const TargetStore = preload("res://combat/target_store.gd")
 const MagicTarget = preload("res://combat/magic_target.gd")
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
+const PerfRun = preload("res://game/core/perf_run.gd")
 const BaseGeometry = preload("res://world/arena_geometry.gd")
 const SEED := 20261022
 const BUDGET_MS := 4.0
@@ -227,75 +228,26 @@ func _targets(rooms: Array) -> Array:
 		out.append(str(best[st]["id"]))
 	return out
 
-## Highest-complexity legal Split+Pierce(+Homing) projectile with On Hit burst payload (same as m4_stress_probe).
 func _worst_formula() -> Dictionary:
-	return {"schema_version":1,"formula_id":"ad087.worst_case","display_name":"AD-087 worst case",
-		"root":{"essence_id":"essence.fire","manifestation_id":"form.projectile",
-			"modifier_ids":["mod.split","mod.pierce","mod.homing"],"params":{}},
-		"on_hit":{"trigger_id":"trigger.on_hit","payload":{"essence_id":"essence.lightning",
-			"manifestation_id":"form.burst","modifier_ids":[],"params":{}}}}
+	return PerfRun.config()["worst_formula"]
 
 func _refill(session) -> void:
-	session.sim.actor.health.current = session.sim.actor.health.maximum
-	session.sim.mana = float(session.sim.settings["combat"]["player_max_mana"])
-	for e in session.enemies:
-		e.target.health.current = maxf(e.target.health.current,1e5)
+	PerfRun.refill(session)
 
 func _command(session) -> Dictionary:
-	var aim := Vector2.RIGHT
-	var cursor: Vector2 = session.sim.actor.position+aim*100.0
-	for e in session.enemies:
-		if e.target.alive():
-			cursor = e.target.position
-			aim = (cursor-session.sim.actor.position).normalized()
-			break
-	return {"move":Vector2.ZERO,"aim":aim,"cursor":cursor,"cast":1,"dash":false}
+	return PerfRun.command(session)
 
 func _probe(room_id: String) -> Dictionary:
 	var flow = Flow.new(SEED,Flow.CONFIG_V2)
-	var idx := -1
-	for i in flow.rooms.size():
-		if str(flow.rooms[i]["id"]) == room_id:
-			idx = i
 	var out := {"seed":SEED,"ticks":ticks,"room_id":room_id,"ok":false}
-	if idx < 0:
-		out["error"] = "room not in sequence"
-		return out
-	out["stage"] = int(flow.rooms[idx]["stage"])
-	out["type"] = str(flow.rooms[idx]["type"])
-	flow.run.sequence_index = idx
-	flow._enter_current()
-	if flow.state != "fighting":
-		out["error"] = "state " + flow.state
+	var prep: Dictionary = PerfRun.prepare_room(flow,room_id,PerfRun.config())
+	for k in ["stage","type","boss_present","enemies_spawned","equip_ok","complexity"]:
+		if prep.has(k):
+			out[k] = prep[k]
+	if not prep["ok"]:
+		out["error"] = prep["error"]
 		return out
 	var session = flow.session
-	out["boss_present"] = out["type"] == "boss" and session.enemies.size() == 1
-	var kinds: Array = session.data["enemies"].keys()
-	kinds.sort()
-	var want: int = int(flow.config["max_active_enemies"])
-	var spawned := 0
-	var tries := 0
-	for gy in range(120,800,90):
-		for gx in range(260,1200,110):
-			if spawned >= want:
-				break
-			if session.spawn_enemy(kinds[tries%kinds.size()],Vector2(gx,gy)) != null:
-				spawned += 1
-			tries += 1
-	out["enemies_spawned"] = spawned
-	for e in session.enemies:
-		e.target.health.maximum = 1e6
-		e.target.health.current = 1e6
-	var sim = session.sim
-	sim.loadout.unlocked = sim.registry.get_ids()
-	sim.loadout.allow_edit = true
-	var formula := _worst_formula()
-	var eq: Dictionary = sim.equip(1,formula)
-	out["equip_ok"] = bool(eq.get("ok",false))
-	if not out["equip_ok"]:
-		out["error"] = "equip failed " + str(eq.get("issues",[]))
-		return out
-	out["complexity"] = sim.loadout.get_plan(1).complexity()
 	var samples: Array = []
 	var peak_active := 0
 	var peak_pending := 0
@@ -339,7 +291,7 @@ func _probe(room_id: String) -> Dictionary:
 		"peak_queued_events":peak_pending,"peak_enemies_alive":peak_alive,"budget_drop_records":drops,
 		"casts":casts,"sim_p50_first100_ms":p50_first,"sim_p50_last100_ms":p50_last,
 		"trace_records":trace_records,"godot":Engine.get_version_info()["string"]})
-	out["ok"] = spawned > 0 and flow.session != null
+	out["ok"] = int(prep["enemies_spawned"]) > 0 and flow.session != null
 	return out
 
 func _digest(session) -> String:

@@ -63,6 +63,19 @@ def write_readme(folder: pathlib.Path, version: str) -> None:
     (folder / "README_FRIENDS.txt").write_text(friends.rstrip("\n") + "\n\n" + form, encoding="utf-8")
 
 
+def write_perf_bats(folder: pathlib.Path) -> None:
+    """Double-click launchers for the reference-PC perf run (AD-187). CRLF so cmd.exe reads them cleanly."""
+    for level in ("high", "low"):
+        lines = [
+            "@echo off",
+            'cd /d "%~dp0"',
+            "echo Performance test running, please wait...",
+            f'start /wait "" Sigilwright.exe --resolution 1920x1080 -- --perf-run --perf-lighting={level}',
+            'explorer "%APPDATA%\\Godot\\app_userdata\\Sigilwright\\perf"',
+        ]
+        (folder / f"perf_test_{level}.bat").write_bytes(("\r\n".join(lines) + "\r\n").encode("ascii"))
+
+
 def make_zip(folder: pathlib.Path, zip_path: pathlib.Path, version: str) -> None:
     top = f"Sigilwright-{version}"
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -173,6 +186,20 @@ def verify_linux(zip_path: pathlib.Path, out: pathlib.Path, godot: str) -> None:
     # The probe pack deliberately contains tests/, so its pack-contents check is skipped; the shipped pck was checked above.
     _run_verify("release probe", [str(probe_bin), "--headless", "--"] + probe_args, env, "RELEASE_PROBE OK")
     print("PASS: release probe (debug keys, title, arena, run) + shipped pck contents")
+    _run_verify("perf run", [str(binary), "--headless", "--", "--perf-run", "--perf-ticks=30"], env, "PERF_RUN_OK")
+    reports = sorted((verify / "xdg" / "godot" / "app_userdata" / "Sigilwright" / "perf").glob("*.json"),
+                     key=lambda p: p.stat().st_mtime)
+    if not reports:
+        raise SystemExit("error: verify perf run: no report json written")
+    report = json.loads(reports[-1].read_text(encoding="utf-8"))
+    rooms = report.get("rooms", [])
+    want = ["ruins_c07", "cistern_p10", "ruins_boss", "cistern_boss"]
+    ok = isinstance(report.get("lighting"), str) and [r.get("room_id") for r in rooms] == want
+    ok = ok and all(isinstance(r.get(k), dict) and all(m in r[k] for m in ("p50", "p95", "max"))
+                    for r in rooms for k in ("frame_ms", "sim_ms"))
+    if not ok:
+        raise SystemExit(f"error: verify perf run: bad report schema in {reports[-1].name}")
+    print("PASS: perf run on shipped binary writes a valid report (4 rooms)")
 
 
 def main() -> int:
@@ -195,6 +222,8 @@ def main() -> int:
         folder = out / name
         export(args.godot, preset, folder, binary)
         write_readme(folder, version)
+        if name == "windows":
+            write_perf_bats(folder)
         zip_path = out / f"Sigilwright-{version}-{name}.zip"
         make_zip(folder, zip_path, version)
         zips.append(zip_path)

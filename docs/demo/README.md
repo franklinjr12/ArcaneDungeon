@@ -31,12 +31,13 @@ Full checklist: [FRANKLIN_TEST.md](FRANKLIN_TEST.md).
 3. Settings > Accessibility > **Open log folder**.
 4. Send back every `session_*.json` and `crash_*.txt`.
 
-Log folder (project name `ArcaneDungeon`; `config/use_custom_user_dir` is not set):
-- Windows: `%APPDATA%\Godot\app_userdata\ArcaneDungeon\logs`
-- Linux: `~/.local/share/godot/app_userdata/ArcaneDungeon/logs`
+Log folder (project name `Sigilwright`; `config/use_custom_user_dir` is not set):
+- Windows: `%APPDATA%\Godot\app_userdata\Sigilwright\logs`
+- Linux: `~/.local/share/godot/app_userdata/Sigilwright/logs`
 
 A `crash_*.txt` appears on the next opted-in launch after an unclean exit.
 
+Reference-PC performance test (Gate G4): [PERF_TEST.md](PERF_TEST.md).
 Friends feedback form and F8 reports: [FEEDBACK_FORM.md](FEEDBACK_FORM.md).
 Onboarding audit, tip ids and triggers (Gate G2): [ONBOARDING.md](ONBOARDING.md).
 
