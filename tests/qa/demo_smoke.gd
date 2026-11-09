@@ -1,6 +1,8 @@
 extends "res://tests/bench/run_bench.gd"
 ## AD-158: full-run smoke + full-run determinism (extends AD-086). Reuses the AD-156 bot; no gameplay change.
-## Run: godot --headless --path . --script res://tests/qa/demo_smoke.gd [-- --seeds=N --det-seeds=N --natural=1]
+## Run: godot --headless --path . --script res://tests/qa/demo_smoke.gd [-- --seeds=N --det-seeds=N --natural=1 --first=N --trace=0]
+## --first=N starts the route and natural loops at SEEDS[N] (AD-176 chunking; determinism still uses SEEDS[0..det-seeds)).
+## --trace=0 turns trace recording off (AD-173: same results); use it with --det-seeds=0 because determinism compares traces.
 ## Not named test_*.gd on purpose: a full run is far too slow for tests/run_tests.gd.
 const GOD_HEALTH := 1000000.0
 const SMOKE_BUILD := "typical"
@@ -9,13 +11,17 @@ const SMOKE_BUILD := "typical"
 var _god := false
 
 func _run() -> void:
+	if _option("--trace=", "1") == "0":
+		_record_trace = false
+	var first: int = clampi(int(_option("--first=", "0")), 0, SEEDS.size() - 1)
 	var count: int = clampi(int(_option("--seeds=", str(SEEDS.size()))), 1, SEEDS.size())
+	var chunk: Array = SEEDS.slice(first, first + count)
 	var det_count: int = clampi(int(_option("--det-seeds=", "5")), 0, SEEDS.size())
 	var natural: bool = _option("--natural=", "0") == "1"
 	var rows: Array = []
 	var failing: Array = []
 	_god = true
-	for run_seed in SEEDS.slice(0, count):
+	for run_seed in chunk:
 		var rec: Dictionary = _play(int(run_seed), SMOKE_BUILD)
 		var ok: bool = _route_ok(rec)
 		rows.append(_row(rec, "route", ok))
@@ -41,7 +47,7 @@ func _run() -> void:
 			failing.append("%d/%d:distinct" % [SEEDS[0], SEEDS[1]])
 	_god = false
 	if natural:
-		for run_seed in SEEDS.slice(0, count):
+		for run_seed in chunk:
 			for build in BUILDS.keys():
 				var rec: Dictionary = _play(int(run_seed), build)
 				var ok: bool = rec["outcome"] in ["won", "dead"]
