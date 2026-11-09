@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "rules": [
+    {
+      "glob": "art/export/fnt/arc_fnt_m5x7.*",
+      "status": "third-party",
+      "licence": "CC0 (recorded in assets/ui/ad_ui_kit.json, AD-029)",
+      "credit": "m5x7 font",
+      "note": ""
+    },
+    {
+      "glob": "art/export/fnt/arc_fnt_silkscreen.*",
+      "status": "third-party",
+      "licence": "OFL 1.1 (recorded in assets/ui/ad_ui_kit.json, AD-029)",
+      "credit": "Silkscreen font",
+      "note": ""
+    },
+    {
+      "glob": "art/export/fnt/arc_fnt_digits_3x5.*",
+      "status": "third-party",
+      "licence": "",
+      "credit": "",
+      "note": "origin and licence not recorded in the repo; owner to confirm"
+    },
+    {
+      "glob": "art/export/*",
+      "status": "placeholder",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md)"
+    },
+    {
+      "glob": "assets/pixel/*",
+      "status": "placeholder",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md)"
+    },
+    {
+      "glob": "assets/ui/*",
+      "status": "placeholder",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md)"
+    }
+  ]
+}

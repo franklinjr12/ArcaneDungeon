@@ -581,3 +581,10 @@ report.save,Save
 report.cancel,Cancel
 report.saved,Report saved
 pause.open_reports,Open reports folder
+menu.credits,Credits
+credits.title,Credits
+credits.back,Back
+credits.section.made_by,Made by
+credits.section.tools,Tools
+credits.section.third_party,Third-party
+credits.unavailable,Credits unavailable
