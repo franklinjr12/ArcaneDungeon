@@ -62,6 +62,9 @@ func _tabs(t, screen, svc) -> void:
 	t.equal(screen.current_tab, "access", "AD-152 unknown tab id ignored")
 	screen.select_tab("video")
 	t.check(screen.lighting_toggle.button_pressed and svc.settings.lighting == "high", "AD-152 lighting toggle starts on (high)")
+	t.check(screen.fps_toggle != null and not screen.disabled_widgets.has(screen.fps_toggle) and not screen.fps_toggle.button_pressed, "AD-187 fps toggle backed and starts off")
+	screen.fps_toggle.button_pressed = true
+	t.check(svc.settings.show_fps, "AD-187 fps toggle sets show_fps")
 	screen.lighting_toggle.button_pressed = false
 	t.equal(svc.settings.lighting, "off", "AD-152 lighting toggle off sets lighting off")
 	t.check(screen.lighting_option.disabled, "AD-152 light quality disabled while lighting is off")
@@ -70,6 +73,7 @@ func _tabs(t, screen, svc) -> void:
 	t.equal(svc.settings.lighting, "low", "AD-152 light quality low while on")
 	screen.reset_button.pressed.emit()
 	t.equal(svc.settings.lighting, "high", "AD-152 defaults button resets lighting")
+	t.check(not svc.settings.show_fps and not screen.fps_toggle.button_pressed, "AD-187 defaults button resets show_fps")
 	t.check(screen.lighting_toggle.button_pressed and screen.volume_sliders["SFX"].value == 1.0, "AD-152 defaults refreshes controls")
 	t.check(screen.disabled_widgets.size() >= 12, "AD-152 unbacked widgets tracked")
 	for c in screen.disabled_widgets:
