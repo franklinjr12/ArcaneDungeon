@@ -243,6 +243,7 @@ var music_slider: HSlider
 var flash_toggle: Button
 var shake_toggle: Button
 var telemetry_toggle: Button
+var tips_toggle: Button
 var open_logs_button: Button
 var lighting_toggle: Button
 var back_button: Button
@@ -765,7 +766,10 @@ func _build_access(page: Control) -> void:
 	telemetry_toggle = _toggle(tab, page, "", "settings.telemetry", "telemetry", _settings.telemetry_opt_in, func(on: bool):
 		_settings.telemetry_opt_in = on
 		_save(), {"x": last["x"], "y": last["y"] + 18, "w": last["w"], "h": last["h"]})
-	var logs_rect := {"x": last["x"], "y": last["y"] + 36, "w": last["w"], "h": last["h"]}
+	tips_toggle = _toggle(tab, page, "", "settings.tips", "tips", _settings.tips_enabled, func(on: bool):
+		_settings.tips_enabled = on
+		_save(), {"x": last["x"], "y": last["y"] + 36, "w": last["w"], "h": last["h"]})
+	var logs_rect := {"x": 410, "y": 226, "w": 178, "h": 18}
 	open_logs_button = _button(page, "btn_open_logs", tr("settings.open_logs"), tab)
 	_items[_items.size() - 1]["w"] = logs_rect
 	open_logs_button.disabled = _read_only
@@ -774,9 +778,9 @@ func _build_access(page: Control) -> void:
 		if DisplayServer.get_name() != "headless":
 			OS.shell_open(ExperimentLog.log_dir_path()))
 	_help_hook(open_logs_button, tab, "open_logs", "settings.open_logs")
-	for c in [flash_toggle, shake_toggle, telemetry_toggle]:
+	for c in [flash_toggle, shake_toggle, telemetry_toggle, tips_toggle]:
 		c.disabled = _read_only
-	for pair in [[flash_toggle, func(): return _settings.reduce_flashes], [shake_toggle, func(): return not _settings.screen_shake], [telemetry_toggle, func(): return _settings.telemetry_opt_in]]:
+	for pair in [[flash_toggle, func(): return _settings.reduce_flashes], [shake_toggle, func(): return not _settings.screen_shake], [telemetry_toggle, func(): return _settings.telemetry_opt_in], [tips_toggle, func(): return _settings.tips_enabled]]:
 		var t: Button = pair[0]
 		var getter: Callable = pair[1]
 		_sync_hooks.append(func():
@@ -968,12 +972,7 @@ func _refresh_conflict_panel(eff: Dictionary) -> void:
 	cancel_button.disabled = not actionable
 
 func _event_text(ev) -> String:
-	if ev == null:
-		return tr("settings.controls.unbound")
-	if ev is InputEventKey and ev.physical_keycode != 0:
-		var code: int = ev.physical_keycode if DisplayServer.get_name() == "headless" else DisplayServer.keyboard_get_keycode_from_physical(ev.physical_keycode)
-		return OS.get_keycode_string(code if code != KEY_NONE else ev.physical_keycode)
-	return ev.as_text()
+	return InputActions.event_text(ev)
 
 func _commit(bindings: Dictionary) -> void:
 	_settings.bindings = bindings

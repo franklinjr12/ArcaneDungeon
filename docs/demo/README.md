@@ -47,6 +47,7 @@ Log folder (project name `ArcaneDungeon`; `config/use_custom_user_dir` is not se
 A `crash_*.txt` appears on the next opted-in launch after an unclean exit.
 
 Friends feedback form and F8 reports: [FEEDBACK_FORM.md](FEEDBACK_FORM.md).
+Onboarding audit, tip ids and triggers (Gate G2): [ONBOARDING.md](ONBOARDING.md).
 
 ## 6. Privacy
 Nothing is uploaded; there is no network code. Logs are written only when the tester opts in. They hold anonymous

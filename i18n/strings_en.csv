@@ -1,6 +1,8 @@
 keys,en
 flavour.rift_line,"Something in the Uncatalogued Ruins has opened a rift, and the Undead it wakes now guard it."
-onboarding.room1,"Move/aim with mouse. LMB bolt, RMB/Q presets, Space dash gives i-frames."
+onboarding.room1,"{move} move, mouse aims, {cast} casts, {dash} dashes (i-frames)."
+onboarding.telegraph,That marker is an enemy attack winding up. {dash} dashes you clear.
+onboarding.spells_are_runes,Spells are built from runes. Open a slot at the Sigil Desk to craft one.
 onboarding.first_reward,3 cards: pick 1. Each card adds a new behaviour to your spells.
 onboarding.first_workshop,"Edit slot 4, test it in the range. Invalid spells show why."
 room.s1_r1,Uncatalogued Ruins I
@@ -214,6 +216,7 @@ settings.title,Settings
 settings.flashes,Reduce flashes
 settings.shake,Reduce screen shake
 settings.telemetry,Local telemetry (opt-in)
+settings.tips,Tips
 settings.window_mode,Window mode
 settings.lighting,Lighting
 settings.lighting.high,High
@@ -532,6 +535,7 @@ settings.help.hold_cast,Hold the cast button instead of clicking repeatedly.
 settings.help.aim_assist,Nudges spells toward the nearest enemy.
 settings.help.visual_cues,Shows an icon on screen for important sounds.
 settings.help.telemetry,"When on, anonymous play stats and session/crash logs are saved locally to the log folder. Nothing is sent anywhere."
+settings.help.tips,Shows short one-time tips. Off hides them without using them up.
 run.reward.title,CHOOSE A REWARD
 run.reward.subtitle,ROOM %d CLEARED   TAKE ONE
 run.reward.take,TAKE
