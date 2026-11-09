@@ -148,6 +148,14 @@ class AssetStatusTest(unittest.TestCase):
     def test_real_rules_file_loads(self):
         self.assertTrue(ast.load_rules(ROOT / 'tools' / 'asset_status_rules.json'))
 
+    def test_third_party_credits_in_credits_json(self):
+        rules = json.loads((ROOT / 'tools' / 'asset_status_rules.json').read_text(encoding='utf-8'))['rules']
+        credits = json.loads((ROOT / 'game' / 'data' / 'credits_v1.json').read_text(encoding='utf-8'))
+        names = {e['name'] for s in credits['sections'] for e in s['entries']}
+        for rule in rules:
+            if rule['status'] == 'third-party' and rule.get('licence'):
+                self.assertIn(rule['credit'], names, rule['glob'])
+
 
 if __name__ == '__main__':
     unittest.main()
