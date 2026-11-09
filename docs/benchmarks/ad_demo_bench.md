@@ -844,3 +844,136 @@ All failures were caused only by live-balance dependence (fixed kill damage of 1
 | tests/run_ui_smoke.gd | `TestContext.set_frozen_balance(true)` at start of `_run` (M3 UI smoke: first room clear by 1000-damage kill) |
 
 `tests/test_ad_minibosses.gd` was not changed: it passes on the live data (mini-boss HP is 2000 since iteration 1, and the scripted kills still finish inside the 6000-tick limit). `tests/bench/boss_pacing_bench.gd` is not part of the suites and was not run.
+
+## AD-182 HP correction (Franklin feel)
+
+Why: Franklin 2026-11-09 could not finish the first room after AD-175. Design rule from now on: run length comes from room count, encounter density, content and boss design, never from HP sponges. Data only; the HP/damage values are the PR #9 values (`git show f910fe5^:combat/combat_tuning_v1.json`).
+
+| file | key | old | new |
+|---|---|---|---|
+| combat/combat_tuning_v1.json | enemies.bone_thrall hp / damage | 2990 / 0.34 | 95 / 14 |
+| combat/combat_tuning_v1.json | enemies.fallen_adept hp / damage | 1610 / 0.26 | 80 / 11 |
+| combat/combat_tuning_v1.json | enemies.grave_hound hp / damage | 1725 / 0.21 | 85 / 9 |
+| combat/combat_tuning_v1.json | enemies.ossuary_shieldbearer hp / damage | 1210 / 0.68 | 150 / 16 |
+| combat/combat_tuning_v1.json | enemies.wailing_spirit hp / damage | 435 / 0.38 | 55 / 9 |
+| combat/combat_tuning_v1.json | enemies.corpse_bloat hp / damage | 1380 / 0.77 | 170 / 18 |
+| combat/combat_tuning_v1.json | enemies.corpse_bloat explode_damage | 0.94 | 22 |
+| combat/combat_tuning_v1.json | enemies.cistern_slime hp / damage | 2820 / 0.3 | 120 / 12 |
+| combat/combat_tuning_v1.json | enemies.cistern_slimelet hp / damage | 725 / 0.17 | 32 / 7 |
+| combat/combat_tuning_v1.json | enemies.drowned_acolyte hp (damage 0 unchanged) | 1240 | 60 |
+| combat/combat_tuning_v1.json | enemies.deep_eel hp / damage | 1450 / 0.3 | 70 / 12 |
+| combat/combat_tuning_v1.json | enemies.rust_golem hp / damage | 2620 / 0.47 | 220 / 20 |
+| combat/combat_tuning_v1.json | enemies.lantern_wisp hp (damage 0 unchanged) | 920 | 45 |
+| combat/combat_tuning_v1.json | enemies.storm_crystal hp / damage | 1725 / 0.26 | 90 / 10 |
+| combat/combat_tuning_v1.json | mini_bosses.ruins_adept_elite hp | 260 | 260 (unchanged) |
+| combat/combat_tuning_v1.json | mini_bosses.cistern_crystal_elite hp | 2000 | 450 |
+| combat/combat_tuning_v1.json | mini_bosses.cistern_crystal_elite pulse_damage | 7 | 12 |
+| combat/combat_tuning_v1.json | mini_bosses.cistern_crystal_elite radial_damage | 5 | 8 |
+| combat/combat_tuning_v1.json | mini_bosses.cistern_crystal_elite shot_damage | 6 | 10 |
+| world/data/run_v2.json | bosses.ruins_warden hp | 9000 | 1800 |
+| world/data/run_v2.json | bosses.ruins_warden radial_damage | 12 | 9 |
+| world/data/run_v2.json | bosses.ruins_warden shot_damage | 16 | 16 (unchanged) |
+| world/data/run_v2.json | bosses.cistern_boss hp | 9500 | 2400 |
+| world/data/run_v2.json | bosses.cistern_boss water_bolt_damage | 6 | 10 |
+| world/data/run_v2.json | bosses.cistern_boss storm_pulse_damage | 8 | 14 |
+| world/data/run_v2.json | merchant.max_hp_upgrade_amount | 70 | 25 |
+| run_v2.json room_templates, rooms_cistern_v1.json | combat room waves | 3-4 timed `start` waves 420 ticks apart | `start` + one `on_clear` wave, delay_ticks 45 |
+
+Mana values, the legacy top-level `boss.hp` and `tests/fixtures/balance_frozen/` were not changed. `corpse_bloat` `explode_damage` was restored to 22 alongside its damage although the task's list did not name it.
+
+### Wave decision (owner decision needed)
+
+The task allowed at most 3 waves per combat room, but all 18 combat rooms use 2. `world/encounter_director.gd` never resets `clear_triggered`, so a second `on_clear` wave would launch together with the first and stack. Three sequential waves need a small director change, which was out of scope for this data-only task and is left for Franklin to decide. `cistern_p04` and `cistern_p10` kept their original wave index 3 and 2 respectively as their second wave.
+
+### Bench run (INFO only)
+
+Commands (G = `/usr/local/bin/godot --headless --path . --script res://tests/bench/run_bench.gd --`):
+
+```
+/usr/local/bin/godot --headless --path . --import
+G --seeds=0..3 --jobs=2 --results=/tmp/ad182/bench
+G --seeds=4..7 --jobs=2 --results=/tmp/ad182/bench
+G --seeds=0..7 --summarize --results=/tmp/ad182/bench
+```
+
+Seeds 20261022-20261029 (indices 0..7), 3 builds (24 runs). No `AD_DEMO_BENCH_PARTIAL` and no nondeterministic output seen. Results folder is in /tmp and not committed. Bot win rates are not a gate; Franklin's feel is. Numbers are reported as measured; no tuning was done in response.
+
+**weak**
+
+| seed | outcome | died in | total min | max room s | starved % | rooms cleared |
+|---|---|---|---|---|---|---|
+| 20261022 | won | - | 2.629 | 42.517 | 6.469 | 13 |
+| 20261023 | won | - | 2.364 | 32.167 | 6.497 | 12 |
+| 20261024 | dead | stage2_boss | 2.443 | 36.517 | 6.457 | 12 |
+| 20261025 | won | - | 2.939 | 42.567 | 6.302 | 14 |
+| 20261026 | won | - | 2.513 | 35.233 | 6.572 | 13 |
+| 20261027 | won | - | 2.575 | 39.233 | 7.11 | 12 |
+| 20261028 | won | - | 2.853 | 51.9 | 6.156 | 13 |
+| 20261029 | won | - | 2.92 | 48.467 | 6.316 | 14 |
+
+**typical**
+
+| seed | outcome | died in | total min | max room s | starved % | rooms cleared |
+|---|---|---|---|---|---|---|
+| 20261022 | won | - | 3.338 | 38.183 | 5.312 | 14 |
+| 20261023 | won | - | 3.636 | 52.467 | 4.936 | 13 |
+| 20261024 | won | - | 3.409 | 44.783 | 4.984 | 14 |
+| 20261025 | won | - | 3.589 | 39.733 | 5.494 | 15 |
+| 20261026 | won | - | 3.745 | 64.083 | 5.362 | 14 |
+| 20261027 | won | - | 3.16 | 40.3 | 5.059 | 13 |
+| 20261028 | won | - | 3.351 | 40.283 | 5.439 | 14 |
+| 20261029 | dead | stage2_boss | 3.218 | 42.75 | 5.433 | 14 |
+
+**skilled**
+
+| seed | outcome | died in | total min | max room s | starved % | rooms cleared |
+|---|---|---|---|---|---|---|
+| 20261022 | won | - | 3.733 | 56.833 | 3.567 | 14 |
+| 20261023 | dead | stage2_boss | 3.491 | 50.083 | 4.088 | 12 |
+| 20261024 | dead | stage2_boss | 2.936 | 40.9 | 4.397 | 13 |
+| 20261025 | dead | stage2_boss | 3.671 | 46.1 | 4.138 | 14 |
+| 20261026 | dead | stage2_boss | 3.402 | 42.717 | 3.967 | 13 |
+| 20261027 | won | - | 3.661 | 66.4 | 3.115 | 13 |
+| 20261028 | dead | stage2_boss | 3.441 | 44.05 | 3.883 | 13 |
+| 20261029 | dead | stage2_boss | 4.006 | 58.117 | 3.51 | 14 |
+
+| build | wins | win total min (median/min/max) | dies stage 1 or first boss | max room s | starved % median | starved % max |
+|---|---|---|---|---|---|---|
+| weak | 7/8 | 2.629 / 2.364 / 2.939 | 0/8 | 51.9 | 6.463 | 7.11 |
+| typical | 7/8 | 3.409 / 3.16 / 3.745 | 0/8 | 64.083 | 5.337 | 5.494 |
+| skilled | 2/8 | 3.697 / 3.661 / 3.733 | 0/8 | 66.4 | 3.925 | 4.397 |
+
+| target | weak | typical | skilled |
+|---|---|---|---|
+| winning run 30-40 min sim | n/a | NO (median 3.409 min, 7 wins) | NO (median 3.697 min, 2 wins) |
+| weak build dies in stage 1 or at the first boss on most seeds | NO (0/8 dead early, need 5) | n/a | n/a |
+| no room > 4 min | PASS (max 51.9 s) | PASS (max 64.083 s) | PASS (max 66.4 s) |
+| mana-starved < 20% | PASS (median 6.463%) | PASS (median 5.337%) | PASS (median 3.925%) |
+
+| room | n | median s | min s | max s | median HP lost | min HP lost | max HP lost |
+|---|---|---|---|---|---|---|---|
+| cistern_boss | 24 | 42.542 | 18.433 | 66.4 | 74.0 | 10.0 | 114.0 |
+| cistern_challenge_v1 | 16 | 40.008 | 35.217 | 50.717 | 42.5 | 15.0 | 75.0 |
+| cistern_p01 | 9 | 6.683 | 5.583 | 7.267 | 11.0 | 0.0 | 22.0 |
+| cistern_p02 | 12 | 7.975 | 7.283 | 14.883 | 0.0 | 0.0 | 11.0 |
+| cistern_p03 | 15 | 7.933 | 7.0 | 8.367 | 0.0 | 0.0 | 0.0 |
+| cistern_p04 | 6 | 9.159 | 6.367 | 9.65 | 0.0 | 0.0 | 9.0 |
+| cistern_p05 | 21 | 7.55 | 7.15 | 8.333 | 0.0 | 0.0 | 0.0 |
+| cistern_p06 | 12 | 7.0 | 5.967 | 8.05 | 0.0 | 0.0 | 0.0 |
+| cistern_p07 | 9 | 9.35 | 8.667 | 9.933 | 0.0 | 0.0 | 0.0 |
+| cistern_p08 | 6 | 11.5 | 9.583 | 13.733 | 0.0 | 0.0 | 0.0 |
+| cistern_p09 | 21 | 5.9 | 5.333 | 6.517 | 0.0 | 0.0 | 0.0 |
+| cistern_p10 | 21 | 8.917 | 7.667 | 12.183 | 0.0 | 0.0 | 0.0 |
+| ruins_boss | 24 | 17.467 | 9.983 | 23.3 | 12.5 | 0.0 | 32.0 |
+| ruins_c01 | 9 | 5.6 | 5.417 | 5.633 | 0.0 | 0.0 | 0.0 |
+| ruins_c02 | 18 | 5.592 | 5.517 | 5.7 | 0.0 | 0.0 | 0.0 |
+| ruins_c03 | 12 | 7.583 | 6.6 | 7.967 | 0.0 | 0.0 | 11.0 |
+| ruins_c04 | 21 | 6.833 | 6.467 | 7.383 | 0.0 | 0.0 | 22.0 |
+| ruins_c05 | 12 | 8.017 | 7.717 | 9.717 | 0.0 | 0.0 | 9.0 |
+| ruins_c06 | 18 | 6.4 | 5.883 | 8.133 | 0.0 | 0.0 | 11.0 |
+| ruins_c07 | 21 | 6.817 | 6.583 | 7.333 | 0.0 | 0.0 | 0.0 |
+| ruins_c08 | 21 | 6.1 | 5.917 | 8.283 | 9.0 | 0.0 | 11.0 |
+
+### Suites
+
+`python3 scripts/validate_godot.py --godot /usr/local/bin/godot` (under the host lock): exit code 0. The negative failure probe prints `1 failed` by design and counts as PASS.
