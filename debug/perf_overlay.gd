@@ -21,7 +21,7 @@ func _init() -> void:
 	label.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	label.offset_left = MARGIN
 	label.offset_bottom = -MARGIN
-	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_font_size_override("font_size", 14)
 	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
 	label.add_theme_constant_override("outline_size", 4)
 	add_child(label)
