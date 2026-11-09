@@ -197,3 +197,168 @@ static func write_report(report: Dictionary, dir: String = "user://perf") -> Str
 	file.store_string(JSON.stringify(report, "\t"))
 	file.close()
 	return path
+
+
+# ---- live driver (AD-187): plays the fixed script through the real run scene ----
+const RUN_SCENE := "res://scenes/run.tscn"
+
+var cfg: Dictionary = {}
+var _rooms_left: Array = []
+var _room_id := ""
+var _info: Dictionary = {}
+var _ctrl = null
+var _frame_usec: Array = []
+var _sim_usec: Array = []
+var _seen := 0
+var _last_usec := 0
+var _peak_enemies := 0
+var _peak_effects := 0
+var _ticks := 0
+var _results: Array = []
+var _active := false
+var _done := false
+
+static func _args() -> Array:
+	return Array(OS.get_cmdline_user_args()) + Array(OS.get_cmdline_args())
+
+static func requested() -> bool:
+	return "--perf-run" in _args()
+
+static func _arg_value(name: String) -> String:
+	var prefix := name + "="
+	for a in _args():
+		if str(a).begins_with(prefix):
+			return str(a).substr(prefix.length())
+	return ""
+
+static func launch(tree: SceneTree) -> void:
+	tree.root.add_child.call_deferred(load("res://game/core/perf_run.gd").new())
+
+func _fail(reason: String) -> void:
+	if _done:
+		return
+	_done = true
+	_active = false
+	print("PERF_RUN_FAIL ", reason)
+	get_tree().quit(1)
+
+func _ready() -> void:
+	name = "PerfRun"
+	Engine.max_fps = 0
+	if DisplayServer.get_name() != "headless":
+		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	cfg = config()
+	if cfg.is_empty():
+		_fail("config missing")
+		return
+	var ticks := _arg_value("--perf-ticks")
+	if ticks != "":
+		if not ticks.is_valid_int() or int(ticks) < 1:
+			_fail("invalid --perf-ticks " + ticks)
+			return
+		cfg["ticks_per_room"] = int(ticks)
+	var light := _arg_value("--perf-lighting")
+	if light != "":
+		if not light in Settings.LIGHTING_MODES:
+			_fail("invalid --perf-lighting " + light)
+			return
+		var save = get_node_or_null("/root/SaveService")
+		if save != null:
+			save.settings.lighting = light # in memory only, never saved
+	_rooms_left = cfg["rooms"].duplicate()
+	for n in get_tree().root.get_children():
+		if n is Control and n.get_script() != null and str(n.get_script().resource_path) == "res://ui/main_menu.gd":
+			n.queue_free()
+	_next_room()
+
+func _next_room() -> void:
+	_active = false
+	if _rooms_left.is_empty():
+		_finish()
+		return
+	_room_id = str(_rooms_left.pop_front())
+	var ctrl = load(RUN_SCENE).instantiate()
+	ctrl.perf_seed = int(cfg["seed"])
+	ctrl.show_dev_tools = false
+	get_tree().root.add_child(ctrl)
+	_ctrl = ctrl
+	_info = prepare_room(ctrl.flow, _room_id, cfg)
+	if not _info["ok"]:
+		_fail("%s: %s" % [_room_id, _info["error"]])
+		return
+	ctrl._redraw_panel()
+	_frame_usec = []
+	_sim_usec = []
+	_seen = 0
+	_ticks = 0
+	_peak_enemies = 0
+	_peak_effects = 0
+	_last_usec = 0
+	_active = true
+
+func _process(_delta: float) -> void:
+	if not _active:
+		return
+	var now := Time.get_ticks_usec()
+	var frame_usec := now - _last_usec
+	var had_prev := _last_usec != 0
+	_last_usec = now
+	var flow = _ctrl.flow
+	if flow.state != "fighting":
+		_fail("%s: left fighting state (%s)" % [_room_id, flow.state])
+		return
+	refill(flow.session)
+	_ctrl.perf_step(command(flow.session))
+	if not had_prev:
+		return
+	_seen += 1
+	if _seen <= int(cfg["warmup_frames"]):
+		return
+	_frame_usec.append(frame_usec)
+	_sim_usec.append(_ctrl.last_sim_usec)
+	var alive := 0
+	for e in flow.session.enemies:
+		if e.target.alive():
+			alive += 1
+	_peak_enemies = maxi(_peak_enemies, alive)
+	_peak_effects = maxi(_peak_effects, flow.session.sim.queue.active_effect_count())
+	if _frame_usec.size() >= int(cfg["ticks_per_room"]):
+		_finish_room()
+
+func _finish_room() -> void:
+	_active = false
+	var room: Dictionary = _info.duplicate()
+	for k in ["ok", "error", "boss_present", "equip_ok", "complexity"]:
+		room.erase(k)
+	room["frames"] = _frame_usec.size()
+	room["frame_ms"] = sample_stats(_frame_usec)
+	room["sim_ms"] = sample_stats(_sim_usec)
+	room["peak_enemies_alive"] = _peak_enemies
+	room["peak_effects"] = _peak_effects
+	_results.append(room)
+	_ctrl.queue_free()
+	_ctrl = null
+	await get_tree().process_frame
+	_next_room()
+
+func _finish() -> void:
+	var save = get_node_or_null("/root/SaveService")
+	var meta := {
+		"lighting": save.settings.lighting if save != null else "high",
+		"headless": DisplayServer.get_name() == "headless",
+		"window_size": [get_window().size.x, get_window().size.y],
+		"renderer": RenderingServer.get_current_rendering_method()}
+	var report := build_report(cfg, _results, meta)
+	var issues := validate_report(report)
+	if not issues.is_empty():
+		_fail("invalid report " + str(issues))
+		return
+	var path := write_report(report)
+	if path == "":
+		_fail("write failed")
+		return
+	_done = true
+	print("PERF_RUN_OK path=", ProjectSettings.globalize_path(path))
+	for r in _results:
+		print("  %s frame_p95=%.2f ms sim_p95=%.2f ms" % [r["room_id"], r["frame_ms"]["p95"], r["sim_ms"]["p95"]])
+	get_tree().quit(0)
