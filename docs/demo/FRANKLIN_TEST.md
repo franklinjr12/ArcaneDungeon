@@ -1,6 +1,13 @@
 # Franklin demo test checklist
 
-**Time budget: 30-40 minutes** (sections add up to about 35).
+**Time budget (estimate):** non-combat sections 1, 2, 4, 6, 7 and 9 sum to about 20 min. Add the route median rounded up (31 min, from the AD-176 invulnerable route run) for about 51 min. This is an estimate, not a measurement, and it is above the 30-40 min target.
+
+**Expected run length** (AD-176, simulation minutes; menus and reading excluded):
+
+- Natural bot runs (weak, typical, skilled) all end in death, 0 of 60 won. Totals are 9.1-13.4 min. In AD-175, all of these runs died at the Undead Warden (`ruins_boss`).
+- Invulnerable route bot takes 19.5-35.7 min for the whole route. 11 of 20 finished, in 30.2-35.7 min; 9 hit the 360 s room cap.
+- The 30-40 min target is **not met**.
+- Stage 2 sections (5 and 8) may be unreachable without surviving the Undead Warden: no bot won natural play in AD-175 or AD-176.
 
 ## Build and launch
 
@@ -51,7 +58,7 @@ First run only; the desk lists 3 given runes: Lightning, Projectile, Split.
 | 11 | Walk into the right-hand door, or press F. | Run starts in Stage 1. |  |
 | 12 | Start a second run (Retry same seed or New seed); find the desk again. | `Skip the desk` is offered and works. |  |
 
-## 3. Stage 1: Ruins and Undead Warden (~6 min)
+## 3. Stage 1: Ruins and Undead Warden (natural median ~11 min, see Expected run length)
 
 
 
@@ -76,7 +83,7 @@ First run only; the desk lists 3 given runes: Lightning, Projectile, Split.
 | 22 | Press **REROLL** once, then try again. | First reroll changes stock; second is blocked (`REROLLED`). |  |
 | 23 | Check any artifact you hold, in the loadout (Tab) and Compendium > Artifacts. | Name and description show; effect works in play. |  |
 
-## 5. Stage 2: Flooded Cistern (~5 min)
+## 5. Stage 2: Flooded Cistern (time: see Expected run length)
 
 
 
@@ -114,7 +121,7 @@ Build each in the workshop, then cast on enemies/dummy. Check the visible effect
 | 39 | Compare Settings > Video > Light quality High, Low and Lighting off (lighting hint says Off = low-end PCs). | Rooms get darker with High/Low; Off is bright and flat. Enemies and floor stay readable in all modes. |  |
 | 40 | Cast with lighting on. | Spells glow and light nearby floor; no stutter you can feel. |  |
 
-## 8. Final boss, summary, save and resume (~4 min)
+## 8. Final boss, summary, save and resume (time: see Expected run length)
 
 
 
@@ -144,8 +151,8 @@ From [docs/benchmarks/ad_demo_qa.md](../benchmarks/ad_demo_qa.md):
 | 1 | perf (sim) | Sim p95 over the 4.0 ms budget in all 4 probed rooms on the QA host. | high on QA host |
 | 2 | perf (sign-off) | 60 FPS sign-off on reference hardware (i5 / GTX 1660) pending. Your run helps here: note FPS if it dips. | high |
 | 3 | perf (GPU) | GPU and draw cost not measured (headless QA). | medium |
-| 4 | balance | Run length, weak-dies-early and mana-starved targets not met; runs may feel too easy or too short. | high for pacing |
-| 5 | QA coverage | Natural-play smoke not run; route smoke only. | low |
+| 4 | balance | Run length not met: natural bots never won (0/60 in AD-176; all died at 9-13 min). Invulnerable route runs took 19.5-35.7 min, with 9/20 timeouts at the room cap. | high for pacing |
+| 5 | QA coverage | Natural smoke run by AD-176 on tuned data: 0/60 wins; route smoke 9/20 timeouts. Determinism not re-run. | low |
 | 6 | tooling | Fresh checkout needs `godot --headless --path . --import` once before tests. | low |
 | 7 | UI coverage | UI matrix has no Sigil Desk state; fullscreen untestable under Xvfb. Section 2 and the Video tab here cover it by hand. | low |
 | 8 | perf (noise) | QA perf numbers were taken on a shared host. | low |
