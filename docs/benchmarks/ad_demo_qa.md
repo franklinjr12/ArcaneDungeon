@@ -242,3 +242,82 @@ Notes:
 | 6 | tooling | In a fresh worktree without `.godot/`, `run_tests.gd` fails: texture `.ctex` files fail to load (many `FAIL: AD-065/AD-030 png loads`) and `class_name` calls such as `damage_glyph_width` are missing. The first, un-imported run (`/tmp/ad158/suite_noimport.txt`) exited 1. After `godot --headless --path . --import` the suite is 19377 passed / 0 failed. | `/tmp/ad158/suite_noimport.txt`, `/tmp/ad158/suite.txt` | low (environment, not a code bug) | Decide whether the test runner or docs should run the import step automatically. |
 | 7 | UI coverage | `tools/ui_matrix.sh` has no sigil_desk state, and fullscreen is not testable under Xvfb. The screenshots were not visually reviewed in this step. | section 4 | low | Check these by hand in `docs/demo/FRANKLIN_TEST.md`. |
 | 8 | perf (noise) | Perf run shared the host with other jobs; p95 is 2-3x the AD-087 figure. Not re-run in isolation. | section 3; AD-176 re-run: 1-min load 0.94 / 0.99 / 0.92 at the start of runs 1 / 2 / 3, rising to 1.02-1.19 during each run, so the probe kept the host near saturation | low | Re-run on an idle host if a trend matters. |
+
+## Friends Demo v1 (AD-190)
+
+Date 2026-11-09. Commit `c7b7ef6` (branch task/AD-190-hermes-software-exec-ad, plus the `tools/ui_matrix.sh` state change committed before the run). Godot 4.7.1.stable.official.a13da4feb. Host: aarch64 2-core shared VM, NOT the reference PC. 1-min load at the start of the UI matrix 1.93, of the perf run 1.60 (so the host was not idle).
+
+This section supersedes the older sections and the Known issues table above where they differ. For example, `sigil_desk` IS now in the UI matrix (it was missing in issue 7), and the matrix now also shoots `compendium_runes`, `settings_audio`, `settings_video`, `settings_controls`. Bot win rate, mana-starved % and bot room lengths are INFO and not gates (Demo Plan 19.1).
+
+Commands (G=/usr/local/bin/godot, outputs in /tmp/ad190, export on /workspace scratch):
+
+- `$G --headless --path . --import`
+- `$G --headless --path . --script res://tests/qa/demo_smoke.gd -- --natural=1 --seeds=10 --first=0 --det-seeds=0 --trace=0` and the same with `--first=10` (two parallel chunks)
+- `bash tools/ui_matrix.sh --godot $G --out /tmp/ad190/ui_matrix`
+- `python3 scripts/export_demo.py --godot $G --out <scratch>/export`
+- `$G --headless --path . --script res://tests/run_tests.gd`
+- `XDG_DATA_HOME=/tmp/ad190/perf_xdg $G --headless --path . -- --perf-run`, then `$G --headless --path . --script res://tests/qa/demo_perf_probe.gd`
+
+### Smoke (20 seeds 20261022-20261041, natural + route)
+
+Both chunks exited 0: `smoke_green` 40/40 per chunk, 80 rows in total, no failing seeds, no SCRIPT ERROR or crash lines. Determinism: not re-run (`--det-seeds=0`).
+
+| mode | build | n | outcomes | total min min / median / max | max of max room s | rows ok=NO |
+|---|---|---|---|---|---|---|
+| route | typical | 20 | won 20 | 3.048 / 3.459 / 3.745 | 64.083 | 0 |
+| natural | weak | 20 | won 17, dead 3 | 2.338 / 2.670 / 2.939 | 52.167 | 0 |
+| natural | typical | 20 | won 18, dead 2 | 3.048 / 3.349 / 3.745 | 64.083 | 0 |
+| natural | skilled | 20 | won 6, dead 14 | 2.936 / 3.589 / 4.295 | 91.550 | 0 |
+
+No route timeout at the 360 s room cap, so no possible softlock was seen in this smoke. These numbers differ strongly from the AD-176 section above (route 30 min, 9 timeouts, natural 0 wins at 9-13 min): the bots now win in about 3 minutes. Cause not investigated here (data or bot changes since AD-176); recorded as INFO for the owner. Bot run length is far below the 25-40 min G1 target, but bot numbers do not decide G1.
+
+### UI matrix
+
+30 states x 13 size modes: 390 shots taken, 390 headings, 0 FAIL, 0 WARN lines, 30 NOTE lines (fullscreen under Xvfb without a window manager: known limit). Every shot was reported at the requested size. The script did NOT print a `SUMMARY:` line: the contact-sheet step failed (`montage: unable to write ... pause_controls.png`) because /tmp, a 1.9 GB tmpfs, was full (25 of 30 sheets written), and `set -e` stopped the script. Not a UI defect; a scratch-space limit. PNGs were not visually reviewed and were deleted afterwards to free space.
+
+### Release export
+
+`scripts/export_demo.py` exit 0. Zips: `Sigilwright-0.1.0-demo-windows.zip` (38.6 MB) and `Sigilwright-0.1.0-demo-linux.zip` (29.4 MB). Linux zip verification: PASS starts headless and quits cleanly; PASS AD_UI_SHOT_STATE hook inert in release build; PASS release probe (debug keys, title, arena, run) + shipped pck contents; PASS perf run on shipped binary writes a valid report (4 rooms). Host is aarch64, so the arm64 release template ran the pack. The Windows zip was exported but not run. A first attempt with `--out /tmp/ad190/export` failed at "Prepare Template: Failed to copy export template" (same full /tmp tmpfs); the re-run on /workspace passed.
+
+### Test suite (run log, F8 snapshot, resume)
+
+`run_tests.gd` exit 0. TEST SUMMARY: 19558 passed / 0 failed / 78 suites. `test_ad_run_log.gd`, `test_ad_feedback_snapshot.gd` and `test_ad_resume.gd` all ran with no FAIL lines.
+
+### Perf on the VM (INFO, headless, not valid for G4)
+
+`--perf-run` (headless, gl_compatibility, lighting high, dev build, target p95 16.7 ms), per room, ms:
+
+| room | frame p50 | frame p95 | frame max | sim p50 | sim p95 | sim max |
+|---|---|---|---|---|---|---|
+| ruins_c07 | 45.701 | 135.713 | 164.928 | 5.662 | 11.316 | 20.181 |
+| cistern_p10 | 115.797 | 191.986 | 212.778 | 7.676 | 16.717 | 22.829 |
+| ruins_boss | 81.658 | 154.282 | 180.634 | 5.689 | 11.107 | 14.159 |
+| cistern_boss | 106.975 | 136.267 | 156.949 | 7.437 | 11.144 | 18.278 |
+
+`demo_perf_probe.gd` (sim only, 4.0 ms budget, host load 1.23 at start): all 4 rooms over budget, 0 budget drops.
+
+| room | p50 ms | p95 ms | max ms | proxy verdict |
+|---|---|---|---|---|
+| cistern_boss | 5.561 | 8.514 | 17.652 | FAIL (>8.0) |
+| ruins_boss | 3.564 | 7.932 | 10.898 | PASS |
+| ruins_c05 | 4.130 | 9.864 | 15.200 | FAIL (>8.0) |
+| cistern_p08 | 6.588 | 14.737 | 20.904 | FAIL (>8.0) |
+
+Frame times here come from a dummy renderer on a shared 2-core VM and say nothing about 60 FPS on the reference PC.
+
+### Manual checks (the matrix cannot shoot these)
+
+The UI hook has no state for the F8 report dialog or the FPS overlay, and adding one is out of scope. Franklin to check both by hand.
+
+### Gates (Demo Plan 19.4; Franklin decides)
+
+| gate | requirement | evidence | status |
+|---|---|---|---|
+| G1 | Feel: Franklin plays 3 runs; rooms quick and satisfying, no room over ~3 min, bosses feel like events, winning run 25-40 min | Bot numbers are INFO only: max room 91.6 s, bot wins take 2.3-4.3 min (far below 25-40 min) | Franklin to check |
+| G2 | Onboarding: a friend with no explanation moves, dashes, casts, reads a telegraph and crafts one spell within ~5 min | `docs/demo/ONBOARDING.md` says the human test has not been run | Franklin to check |
+| G3 | Stability: no crash or softlock in 20-seed smoke + Franklin's runs; workshop save/quit works | 80/80 smoke rows ok, no crash, no SCRIPT ERROR, no 360 s timeout; suite 19558/0 incl. test_ad_resume | Partial: 20-seed smoke and resume test are clean; Franklin to check his own runs and workshop save/quit by hand |
+| G4 | Performance: 60 FPS at 1080p on the reference PC (i5 11th gen / GTX 1660), Lighting High (Low allowed) | Only headless VM numbers (INFO, above); `docs/demo/PERF_TEST.md` not run on the reference PC | Franklin to check |
+| G5 | Build: one script makes versioned Windows/Linux zips; no debug keys or menus; launches without Godot | `export_demo.py` exit 0, 0.1.0-demo zips for both; Linux zip verify 4/4 PASS incl. release probe | Partial: script, versioned zips and Linux release checks pass; Franklin to check the Windows zip launches without Godot |
+| G6 | Feedback: run log JSON per run, F8 snapshot, feedback form, clear 'send this folder' instructions | Suites test_ad_run_log and test_ad_feedback_snapshot clean; `docs/demo/FEEDBACK_FORM.md` exists | Partial: suites pass and form exists; Franklin to check F8 in a real build (report dialog) and the instructions text |
+| G7 | Assets: placeholder list known; audio in or accepted as placeholder; credits and licences complete | `docs/demo/ASSET_STATUS.md`: 393 files, 390 placeholder, 3 third-party, 1 flagged (`art/export/fnt/arc_fnt_digits_3x5.png` has no recorded licence); `docs/demo/AUDIO_STATUS.md`: 77 of 77 cues placeholder or silent; credits screen from `game/data/credits_v1.json` is in the matrix | Partial: placeholder lists known and credits screen exists; Franklin to check the font licence (licences NOT complete until then) and accept placeholder audio |
+| G8 | Known issues list in the friends package | `README_FRIENDS.md` has a short KNOWN ISSUES section that ships in the zip via `write_readme`. `docs/demo/KNOWN_ISSUES.md` is added by the next step, but `export_demo.py` only bundles README_FRIENDS.md + FEEDBACK_FORM.md, so KNOWN_ISSUES.md itself will NOT be in the zip (owner follow-up) | Partial: README KNOWN ISSUES ships; Franklin to check that list is enough or order KNOWN_ISSUES.md bundled |
