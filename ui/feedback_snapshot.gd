@@ -69,6 +69,9 @@ static func write_report(image: Image, run_log: Dictionary, note: String) -> Str
 	note_file.close()
 	return path
 
+static func ensure_reports_dir() -> void:
+	DirAccess.make_dir_recursive_absolute(_dir())
+
 static func reports_dir_path() -> String:
 	return ProjectSettings.globalize_path(_dir())
 

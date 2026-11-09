@@ -2,6 +2,7 @@ extends RefCounted
 ## AD-184: F8 feedback snapshot writes screenshot/run log/note under user://reports/.
 const FS = preload("res://ui/feedback_snapshot.gd")
 const IA = preload("res://ui/input_actions.gd")
+const SkinA = preload("res://ui/skin_a.gd")
 const DIR := "user://ad184_test_reports/"
 
 func _rm(path: String) -> void:
@@ -80,6 +81,18 @@ func run(t) -> void:
 		if line.begins_with("exclude_filter") and (line.contains("ui/") or line.contains("game/")):
 			ok = false
 	t.check(ok, "AD-184 export filters keep ui/ and game/")
+
+	scene.open_pause()
+	var pm = scene.pause_menu
+	t.check(pm.open_reports_button != null and pm.open_reports_button.visible, "AD-184 open reports button visible")
+	DirAccess.make_dir_recursive_absolute(DIR)
+	_rm(DIR)
+	pm.open_reports_button.pressed.emit()
+	t.check(DirAccess.dir_exists_absolute(DIR) and pm.visible, "AD-184 open reports creates dir and keeps menu open")
+	t.check("btn_open_reports" in SkinA.layout("pause")["focus_order"], "AD-184 pause focus order has open reports")
+	var form := FileAccess.get_file_as_string("res://docs/demo/FEEDBACK_FORM.md").to_lower()
+	for topic in ["fun", "confus", "first spell", "hardest room", "play again", "bug", "pc specs", "run time"]:
+		t.check(form.contains(topic), "AD-184 feedback form covers " + topic)
 
 	viewport.queue_free()
 	FS.image_override = null

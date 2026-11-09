@@ -46,9 +46,12 @@ Log folder (project name `ArcaneDungeon`; `config/use_custom_user_dir` is not se
 
 A `crash_*.txt` appears on the next opted-in launch after an unclean exit.
 
+Friends feedback form and F8 reports: [FEEDBACK_FORM.md](FEEDBACK_FORM.md).
+
 ## 6. Privacy
 Nothing is uploaded; there is no network code. Logs are written only when the tester opts in. They hold anonymous
 counts and timings plus the build stamp: no names, no free text.
+F8 reports are saved only when the player presses F8 and do include a screenshot and the typed note.
 
 ## 7. Summarising
 `scripts/summarize_m4_playtest.py --observations <obs.json> --log <session_x.json> [--log ...] --output <out>`
