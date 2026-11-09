@@ -31,10 +31,28 @@ func _golden(t) -> void:
 		if actual.size() != expected.size():
 			message = "length %d != %d" % [actual.size(),expected.size()]
 		for i in mini(actual.size(),expected.size()):
-			if actual[i] != expected[i]:
+			if not _same_line(actual[i],expected[i]):
 				message = "line %d: got '%s' expected '%s'" % [i,actual[i],expected[i]]
 				break
 		t.check(message == "","AD-136 golden %s %s" % [case_name,message])
+
+## Trace lines match when every '|' field is equal; numeric fields may differ by float text rounding
+## (Godot prints 307.328125 as ...812 on Linux and ...813 on Windows), so compare those within 1e-3.
+func _same_line(a: String, b: String) -> bool:
+	if a == b:
+		return true
+	var fa := a.split("|")
+	var fb := b.split("|")
+	if fa.size() != fb.size():
+		return false
+	for i in fa.size():
+		if fa[i] == fb[i]:
+			continue
+		if not (fa[i].is_valid_float() and fb[i].is_valid_float()):
+			return false
+		if absf(float(fa[i]) - float(fb[i])) > 0.001:
+			return false
+	return true
 
 ## Session with one enemy of `kind`, config overridden by `overrides`, spawned at actor + offset.
 func _spawn(kind: String, offset: Vector2, overrides: Dictionary = {}) -> Array:
