@@ -20,6 +20,7 @@ Godot 4.7.1 stable (pinned) GL Compatibility M0–M3 playable prototypes are imp
 | [demo/FEEDBACK_FORM.md](demo/FEEDBACK_FORM.md) | AD-184 friends feedback questions, F8 reports and how to send the reports folder |
 | [demo/ONBOARDING.md](demo/ONBOARDING.md) | AD-185 onboarding audit: step -> tip id -> trigger, Controls page, Tips toggle |
 | [demo/PERF_TEST.md](demo/PERF_TEST.md) | AD-187 reference-PC performance kit: perf_test .bat launchers, `--perf-run` report and what PASS means (Gate G4) |
+| [demo/ASSET_STATUS.md](demo/ASSET_STATUS.md) | AD-189 asset status: every shipped art, font and audio file as final, placeholder or third-party with licence; flagged files; regenerate with `tools/asset_status.py` |
 | [artifacts.md](artifacts.md) | AD-143 run artifacts: data file, hooks, max held, sources, proposed numbers |
 | [meta_progress.md](meta_progress.md) | AD-145 meta progression: profile v2 schema, discoveries, milestone unlocks, Compendium |
 | [GDD_v1_conformance.md](GDD_v1_conformance.md) | GDD v1.0 rule → status (OK/GAP) → board row tracker for Round AD-R1 |
