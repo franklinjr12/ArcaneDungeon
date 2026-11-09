@@ -55,7 +55,7 @@ var _notice_seen := ""
 var _notice_until_ms := 0
 var _last_wet_kills := 0
 var _last_arcs := 0
-const TELEMETRY_INDEX := {"room1":3,"first_reward":4,"first_workshop":5}
+const TELEMETRY_INDEX := {"room1":3,"first_reward":4,"first_workshop":5,"telegraph":6,"spells_are_runes":7}
 var arena_canvas
 var test_canvas
 var portrait_hud # alias of arena_canvas.slot_hud (the only HP/MP display)
@@ -501,6 +501,7 @@ func close_pause() -> void:
 		pause_menu.close_settings()
 	if pause_menu.is_controls_open():
 		pause_menu.close_controls()
+	guide.refresh_bindings()
 	if pause_menu.is_confirm_open():
 		pause_menu.cancel_confirm()
 	pause_menu.visible = false
@@ -1137,14 +1138,16 @@ func _update_labels() -> void:
 	if tip != null:
 		_watch_hint_signals()
 		var active := ""
-		if flow.mode == "workshop" and not flow.prelude:
+		if flow.prelude and not editor_open:
+			active = "spells_are_runes"
+		elif flow.mode == "workshop" and not flow.prelude:
 			active = "first_workshop"
-		elif flow.state == "fighting" and str(flow.room.values["id"]) == "s1_r1":
+		elif flow.state == "fighting" and flow.run.sequence_index == 0:
 			active = "room1"
 		elif flow.state == "cleared" and not flow.reward_collected:
 			active = "first_reward"
 		var hint: String = guide.next_hint()
-		if guide.HINT_IDS.has(guide.current) and not guide.dismissed and hint == "":
+		if (guide.HINT_IDS.has(guide.current) or guide.is_timed_active()) and not guide.dismissed and hint == "":
 			active = guide.current
 		elif hint != "" and (active == "" or guide.seen.has(active)):
 			active = hint  # an unseen AD-042 tip is shown first, then the pending hint takes over
@@ -1192,6 +1195,12 @@ func _update_dev_label() -> void:
 
 ## AD-084: read-only watch on run-flow counters; never pauses the sim or opens dialogs.
 func _watch_hint_signals() -> void:
+	guide.tick(Time.get_ticks_msec())
+	if flow.state == "fighting" and flow.session != null:
+		for enemy in flow.session.enemies:
+			if enemy.state == "windup":
+				guide.note_telegraph()
+				break
 	if flow.mode == "workshop" and not flow.prelude:
 		guide.note_workshop(3 - flow.run.formulas.size())
 		if flow.run.formulas.size() >= 3 and guide.current == "workshop_empty_slot":

@@ -1,6 +1,8 @@
 keys,en
 flavour.rift_line,"Something in the Uncatalogued Ruins has opened a rift, and the Undead it wakes now guard it."
-onboarding.room1,"Move/aim with mouse. LMB bolt, RMB/Q presets, Space dash gives i-frames."
+onboarding.room1,"{move} move, mouse aims, {cast} casts, {dash} dashes (i-frames)."
+onboarding.telegraph,That marker is an enemy attack winding up. {dash} dashes you clear.
+onboarding.spells_are_runes,Spells are built from runes. Open a slot at the Sigil Desk to craft one.
 onboarding.first_reward,3 cards: pick 1. Each card adds a new behaviour to your spells.
 onboarding.first_workshop,"Edit slot 4, test it in the range. Invalid spells show why."
 room.s1_r1,Uncatalogued Ruins I

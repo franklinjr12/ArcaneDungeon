@@ -968,12 +968,7 @@ func _refresh_conflict_panel(eff: Dictionary) -> void:
 	cancel_button.disabled = not actionable
 
 func _event_text(ev) -> String:
-	if ev == null:
-		return tr("settings.controls.unbound")
-	if ev is InputEventKey and ev.physical_keycode != 0:
-		var code: int = ev.physical_keycode if DisplayServer.get_name() == "headless" else DisplayServer.keyboard_get_keycode_from_physical(ev.physical_keycode)
-		return OS.get_keycode_string(code if code != KEY_NONE else ev.physical_keycode)
-	return ev.as_text()
+	return InputActions.event_text(ev)
 
 func _commit(bindings: Dictionary) -> void:
 	_settings.bindings = bindings

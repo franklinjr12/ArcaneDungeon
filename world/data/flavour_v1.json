@@ -4,8 +4,11 @@
   "onboarding": {
     "room1": "onboarding.room1",
     "first_reward": "onboarding.first_reward",
-    "first_workshop": "onboarding.first_workshop"
+    "first_workshop": "onboarding.first_workshop",
+    "telegraph": "onboarding.telegraph",
+    "spells_are_runes": "onboarding.spells_are_runes"
   },
+  "onboarding_seconds": {"telegraph": 6.0},
   "room_names": {
     "s1_r1": "room.s1_r1",
     "s1_r2": "room.s1_r2",
