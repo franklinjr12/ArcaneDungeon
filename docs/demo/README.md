@@ -13,7 +13,7 @@ Set `version` in `game/data/demo_v1.json` (for example `0.1.0-demo`). It shows o
 ## 3. Export and zip
     python3 scripts/export_demo.py --godot <godot>
 
-Optional `--out <dir>` (default `build/demo/<version>/`, git-ignored). Output layout:
+Optional `--out <dir>` (default `build/demo/<version>/`, git-ignored). The script then verifies the Linux zip (extract to `<out>/_verify`, headless start, `AD_UI_SHOT_STATE` hook inert, `tests/release_probe.gd` debug-key probe in a release build, pack contents); skip with `--no-verify`. On a non-x86_64 host the exported `.pck` runs under the arm64 release template. The Windows zip is exported but not run by the script. Output layout:
 
     <out>/Sigilwright-<version>-windows.zip
     <out>/Sigilwright-<version>-linux.zip
