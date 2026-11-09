@@ -1136,6 +1136,8 @@ func _update_labels() -> void:
 	pause_button.disabled = not can_pause()
 	_update_dev_label()
 	if tip != null:
+		if _settings != null:
+			guide.enabled = _settings.tips_enabled
 		_watch_hint_signals()
 		var active := ""
 		if flow.prelude and not editor_open:

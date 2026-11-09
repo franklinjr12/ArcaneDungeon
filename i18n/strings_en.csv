@@ -216,6 +216,7 @@ settings.title,Settings
 settings.flashes,Reduce flashes
 settings.shake,Reduce screen shake
 settings.telemetry,Local telemetry (opt-in)
+settings.tips,Tips
 settings.window_mode,Window mode
 settings.lighting,Lighting
 settings.lighting.high,High
@@ -534,6 +535,7 @@ settings.help.hold_cast,Hold the cast button instead of clicking repeatedly.
 settings.help.aim_assist,Nudges spells toward the nearest enemy.
 settings.help.visual_cues,Shows an icon on screen for important sounds.
 settings.help.telemetry,"When on, anonymous play stats and session/crash logs are saved locally to the log folder. Nothing is sent anywhere."
+settings.help.tips,Shows short one-time tips. Off hides them without using them up.
 run.reward.title,CHOOSE A REWARD
 run.reward.subtitle,ROOM %d CLEARED   TAKE ONE
 run.reward.take,TAKE
