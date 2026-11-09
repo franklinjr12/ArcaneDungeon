@@ -14,6 +14,7 @@ const Art = preload("res://ui/pixel_art_renderer.gd")
 const InputActions = preload("res://ui/input_actions.gd")
 var aim_source = InputActions.default_aim_source()
 const PauseMenu = preload("res://ui/pause_menu.gd")
+const FeedbackSnapshot = preload("res://ui/feedback_snapshot.gd")
 const LoadoutView = preload("res://ui/loadout_view.gd")
 const EditorView = preload("res://ui/skin_a_editor.gd")
 const MerchantScript = preload("res://world/merchant.gd")
@@ -104,6 +105,9 @@ const TEST_RANGE_SIZE := Vector2(916,650)
 const DESK_DOOR_RADIUS := 34.0
 const EDITOR_SIZE := Vector2(632,665) # AD-153: 296 canvas px at x2 (skin A editor column) plus the panel frame and scrollbar
 var _prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
+var feedback_snapshot
+var _report_paused_clocks := false
+var _report_prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
 
 func _ready() -> void:
 	VisualTheme.apply(self)
@@ -226,6 +230,10 @@ func _build() -> void:
 	pause_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	pause_menu.visible = false
 	add_child(pause_menu)
+	feedback_snapshot = FeedbackSnapshot.new()
+	feedback_snapshot.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(feedback_snapshot)
+	feedback_snapshot.closed.connect(_on_report_closed)
 	pause_menu.resume_requested.connect(close_pause)
 	pause_menu.retry_confirmed.connect(_pause_retry)
 	pause_menu.quit_confirmed.connect(_pause_quit)
@@ -433,7 +441,28 @@ func _fit_editor_panel() -> void:
 	editor_panel.custom_minimum_size = Vector2(minf(EDITOR_SIZE.x,size.x*0.5),0)
 
 func is_paused() -> bool:
-	return pause_menu != null and pause_menu.visible
+	return (pause_menu != null and pause_menu.visible) or (feedback_snapshot != null and feedback_snapshot.is_open())
+
+func open_report() -> void:
+	if flow == null or not flow.initialized or feedback_snapshot.is_open():
+		return
+	var image = FeedbackSnapshot.capture(get_viewport())
+	_report_paused_clocks = can_pause() and not pause_menu.visible
+	if _report_paused_clocks:
+		_set_clocks_paused(true)
+	_report_prev_mouse_mode = Input.mouse_mode
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	feedback_snapshot.open(image, flow.run_log.to_dict())
+
+func _on_report_closed(saved_path: String) -> void:
+	if _report_paused_clocks:
+		_set_clocks_paused(false)
+	_report_paused_clocks = false
+	Input.mouse_mode = _report_prev_mouse_mode
+	if not saved_path.is_empty():
+		current_notice = tr("report.saved")
+		if not pause_menu.visible:
+			_update_labels()
 
 func can_pause() -> bool:
 	return not editor_open and flow.state in ["fighting","cleared","workshop"]
@@ -574,6 +603,15 @@ func _reset_test_range() -> void:
 	_update_labels()
 
 func _input(event: InputEvent) -> void:
+	if feedback_snapshot != null and feedback_snapshot.is_open():
+		if event.is_action_pressed("pause") and not event.is_echo():
+			feedback_snapshot.cancel()
+			get_viewport().set_input_as_handled()
+		return
+	if event.is_action_pressed("report") and not event.is_echo():
+		open_report()
+		get_viewport().set_input_as_handled()
+		return
 	if is_paused():
 		if event.is_action_pressed("pause") and not event.is_echo():
 			pause_menu.handle_cancel()

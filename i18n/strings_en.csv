@@ -570,3 +570,10 @@ run.summary.loadout,FINAL LOADOUT
 menu.build_stamp,Build %s
 settings.open_logs,Open log folder
 settings.help.open_logs,"Opens the folder with your local session and crash logs. Send these files to Franklin. Nothing is uploaded."
+settings.action.report,Report feedback
+report.title,Send feedback
+report.prompt,"Add a one-line note (optional)"
+report.save,Save
+report.cancel,Cancel
+report.saved,Report saved
+pause.open_reports,Open reports folder

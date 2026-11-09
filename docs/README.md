@@ -17,6 +17,7 @@ Godot 4.7.1 stable (pinned) GL Compatibility M0–M3 playable prototypes are imp
 | [M3_vertical_slice.md](M3_vertical_slice.md) | M3 run walkthrough, seeded rewards/rooms, mini-boss, shop, spell editor, safe testing, full-route regression |
 | [M4_validation.md](M4_validation.md) | M4 code, regression/stress/telemetry commands, observability boundaries and deferred acceptance |
 | [demo/README.md](demo/README.md) | AD-157 closed demo: Windows/Linux export commands, headless route check, tester opt-in logs and what to send back |
+| [demo/FEEDBACK_FORM.md](demo/FEEDBACK_FORM.md) | AD-184 friends feedback questions, F8 reports and how to send the reports folder |
 | [artifacts.md](artifacts.md) | AD-143 run artifacts: data file, hooks, max held, sources, proposed numbers |
 | [meta_progress.md](meta_progress.md) | AD-145 meta progression: profile v2 schema, discoveries, milestone unlocks, Compendium |
 | [GDD_v1_conformance.md](GDD_v1_conformance.md) | GDD v1.0 rule → status (OK/GAP) → board row tracker for Round AD-R1 |

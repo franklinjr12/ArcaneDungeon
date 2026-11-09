@@ -22,7 +22,7 @@ static func cast_slot_for_mouse_button(button: int) -> int:
 	return cast_slot_for_event(ev)
 
 const REBINDABLE := ["move_up","move_down","move_left","move_right","cast_slot_1","cast_slot_2",
-	"cast_slot_3","cast_slot_4","dash","interact","pause"]
+	"cast_slot_3","cast_slot_4","dash","interact","pause","report"]
 
 static func default_events(action: String) -> Array:
 	var out: Array = []

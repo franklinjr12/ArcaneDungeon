@@ -31,7 +31,7 @@ const TEXT := {
 }
 const CONFLICT_COLOR := Color(1, 0.45, 0.4)
 ## action -> id stem used by the layout JSON rebind rows.
-const RB_STEM := {"cast_slot_1": "cast_1", "cast_slot_2": "cast_2", "cast_slot_3": "cast_3", "cast_slot_4": "cast_4"}
+const RB_STEM := {"cast_slot_1": "cast_1", "cast_slot_2": "cast_2", "cast_slot_3": "cast_3", "cast_slot_4": "cast_4", "report": "screenshot"}
 signal back_requested
 
 ## Kit painting (scaled 9-slice / tile), shared by the skin controls below.
