@@ -6,14 +6,16 @@ const Flow = preload("res://world/run_flow.gd")
 const ArenaCanvas = preload("res://ui/run_canvas.gd")
 const TestCanvas = preload("res://ui/sandbox_canvas.gd")
 const PortraitHUD = preload("res://ui/pixel_hud.gd")
-const ShopCard = preload("res://art/export/ui/ad_ui_tooltip_and_shop_card.png")
-const RewardCard = preload("res://art/export/ui/ad_ui_reward_card.png")
+const SkinA = preload("res://ui/skin_a.gd")
+const Overlay = preload("res://ui/skin_a_overlay.gd")
+const Artifacts = preload("res://world/artifacts.gd")
 const Prompts = preload("res://ui/onboarding_prompts.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
 const InputActions = preload("res://ui/input_actions.gd")
 var aim_source = InputActions.default_aim_source()
 const PauseMenu = preload("res://ui/pause_menu.gd")
 const LoadoutView = preload("res://ui/loadout_view.gd")
+const EditorView = preload("res://ui/skin_a_editor.gd")
 const MerchantScript = preload("res://world/merchant.gd")
 var flow
 var config_path: String = Flow.CONFIG_V2
@@ -22,25 +24,28 @@ var tip: Label
 var tip_panel: PanelContainer
 var notice_panel: PanelContainer
 var objective: Label
+var objective_panel: PanelContainer
+var top_toasts: VBoxContainer
 var coins_label: Label
 var pause_button: Button
 var loadout_view
 var loadout_view_button: Button
 var workshop_holder: MarginContainer
 var workshop_column: VBoxContainer
-var reward_overlay: CenterContainer
-var reward_panel: PanelContainer
-var summary_overlay: Control
-var shop_overlay: Control
-var shop_panel: PanelContainer
-var shop_list: VBoxContainer
+var reward_overlay: Overlay ## AD-153: skin A reward pick (ad_ui_screen_reward_layout.json)
+var summary_overlay: Overlay ## AD-153: skin A run summary (summary_win / summary_lose layouts)
+var shop_overlay: Overlay ## AD-153: skin A merchant (ad_ui_screen_merchant_layout.json)
+var reward_cards: Array = [] ## card_N sprite nodes, one per reward option
+var reward_take_buttons: Array = []
+var shop_cards: Array = [] ## offer_N sprite nodes, one per stock item
+var shop_buy_buttons: Array = []
+var _shop_detail: Array = [] ## [title, tag, desc] labels of the merchant detail panel
 var shop_open := false
 var _shop_offered := false
 var shop_reopen_button: Button
 var desk_skip_button: Button
-var shop_close_button: Button
 var shop_reroll_button: Button
-var summary_panel: PanelContainer
+var shop_close_button: Button
 var dev_panel: PanelContainer
 var dev_label: Label
 ## null = resolve from OS.is_debug_build() in _ready (same meaning as main_menu.show_debug_entries); tests set false before add_child.
@@ -60,7 +65,9 @@ var editor_panel: PanelContainer
 var editor_dock: MarginContainer
 var editor_controls: VBoxContainer
 var editor_preview: Label
-var palette_tab := 0
+var editor_scroll: ScrollContainer
+var editor_buttons: HBoxContainer
+var editor_view
 var transition_veil: ColorRect
 var current_notice := ""
 var summary_retry_button: Button
@@ -88,10 +95,14 @@ var arena_area: Control
 const SCREEN_MARGIN := 6
 const WORKSHOP_PANEL_WIDTH := 360.0
 const TOP_BAR_HEIGHT := 44
+## Edges of the HUD groups in 640x360 layout px (ad_ui_screen_hud_layout.json).
+const HUD_ARTIFACT_LEFT := 499.0
+const HUD_BOSS_BOTTOM := 46.0
+const HUD_STATUS_BOTTOM := 80.0
 const NOTICE_MS := 5000
 const TEST_RANGE_SIZE := Vector2(916,650)
 const DESK_DOOR_RADIUS := 34.0
-const EDITOR_SIZE := Vector2(500,665)
+const EDITOR_SIZE := Vector2(632,665) # AD-153: 296 canvas px at x2 (skin A editor column) plus the panel frame and scrollbar
 var _prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
 
 func _ready() -> void:
@@ -119,6 +130,7 @@ func _ready() -> void:
 	if _director != null:
 		flow.audio_sink = _director.play
 		_director.play("amb.workshop" if flow.mode == "workshop" else "amb.ruins")
+		_director.play("music." + flow.music_context_for_room())
 	var save = get_node_or_null("/root/SaveService")
 	if save != null:
 		_settings = save.settings
@@ -175,21 +187,6 @@ func _build() -> void:
 	transition_veil.modulate.a = 0
 	transition_veil.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	arena_area.add_child(transition_veil)
-	shop_overlay = Control.new()
-	shop_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shop_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	shop_overlay.visible = false
-	arena_area.add_child(shop_overlay)
-	var shop_centre := CenterContainer.new()
-	shop_centre.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shop_centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	shop_overlay.add_child(shop_centre)
-	shop_panel = PanelContainer.new()
-	shop_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	shop_centre.add_child(shop_panel)
-	shop_list = VBoxContainer.new()
-	shop_list.add_theme_constant_override("separation",6)
-	shop_panel.add_child(shop_list)
 	arena_area.resized.connect(_fit_test_canvas)
 	arena_area.resized.connect(_fit_arena)
 	get_window().size_changed.connect(_fit_arena)
@@ -203,15 +200,24 @@ func _build() -> void:
 	layout.add_child(editor_dock)
 	editor_panel = PanelContainer.new()
 	editor_panel.visible = false
+	editor_panel.add_theme_stylebox_override("panel",SkinA.stylebox("ad_ui_panel_large",16))
 	editor_dock.add_child(editor_panel)
 	resized.connect(_fit_editor_panel)
-	var editor_scroll := ScrollContainer.new()
+	var editor_body := VBoxContainer.new()
+	editor_body.add_theme_constant_override("separation",8)
+	editor_panel.add_child(editor_body)
+	editor_scroll = ScrollContainer.new()
 	editor_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	editor_panel.add_child(editor_scroll)
+	editor_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	editor_body.add_child(editor_scroll)
 	editor_controls = VBoxContainer.new()
-	editor_controls.custom_minimum_size = Vector2(470,0)
-	editor_controls.add_theme_constant_override("separation",9)
+	editor_controls.custom_minimum_size = Vector2(EditorView.WIDTH*EditorView.SC,0)
+	editor_controls.add_theme_constant_override("separation",int(4*EditorView.SC))
 	editor_scroll.add_child(editor_controls)
+	editor_buttons = HBoxContainer.new()
+	editor_buttons.add_theme_constant_override("separation",int(4*EditorView.SC))
+	editor_body.add_child(editor_buttons)
+	editor_view = EditorView.new()
 	_build_dev_overlay()
 	loadout_view = LoadoutView.new()
 	add_child(loadout_view)
@@ -225,6 +231,9 @@ func _build() -> void:
 	pause_menu.quit_confirmed.connect(_pause_quit)
 	pause_menu.save_quit_confirmed.connect(_save_and_quit)
 	pause_menu.tips_toggled.connect(_toggle_tips)
+	pause_menu.loadout_requested.connect(func():
+		close_pause()
+		open_loadout_view())
 	_fit_editor_panel()
 
 ## Workshop is a safe room, so it gets a side panel (merchant, test range tools, loadout, test feedback); combat has none.
@@ -267,94 +276,88 @@ func _toast(parent: Control, label: Label) -> PanelContainer:
 	parent.add_child(holder)
 	return holder
 
-## Top-left objective + coins, top-centre toasts, top-right pause button.
+## AD-153: the skin A HUD (pixel_hud.gd) owns HP/MP, stage, coins and artifacts. This bar keeps the goal line (below the
+## status row), the toasts, and the Pause / Loadout buttons, positioned clear of the HUD by `_layout_top_bar`.
 func _build_top_bar() -> void:
 	var bar := Control.new()
 	bar.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bar)
-	var objective_panel := PanelContainer.new()
+	objective_panel = PanelContainer.new()
 	objective_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	objective_panel.position = Vector2(SCREEN_MARGIN+4,SCREEN_MARGIN+4)
 	bar.add_child(objective_panel)
-	var objective_box := VBoxContainer.new()
-	objective_panel.add_child(objective_box)
 	objective = Label.new()
 	objective.name = "Objective"
 	objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	objective.custom_minimum_size.x = 360
 	objective.add_theme_color_override("font_color",Color("#efbc65"))
-	objective_box.add_child(objective)
-	var coin_row := HBoxContainer.new()
-	objective_box.add_child(coin_row)
-	var coin := TextureRect.new()
-	coin.texture = PortraitHUD.ui_icon_texture("coin")
-	coin.custom_minimum_size = Vector2(20,20)
-	coin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	coin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	coin.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	coin_row.add_child(coin)
-	coins_label = Label.new()
+	objective_panel.add_child(objective)
+	coins_label = Label.new() # mirrors the coin count the HUD draws; kept for tests and screen readers
 	coins_label.name = "Coins"
-	coin_row.add_child(coins_label)
+	coins_label.visible = false
+	bar.add_child(coins_label)
 	pause_button = _button(bar,tr("run.btn.pause"),func(): open_pause())
 	pause_button.name = "PauseButton"
 	pause_button.focus_mode = Control.FOCUS_NONE # Space is the dash key; a focused button would also fire on it
 	pause_button.custom_minimum_size = Vector2(120,34)
-	pause_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	pause_button.offset_left = -(SCREEN_MARGIN+4+120)
-	pause_button.offset_right = -(SCREEN_MARGIN+4)
-	pause_button.offset_top = SCREEN_MARGIN+4
-	pause_button.offset_bottom = SCREEN_MARGIN+4+34
 	loadout_view_button = _button(bar,tr("run.btn.loadout_view"),func(): open_loadout_view())
 	loadout_view_button.name = "LoadoutViewButton"
 	loadout_view_button.focus_mode = Control.FOCUS_NONE
-	loadout_view_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	loadout_view_button.offset_left = -(SCREEN_MARGIN+4+120+8+150)
-	loadout_view_button.offset_right = -(SCREEN_MARGIN+4+120+8)
-	loadout_view_button.offset_top = SCREEN_MARGIN+4
-	loadout_view_button.offset_bottom = SCREEN_MARGIN+4+34
+	loadout_view_button.custom_minimum_size = Vector2(150,34)
 	loadout_view_button.visible = false
 	var toasts := VBoxContainer.new()
 	toasts.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	toasts.custom_minimum_size.x = 460
 	toasts.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP,Control.PRESET_MODE_MINSIZE)
-	toasts.offset_top = SCREEN_MARGIN+4
 	toasts.offset_left = -230 # centred on the screen, clear of the right-hand panel
 	toasts.offset_right = 230
 	toasts.add_theme_constant_override("separation",4)
 	bar.add_child(toasts)
+	top_toasts = toasts
 	tip = Label.new()
 	tip_panel = _toast(toasts,tip)
 	notices = Label.new()
 	notice_panel = _toast(toasts,notices)
+	get_viewport().size_changed.connect(_layout_top_bar)
+	_layout_top_bar()
+
+## Pixel-scale and HUD-free top edge for the top bar. While the arena HUD is up (combat), the buttons sit left of the
+## artifact column and below the boss block; in the workshop (no HUD) they keep the original top-right spot.
+func _layout_top_bar() -> void:
+	if pause_button == null:
+		return
+	var view := get_viewport_rect().size
+	var sc := floorf(SkinA.canvas_scale(view))
+	var hud_up: bool = arena_canvas != null and arena_canvas.visible
+	var edge := float(SCREEN_MARGIN+4)
+	var right := view.x-edge
+	var top := edge
+	if hud_up:
+		right = view.x-SCREEN_MARGIN-(SkinA.CANVAS.x-HUD_ARTIFACT_LEFT)*sc-8.0
+		top = SCREEN_MARGIN+HUD_BOSS_BOTTOM*sc+4.0
+	pause_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	pause_button.position = Vector2(right-120,top)
+	pause_button.size = Vector2(120,34)
+	loadout_view_button.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	loadout_view_button.position = Vector2(right-120-8-150,top)
+	loadout_view_button.size = Vector2(150,34)
+	objective_panel.position = Vector2(SCREEN_MARGIN+4,SCREEN_MARGIN+HUD_STATUS_BOTTOM*sc+4.0 if hud_up else edge)
+	top_toasts.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP,Control.PRESET_MODE_MINSIZE)
+	top_toasts.offset_left = -230
+	top_toasts.offset_right = 230
+	top_toasts.offset_top = top+34.0+8.0
 
 ## Centred, non-pausing panels: reward choice (cleared combat room) and the run summary modal (dead / won).
 func _build_overlays() -> void:
-	reward_overlay = CenterContainer.new()
-	reward_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	reward_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	reward_overlay.visible = false
+	reward_overlay = Overlay.new(false)
+	reward_overlay.director = _director
 	add_child(reward_overlay)
-	reward_panel = PanelContainer.new()
-	reward_overlay.add_child(reward_panel)
-	summary_overlay = Control.new()
-	summary_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	summary_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	summary_overlay.visible = false
+	summary_overlay = Overlay.new(true)
+	summary_overlay.director = _director
 	add_child(summary_overlay)
-	var dim := ColorRect.new()
-	dim.color = Color(0,0,0,0.6)
-	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	summary_overlay.add_child(dim)
-	var centre := CenterContainer.new()
-	centre.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	summary_overlay.add_child(centre)
-	summary_panel = PanelContainer.new()
-	summary_panel.custom_minimum_size.x = 380
-	centre.add_child(summary_panel)
+	shop_overlay = Overlay.new(true)
+	shop_overlay.director = _director
+	add_child(shop_overlay)
 
 ## Dev-only F3 overlay: only built when show_dev_tools (and debug keys) are on; starts hidden.
 func _build_dev_overlay() -> void:
@@ -427,7 +430,7 @@ func _fit_test_canvas() -> void:
 func _fit_editor_panel() -> void:
 	if editor_panel == null:
 		return
-	editor_panel.custom_minimum_size = Vector2(minf(EDITOR_SIZE.x,size.x*0.45),0)
+	editor_panel.custom_minimum_size = Vector2(minf(EDITOR_SIZE.x,size.x*0.5),0)
 
 func is_paused() -> bool:
 	return pause_menu != null and pause_menu.visible
@@ -458,6 +461,8 @@ func open_pause() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	pause_menu.set_tips_visible(not guide.dismissed)
 	pause_menu.set_save_available(flow.can_save())
+	var seconds := int(flow.summary()["seconds"])
+	pause_menu.set_run_info(tr("pause.run_info") % [int(flow.room.values.get("stage",0))+1,int(flow.rooms_cleared)+1,seconds/60,seconds%60])
 	pause_menu.visible = true
 
 func close_pause() -> void:
@@ -574,6 +579,9 @@ func _input(event: InputEvent) -> void:
 			pause_menu.handle_cancel()
 		get_viewport().set_input_as_handled()
 		return
+	if event.is_action_pressed("dash") and (reward_overlay.has_button_focus() or shop_overlay.has_button_focus()):
+		get_viewport().set_input_as_handled() # Space is the dash key and also "accept": never let it press a focused offer
+		return
 	if editor_open or not event.is_pressed() or event.is_echo():
 		return
 	if is_loadout_view_open():
@@ -595,6 +603,8 @@ func _input(event: InputEvent) -> void:
 		open_loadout_view()
 	elif event.is_action_pressed("interact"):
 		_exit()
+	elif event.is_action_pressed("pause") and shop_overlay.visible:
+		_set_shop_open(false)
 	elif event.is_action_pressed("pause"):
 		open_pause()
 	elif event.is_action_pressed("run_retry"):
@@ -723,6 +733,7 @@ func _redraw_panel() -> void:
 	arena_canvas.lighting_props = flow.room.values.get("layout",{}).get("props",[])
 	portrait_hud.queue_redraw()
 	arena_canvas.visible = flow.mode != "workshop"
+	_layout_top_bar()
 	test_canvas.visible = flow.mode == "workshop"
 	test_canvas.runner = flow.range_sim
 	test_canvas.door_at = desk_door_position() if flow.prelude else Vector2.INF
@@ -744,41 +755,13 @@ func _redraw_panel() -> void:
 	workshop_holder.visible = in_workshop and not editor_open
 	reward_overlay.visible = reward_choice
 	summary_overlay.visible = in_summary
-	_place_context(summary_panel if in_summary else (reward_panel if reward_choice else workshop_column))
+	_place_context(workshop_column)
 	if in_summary:
 		_build_summary_panel()
 	elif flow.state == "error":
 		_heading(context,tr("run.error.run_data"))
 	elif reward_choice:
-		var heading := Label.new()
-		heading.text = tr("run.reward.heading")
-		heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		heading.add_theme_color_override("font_color",Color("#efbc65"))
-		context.add_child(heading)
-		var row := HBoxContainer.new()
-		row.alignment = BoxContainer.ALIGNMENT_CENTER
-		row.add_theme_constant_override("separation",12)
-		context.add_child(row)
-		for i in flow.reward_options.size():
-			var item: Dictionary = flow.reward_options[i]
-			var caption := ""
-			if item["kind"] in ["rune","artifact"]:
-				caption = tr(str(item["name_key"]))+"\n"+tr(str(item["behaviour_key"]))
-			else:
-				caption = tr("run.reward.currency") % int(item["amount"])
-			var card := _button(row,"%d) %s" % [i+1,caption],_choose_reward.bind(i))
-			card.custom_minimum_size = Vector2(180,240)
-			card.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			card.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			card.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
-			_skin_reward_button(card,item)
-		var keys := Label.new()
-		keys.text = tr("run.reward.keys")
-		keys.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		context.add_child(keys)
-		if flow.edit_policy == "cleared_room":
-			_hint(context,tr("run.hint.quick_edit"))
-		_hint(context,tr("run.hint.advance"))
+		_build_reward_panel()
 	elif flow.state == "cleared" and flow.next_is_optional():
 		_button(context,tr("run.btn.door_optional"),func(): _exit(true))
 		_button(context,tr("run.btn.door_skip"),func(): _exit(false))
@@ -804,7 +787,100 @@ func _redraw_panel() -> void:
 		_shop_offered = false
 		shop_open = false
 	_sync_shop()
+	reward_overlay.focus_default()
 	_update_labels()
+
+## AD-153: kit card art per kind (rune / artifact / upgrade); falls back to the common frame when a rarity has none.
+static func card_rarity(kind: String, rarity: String) -> String:
+	return rarity if SkinA.has_sprite("ad_ui_card_%s_%s" % [kind,rarity]) else "common"
+
+static func card_sprite(kind: String, rarity: String) -> String:
+	return "ad_ui_card_%s_%s" % [kind,card_rarity(kind,rarity)]
+
+## Rune art: the demo icon atlas by rune name (essence.cold -> cold), else the MVP rune icon.
+func _rune_art(rune_id: String) -> Texture2D:
+	var short := rune_id.get_slice(".",1)
+	return SkinA.icon(short) if SkinA.has_icon(short) else PortraitHUD.rune_icon_texture(rune_id)
+
+## Rect of a layout label's row spanning a band's width (centred text).
+func _band(o: Overlay, band_id: String, label_id: String) -> Dictionary:
+	var band: Dictionary = o.rect_of(band_id)
+	var row: Dictionary = o.rect_of(label_id)
+	return {"x":band["x"],"y":row["y"],"w":band["w"],"h":row["h"]}
+
+## One kit card (sprite, rarity, name, art) from the card widget `template` shifted by dx canvas px.
+func _kit_card(o: Overlay, template: String, node_id: String, dx: float, kind: String, rarity: String, card_name: String, art: Texture2D) -> TextureRect:
+	var card_tex := card_sprite(kind,rarity)
+	var card := o.picture(node_id,SkinA.region(card_tex),o.rect_of(template,dx))
+	card.set_meta("sprite",card_tex)
+	var head: Dictionary = o.region_of(template,"header",dx)
+	head["y"] += 2.0
+	head["h"] = 7.0
+	o.text(node_id+"_rarity",tr("run.rarity."+card_rarity(kind,rarity)),head,"selected",HORIZONTAL_ALIGNMENT_CENTER)
+	o.picture(node_id+"_icon",art,o.region_of(template,"icon",dx))
+	var label_box: Dictionary = o.region_of(template,"text",dx)
+	label_box["y"] += 2.0
+	label_box["h"] = 16.0
+	o.text(node_id+"_name",card_name.to_upper(),label_box,"normal",HORIZONTAL_ALIGNMENT_CENTER,2)
+	return card
+
+## AD-153: reward pick per ad_ui_screen_reward_layout.json. Offers, order and keys 1-N come from the flow unchanged.
+func _build_reward_panel() -> void:
+	var o: Overlay = reward_overlay
+	o.begin("reward")
+	reward_cards.clear()
+	reward_take_buttons.clear()
+	o.picture("title_header",SkinA.region("ad_ui_header"),o.rect_of("title_header"))
+	o.text("title",tr("run.reward.title"),_band(o,"title_header","title"),"selected",HORIZONTAL_ALIGNMENT_CENTER)
+	var room_number := int(flow.room.values.get("room",flow.run.sequence_index))+1
+	o.text("subtitle",tr("run.reward.subtitle") % room_number,{"x":0.0,"y":o.rect_of("subtitle")["y"],"w":SkinA.CANVAS.x,"h":7.0},"normal",HORIZONTAL_ALIGNMENT_CENTER)
+	o.picture("ico_coin",SkinA.icon_or_mvp("coin"),{"x":520.0,"y":11.0,"w":16.0,"h":16.0})
+	o.text("coins_txt",tr("run.reward.coins") % flow.run.currency,{"x":540.0,"y":o.rect_of("coins_txt")["y"],"w":76.0,"h":7.0},"selected",HORIZONTAL_ALIGNMENT_RIGHT)
+	var count: int = flow.reward_options.size()
+	var step := 200.0 if count <= 3 else floorf(448.0/float(count-1))
+	var card_one: Dictionary = o.rect_of("card_1")
+	var order: Array = []
+	for i in count:
+		var item: Dictionary = flow.reward_options[i]
+		var centre := SkinA.CANVAS.x*0.5+(float(i)-float(count-1)*0.5)*step
+		var dx: float = centre-(card_one["x"]+card_one["w"]*0.5)
+		var kind := "upgrade"
+		var rarity := "common"
+		var card_name := tr("run.reward.coins_name") % int(item.get("amount",0))
+		var desc := tr("run.reward.coins_desc")
+		var tag_key := "run.reward.tag_currency"
+		var art: Texture2D = SkinA.icon_or_mvp("coin")
+		if item["kind"] in ["rune","artifact"]:
+			kind = str(item["kind"])
+			rarity = str(item.get("rarity","common"))
+			card_name = tr(str(item["name_key"]))
+			desc = tr(str(item["behaviour_key"]))
+			tag_key = "run.reward.tag_"+kind
+			art = _rune_art(str(item["id"])) if kind == "rune" else SkinA.icon_or_mvp("upgrade")
+		var card := _kit_card(o,"card_1","card_%d" % (i+1),dx,kind,rarity,card_name,art)
+		reward_cards.append(card)
+		var tip_w := minf(160.0,step-8.0)
+		var tip: Dictionary = o.rect_of("info_1")
+		tip["x"] = centre-tip_w*0.5
+		tip["w"] = tip_w
+		o.frame("info_%d" % (i+1),"ad_ui_panel_tooltip",tip)
+		var inner_x: float = tip["x"]+8.0
+		var inner_w := tip_w-16.0
+		o.text("info_%d_title" % (i+1),card_name.to_upper(),{"x":inner_x,"y":o.rect_of("info_1_title")["y"],"w":inner_w,"h":7.0},"selected")
+		o.text("info_%d_tag" % (i+1),(tr(tag_key) % tr("run.rarity."+card_rarity(kind,rarity))).to_upper(),{"x":inner_x,"y":o.rect_of("info_1_tag")["y"],"w":inner_w,"h":7.0},"hover")
+		var rule: Dictionary = o.rect_of("divider_11")
+		o.rule("divider_%d" % (i+1),"ad_ui_divider_plain",{"x":inner_x,"y":rule["y"],"w":inner_w,"h":rule["h"]})
+		o.text("info_%d_desc" % (i+1),desc.to_upper(),{"x":inner_x,"y":o.rect_of("info_1_desc_0")["y"],"w":inner_w,"h":40.0},"normal",HORIZONTAL_ALIGNMENT_LEFT,4)
+		var take := o.button("btn_take_%d" % (i+1),tr("run.reward.take"),_choose_reward.bind(i),o.rect_of("btn_take_1",dx))
+		reward_take_buttons.append(take)
+		order.append("btn_take_%d" % (i+1))
+	var hint_y: float = o.rect_of("hint")["y"]
+	o.text("hint",tr("run.reward.keys").to_upper(),{"x":0.0,"y":hint_y,"w":SkinA.CANVAS.x,"h":7.0},"disabled",HORIZONTAL_ALIGNMENT_CENTER)
+	var notes: Array = [tr("run.hint.advance")]
+	if flow.edit_policy == "cleared_room":
+		notes.push_front(tr("run.hint.quick_edit"))
+	o.text("hint_notes","   ".join(notes).to_upper(),{"x":96.0,"y":hint_y+10.0,"w":448.0,"h":16.0},"disabled",HORIZONTAL_ALIGNMENT_CENTER,2)
+	o.finish(order)
 
 func _build_desk_panel() -> void:
 	var slot_ui: int = int(flow.config["sigil_desk"]["formula_index"])+2
@@ -835,8 +911,9 @@ func _rune_label(id: String) -> String:
 func _sync_shop() -> void:
 	if shop_overlay != null:
 		shop_overlay.visible = shop_open and flow != null and flow.state == "workshop" and not editor_open
+		shop_overlay.focus_default()
 	if workshop_holder != null and flow != null:
-		workshop_holder.visible = flow.state == "workshop" and not editor_open
+		workshop_holder.visible = flow.state == "workshop" and not editor_open and not (shop_overlay != null and shop_overlay.visible)
 	if editor_dock != null:
 		editor_dock.visible = editor_open
 		_fit_editor_panel()
@@ -846,77 +923,122 @@ func _set_shop_open(on: bool) -> void:
 	shop_open = on
 	_sync_shop()
 
+## AD-153: visual-only rarity for upgrade offers (merchant data carries none); matches the merchant mock.
+const UPGRADE_RARITY := {"max_hp":"common","max_mana":"common","dash_charge":"rare"}
+const UPGRADE_ICONS := {"max_hp":"hp_up","max_mana":"mana_up","dash_charge":"dash_up"}
+const SHOP_CARD_AREA := Vector2(24.0,432.0) # canvas x span of the offer cards (left of the side panel)
+var _shop_sel := 0
+var _shop_views: Array = []
+
+## Card/detail view of one stock item: {kind, rarity, name, art, tag_key, desc}.
+func _shop_view(item: Dictionary) -> Dictionary:
+	var view := {"kind":"upgrade","rarity":"common","tag_key":"run.reward.tag_upgrade"}
+	if item["kind"] == "rune":
+		var rune_id := str(item["rune_id"])
+		view["kind"] = "rune"
+		view["rarity"] = flow.rewards.rarity_of(rune_id,flow.rewards.config)
+		view["name"] = _rune_label(rune_id)
+		view["art"] = _rune_art(rune_id)
+		view["tag_key"] = "run.reward.tag_rune"
+		var rune = flow.session.sim.registry.get_rune(rune_id)
+		var desc_key := "rune.%s.desc" % rune_id
+		view["desc"] = rune_id
+		if rune != null:
+			view["desc"] = tr(desc_key) if tr(desc_key) != desc_key else str(rune.snapshot()["description"])
+	elif item["kind"] == "artifact":
+		view["kind"] = "artifact"
+		view["rarity"] = Artifacts.rarity_of(str(item["artifact_id"]))
+		view["name"] = tr(str(item["label_args"][0]))
+		view["art"] = SkinA.icon_or_mvp("upgrade")
+		view["tag_key"] = "run.reward.tag_artifact"
+		view["desc"] = tr(str(item["desc_key"]))
+	else:
+		var stat := str(item.get("stat","max_hp"))
+		view["rarity"] = UPGRADE_RARITY.get(stat,"common")
+		view["name"] = MerchantScript.item_label(item)
+		view["art"] = SkinA.icon_or_mvp(UPGRADE_ICONS.get(stat,"hp_up"))
+		view["desc"] = tr("run.shop."+stat) % int(item["amount"])
+	return view
+
+func _shop_select(i: int) -> void:
+	if i < 0 or i >= _shop_views.size() or _shop_detail.size() < 3:
+		return
+	_shop_sel = i
+	var view: Dictionary = _shop_views[i]
+	var item: Dictionary = flow.merchant.stock[i]
+	var rarity := card_rarity(str(view["kind"]),str(view["rarity"]))
+	_shop_detail[0].text = str(view["name"]).to_upper()
+	_shop_detail[1].text = ((tr(str(view["tag_key"])) % tr("run.rarity."+rarity))+"   "+tr("run.shop.price_coins") % int(item["price"])).to_upper()
+	_shop_detail[2].text = str(view["desc"]).to_upper()
+
+## AD-153: merchant per ad_ui_screen_merchant_layout.json. Stock, prices, buy/reroll rules are the flow's, unchanged.
 func _build_shop_panel() -> void:
-	_clear(shop_list)
-	var title := Label.new()
-	title.text = tr(str(flavour.get("merchant", {}).get("title", "Merchant")))+tr("run.merchant.buy_once")
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_color_override("font_color",Color("#efbc65"))
-	shop_list.add_child(title)
-	var greet := Label.new()
-	greet.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	greet.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	greet.custom_minimum_size.x = 380
-	greet.text = tr(flow.merchant.greeting(flow.run.seed))
-	shop_list.add_child(greet)
-	# AD-144: up to 6 offers, so cards wrap into rows of three.
-	var row := GridContainer.new()
-	row.columns = 3
-	row.add_theme_constant_override("h_separation",8)
-	row.add_theme_constant_override("v_separation",8)
-	shop_list.add_child(row)
-	for i in flow.merchant.stock.size():
-		var item: Dictionary = flow.merchant.stock[i]
-		var affordable: bool = int(item["price"]) <= flow.run.currency
-		var card := PanelContainer.new()
-		var box := StyleBoxTexture.new()
-		var tex := AtlasTexture.new()
-		tex.atlas = ShopCard
-		tex.region = Rect2(48,0,48,48)
-		box.texture = tex
-		box.draw_center = false # the card art bakes in a RUNE label and price; keep only its frame
-		for side in ["left","right","top","bottom"]:
-			box.set("texture_margin_"+side,4)
-			box.set("content_margin_"+side,8)
-		card.add_theme_stylebox_override("panel",box)
-		card.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		row.add_child(card)
-		var col := VBoxContainer.new()
-		col.custom_minimum_size.x = 150
-		col.add_theme_constant_override("separation",4)
-		card.add_child(col)
-		var b := _button(col,tr("run.shop.item_price") % [MerchantScript.item_label(item),str(item["price"])],_buy.bind(i))
-		b.disabled = flow.merchant.bought.has(item["id"]) or not affordable
-		if item["kind"] == "rune":
-			b.icon = PortraitHUD.rune_icon_texture(str(item["rune_id"]))
-		elif item["kind"] == "artifact":
-			b.icon = PortraitHUD.ui_icon_texture("upgrade")
-		else:
-			b.icon = PortraitHUD.ui_icon_texture({"max_mana":"mana","dash_charge":"dash"}.get(str(item.get("stat","max_hp")),"hp"))
-		b.expand_icon = false
-		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		var detail := Label.new()
-		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		detail.custom_minimum_size.x = 150 # a wrapped label needs a width or it measures one character per line
-		var explanation := ""
-		if item["kind"] == "rune":
-			var rune = flow.session.sim.registry.get_rune(str(item["rune_id"]))
-			var desc_key := "rune.%s.desc" % item["rune_id"]
-			explanation = str(item["rune_id"])
-			if rune != null:
-				explanation = tr(desc_key) if tr(desc_key) != desc_key else str(rune.snapshot()["description"])
-		elif item["kind"] == "artifact":
-			explanation = tr(str(item["desc_key"]))
-		else:
-			explanation = tr("run.shop."+str(item.get("stat","max_hp"))) % int(item["amount"])
-		detail.text = explanation+" | "+(tr("run.shop.purchased") if flow.merchant.bought.has(item["id"]) else (tr("run.shop.affordable") if affordable else tr("run.shop.need") % (int(item["price"])-flow.run.currency)))
-		col.add_child(detail)
+	var o: Overlay = shop_overlay
+	o.begin("merchant")
+	shop_cards.clear()
+	shop_buy_buttons.clear()
+	_shop_views.clear()
+	_shop_detail.clear()
+	var stock: Array = flow.merchant.stock
+	o.picture("title_header",SkinA.region("ad_ui_header"),o.rect_of("title_header"))
+	o.text("title",tr(str(flavour.get("merchant",{}).get("title","Merchant"))).to_upper(),_band(o,"title_header","title"),"selected",HORIZONTAL_ALIGNMENT_CENTER)
+	var count: int = stock.size()
+	var template_x: float = o.rect_of("offer_1")["x"]
+	var step: float = o.rect_of("offer_2")["x"]-template_x
+	if count > 5:
+		step = floorf((SHOP_CARD_AREA.y-SHOP_CARD_AREA.x-o.rect_of("offer_1")["w"])/float(count-1)) # six offers squeeze in without touching the side panel
+	var order: Array = []
+	for i in count:
+		var item: Dictionary = stock[i]
+		var t := "%d" % (mini(i,4)+1) # layout slot used as the template for this offer
+		var dx: float = SHOP_CARD_AREA.x+step*float(i)-o.rect_of("offer_"+t)["x"]
+		var view := _shop_view(item)
+		_shop_views.append(view)
+		var sold: bool = flow.merchant.bought.has(item["id"])
+		var price := int(item["price"])
+		var affordable: bool = price <= flow.run.currency
+		var card := _kit_card(o,"offer_"+t,"offer_%d" % (i+1),dx,str(view["kind"]),str(view["rarity"]),str(view["name"]),view["art"])
+		shop_cards.append(card)
+		o.hotspot("offer_%d_select" % (i+1),_shop_select.bind(i),o.rect_of("offer_"+t,dx)).mouse_entered.connect(_shop_select.bind(i))
+		var plate: Dictionary = o.rect_of("price_plate_"+t,dx)
+		o.frame("price_plate_%d" % (i+1),"ad_ui_panel_tooltip",plate)
+		o.picture("price_ico_%d" % (i+1),SkinA.icon_or_mvp("coin"),o.rect_of("price_ico_"+t,dx))
+		o.text("price_%d" % (i+1),str(price),{"x":plate["x"]+24.0,"y":o.rect_of("price_"+t)["y"],"w":plate["w"]-28.0,"h":7.0},"selected" if affordable and not sold else "disabled")
+		var buy_text := tr("run.shop.sold") if sold else (tr("run.shop.buy") if affordable else tr("run.shop.need_short") % (price-flow.run.currency))
+		var buy := o.button("btn_buy_%d" % (i+1),buy_text,_buy.bind(i),o.rect_of("btn_buy_"+t,dx))
+		buy.disabled = sold or not affordable
+		buy.focus_entered.connect(_shop_select.bind(i))
+		buy.mouse_entered.connect(_shop_select.bind(i))
+		shop_buy_buttons.append(buy)
+		order.append("btn_buy_%d" % (i+1))
+		if sold:
+			card.modulate = Color(1,1,1,0.55)
+	o.frame("detail","ad_ui_panel_tooltip",o.rect_of("detail"))
+	var detail: Dictionary = o.rect_of("detail")
+	var inner_x: float = detail["x"]+8.0
+	var inner_w: float = detail["w"]-16.0
+	_shop_detail.append(o.text("detail_title","",{"x":inner_x,"y":o.rect_of("detail_title")["y"],"w":inner_w,"h":7.0},"selected"))
+	_shop_detail.append(o.text("detail_tag","",{"x":inner_x,"y":o.rect_of("detail_tag")["y"],"w":inner_w,"h":7.0},"hover"))
+	var rule: Dictionary = o.rect_of("divider_51")
+	o.rule("detail_rule","ad_ui_divider_plain",{"x":inner_x,"y":rule["y"],"w":inner_w,"h":rule["h"]})
+	_shop_detail.append(o.text("detail_desc","",{"x":inner_x,"y":o.rect_of("detail_desc_0")["y"],"w":inner_w,"h":27.0},"normal",HORIZONTAL_ALIGNMENT_LEFT,3))
+	_shop_select(clampi(_shop_sel,0,maxi(count-1,0)))
+	o.frame("side_panel","ad_ui_panel_large",o.rect_of("side_panel"))
+	o.picture("ico_coin",SkinA.icon_or_mvp("coin"),o.rect_of("ico_coin"))
+	o.text("coins_txt",tr("run.shop.coins") % flow.run.currency,o.rect_of("coins_txt"),"selected")
+	var side_rule: Dictionary = o.rect_of("divider_56")
+	o.rule("side_rule","ad_ui_divider_plain",side_rule)
+	var remark: Dictionary = o.rect_of("remark_0")
+	o.text("remark",tr(flow.merchant.greeting(flow.run.seed)).to_upper(),{"x":remark["x"],"y":remark["y"],"w":side_rule["w"],"h":27.0},"normal",HORIZONTAL_ALIGNMENT_LEFT,3)
 	var reroll_price := int(flow.merchant.config.get("reroll_price",0))
 	var can_reroll: bool = flow.merchant.reroll_available(flow.run)
-	shop_reroll_button = _button(shop_list,tr("run.shop.reroll") % reroll_price if can_reroll else tr("run.shop.reroll_used"),_reroll)
+	shop_reroll_button = o.button("btn_reroll",tr("run.shop.reroll_btn") % reroll_price if can_reroll else tr("run.shop.reroll_spent"),_reroll)
 	shop_reroll_button.disabled = not can_reroll or flow.run.currency < reroll_price
-	shop_close_button = _button(shop_list,tr("run.btn.close_shop"),func(): _set_shop_open(false),"ui.cancel")
+	o.text("reroll_note",tr("run.shop.reroll_note"),o.rect_of("reroll_note"),"disabled")
+	shop_close_button = o.button("btn_leave",tr("run.shop.leave"),func(): _set_shop_open(false),{},"ui.cancel")
+	o.text("hint",tr("run.shop.hint"),{"x":0.0,"y":o.rect_of("hint")["y"],"w":SkinA.CANVAS.x,"h":7.0},"disabled",HORIZONTAL_ALIGNMENT_CENTER)
+	order.append_array(["btn_reroll","btn_leave"])
+	o.finish(order)
 
 func _hint(parent: Node, text: String) -> void:
 	var label := Label.new()
@@ -1015,6 +1137,7 @@ func _update_objective() -> void:
 	var title := room_display_name(str(flow.room.values["id"]))
 	objective.text = title if goal == "" else tr("run.objective") % [title,goal]
 	coins_label.text = "%d" % flow.run.currency
+	portrait_hud.room_title = title
 
 func _update_dev_label() -> void:
 	if dev_panel == null or not dev_panel.visible:
@@ -1073,6 +1196,7 @@ func _reroll() -> void:
 		_autosave()
 	_redraw_panel()
 
+## AD-153: run summary per ad_ui_screen_summary_win/lose_layout.json. Data and button callbacks are the existing ones.
 func _build_summary_panel() -> void:
 	var stats: Dictionary = flow.summary()
 	var save = get_node_or_null("/root/SaveService")
@@ -1081,31 +1205,64 @@ func _build_summary_panel() -> void:
 		_stats_recorded = true
 		stats["discovered"] = flow.discoveries()
 		save.record_run(stats)
-	_heading(context,tr("run.summary.title") % (tr("run.summary.victory") if flow.state == "won" else tr("run.summary.defeated")),18)
+	var won: bool = flow.state == "won"
+	var o: Overlay = summary_overlay
+	o.begin("summary_win" if won else "summary_lose")
+	o.frame("panel","ad_ui_panel_large",o.rect_of("panel"))
+	o.picture("title_header",SkinA.region("ad_ui_header"),o.rect_of("title_header"))
+	var panel: Dictionary = o.rect_of("panel")
+	var column := {"x":panel["x"],"w":panel["w"]}
+	var span := func(id: String, height: float = 7.0) -> Dictionary: return {"x":column["x"],"y":o.rect_of(id)["y"],"w":column["w"],"h":height}
+	o.text("title",tr("run.summary.title_win" if won else "run.summary.title_lose"),span.call("title"),"selected",HORIZONTAL_ALIGNMENT_CENTER)
+	o.text("result",tr("run.summary.victory" if won else "run.summary.defeated"),span.call("result",14.0),"selected",HORIZONTAL_ALIGNMENT_CENTER,1,14)
+	var stage := int(flow.room.values.get("stage",0))+1
+	o.text("result_sub",tr("run.summary.sub_win") if won else tr("run.summary.sub_lose") % stage,span.call("result_sub"),"normal",HORIZONTAL_ALIGNMENT_CENTER)
+	o.frame("stats","ad_ui_panel_inset",o.rect_of("stats"))
 	var seconds := int(stats["seconds"])
-	for line in [tr("run.summary.rooms") % int(stats["rooms_cleared"]),tr("run.summary.kills") % int(stats["kills"]),
-			tr("run.summary.time") % [seconds/60,seconds%60],tr("run.summary.spells") % int(stats["spells_used"]),
-			tr("run.summary.seed") % int(stats["seed"])]:
-		var label := Label.new()
-		label.text = line
-		context.add_child(label)
+	var rows: Array = []
+	if flow.room.values.has("stage"):
+		rows.append(["run.summary.l_stage","%d" % stage])
+	rows.append_array([["run.summary.l_rooms","%d" % int(stats["rooms_cleared"])],["run.summary.l_time","%d:%02d" % [seconds/60,seconds%60]],
+		["run.summary.l_kills","%d" % int(stats["kills"])],["run.summary.l_spells","%d" % int(stats["spells_used"])],
+		["run.summary.l_coins","%d" % flow.run.currency]])
+	for i in rows.size():
+		if not o.has_widget("st%d_l" % i):
+			break
+		o.text("st%d_l" % i,tr(rows[i][0]),o.rect_of("st%d_l" % i),"disabled")
+		o.text("st%d_v" % i,rows[i][1],o.rect_of("st%d_v" % i),"selected")
+	o.frame("hdr_loadout","ad_ui_header_small",o.rect_of("hdr_loadout"))
+	o.text("label_loadout",tr("run.summary.loadout"),_band(o,"hdr_loadout","label_21"),"selected",HORIZONTAL_ALIGNMENT_CENTER)
+	for i in 4:
+		var n := i+1
+		var view: Dictionary = portrait_hud.slot_view(i)
+		var filled: bool = not view.is_empty() and not view["empty"]
+		o.picture("spell_%d" % n,SkinA.region("ad_ui_slot24_ready" if filled else "ad_ui_slot24_empty"),o.rect_of("spell_%d" % n))
+		if not filled:
+			continue
+		var ir: Array = o.widgets["spell_%d" % n]["icon_rect"]
+		o.picture("spell_%d_icon" % n,_rune_art("essence."+str(view["element"])),{"x":ir[0],"y":ir[1],"w":ir[2],"h":ir[3]})
+		o.text("spell_key_%d" % n,str(view["key_label"]),o.rect_of("spell_key_%d" % n),"hover")
+		o.text("spell_nm_%d" % n,str(view["name"]).to_upper(),o.rect_of("spell_nm_%d" % n),"normal")
+	var held: Array = flow.run.artifacts
+	for i in held.size():
+		var id := "art_%d" % (i+1)
+		if not o.has_widget(id):
+			break
+		o.picture(id,SkinA.region("ad_ui_slot24_ready"),o.rect_of(id))
+		var ar: Array = o.widgets[id]["icon_rect"]
+		o.picture(id+"_icon",SkinA.icon_or_mvp("upgrade"),{"x":ar[0],"y":ar[1],"w":ar[2],"h":ar[3]})
+	o.text("seed",(tr("run.summary.seed") % int(stats["seed"])).to_upper(),o.rect_of("seed"),"normal")
 	if save != null:
 		var totals: Dictionary = save.stats()
-		var label := Label.new()
 		var best: float = totals["best_time_seconds"]
-		label.text = tr("run.summary.totals") % [totals["runs"],totals["wins"],
-			("%d:%02d" % [int(best)/60,int(best)%60]) if best >= 0.0 else "--"]
-		context.add_child(label)
-	var buttons := HBoxContainer.new()
-	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
-	buttons.add_theme_constant_override("separation",8)
-	context.add_child(buttons)
-	summary_retry_button = _button(buttons,tr("run.btn.retry"),func(): _retry_same_seed())
-	summary_new_seed_button = _button(buttons,tr("run.btn.new_seed"),func(): _new_seed())
-	summary_title_button = _button(buttons,tr("run.btn.title"),func(): _to_title(),"ui.cancel")
-	for b in [summary_retry_button,summary_new_seed_button,summary_title_button]:
-		b.autowrap_mode = TextServer.AUTOWRAP_OFF # a wrapping button in a row shrinks to one character per line
-		b.custom_minimum_size.x = 110
+		o.text("totals",(tr("run.summary.totals") % [totals["runs"],totals["wins"],
+			("%d:%02d" % [int(best)/60,int(best)%60]) if best >= 0.0 else "--"]).to_upper(),o.rect_of("milestone"),"disabled")
+	var layout_ids: Array = ["btn_new_run","btn_compendium","btn_main_menu"] if won else ["btn_retry_seed","btn_new_run","btn_main_menu"]
+	# The win layout's middle slot (Compendium) keeps the run's Retry same seed action; the lose layout already has it.
+	summary_retry_button = o.button("btn_retry_seed",tr("run.btn.retry").to_upper(),func(): _retry_same_seed(),o.rect_of(layout_ids[1] if won else "btn_retry_seed"))
+	summary_new_seed_button = o.button("btn_new_run",tr("run.btn.new_seed").to_upper(),func(): _new_seed(),o.rect_of("btn_new_run"))
+	summary_title_button = o.button("btn_main_menu",tr("run.btn.title").to_upper(),func(): _to_title(),{},"ui.cancel")
+	o.finish(["btn_new_run","btn_retry_seed","btn_main_menu"] if won else ["btn_retry_seed","btn_new_run","btn_main_menu"])
 
 ## AD-145: locks are recomputed from the profile before each run starts.
 func _apply_meta_locks() -> void:
@@ -1286,134 +1443,13 @@ func _open_editor(index: int) -> void:
 	_update_labels()
 
 func _editor_rebuild() -> void:
+	var keep := editor_scroll.scroll_vertical
 	_clear(editor_controls)
-	var e = flow.editor
-	_heading(editor_controls,tr("run.editor.title") % (e.slot+2),20)
-	if not e.guided_runes.is_empty():
-		_heading(editor_controls,tr("run.desk.guided") % _rune_label(e.guided_next()),14)
-	_heading(editor_controls,tr("run.editor.chain"))
-	_build_rune_palette(e)
-	if e.draft.has("on_hit"):
-		_heading(editor_controls,tr("run.editor.child_essence"),14)
-		var child: OptionButton = _option(editor_controls,e.available("essence"),
-			str(e.draft["on_hit"]["payload"]["essence_id"]))
-		child.item_selected.connect(func(idx):
-			e.change_payload_essence(str(child.get_item_metadata(idx)))
-			_editor_rebuild())
-	editor_preview = Label.new()
-	editor_preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	editor_controls.add_child(editor_preview)
-	var verdict: Dictionary = e.validate()
-	if verdict["ok"]:
-		editor_preview.text = tr("run.editor.valid") % [
-			verdict["mana"],verdict["cooldown"],verdict["complexity"],verdict["complexity_cap"]]+"\n"+str(verdict["summary"])
-	else:
-		editor_preview.text = tr("run.editor.invalid")+"\n"
-		for issue in verdict["issues"]:
-			var reason := tr(str(issue["reason_key"]))
-			var args: Array = issue["reason_args"]
-			editor_preview.text += (reason % args if not args.is_empty() else reason)+"\n"
-	_button(editor_controls,tr("run.btn.undo"),func(): e.undo(); _editor_rebuild())
-	_button(editor_controls,tr("run.btn.reset_draft"),func(): e.reset_draft();_editor_rebuild())
-	_button(editor_controls,tr("run.btn.cancel_edit"),func(): _close_editor(false),"ui.cancel")
-	var apply := _button(editor_controls,tr("run.btn.apply"),func(): _close_editor(true))
-	apply.disabled = not verdict["ok"]
-
-func _build_rune_palette(e) -> void:
-	var tabs := TabContainer.new()
-	tabs.name = "RunePalette"
-	editor_controls.add_child(tabs)
-	var root: Dictionary = e.draft["root"]
-	for entry in e.palette():
-		var scroll := ScrollContainer.new()
-		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-		scroll.custom_minimum_size = Vector2(0,160)
-		tabs.add_child(scroll)
-		var title := tr(str(entry["display_key"]))
-		tabs.set_tab_title(scroll.get_index(),str(entry["label"]) if title == str(entry["display_key"]) else title)
-		var list := VBoxContainer.new()
-		list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		scroll.add_child(list)
-		var kind := str(entry["id"])
-		for rune in entry["runes"]:
-			var id := str(rune["id"])
-			var b := Button.new()
-			b.toggle_mode = true
-			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-			b.set_meta("rune_id",id)
-			b.text = _rune_label(id)+(tr("run.suffix.locked") if rune["locked"] else "")
-			b.tooltip_text = str(rune["description"])
-			var icon: Texture2D = _rune_icon(id)
-			if icon != null:
-				b.icon = icon
-			match kind:
-				"essence": b.button_pressed = str(root["essence_id"]) == id
-				"form": b.button_pressed = str(root["manifestation_id"]) == id
-				"modifier": b.button_pressed = id in root["modifier_ids"]
-				"trigger": b.button_pressed = e.draft.has("on_hit") and str(e.draft["on_hit"]["trigger_id"]) == id
-			if id == e.guided_next() and not e.guided_runes.is_empty():
-				b.modulate = Color("#efbc65")
-			var attach: Dictionary = e.can_attach(id) if kind in ["modifier","trigger"] else {"ok":true,"reason_key":""}
-			if not bool(attach["ok"]):
-				b.tooltip_text = tr(str(attach["reason_key"]))
-			b.disabled = bool(rune["locked"]) or not bool(attach["ok"])
-			list.add_child(b)
-			b.pressed.connect(func():
-				match kind:
-					"essence": e.set_root(id,str(e.draft["root"]["manifestation_id"]))
-					"form": e.set_root(str(e.draft["root"]["essence_id"]),id)
-					"modifier": e.toggle_modifier(id)
-					"trigger":
-						var active: bool = e.draft.has("on_hit") and str(e.draft["on_hit"]["trigger_id"]) == id
-						var payload := str(e.draft["on_hit"]["payload"]["essence_id"]) if e.draft.has("on_hit") else "essence.lightning"
-						e.set_trigger(not active,payload,id)
-				_editor_rebuild())
-	palette_tab = clampi(palette_tab,0,maxi(tabs.get_tab_count()-1,0))
-	tabs.current_tab = palette_tab
-	tabs.tab_changed.connect(func(index): palette_tab = index)
-
-func _rune_icon(rune_id: String) -> Texture2D:
-	return PortraitHUD.rune_icon_texture(rune_id)
-
-## AD-038 reward card art as the button skin (frames: normal, hover, pressed); layout is unchanged.
-func _skin_reward_button(b: Button, item: Dictionary) -> void:
-	var states := {"normal":0,"hover":1,"focus":1,"pressed":2}
-	for state in states:
-		var box := StyleBoxTexture.new()
-		var tex := AtlasTexture.new()
-		tex.atlas = RewardCard
-		tex.region = Rect2(states[state]*74,0,74,110)
-		box.texture = tex
-		box.texture_margin_left = 5
-		box.texture_margin_right = 5
-		box.texture_margin_top = 5
-		box.texture_margin_bottom = 5
-		box.content_margin_left = 8
-		box.content_margin_right = 8
-		box.content_margin_top = 6
-		box.content_margin_bottom = 6
-		b.add_theme_stylebox_override(state,box)
-	b.icon = PortraitHUD.rune_icon_texture(str(item["id"])) if item["kind"] == "rune" else PortraitHUD.ui_icon_texture("coin")
-	b.expand_icon = false
-	b.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-
-func _option(parent: Node, list: Array, selection: String) -> OptionButton:
-	var option := OptionButton.new()
-	parent.add_child(option)
-	var current := -1
-	for i in list.size():
-		var item: Dictionary = list[i]
-		option.add_item(str(item["id"])+(tr("run.suffix.locked_lower") if item["locked"] else ""))
-		option.set_item_metadata(i,str(item["id"]))
-		var rune_icon: Texture2D = _rune_icon(str(item["id"]))
-		if rune_icon != null:
-			option.set_item_icon(i,rune_icon)
-		option.set_item_disabled(i,bool(item["locked"]))
-		if str(item["id"]) == selection:
-			current = i
-	if current >= 0:
-		option.select(current)
-	return option
+	_clear(editor_buttons)
+	editor_view.build(editor_controls,editor_buttons,flow.editor,{"rebuild":_editor_rebuild,"loadout":flow.range_sim.loadout if flow.range_sim != null else null,
+		"apply":func(): _close_editor(true),"cancel":func(): _close_editor(false)},_director)
+	editor_preview = editor_view.preview
+	editor_scroll.set_deferred("scroll_vertical",keep) # a rebuild keeps the player's place in the column
 
 func _close_visual_editor() -> void:
 	editor_open = false
@@ -1437,7 +1473,7 @@ func _close_editor(apply_changes: bool) -> void:
 
 ## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.
 func apply_debug_shot_state(state: String) -> bool:
-	if not OS.is_debug_build() or not state in ["combat","reward","workshop_editor","merchant","pause","summary","sigil_desk"]:
+	if not OS.is_debug_build() or not state in ["combat","reward","loadout","workshop_editor","merchant","pause","summary","summary_win","sigil_desk"]:
 		return false
 	if state == "sigil_desk":
 		if not flow.prelude and not (flow.prelude_available() and flow.enter_prelude()["ok"]):
@@ -1448,7 +1484,7 @@ func apply_debug_shot_state(state: String) -> bool:
 	if flow.prelude:
 		flow.finish_prelude(true)
 		guide.prelude_active = false
-	if state == "reward":
+	if state == "reward" or state == "loadout":
 		for i in 3000:
 			if flow.state != "fighting":
 				break
@@ -1462,6 +1498,12 @@ func apply_debug_shot_state(state: String) -> bool:
 				flow.run.sequence_index = i
 				break
 		flow._enter_current()
+	elif state == "summary_win":
+		for i in 400:
+			if flow.state == "won" or not _dev_advance():
+				break
+		if flow.state != "won":
+			return false
 	elif state == "summary":
 		flow.session.sim.actor.receive_damage(100000,"fire",2,100)
 		flow.step({"cast":0})
@@ -1473,6 +1515,8 @@ func apply_debug_shot_state(state: String) -> bool:
 		_set_shop_open(true)
 	elif state == "pause":
 		open_pause()
+	elif state == "loadout":
+		open_loadout_view()
 	return true
 
 func _debug_shot_entry() -> void:

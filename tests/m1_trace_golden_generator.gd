@@ -10,6 +10,7 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	preload("res://tests/test_context.gd").set_frozen_balance(true)
 	var formulas = JSON.parse_string(FileAccess.get_file_as_string(FIXTURE))["formulas"]
 	var outputs: Dictionary = {}
 	for scenario in ["split","pierce"]:

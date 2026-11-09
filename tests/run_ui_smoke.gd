@@ -1,4 +1,6 @@
 extends SceneTree
+const SkinA = preload("res://ui/skin_a.gd")
+const TestContext = preload("res://tests/test_context.gd")
 var failures := 0
 func _initialize() -> void:
 	call_deferred("_run")
@@ -44,6 +46,7 @@ func _esc_event() -> InputEventKey:
 	return ev
 
 func _run() -> void:
+	TestContext.set_frozen_balance(true) # AD-175: scripted kills (1000 damage) assume the frozen enemy HP
 	var save = _install_save_sandbox()
 	var pack = load("res://scenes/run.tscn")
 	expect(pack is PackedScene,"M3 scene loadable")
@@ -98,16 +101,13 @@ func _run() -> void:
 	expect(control.pause_menu.is_settings_open(),"AD-068 pause opens settings")
 	control.pause_menu.handle_cancel()
 	expect(not control.pause_menu.is_settings_open() and control.is_paused(),"AD-068 cancel closes settings only")
-	var controls_button: Button = control.pause_menu.find_child("ControlsButton",true,false)
-	expect(controls_button != null and controls_button.text == "Controls","AD-092 pause menu has a Controls button")
-	controls_button.emit_signal("pressed")
-	expect(control.pause_menu.is_controls_open() and control.pause_menu.controls_box.is_visible_in_tree()
-		and control.pause_menu.controls_box.find_children("*","Label",true,false).any(func(l): return l.text.contains("Basic Bolt")),
-		"AD-092 Controls opens the controls help")
+	control.pause_menu.open_controls()
+	expect(control.pause_menu.is_settings_open() and control.pause_menu.settings_screen.current_tab == "controls",
+		"AD-152 Settings opens and select_tab(controls) works")
 	control.pause_menu.handle_cancel()
-	expect(not control.pause_menu.is_controls_open() and control.is_paused() and control.pause_menu.panel.visible,
-		"AD-092 cancel closes controls only")
-	expect(control.pause_menu.find_child("QuitButton",true,false).text == "Back to Menu","AD-092 pause menu leaves via Back to Menu")
+	expect(not control.pause_menu.is_settings_open() and control.is_paused() and control.pause_menu.panel.visible,
+		"AD-092 cancel closes settings")
+	expect(control.pause_menu.find_child("QuitButton",true,false).text == "Abandon","AD-152 pause menu leaves via Abandon")
 	control.pause_menu.tips_toggled.emit()
 	expect(control.guide.dismissed and control.tip.text.is_empty(),"AD-092 pause menu hides tips")
 	control.pause_menu.tips_toggled.emit()
@@ -169,27 +169,21 @@ func _run() -> void:
 	run.step()
 	control._redraw_panel()
 	expect(run.state=="cleared","first room advances to clear state")
-	expect(control.context.get_child_count()>2,"reward choice panel created")
+	expect(control.reward_overlay.visible and control.reward_overlay.get_child_count()>1,"reward choice panel created")
 	expect(control.tip.text.contains("3 cards"),"AD-042 first_reward tip at first clear")
 	var view_h: float = control.get_viewport_rect().size.y
-	var reward_buttons: Array = control.context.find_children("*","Button",true,false)
+	var reward_buttons: Array = control.reward_overlay.find_children("*","Button",true,false)
 	expect(not reward_buttons.is_empty() and reward_buttons.all(func(b): return b.get_global_rect().end.y <= view_h),
 		"reward buttons on screen at first clear")
-	var cards: Array = reward_buttons.filter(func(b): return b.text.substr(1,2)==") ")
-	expect(cards.size()==3 and cards.all(func(b): return b.get_theme_stylebox("normal") is StyleBoxTexture and b.icon != null),
-		"AD-040 3 reward cards have texture skin and icon")
-	expect(control.reward_overlay.visible and control.context.is_visible_in_tree() and control.reward_panel.is_ancestor_of(control.context),
-		"AD-092 reward cards sit in the centred overlay")
-	var card_row: Node = cards[0].get_parent() if not cards.is_empty() else null
-	expect(card_row is HBoxContainer and cards.all(func(b): return b.get_parent()==card_row)
-		and cards.all(func(b): return b.get_global_rect().end.x <= control.get_viewport_rect().size.x and b.get_global_rect().position.x >= 0.0),
-		"AD-093 3 reward cards share one on-screen HBoxContainer row")
-	var in_scroll := false
-	var walker: Node = control.context
-	while walker != null:
-		if walker is ScrollContainer: in_scroll = true
-		walker = walker.get_parent()
-	expect(not in_scroll,"AD-093 reward cards not inside a ScrollContainer")
+	var takes: Array = control.reward_take_buttons
+	expect(takes.size()==run.reward_options.size() and takes.size()==control.reward_cards.size() and takes.size()>=3
+		and takes.all(func(b): return b.is_visible_in_tree()),
+		"AD-153 one TAKE button and one kit card per reward option")
+	expect(control.reward_cards.all(func(c): return c.texture != null and SkinA.has_sprite(str(c.get_meta("sprite")))),
+		"AD-153 every reward card uses a kit sprite")
+	expect(takes.all(func(b): return b.get_global_rect().end.x <= control.get_viewport_rect().size.x and b.get_global_rect().position.x >= 0.0),
+		"AD-093 reward cards stay on screen")
+	expect(control.reward_overlay.find_children("*","ScrollContainer",true,false).is_empty(),"AD-093 reward cards not inside a ScrollContainer")
 	var key_one := InputEventKey.new()
 	key_one.keycode = KEY_1
 	key_one.pressed = true
@@ -209,12 +203,20 @@ func _run() -> void:
 	expect(slot_rows==4,"AD-147 view shows 4 slot rows")
 	var art_ok: bool = false
 	for l in control.loadout_view.find_children("*","Label",true,false):
-		if l.text==tr("loadout_view.artifacts") or l.text==tr("loadout_view.no_artifacts"): art_ok = true
+		if l.text.begins_with(tr("loadout_view.artifacts").to_upper()) or l.text==tr("loadout_view.no_artifacts").to_upper(): art_ok = true
 	expect(art_ok,"AD-147 view shows artifacts section")
-	var view_buttons: Array = control.loadout_view.find_children("*","Button",true,false)
-	expect(view_buttons.size()==1 and view_buttons[0].name=="LoadoutCloseButton"
+	var view_names: Array = []
+	for b in control.loadout_view.find_children("*","Button",true,false):
+		view_names.append(str(b.name))
+	view_names.sort()
+	expect(view_names==["LoadoutCloseButton","LoadoutContinueButton"]
 		and control.loadout_view.find_children("*","OptionButton",true,false).is_empty()
-		and control.loadout_view.find_children("*","LineEdit",true,false).is_empty(),"AD-147 view is read-only (close button only)")
+		and control.loadout_view.find_children("*","LineEdit",true,false).is_empty(),"AD-147 view is read-only (Back/Continue only)")
+	var chain_icons: int = 0
+	for n in control.loadout_view.find_children("spell_*_rune_*","TextureRect",true,false):
+		chain_icons += 1
+	expect(chain_icons>=2 and control.loadout_view.find_child("tt_name",true,false) != null and control.loadout_view.find_child("ico_hp",true,false) != null,
+		"AD-153 loadout shows rune chain icons, artifact tooltip and status block")
 	control._open_editor(2)
 	var edit_try: Dictionary = control.flow.open_editor(1)
 	expect(not control.editor_open and not edit_try["ok"] and str(edit_try.get("reason",""))=="POLICY_WORKSHOP_ONLY" and run.edit_policy=="workshop_only",
@@ -273,14 +275,22 @@ func _run() -> void:
 	expect(not control.arena_canvas.visible,"combat canvas hidden during workshop")
 	expect(control.tip.text.contains("slot 4"),"AD-042 first_workshop tip on entering workshop")
 	expect(control.context.get_child_count()>3,"workshop test tools visible")
-	expect(control.shop_overlay.visible and control.arena_area.is_ancestor_of(control.shop_panel),"AD-093 shop overlay opens on workshop entry")
+	expect(control.shop_overlay.visible and control.is_ancestor_of(control.shop_overlay),"AD-153 shop overlay opens on workshop entry")
 	var previews := false
-	for label in control.shop_list.find_children("*","Label",true,false):
-		if label.text.contains("Affordable") or label.text.contains("Need "):
+	for b in control.shop_buy_buttons:
+		if b.text == control.tr("run.shop.buy") or b.text.begins_with(control.tr("run.shop.need_short").get_slice("%",0)) or b.text == control.tr("run.shop.sold"):
 			previews = true
-	expect(previews,"merchant displays effect preview and affordability")
-	var stock_buttons: Array = control.shop_list.find_children("*","Button",true,false).filter(func(b): return b.text.contains(" coins") and b != control.shop_reroll_button)
-	expect(not stock_buttons.is_empty() and stock_buttons.all(func(b): return b.icon != null),"AD-040 merchant stock buttons have icons")
+	expect(previews,"merchant displays affordability on each BUY button")
+	var stock: Array = control.flow.merchant.stock
+	expect(control.shop_cards.size()==stock.size() and control.shop_buy_buttons.size()==stock.size() and stock.size()>=3,
+		"AD-153 one offer card and BUY button per stock item")
+	expect(control.shop_cards.all(func(c): return SkinA.has_sprite(str(c.get_meta("sprite")))),"AD-153 every merchant offer uses a kit sprite")
+	var priced: Array = control.shop_overlay.find_children("price_*","Label",true,false)
+	expect(priced.size()==stock.size() and control.shop_overlay.find_children("price_ico_*","TextureRect",true,false).size()==stock.size(),
+		"AD-153 merchant offers show price plates with the coin icon")
+	for i in stock.size():
+		var affordable: bool = int(stock[i]["price"]) <= control.flow.run.currency and not control.flow.merchant.bought.has(stock[i]["id"])
+		expect(control.shop_buy_buttons[i].disabled == not affordable,"AD-153 BUY button %d disabled exactly when unaffordable or sold" % i)
 	control.shop_close_button.emit_signal("pressed")
 	expect(not control.shop_overlay.visible,"AD-093 Close shop hides the shop overlay")
 	control.shop_reopen_button.emit_signal("pressed")
@@ -306,6 +316,7 @@ func _run() -> void:
 	expect(control.shop_reroll_button.disabled,"AD-144 reroll button disabled after use")
 	run.run.currency = coins_start # keep later guide/telemetry checks on the original economy
 	control._redraw_panel()
+	control.shop_close_button.emit_signal("pressed") # AD-153: the merchant is a modal; the player leaves it before editing
 	control._open_editor(1)
 	expect(control.editor_open and control.editor_panel.visible,"structured editor panel opens")
 	expect(not (control.editor_panel.get_parent() is CenterContainer),"AD-093 editor is docked, not centred")
@@ -316,9 +327,23 @@ func _run() -> void:
 		if b.has_meta("rune_id"):
 			palette_ids.append(str(b.get_meta("rune_id")))
 	palette_ids.sort()
-	expect(palette_tabs is TabContainer and palette_tabs.get_tab_count()==4 and palette_ids.size()==run.session.sim.registry.get_ids().size()
+	var tab_names: Array = []
+	for b in palette_tabs.find_children("PaletteTab_*","Button",true,false):
+		tab_names.append(str(b.name))
+	expect(palette_tabs != null and tab_names.size()==5 and palette_ids.size()==run.session.sim.registry.get_ids().size()
 		and palette_ids==run.session.sim.registry.get_ids(),
-		"AD-129 editor has RunePalette with 4 category tabs and one button per registered rune")
+		"AD-129 editor has RunePalette with All plus 4 category tabs and one button per registered rune")
+	expect(control.editor_buttons.find_child("EditorApplyButton",true,false) != null and control.editor_buttons.find_child("EditorCancelButton",true,false) != null
+		and control.editor_buttons.find_child("EditorUndoButton",true,false) != null and control.editor_buttons.find_child("EditorResetButton",true,false) != null,
+		"AD-153 editor keeps Apply, Cancel, Undo and Reset reachable")
+	var rune_pressed: Button = control.editor_controls.find_child("Rune_essence_water",true,false)
+	expect(rune_pressed != null and rune_pressed.get_child_count()>0 and run.editor.draft["root"]["essence_id"]!="essence.water",
+		"AD-153 palette runes are icon slots")
+	rune_pressed.emit_signal("pressed")
+	expect(run.editor.draft["root"]["essence_id"]=="essence.water" and control.editor_controls.find_child("Rune_essence_water",true,false).button_pressed,
+		"AD-153 clicking a palette rune edits the draft and the rebuilt slot shows it selected")
+	control.editor_buttons.find_child("EditorUndoButton",true,false).emit_signal("pressed")
+	expect(run.editor.draft["root"]["essence_id"]!="essence.water","AD-153 Undo button reverts the draft")
 	var old: Dictionary = run.run.formulas[0].duplicate(true)
 	run.editor.set_root("essence.water","form.projectile")
 	control._editor_rebuild()
@@ -352,10 +377,7 @@ func _run() -> void:
 	run.editor.set_root("essence.fire","form.projectile")
 	run.editor.toggle_modifier(locked_mod)
 	control._editor_rebuild()
-	var apply_disabled := false
-	for b in control.editor_controls.find_children("*","Button",true,false):
-		if b.text.begins_with("Apply"):
-			apply_disabled = b.disabled
+	var apply_disabled: bool = control.editor_buttons.find_child("EditorApplyButton",true,false).disabled
 	expect(control.editor_preview.text.contains("INVALID") and control.editor_preview.text.contains(control.tr("editor.issue.rune_locked").get_slice(":",0)) and apply_disabled,
 		"invalid formula shows reason, Apply disabled")
 	control._close_editor(true)
@@ -398,10 +420,7 @@ func _run() -> void:
 	run.editor.set_root("essence.fire","form.burst")
 	run.editor.set_trigger(true,"essence.cold","trigger.timer")
 	control._editor_rebuild()
-	var neg_apply_disabled := false
-	for b in control.editor_controls.find_children("*","Button",true,false):
-		if b.text.begins_with("Apply"):
-			neg_apply_disabled = b.disabled
+	var neg_apply_disabled: bool = control.editor_buttons.find_child("EditorApplyButton",true,false).disabled
 	expect(control.editor_preview.text.contains(control.tr("editor.issue.trigger_needs_lasting")) and neg_apply_disabled,
 		"AD-135 burst + timer shows lasting-form reason, Apply disabled")
 	control._close_editor(false)
@@ -444,11 +463,11 @@ func _run() -> void:
 	control._redraw_panel()
 	expect(run.state=="won","clearing the first stage-2 room wins the slice")
 	var texts: Array = []
-	for item in control.context.find_children("*","Label",true,false):
+	for item in control.summary_overlay.find_children("*","Label",true,false):
 		texts.append(item.text)
 	var joined := "\n".join(texts)
-	expect(joined.contains("RUN SUMMARY") and joined.contains("VICTORY"),"win opens Run Summary: victory")
-	expect(joined.contains("Kills") and joined.contains("Spells used"),"summary shows kills and spells used")
+	expect(joined.contains(control.tr("run.summary.title_win")) and joined.contains(control.tr("run.summary.victory")),"win opens Run Summary: victory")
+	expect(joined.contains(control.tr("run.summary.l_kills")) and joined.contains(control.tr("run.summary.l_spells")),"summary shows kills and spells used")
 	expect(control.summary_retry_button != null and control.summary_retry_button.is_visible_in_tree()
 		and control.summary_new_seed_button != null and control.summary_new_seed_button.is_visible_in_tree()
 		and control.summary_title_button != null and control.summary_title_button.is_visible_in_tree(),
@@ -471,10 +490,10 @@ func _run() -> void:
 	run.step({"cast":0})
 	control._redraw_panel()
 	texts.clear()
-	for item in control.context.find_children("*","Label",true,false):
+	for item in control.summary_overlay.find_children("*","Label",true,false):
 		texts.append(item.text)
 	joined = "\n".join(texts)
-	expect(run.state=="dead" and joined.contains("RUN SUMMARY") and joined.contains("DEFEATED"),
+	expect(run.state=="dead" and joined.contains(control.tr("run.summary.title_lose")) and joined.contains(control.tr("run.summary.defeated")),
 		"death opens Run Summary: defeated")
 	expect(save.stats()["runs"]==2 and save.stats()["deaths"]==1,"AD-019 death recorded in stats")
 	expect(not save.has_run(),"AD-146 death deletes the run save")

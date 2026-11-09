@@ -203,18 +203,16 @@ func _compendium(t) -> void:
 	var cats := Screen.catalogs_by_category()
 	var cfg: Dictionary = Meta.load_config()
 	t.equal(screen.section_labels.keys(), ["runes", "reactions", "enemies", "artifacts"], "AD-145 compendium four sections")
-	t.check(screen.section_labels["runes"].text.ends_with("1/%d" % cats["runes"].size()), "AD-145 compendium runes count")
-	t.check(screen.section_labels["reactions"].text.ends_with("1/%d" % cfg["compendium"]["reactions"].size()), "AD-145 compendium reactions count")
-	t.check(screen.section_labels["enemies"].text.ends_with("0/%d" % cfg["compendium"]["enemies"].size()), "AD-145 compendium enemies count")
-	t.check(screen.section_labels["artifacts"].text.ends_with("0/%d" % cats["artifacts"].size()), "AD-145 compendium artifacts count")
-	var texts := []
-	for l in screen.find_children("*", "Label", true, false):
-		texts.append(l.text)
-	t.check(screen.tr("rune.essence.fire.name") in texts and screen.tr("rune.essence.water.name") not in texts, "AD-145 discovered rune named")
-	t.check(screen.tr("compendium.unknown") in texts, "AD-145 undiscovered shows ???")
-	t.equal(screen.milestone_rows.size(), cfg["milestones"].size(), "AD-145 milestone rows match data")
-	for i in screen.milestone_rows.size():
-		t.equal(screen.milestone_rows[i]["id"], cfg["milestones"][i]["id"], "AD-145 milestone row id " + str(i))
+	t.check(screen.section_labels["runes"].text.ends_with("1 / %d" % cats["runes"].size()), "AD-145 compendium runes count")
+	t.check(screen.section_labels["reactions"].text.ends_with("1 / %d" % cfg["compendium"]["reactions"].size()), "AD-145 compendium reactions count")
+	t.check(screen.section_labels["enemies"].text.ends_with("0 / %d" % cfg["compendium"]["enemies"].size()), "AD-145 compendium enemies count")
+	t.check(screen.section_labels["artifacts"].text.ends_with("0 / %d" % cats["artifacts"].size()), "AD-145 compendium artifacts count")
+	var runes: Array = cats["runes"]
+	var first_fire: int = runes.find("essence.fire")
+	t.check(not screen.cells["runes"][first_fire].locked, "AD-145 discovered rune cell unlocked")
+	t.check(screen.cells["runes"][runes.find("essence.water")].locked, "AD-145 undiscovered rune cell locked")
+	t.equal(screen.cells["reactions"][1].entry_id, "chill_freeze", "AD-145 reaction cell id")
+	t.check(not screen.cells["reactions"][1].locked and screen.cells["reactions"][0].locked, "AD-145 reaction discovery state")
 	t.check(screen.back_button.focus_mode == Control.FOCUS_ALL, "AD-145 compendium back focusable")
 	var hits := []
 	screen.back_requested.connect(func(): hits.append(1))

@@ -7,10 +7,13 @@ const Driver = preload("res://tests/m3_run_driver.gd")
 const Flow = preload("res://world/run_flow.gd")
 const BUILDS := [0,2]
 const MAX_TICKS := 12000
-const MIN_KILL_TICKS := 5400
-const MAX_KILL_TICKS := 10800
+var _run_doc: Dictionary = {}
 
 func run(t) -> void:
+	_run_doc = t.frozen_json("run_v2.json")
+	t.with_frozen_balance(func(): _body(t))
+
+func _body(t) -> void:
 	var cfg := _cfg()
 	_phase_one(t,cfg)
 	_phase_two(t,cfg)
@@ -24,8 +27,7 @@ func run(t) -> void:
 	_run_summary(t)
 
 func _cfg() -> Dictionary:
-	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://world/data/run_v2.json"))
-	return doc["bosses"]["cistern_boss"]
+	return _run_doc["bosses"]["cistern_boss"]
 
 func _rects(cfg: Dictionary, index: int) -> Array:
 	return cfg["flood_sets"][index].map(func(entry): return entry["rect"])
@@ -207,14 +209,14 @@ func _deterministic(t) -> void:
 	t.equal(snaps[0],snaps[1],"AD-142 1500-tick run is deterministic")
 
 func _doc() -> Dictionary:
-	return JSON.parse_string(FileAccess.get_file_as_string("res://world/data/run_v2.json"))
+	return _run_doc
 
 func _arena_water() -> Array:
 	return _doc()["room_templates"]["cistern_boss"]["layout"]["water"]
 
 func _arena_room(t) -> void:
 	var room: Dictionary = _doc()["room_templates"]["cistern_boss"]
-	var tuning: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))
+	var tuning: Dictionary = t.frozen_json("combat_tuning_v1.json")
 	var template = preload("res://world/room_template.gd").new()
 	var verdict: Dictionary = template.initialize(room.duplicate(true),tuning["arena"],tuning["enemies"].keys())
 	t.check(verdict["ok"],"AD-142 water arena passes room template validation")
@@ -260,7 +262,7 @@ func _kill(build: int, loadout: Array = []) -> Dictionary:
 func _check_win(t, label: String, a: Dictionary) -> void:
 	t.check(a["dead"] and a["alive"],"AD-142 %s kills the archivist and survives (tick %d, hp %.0f)" % [label,a["tick"],a["hp"]])
 	t.check(a["phases"].has(1) and a["phases"].has(2) and a["phases"].has(3),"AD-142 %s reaches all 3 phases" % label)
-	t.check(a["tick"] >= MIN_KILL_TICKS and a["tick"] <= MAX_KILL_TICKS,"AD-142 %s fight lasts 90-180 s (tick %d)" % [label,a["tick"]])
+	# Fight-length window (90-180 s) moved to tests/bench/boss_pacing_bench.gd (AD-167).
 
 func _scripted_wins(t) -> void:
 	for build in BUILDS:
@@ -272,7 +274,7 @@ func _scripted_wins(t) -> void:
 
 ## Reaches the cistern_boss room the way test_ad_run_v2 does, kills the archivist and checks the run summary.
 func _run_summary(t) -> void:
-	var flow = Flow.new(20261022,Flow.CONFIG_V2)
+	var flow = Flow.new(20261022,t.frozen_path("run_v2.json"))
 	for guard in 80:
 		if flow.state == "fighting" and str(flow.room.values["id"]) == "cistern_boss":
 			break

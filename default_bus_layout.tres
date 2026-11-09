@@ -6,6 +6,9 @@ resource_name = "Amplify"
 [sub_resource type="AudioEffectAmplify" id="AudioEffectAmplify_bed"]
 resource_name = "Amplify"
 
+[sub_resource type="AudioEffectAmplify" id="AudioEffectAmplify_mus"]
+resource_name = "Amplify"
+
 [resource]
 bus/1/name = &"SFX"
 bus/1/solo = false
@@ -35,3 +38,11 @@ bus/4/volume_db = 0.0
 bus/4/send = &"SFX"
 bus/4/effect/0/effect = SubResource("AudioEffectAmplify_bed")
 bus/4/effect/0/enabled = true
+bus/5/name = &"Music"
+bus/5/solo = false
+bus/5/mute = false
+bus/5/bypass_fx = false
+bus/5/volume_db = 0.0
+bus/5/send = &"Master"
+bus/5/effect/0/effect = SubResource("AudioEffectAmplify_mus")
+bus/5/effect/0/enabled = true

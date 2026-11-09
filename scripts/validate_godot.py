@@ -25,6 +25,11 @@ def _text(value: bytes | str | None) -> str:
     return value
 
 
+def needs_import() -> bool:
+    # Both markers: a partial or interrupted cache can have .godot/ without the class cache.
+    return not (PROJECT / ".godot" / "imported").is_dir() or not (PROJECT / ".godot" / "global_script_class_cache.cfg").is_file()
+
+
 def check(godot: str, label: str, args: list[str], timeout: float, should_fail: bool = False) -> bool:
     cmd = [godot, "--headless", "--path", str(PROJECT), *args]
     print(f"\n--- {label} ---", flush=True)
@@ -44,6 +49,9 @@ def check(godot: str, label: str, args: list[str], timeout: float, should_fail: 
         okay = proc.returncode != 0 and "intentional failure probe" in combined
     else:
         okay = proc.returncode == 0 and not engine_errors
+        if "--import" in args:
+            # First-time import can print benign ERROR/WARNING lines while building the cache.
+            okay = proc.returncode == 0 and not needs_import()
         if "run_tests.gd" in " ".join(args):
             okay = okay and bool(SUCCESS_SUMMARY.search(combined))
         if "m4_stress_probe.gd" in " ".join(args):
@@ -58,6 +66,13 @@ def check(godot: str, label: str, args: list[str], timeout: float, should_fail: 
             okay = okay and combined.count("NAVIGATION PASS:") == 4
     print(f"{label}: {'PASS' if okay else 'FAIL'} (exit={proc.returncode}, engine_errors={len(engine_errors)}, elapsed={elapsed:.1f}s)", flush=True)
     return okay
+
+
+def ensure_imported(godot: str, timeout: float) -> bool:
+    if not needs_import():
+        print("Asset import: skipped (.godot/ cache present)", flush=True)
+        return True
+    return check(godot, "Asset import (fresh checkout)", ["--import"], timeout)
 
 
 def main() -> int:
@@ -78,6 +93,8 @@ def main() -> int:
         except ValueError:
             print(f"error: AD_VALIDATE_TIMEOUT must be a number of seconds, got {os.environ['AD_VALIDATE_TIMEOUT']!r}", flush=True)
             return 2
+    if not ensure_imported(args.godot, override if override is not None else 600):
+        return 1
     stages = [
         ("Editor import / parser", ["--editor", "--quit"], False, 600),
         ("Gameplay entry navigation", ["--script", "res://tests/navigation_smoke.gd"], False, 300),

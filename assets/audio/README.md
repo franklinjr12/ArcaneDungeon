@@ -42,3 +42,59 @@ Format: 44.1 kHz mono 16-bit WAV; ambience loops are imported looping.
 - Telegraph cues (priority 3, `unstealable_priority`) are never stolen by other voices.
 - Per-cue voice caps come from `max_voices`; the total cap is `max_voices_total` = 24.
 - Telegraphs duck Ambience and non-telegraph SFX by ~6 dB for the cue length (min 0.25 s). Non-telegraph SFX play on the internal `SFXBed` bus (sends to SFX); ducking sets an AudioEffectAmplify (-6 dB) in slot 0 of `Ambience` and `SFXBed`, never bus volume_db, so user volume settings are untouched. Telegraphs stay on SFX and UI is never ducked.
+
+## Franklin-provided files (AD-151)
+
+Franklin generates music and SFX on his own PC and drops the files at the paths below (music `.ogg` in `assets/audio/music/`, SFX `.ogg` in `assets/audio/sfx/`). The cue table, event map (`events` in `game/audio/audio_cues_v1.json`) and file mapping are already in place. A missing file plays its placeholder (an existing wav) and logs an `AUDIO_PLACEHOLDER` warning once per cue; with neither file the cue is silent and logs `AUDIO_STREAM_MISSING`.
+
+Audio must never be generated on the VM or through cloud audio APIs (Vertex/Lyria rejected 2026-11-06). `scripts/gen_placeholder_audio.py` skips cues marked `"provided": true`.
+
+| cue id | expected file | placeholder | bus | priority |
+|---|---|---|---|---|
+| music.ruins | assets/audio/music/mus_ruins.ogg | assets/audio/amb/amb_ruins.wav | Music | - |
+| music.cistern | assets/audio/music/mus_cistern.ogg | assets/audio/amb/amb_ruins.wav | Music | - |
+| music.workshop | assets/audio/music/mus_workshop.ogg | assets/audio/amb/amb_workshop.wav | Music | - |
+| music.boss | assets/audio/music/mus_boss.ogg | assets/audio/amb/amb_ruins.wav | Music | - |
+| sfx.cast.cold | assets/audio/sfx/sfx_cast_cold.ogg | assets/audio/sfx/sfx_cast_neutral.wav | SFX | 1 |
+| sfx.cast.force | assets/audio/sfx/sfx_cast_force.ogg | assets/audio/sfx/sfx_cast_neutral.wav | SFX | 1 |
+| sfx.form.beam | assets/audio/sfx/sfx_form_beam.ogg | assets/audio/sfx/sfx_cast_neutral.wav | SFX | 1 |
+| sfx.form.field | assets/audio/sfx/sfx_form_field.ogg | assets/audio/sfx/sfx_cast_neutral.wav | SFX | 1 |
+| sfx.trigger.on_hit | assets/audio/sfx/sfx_trigger_on_hit.ogg | assets/audio/sfx/sfx_hit_generic.wav | SFX | 1 |
+| sfx.trigger.on_kill | assets/audio/sfx/sfx_trigger_on_kill.ogg | assets/audio/sfx/sfx_hit_generic.wav | SFX | 1 |
+| sfx.trigger.on_expire | assets/audio/sfx/sfx_trigger_on_expire.ogg | assets/audio/sfx/sfx_hit_generic.wav | SFX | 1 |
+| sfx.trigger.timer | assets/audio/sfx/sfx_trigger_timer.ogg | assets/audio/sfx/sfx_hit_generic.wav | SFX | 1 |
+| sfx.mod.chain | assets/audio/sfx/sfx_mod_chain.ogg | assets/audio/sfx/sfx_react_arc.wav | SFX | 1 |
+| sfx.mod.generic | assets/audio/sfx/sfx_mod_generic.ogg | assets/audio/sfx/sfx_cast_neutral.wav | SFX | 1 |
+| sfx.react.freeze | assets/audio/sfx/sfx_react_freeze.ogg | assets/audio/sfx/sfx_react_extinguish.wav | SFX | 1 |
+| sfx.react.shatter | assets/audio/sfx/sfx_react_shatter.ogg | assets/audio/sfx/sfx_react_arc.wav | SFX | 1 |
+| sfx.react.steam | assets/audio/sfx/sfx_react_steam.ogg | assets/audio/sfx/sfx_react_extinguish.wav | SFX | 1 |
+| sfx.tele.ossuary_shieldbearer | assets/audio/sfx/sfx_tele_ossuary_shieldbearer.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | SFX | 3 |
+| sfx.tele.wailing_spirit | assets/audio/sfx/sfx_tele_wailing_spirit.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | SFX | 3 |
+| sfx.tele.corpse_bloat | assets/audio/sfx/sfx_tele_corpse_bloat.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | SFX | 3 |
+| sfx.tele.cistern_slime | assets/audio/sfx/sfx_tele_cistern_slime.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | SFX | 3 |
+| sfx.tele.cistern_slimelet | assets/audio/sfx/sfx_tele_cistern_slimelet.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | SFX | 3 |
+| sfx.tele.drowned_acolyte | assets/audio/sfx/sfx_tele_drowned_acolyte.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | SFX | 3 |
+| sfx.tele.deep_eel | assets/audio/sfx/sfx_tele_deep_eel.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | SFX | 3 |
+| sfx.tele.rust_golem | assets/audio/sfx/sfx_tele_rust_golem.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | SFX | 3 |
+| sfx.tele.lantern_wisp | assets/audio/sfx/sfx_tele_lantern_wisp.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | SFX | 3 |
+| sfx.tele.storm_crystal | assets/audio/sfx/sfx_tele_storm_crystal.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | SFX | 3 |
+| sfx.boss.drowned_archivist.tele_a | assets/audio/sfx/sfx_boss_drowned_archivist_tele_a.ogg | assets/audio/sfx/sfx_boss_tele_a.wav | SFX | 3 |
+| sfx.boss.drowned_archivist.tele_b | assets/audio/sfx/sfx_boss_drowned_archivist_tele_b.ogg | assets/audio/sfx/sfx_boss_tele_b.wav | SFX | 3 |
+| sfx.boss.drowned_archivist.phase | assets/audio/sfx/sfx_boss_drowned_archivist_phase.ogg | assets/audio/sfx/sfx_boss_phase.wav | SFX | 1 |
+| sfx.artifact.rebound_sigil | assets/audio/sfx/sfx_artifact_rebound_sigil.ogg | assets/audio/sfx/sfx_pickup_rune.wav | SFX | 1 |
+| sfx.artifact.residue_crystal | assets/audio/sfx/sfx_artifact_residue_crystal.ogg | assets/audio/sfx/sfx_pickup_rune.wav | SFX | 1 |
+| sfx.artifact.shatterheart | assets/audio/sfx/sfx_artifact_shatterheart.ogg | assets/audio/sfx/sfx_pickup_rune.wav | SFX | 1 |
+| sfx.artifact.momentum_rune | assets/audio/sfx/sfx_artifact_momentum_rune.ogg | assets/audio/sfx/sfx_pickup_rune.wav | SFX | 1 |
+| sfx.artifact.echo_chamber | assets/audio/sfx/sfx_artifact_echo_chamber.ogg | assets/audio/sfx/sfx_pickup_rune.wav | SFX | 1 |
+| sfx.artifact.stormglass | assets/audio/sfx/sfx_artifact_stormglass.ogg | assets/audio/sfx/sfx_pickup_rune.wav | SFX | 1 |
+| sfx.artifact.tidewalkers_boots | assets/audio/sfx/sfx_artifact_tidewalkers_boots.ogg | assets/audio/sfx/sfx_pickup_rune.wav | SFX | 1 |
+| sfx.artifact.ember_heart | assets/audio/sfx/sfx_artifact_ember_heart.ogg | assets/audio/sfx/sfx_pickup_rune.wav | SFX | 1 |
+| sfx.artifact.gravity_lens | assets/audio/sfx/sfx_artifact_gravity_lens.ogg | assets/audio/sfx/sfx_pickup_rune.wav | SFX | 1 |
+| sfx.artifact.split_prism | assets/audio/sfx/sfx_artifact_split_prism.ogg | assets/audio/sfx/sfx_pickup_rune.wav | SFX | 1 |
+| sfx.artifact.archivists_quill | assets/audio/sfx/sfx_artifact_archivists_quill.ogg | assets/audio/sfx/sfx_pickup_rune.wav | SFX | 1 |
+| sfx.artifact.warding_lantern | assets/audio/sfx/sfx_artifact_warding_lantern.ogg | assets/audio/sfx/sfx_pickup_rune.wav | SFX | 1 |
+| sfx.env.ignite | assets/audio/sfx/sfx_env_ignite.ogg | assets/audio/sfx/sfx_hit_generic.wav | SFX | 1 |
+| sfx.env.freeze | assets/audio/sfx/sfx_env_freeze.ogg | assets/audio/sfx/sfx_hit_generic.wav | SFX | 1 |
+| sfx.env.thaw | assets/audio/sfx/sfx_env_thaw.ogg | assets/audio/sfx/sfx_hit_generic.wav | SFX | 1 |
+| sfx.env.break | assets/audio/sfx/sfx_env_break.ogg | assets/audio/sfx/sfx_hit_generic.wav | SFX | 1 |
+| sfx.env.burn_out | assets/audio/sfx/sfx_env_burn_out.ogg | assets/audio/sfx/sfx_hit_generic.wav | SFX | 1 |

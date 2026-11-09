@@ -1,0 +1,27 @@
+{ "frames": [
+   {
+    "filename": "ad_key_logo_small.aseprite",
+    "frame": { "x": 0, "y": 0, "w": 120, "h": 30 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 30 },
+    "sourceSize": { "w": 120, "h": 30 },
+    "duration": 100
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "_sheet_tmp.png",
+  "format": "I8",
+  "size": { "w": 120, "h": 30 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "static", "from": 0, "to": 0, "direction": "forward", "color": "#000000ff" }
+  ],
+  "slices": [
+   { "name": "pivot", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 1, "h": 1 } }] },
+   { "name": "sigil", "keys": [{ "frame": 0, "bounds": {"x": 56, "y": 19, "w": 9, "h": 9 } }] }
+  ]
+ }
+}

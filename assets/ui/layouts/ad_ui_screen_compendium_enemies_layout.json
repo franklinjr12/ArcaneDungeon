@@ -1,0 +1,700 @@
+{
+ "screen": "compendium_enemies",
+ "canvas": [
+  640,
+  360
+ ],
+ "safe_area": {
+  "x": 16,
+  "y": 9,
+  "w": 608,
+  "h": 342
+ },
+ "status": "CANDIDATE",
+ "skin": "AD-095 kit (skin A, Franklin 2026-11-04)",
+ "coordinate_origin": "top-left, px at 640x360 (engine scales x2 = 1280x720 exactly)",
+ "note": "rects are the final sprite/text bounds; 9-slice sprites are stretched with the margins in ad_ui_kit.json; labels are engine text (m5x7) positioned at x,y (top-left of the glyph box)",
+ "fonts": {
+  "label": "arc_fnt_m5x7",
+  "small": "arc_fnt_silkscreen"
+ },
+ "focus_order": [
+  "tab_runes",
+  "tab_reactions",
+  "tab_enemies",
+  "tab_artifacts",
+  "btn_back"
+ ],
+ "widgets": [
+  {
+   "id": "modal_backdrop",
+   "type": "backdrop",
+   "x": 0,
+   "y": 0,
+   "w": 640,
+   "h": 360,
+   "sprite": "ad_ui_modal_backdrop_75",
+   "tiled": true
+  },
+  {
+   "id": "panel",
+   "type": "panel",
+   "x": 16,
+   "y": 18,
+   "w": 608,
+   "h": 332,
+   "sprite": "ad_ui_panel_large"
+  },
+  {
+   "id": "title_header",
+   "type": "header",
+   "x": 220,
+   "y": 10,
+   "w": 200,
+   "h": 16,
+   "sprite": "ad_ui_header"
+  },
+  {
+   "id": "title",
+   "type": "label",
+   "x": 286,
+   "y": 15,
+   "w": 68,
+   "h": 7,
+   "text": "COMPENDIUM"
+  },
+  {
+   "id": "tab_runes",
+   "type": "tab",
+   "x": 32,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "RUNES",
+   "tab": "runes"
+  },
+  {
+   "id": "tab_runes_label",
+   "type": "label",
+   "x": 64,
+   "y": 39,
+   "w": 34,
+   "h": 7,
+   "text": "RUNES"
+  },
+  {
+   "id": "tab_reactions",
+   "type": "tab",
+   "x": 132,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "REACTIONS",
+   "tab": "reactions"
+  },
+  {
+   "id": "tab_reactions_label",
+   "type": "label",
+   "x": 150,
+   "y": 39,
+   "w": 61,
+   "h": 7,
+   "text": "REACTIONS"
+  },
+  {
+   "id": "tab_enemies",
+   "type": "tab",
+   "x": 232,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_active",
+   "state": "active",
+   "text": "ENEMIES",
+   "tab": "enemies"
+  },
+  {
+   "id": "tab_enemies_label",
+   "type": "label",
+   "x": 257,
+   "y": 39,
+   "w": 47,
+   "h": 7,
+   "text": "ENEMIES"
+  },
+  {
+   "id": "tab_artifacts",
+   "type": "tab",
+   "x": 332,
+   "y": 34,
+   "w": 98,
+   "h": 16,
+   "sprite": "ad_ui_tab_inactive",
+   "state": "inactive",
+   "text": "ARTIFACTS",
+   "tab": "artifacts"
+  },
+  {
+   "id": "tab_artifacts_label",
+   "type": "label",
+   "x": 350,
+   "y": 39,
+   "w": 61,
+   "h": 7,
+   "text": "ARTIFACTS"
+  },
+  {
+   "id": "content",
+   "type": "panel",
+   "x": 28,
+   "y": 50,
+   "w": 584,
+   "h": 252,
+   "sprite": "ad_ui_panel_inset"
+  },
+  {
+   "id": "btn_back",
+   "type": "button",
+   "x": 40,
+   "y": 314,
+   "w": 96,
+   "h": 24,
+   "sprite": "ad_ui_btn_focus",
+   "state": "focus",
+   "text": "BACK",
+   "action": "close"
+  },
+  {
+   "id": "btn_back_label",
+   "type": "label",
+   "x": 74,
+   "y": 322,
+   "w": 27,
+   "h": 7,
+   "text": "BACK"
+  },
+  {
+   "id": "progress_txt",
+   "type": "label",
+   "x": 150,
+   "y": 313,
+   "w": 107,
+   "h": 7,
+   "text": "DISCOVERED 4 / 14"
+  },
+  {
+   "id": "progress_bar",
+   "type": "bar",
+   "x": 150,
+   "y": 324,
+   "w": 180,
+   "h": 9,
+   "sprite": "ad_ui_bar_frame_thin"
+  },
+  {
+   "id": "note1",
+   "type": "label",
+   "x": 346,
+   "y": 313,
+   "w": 151,
+   "h": 7,
+   "text": "NO PERMANENT STAT POWER"
+  },
+  {
+   "id": "note2",
+   "type": "label",
+   "x": 346,
+   "y": 323,
+   "w": 178,
+   "h": 7,
+   "text": "MILESTONES UNLOCK NEW RUNES"
+  },
+  {
+   "id": "enemy_1",
+   "type": "slot",
+   "x": 42,
+   "y": 56,
+   "w": 56,
+   "h": 56,
+   "sprite": "ad_ui_panel_inset",
+   "state": "normal",
+   "discovered": true,
+   "enemy": "BONE THRALL"
+  },
+  {
+   "id": "enemy_2",
+   "type": "slot",
+   "x": 104,
+   "y": 56,
+   "w": 56,
+   "h": 56,
+   "sprite": "ad_ui_panel_inset",
+   "state": "selected",
+   "discovered": true,
+   "enemy": "FALLEN ADEPT"
+  },
+  {
+   "id": "enemy_3",
+   "type": "slot",
+   "x": 166,
+   "y": 56,
+   "w": 56,
+   "h": 56,
+   "sprite": "ad_ui_panel_inset",
+   "state": "normal",
+   "discovered": true,
+   "enemy": "GRAVE HOUND"
+  },
+  {
+   "id": "enemy_4",
+   "type": "slot",
+   "x": 228,
+   "y": 56,
+   "w": 56,
+   "h": 56,
+   "sprite": "ad_ui_panel_inset",
+   "state": "normal",
+   "discovered": true,
+   "enemy": "OSSUARY WARDEN"
+  },
+  {
+   "id": "enemy_5",
+   "type": "slot",
+   "x": 42,
+   "y": 116,
+   "w": 56,
+   "h": 56,
+   "sprite": "ad_ui_panel_inset",
+   "state": "locked",
+   "discovered": false,
+   "enemy": null
+  },
+  {
+   "id": "label_25",
+   "type": "label",
+   "x": 67,
+   "y": 122,
+   "w": 6,
+   "h": 7,
+   "text": "?"
+  },
+  {
+   "id": "enemy_6",
+   "type": "slot",
+   "x": 104,
+   "y": 116,
+   "w": 56,
+   "h": 56,
+   "sprite": "ad_ui_panel_inset",
+   "state": "locked",
+   "discovered": false,
+   "enemy": null
+  },
+  {
+   "id": "label_27",
+   "type": "label",
+   "x": 129,
+   "y": 122,
+   "w": 6,
+   "h": 7,
+   "text": "?"
+  },
+  {
+   "id": "enemy_7",
+   "type": "slot",
+   "x": 166,
+   "y": 116,
+   "w": 56,
+   "h": 56,
+   "sprite": "ad_ui_panel_inset",
+   "state": "hover",
+   "discovered": false,
+   "enemy": null
+  },
+  {
+   "id": "label_29",
+   "type": "label",
+   "x": 191,
+   "y": 122,
+   "w": 6,
+   "h": 7,
+   "text": "?"
+  },
+  {
+   "id": "enemy_8",
+   "type": "slot",
+   "x": 228,
+   "y": 116,
+   "w": 56,
+   "h": 56,
+   "sprite": "ad_ui_panel_inset",
+   "state": "locked",
+   "discovered": false,
+   "enemy": null
+  },
+  {
+   "id": "label_31",
+   "type": "label",
+   "x": 253,
+   "y": 122,
+   "w": 6,
+   "h": 7,
+   "text": "?"
+  },
+  {
+   "id": "enemy_9",
+   "type": "slot",
+   "x": 42,
+   "y": 176,
+   "w": 56,
+   "h": 56,
+   "sprite": "ad_ui_panel_inset",
+   "state": "locked",
+   "discovered": false,
+   "enemy": null
+  },
+  {
+   "id": "label_33",
+   "type": "label",
+   "x": 67,
+   "y": 182,
+   "w": 6,
+   "h": 7,
+   "text": "?"
+  },
+  {
+   "id": "enemy_10",
+   "type": "slot",
+   "x": 104,
+   "y": 176,
+   "w": 56,
+   "h": 56,
+   "sprite": "ad_ui_panel_inset",
+   "state": "locked",
+   "discovered": false,
+   "enemy": null
+  },
+  {
+   "id": "label_35",
+   "type": "label",
+   "x": 129,
+   "y": 182,
+   "w": 6,
+   "h": 7,
+   "text": "?"
+  },
+  {
+   "id": "enemy_11",
+   "type": "slot",
+   "x": 166,
+   "y": 176,
+   "w": 56,
+   "h": 56,
+   "sprite": "ad_ui_panel_inset",
+   "state": "locked",
+   "discovered": false,
+   "enemy": null
+  },
+  {
+   "id": "label_37",
+   "type": "label",
+   "x": 191,
+   "y": 182,
+   "w": 6,
+   "h": 7,
+   "text": "?"
+  },
+  {
+   "id": "enemy_12",
+   "type": "slot",
+   "x": 228,
+   "y": 176,
+   "w": 56,
+   "h": 56,
+   "sprite": "ad_ui_panel_inset",
+   "state": "locked",
+   "discovered": false,
+   "enemy": null
+  },
+  {
+   "id": "label_39",
+   "type": "label",
+   "x": 253,
+   "y": 182,
+   "w": 6,
+   "h": 7,
+   "text": "?"
+  },
+  {
+   "id": "enemy_13",
+   "type": "slot",
+   "x": 42,
+   "y": 236,
+   "w": 56,
+   "h": 56,
+   "sprite": "ad_ui_panel_inset",
+   "state": "locked",
+   "discovered": false,
+   "enemy": null
+  },
+  {
+   "id": "label_41",
+   "type": "label",
+   "x": 67,
+   "y": 242,
+   "w": 6,
+   "h": 7,
+   "text": "?"
+  },
+  {
+   "id": "enemy_14",
+   "type": "slot",
+   "x": 104,
+   "y": 236,
+   "w": 56,
+   "h": 56,
+   "sprite": "ad_ui_panel_inset",
+   "state": "locked",
+   "discovered": false,
+   "enemy": null
+  },
+  {
+   "id": "label_43",
+   "type": "label",
+   "x": 129,
+   "y": 242,
+   "w": 6,
+   "h": 7,
+   "text": "?"
+  },
+  {
+   "id": "scroll_up",
+   "type": "scroll",
+   "x": 306,
+   "y": 56,
+   "w": 10,
+   "h": 10,
+   "sprite": "ad_ui_scroll_arrow_up_normal"
+  },
+  {
+   "id": "scroll_track",
+   "type": "scroll",
+   "x": 306,
+   "y": 66,
+   "w": 10,
+   "h": 186,
+   "sprite": "ad_ui_scroll_track_v"
+  },
+  {
+   "id": "scroll_thumb",
+   "type": "scroll",
+   "x": 306,
+   "y": 68,
+   "w": 10,
+   "h": 120,
+   "sprite": "ad_ui_scroll_thumb_v_normal"
+  },
+  {
+   "id": "scroll_down",
+   "type": "scroll",
+   "x": 306,
+   "y": 252,
+   "w": 10,
+   "h": 10,
+   "sprite": "ad_ui_scroll_arrow_down_normal"
+  },
+  {
+   "id": "detail",
+   "type": "tooltip",
+   "x": 328,
+   "y": 56,
+   "w": 276,
+   "h": 238,
+   "sprite": "ad_ui_panel_tooltip"
+  },
+  {
+   "id": "d_name",
+   "type": "label",
+   "x": 336,
+   "y": 64,
+   "w": 80,
+   "h": 7,
+   "text": "FALLEN ADEPT"
+  },
+  {
+   "id": "d_tag",
+   "type": "label",
+   "x": 552,
+   "y": 64,
+   "w": 44,
+   "h": 7,
+   "text": "STAGE 1"
+  },
+  {
+   "id": "divider_51",
+   "type": "divider",
+   "x": 336,
+   "y": 76,
+   "w": 260,
+   "h": 3,
+   "sprite": "ad_ui_divider_plain",
+   "tiled": true
+  },
+  {
+   "id": "d_portrait",
+   "type": "portrait",
+   "x": 336,
+   "y": 86,
+   "w": 72,
+   "h": 72,
+   "sprite": "ad_ui_panel_inset",
+   "discovered": true
+  },
+  {
+   "id": "d_desc_0",
+   "type": "label",
+   "x": 416,
+   "y": 90,
+   "w": 162,
+   "h": 7,
+   "text": "A ROBED CASTER THAT BACKS"
+  },
+  {
+   "id": "d_desc_1",
+   "type": "label",
+   "x": 416,
+   "y": 99,
+   "w": 174,
+   "h": 7,
+   "text": "AWAY AND THROWS BOLTS. SLOW"
+  },
+  {
+   "id": "d_desc_2",
+   "type": "label",
+   "x": 416,
+   "y": 108,
+   "w": 50,
+   "h": 7,
+   "text": "TO TURN."
+  },
+  {
+   "id": "hdr_stats",
+   "type": "header",
+   "x": 336,
+   "y": 168,
+   "w": 260,
+   "h": 12,
+   "sprite": "ad_ui_header_small"
+  },
+  {
+   "id": "label_57",
+   "type": "label",
+   "x": 430,
+   "y": 171,
+   "w": 72,
+   "h": 7,
+   "text": "FIELD NOTES"
+  },
+  {
+   "id": "n_seen_l",
+   "type": "label",
+   "x": 340,
+   "y": 188,
+   "w": 76,
+   "h": 7,
+   "text": "ENCOUNTERED"
+  },
+  {
+   "id": "n_seen",
+   "type": "label",
+   "x": 448,
+   "y": 188,
+   "w": 13,
+   "h": 7,
+   "text": "23"
+  },
+  {
+   "id": "n_kill_l",
+   "type": "label",
+   "x": 340,
+   "y": 198,
+   "w": 55,
+   "h": 7,
+   "text": "DEFEATED"
+  },
+  {
+   "id": "n_kill",
+   "type": "label",
+   "x": 448,
+   "y": 198,
+   "w": 12,
+   "h": 7,
+   "text": "19"
+  },
+  {
+   "id": "n_weak_l",
+   "type": "label",
+   "x": 340,
+   "y": 212,
+   "w": 45,
+   "h": 7,
+   "text": "WEAK TO"
+  },
+  {
+   "id": "weak_0",
+   "type": "slot",
+   "x": 398,
+   "y": 206,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    402,
+    210,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "n_weak",
+   "type": "label",
+   "x": 426,
+   "y": 214,
+   "w": 26,
+   "h": 7,
+   "text": "FIRE"
+  },
+  {
+   "id": "n_drop_l",
+   "type": "label",
+   "x": 340,
+   "y": 236,
+   "w": 34,
+   "h": 7,
+   "text": "DROPS"
+  },
+  {
+   "id": "n_drop",
+   "type": "label",
+   "x": 418,
+   "y": 236,
+   "w": 33,
+   "h": 7,
+   "text": "COINS"
+  },
+  {
+   "id": "locked_note",
+   "type": "label",
+   "x": 340,
+   "y": 274,
+   "w": 139,
+   "h": 7,
+   "text": "10 ENEMIES NOT YET MET"
+  }
+ ]
+}

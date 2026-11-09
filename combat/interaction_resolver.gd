@@ -13,7 +13,7 @@ func _init(balance: Dictionary) -> void:
 func resolve(hit: Variant, target, target_store, tick: int) -> Dictionary:
 	if hit is HitPayload and not hit.valid:
 		return {"accepted":false,"damage":0.0,"reason":"HIT_PAYLOAD_INVALID","reaction":{}}
-	var payload: Dictionary = hit.snapshot() if hit is HitPayload else hit
+	var payload: Dictionary = hit.view() if hit is HitPayload else hit
 	# All hit eligibility (team / death) happens through MagicTarget.
 	var team := int(payload.get("team",1))
 	if not target.eligible(team):

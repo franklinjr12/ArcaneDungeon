@@ -2,10 +2,11 @@ extends RefCounted
 ## AD-040: P1 HUD parts / reward card are in the manifest and every rune id has an icon cell.
 const MANIFEST := "res://art/export/manifest.json"
 const MAP := "res://art/export/engine_map.json"
-const INDEX := "res://art/export/ico/ad_ico_atlas_mvp_index.json"
+const INDEX := "res://art/export/ico/ad_ico_atlas_demo_index.json"
 const RUNES := "res://magic/data/runes_v2.json"
 const Hud = preload("res://ui/pixel_hud.gd")
-const ATLAS := "res://art/export/ico/ad_ico_atlas_mvp.png"
+const SkinA = preload("res://ui/skin_a.gd")
+const ATLAS := "res://art/export/ico/ad_ico_atlas_demo.png"
 
 func _load_json(path: String):
 	return JSON.parse_string(FileAccess.get_file_as_string(path))
@@ -77,6 +78,9 @@ func _check_hud_helpers(t, runes: Dictionary) -> void:
 	t.equal(Hud.cooldown_frame(0.0), 11, "AD-040 cooldown_frame(0.0)")
 	t.equal(Hud.dash_frame({"ready": true}), 5, "AD-040 dash_frame ready")
 	t.equal(Hud.dash_frame({"ready": false}), 6, "AD-040 dash_frame cooling")
+	var widgets: Dictionary = SkinA.widgets_by_id("hud")
+	for id in ["bar_hp","bar_mp","bar_boss","boss_phase_33","boss_phase_66","plate_stage","txt_coins","slot_dash","dash_charges"] + ["status_0","status_2","artifact_0","artifact_3","slot_1","slot_4","slot_4_key"]:
+		t.check(widgets.has(id), "AD-153 HUD layout has widget %s" % id)
 	var ids: Array = ["essence.neutral"]
 	for r in runes["runes"]:
 		ids.append(r["id"])

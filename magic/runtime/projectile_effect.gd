@@ -14,6 +14,8 @@ var max_targets: int
 var hit_ids: Dictionary = {}
 var on_hit: Dictionary = {}
 var root: Dictionary = {}
+## Computed once from the root modifiers so the per-tick loop needs no lookup.
+var homing := false
 var expired := false
 var age := 0
 ## AD-143 Rebound Sigil: remaining wall/bounds bounces (0 = expire on contact, as before).
@@ -30,8 +32,12 @@ func _init(spec: Dictionary) -> void:
 	position = spec["position"]
 	direction = spec["direction"].normalized()
 	var params: Dictionary = spec["root"]["params"]
-	root = spec["root"].duplicate(true)
-	on_hit = spec.get("on_hit",{}).duplicate(true)
+	# The plan is a fresh per-cast snapshot and nothing writes root/on_hit, so projectiles share it.
+	root = spec["root"]
+	for modifier in root.get("modifiers",[]):
+		if modifier["id"] == "mod.homing":
+			homing = true
+	on_hit = spec.get("on_hit",{})
 	speed = float(params["speed"])
 	radius = float(params["radius"])
 	life_ticks = int(params["lifetime_ticks"])
@@ -42,10 +48,10 @@ func steer(dt: float, target_store, params: Dictionary) -> void:
 	var acquire := float(params.get("acquire_radius",0))
 	if acquire <= 0:
 		return
-	var targets: Array = target_store.query(position,acquire,team)
-	if targets.is_empty():
+	var nearest = target_store.nearest(position,acquire,team)
+	if nearest == null:
 		return
-	var wanted: Vector2 = (targets[0].position-position).normalized()
+	var wanted: Vector2 = (nearest.position-position).normalized()
 	if wanted.is_zero_approx():
 		return
 	var from_angle := direction.angle()
@@ -69,13 +75,12 @@ func advance(dt: float, target_store, bounds: Rect2, walls: Array = []) -> Array
 		var t := _segment_circle_time(start,end,target.position,target.radius+radius)
 		if t >= 0.0:
 			candidates.append({"target":target,"t":t})
-	candidates.sort_custom(func(a,b):
-		if absf(float(a["t"])-float(b["t"])) < 0.000001:
-			return a["target"].id < b["target"].id
-		return a["t"] < b["t"])
-	var exit_time := _bounds_exit_time(start,end,bounds)
-	for wall in walls:
-		exit_time = minf(exit_time,segment_wall_time(start,end,wall,radius))
+	if candidates.size() >= 2:
+		candidates.sort_custom(func(a,b):
+			if absf(float(a["t"])-float(b["t"])) < 0.000001:
+				return a["target"].id < b["target"].id
+			return a["t"] < b["t"])
+	var exit_time := sweep_walls(start,end,walls,radius,_bounds_exit_time(start,end,bounds))
 	var hits: Array = []
 	for contact in candidates:
 		if contact["t"] > exit_time + 0.000001:
@@ -133,6 +138,22 @@ static func _bounds_exit_time(start: Vector2, finish: Vector2, bounds: Rect2) ->
 		t = minf(t,(bounds.position.y-start.y)/delta.y)
 	return clampf(t,0.0,1.0)
 
+## minf(initial, segment_wall_time over every wall). A wall whose padded rect lies more than 0.01 away from the segment's
+## AABB on some axis cannot be touched (start is outside it and the slab test returns 1.0 or has low > high), so it is skipped.
+static func sweep_walls(start: Vector2, finish: Vector2, walls: Array, padding: float, initial: float) -> float:
+	var result := initial
+	var seg_min_x := minf(start.x,finish.x)
+	var seg_max_x := maxf(start.x,finish.x)
+	var seg_min_y := minf(start.y,finish.y)
+	var seg_max_y := maxf(start.y,finish.y)
+	for wall in walls:
+		var rect := Rect2(wall.position-Vector2.ONE*padding,wall.size+Vector2.ONE*padding*2.0)
+		if seg_max_x < rect.position.x-0.01 or seg_min_x > rect.end.x+0.01 \
+				or seg_max_y < rect.position.y-0.01 or seg_min_y > rect.end.y+0.01:
+			continue
+		result = minf(result,segment_wall_time(start,finish,wall,padding))
+	return result
+
 ## A swept point against an inflated solid AABB, returns first contact t in [0,1].
 static func segment_wall_time(start: Vector2, finish: Vector2, wall: Rect2, padding: float = 0.0) -> float:
 	var rect := Rect2(wall.position-Vector2.ONE*padding,wall.size+Vector2.ONE*padding*2.0)
@@ -141,19 +162,24 @@ static func segment_wall_time(start: Vector2, finish: Vector2, wall: Rect2, padd
 	var vector := finish-start
 	var low := 0.0
 	var high := 1.0
-	for axis in 2:
-		var origin: float = start.x if axis == 0 else start.y
-		var component: float = vector.x if axis == 0 else vector.y
-		var minimum: float = rect.position.x if axis == 0 else rect.position.y
-		var maximum: float = rect.end.x if axis == 0 else rect.end.y
-		if absf(component) < 0.00000001:
-			if origin < minimum or origin > maximum:
-				return 1.0
-			continue
-		var a := (minimum-origin)/component
-		var b := (maximum-origin)/component
-		low = maxf(low,minf(a,b))
-		high = minf(high,maxf(a,b))
+	if absf(vector.x) < 0.00000001:
+		if start.x < rect.position.x or start.x > rect.end.x:
+			return 1.0
+	else:
+		var ax := (rect.position.x-start.x)/vector.x
+		var bx := (rect.end.x-start.x)/vector.x
+		low = maxf(low,minf(ax,bx))
+		high = minf(high,maxf(ax,bx))
+		if low > high:
+			return 1.0
+	if absf(vector.y) < 0.00000001:
+		if start.y < rect.position.y or start.y > rect.end.y:
+			return 1.0
+	else:
+		var ay := (rect.position.y-start.y)/vector.y
+		var by := (rect.end.y-start.y)/vector.y
+		low = maxf(low,minf(ay,by))
+		high = minf(high,maxf(ay,by))
 		if low > high:
 			return 1.0
 	return low if low >= 0.0 and low <= 1.0 and high >= 0.0 else 1.0

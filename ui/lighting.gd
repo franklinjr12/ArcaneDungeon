@@ -9,6 +9,7 @@ const DATA_PATH := "res://world/data/lighting_v1.json"
 const POOL_MODE := "high"
 static var _data: Dictionary = {}
 var _ambient: DirectionalLight2D
+var _player: PointLight2D
 var _pool: Array = []
 var _room_lights: Array = []
 var _room_key := ""
@@ -22,7 +23,45 @@ static func load_data() -> Dictionary:
 	return _data
 
 static func biome_key(stage: int, room_type: String) -> String:
+	if room_type == "workshop":
+		return "workshop"
 	return ("ruins" if stage < 1 else "cistern") + ("_boss" if room_type == "boss" else "")
+
+static func stage_config(key: String) -> Dictionary:
+	var stages: Dictionary = load_data().get("stages", {})
+	return stages.get(key, stages.get("ruins", {}))
+
+## Effective per-channel multiplier of the SUB ambient light: 1 - energy * (1 - colour).
+static func ambient_factor(key: String) -> Color:
+	var amb: Dictionary = stage_config(key).get("ambient", {})
+	var c := Color(str(amb.get("color", "#ffffff")))
+	var e := float(amb.get("energy", 0.0))
+	return Color(1.0 - e * (1.0 - c.r), 1.0 - e * (1.0 - c.g), 1.0 - e * (1.0 - c.b))
+
+## Static mirror of the lit arena brightness factor at a world point (ambient + radial point lights, clamped to 1).
+static func light_factor_at(key: String, world_pos: Vector2, props: Array, bounds: Rect2, player_pos: Vector2) -> Color:
+	var data := load_data()
+	var cfg := stage_config(key)
+	var half := float(data.get("fallback_cookie_px", 128)) * 0.5
+	var out := ambient_factor(key)
+	var lights: Array = []
+	var torch: Dictionary = cfg.get("torch", {})
+	for p in props:
+		if p is Array and p.size() >= 3 and str(p[0]) == "brazier" and not torch.is_empty():
+			lights.append([Vector2(float(p[1]), float(p[2])), torch])
+	for d in cfg.get("fixed_lights", []):
+		lights.append([bounds.position + Vector2(float(d["at"][0]), float(d["at"][1])) * bounds.size, d])
+	if cfg.get("fill_light") is Dictionary:
+		lights.append([bounds.get_center(), cfg["fill_light"]])
+	if cfg.get("player_light") is Dictionary:
+		lights.append([player_pos, cfg["player_light"]])
+	for l in lights:
+		var d: Dictionary = l[1]
+		var falloff := maxf(0.0, 1.0 - world_pos.distance_to(l[0]) / (half * float(d["texture_scale"])))
+		var c := Color(str(d["color"]))
+		var k := float(d["energy"]) * falloff
+		out = Color(out.r + c.r * k, out.g + c.g * k, out.b + c.b * k)
+	return Color(minf(out.r, 1.0), minf(out.g, 1.0), minf(out.b, 1.0))
 
 static func mode_config(mode: String) -> Dictionary:
 	var modes: Dictionary = load_data().get("modes", {})
@@ -64,6 +103,8 @@ func setup(canvas) -> void:
 	_ambient.shadow_enabled = false
 	_ambient.range_item_cull_mask = mask
 	add_child(_ambient)
+	_player = _new_point(mask)
+	_player.name = "PlayerLight"
 	var cap := int(mode_config(POOL_MODE).get("spell_light_cap", 0))
 	for i in cap:
 		var light := _new_point(mask)
@@ -112,11 +153,11 @@ func _rebuild_room(session, key: String, room_type: String, props: Array, mode: 
 	var data := load_data()
 	var bounds: Rect2 = session.world.bounds
 	var mask := arena_mask()
-	var biome := key.trim_suffix("_boss")
-	var prop_defs: Dictionary = data.get("prop_lights", {})
+	var cfg := stage_config(key)
+	var torch: Dictionary = cfg.get("torch", {})
 	for p in props:
-		if p is Array and p.size() >= 3 and prop_defs.has(str(p[0])):
-			var d: Dictionary = prop_defs[str(p[0])]
+		if p is Array and p.size() >= 3 and str(p[0]) == "brazier" and not torch.is_empty():
+			var d: Dictionary = torch
 			var l := _new_point(mask)
 			_style(l, Color(str(d["color"])), float(d["energy"]), float(d["texture_scale"]))
 			l.position = Vector2(float(p[1]), float(p[2]))
@@ -125,7 +166,7 @@ func _rebuild_room(session, key: String, room_type: String, props: Array, mode: 
 			l.set_meta("period", maxf(1.0, float(d.get("flicker_period_ticks", 1))))
 			l.set_meta("world", l.position)
 			_room_lights.append(l)
-	for d in data.get("biome_fixed_lights", {}).get(biome, []):
+	for d in cfg.get("fixed_lights", []):
 		var l2 := _new_point(mask)
 		_style(l2, Color(str(d["color"])), float(d["energy"]), float(d["texture_scale"]))
 		l2.set_meta("base", float(d["energy"]))
@@ -133,8 +174,8 @@ func _rebuild_room(session, key: String, room_type: String, props: Array, mode: 
 		l2.set_meta("period", 1.0)
 		l2.set_meta("world", bounds.position + Vector2(float(d["at"][0]), float(d["at"][1])) * bounds.size)
 		_room_lights.append(l2)
-	if room_type == "boss":
-		var b: Dictionary = data.get("boss_arena_light", {})
+	if cfg.get("fill_light") is Dictionary:
+		var b: Dictionary = cfg["fill_light"]
 		var l3 := _new_point(mask)
 		_style(l3, Color(str(b.get("color", "#ffffff"))), float(b.get("energy", 0.0)), float(b.get("texture_scale", 1.0)))
 		l3.set_meta("base", float(b.get("energy", 0.0)))
@@ -154,16 +195,20 @@ func hide_all() -> void:
 	for l in _room_lights:
 		l.visible = false
 		l.enabled = false
+	if _player != null:
+		_player.visible = false
+		_player.enabled = false
 
 func sync(canvas, session, settings, stage: int, room_type: String, props: Array) -> void:
 	var mode_name: String = str(settings.lighting) if settings != null else "high"
 	var mode := mode_config(mode_name)
-	var data := load_data()
 	var tick: int = session.sim.clock.tick
 	var key := biome_key(stage, room_type)
 	var ambient_on := bool(mode.get("ambient", false))
-	var amb: Color = Color(str(data["ambient"][key]))
+	var cfg := stage_config(key)
+	var amb: Color = Color(str(cfg.get("ambient", {}).get("color", "#ffffff")))
 	_ambient.color = Color(1.0 - amb.r, 1.0 - amb.g, 1.0 - amb.b)
+	_ambient.energy = float(cfg.get("ambient", {}).get("energy", 0.0))
 	_ambient.visible = ambient_on
 	_ambient.enabled = ambient_on
 	var room_id := "%s|%s|%d|%s" % [key, room_type, session.get_instance_id(), JSON.stringify(props)]
@@ -180,9 +225,16 @@ func sync(canvas, session, settings, stage: int, room_type: String, props: Array
 			var phase := TAU * float(tick) / float(l.get_meta("period")) + float(i)
 			l.energy = float(l.get_meta("base")) * (1.0 + amp * sin(phase))
 			l.position = canvas.local_from_world(l.get_meta("world"))
+	var pl: Dictionary = cfg.get("player_light", {})
+	var player_on := bool(mode.get("player_light", false)) and not pl.is_empty()
+	_player.visible = player_on
+	_player.enabled = player_on
+	if player_on:
+		_style(_player, Color(str(pl["color"])), float(pl["energy"]), float(pl["texture_scale"]))
+		_player.position = canvas.local_from_world(session.sim.actor.position)
 	var cap := mini(int(mode.get("spell_light_cap", 0)), _pool.size())
 	var sources := spell_light_sources(session)
-	var defs: Dictionary = data.get("spell_lights", {})
+	var defs: Dictionary = cfg.get("spell_lights", {})
 	var used := 0
 	for s in sources:
 		if used >= cap:

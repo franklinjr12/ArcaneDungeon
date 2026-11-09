@@ -119,14 +119,16 @@ func _move(session, desired: Vector2) -> void:
 			if test_point.distance_squared_to(before) > 1.0:
 				target.position = test_point
 				break
+	var separation_padding := float(ai.get("separation_padding",2.0))
+	var separation_push := float(ai.get("separation_push",3.0))
 	for other in session.enemies:
 		if other == self or not other.target.alive():
 			continue
 		var diff: Vector2 = target.position-other.target.position
-		var minimum: float = target.radius+other.target.radius+float(ai.get("separation_padding",2.0))
+		var minimum: float = target.radius+other.target.radius+separation_padding
 		if diff.length_squared() < minimum*minimum:
 			var apart: Vector2 = diff.normalized() if not diff.is_zero_approx() else Vector2(1 if target.id < other.target.id else -1,0)
-			target.position = step_body(session,target.position,apart*float(ai.get("separation_push",3.0)))
+			target.position = step_body(session,target.position,apart*separation_push)
 
 func advance(session) -> void:
 	if not target.alive():

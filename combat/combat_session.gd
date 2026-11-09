@@ -1,7 +1,7 @@
 extends RefCounted
 ## M2 combat orchestration: reuses M1 SpellRunner and common MagicTarget/Health.
 const Runner = preload("res://magic/runtime/spell_runner.gd")
-const Geometry = preload("res://world/arena_geometry.gd")
+const Geometry = preload("res://combat/cached_geometry.gd")
 const WaterTiles = preload("res://world/water_tiles.gd")
 const EnvProps = preload("res://world/env_props.gd")
 const Player = preload("res://combat/player_combat.gd")
@@ -10,7 +10,10 @@ const Boss = preload("res://combat/boss_combat.gd")
 const DamageEvent = preload("res://combat/damage_event.gd")
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 const Difficulty = preload("res://game/core/difficulty.gd")
+const AudioDirector = preload("res://game/audio/audio_director.gd")
 const TUNING_FILE := "res://combat/combat_tuning_v1.json"
+## Test-only path override (TestContext.with_frozen_balance); empty means TUNING_FILE.
+static var tuning_override := ""
 const SAMPLES_FILE := "res://magic/data/sandbox_samples_v1.json"
 var data: Dictionary = {}
 var samples: Dictionary = {}
@@ -50,14 +53,16 @@ var reduce_flashes := false
 ## AD-020: output-only audio sink (Callable(cue_id, position)); never read back by the simulation.
 var audio_sink: Callable
 var _audio_hits := 0
-var _audio_reactions := 0
 var _audio_extinguish := 0
+var _audio_status_seen := 0
 var _audio_dashes := 0
+var _audio_trace := {"reaction":0,"artifact":0,"trigger":0}
+var _audio_env := 0
 var _audio_dead := false
 const NON_CAST_REJECTIONS := ["DASH_LOCKOUT","CASTER_DEAD","PAUSED","MODAL_OPEN"]
 
 func _init(run_seed: int = 5160, scenario_id: String = "single", starter_index: int = 0) -> void:
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(TUNING_FILE))
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(tuning_override if not tuning_override.is_empty() else TUNING_FILE))
 	var spells = JSON.parse_string(FileAccess.get_file_as_string(SAMPLES_FILE))
 	if typeof(parsed) != TYPE_DICTIONARY or typeof(spells) != TYPE_DICTIONARY:
 		return
@@ -101,9 +106,11 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	_attack_ids.clear()
 	_death_ids.clear()
 	_audio_hits = 0
-	_audio_reactions = 0
 	_audio_extinguish = 0
+	_audio_status_seen = 0
 	_audio_dashes = 0
+	_audio_trace = {"reaction":0,"artifact":0,"trigger":0}
+	_audio_env = 0
 	_audio_dead = false
 	state = "playing"
 	defer_clear = false
@@ -248,22 +255,35 @@ func spawn_mini_boss(id: String, at: Vector2, elite: Dictionary = {}):
 	settings["elite_damage_multiplier"] = float(elite.get("damage_multiplier",1.0))
 	return spawn_boss(settings,at)
 
+## Root essence/manifestation ids per slot, keyed on the compiled plan object so a hot-swapped spell refreshes them.
+var _slot_cue_ids: Dictionary = {}
+
 func issue(command: Dictionary) -> Dictionary:
 	if state != "playing":
 		return {"accepted":false,"reason":"COMBAT_ENDED"}
 	var slot: int = int(command.get("cast",-1))
 	var essence := "neutral"
+	var form_id := ""
 	if slot >= 0:
 		var plan = sim.loadout.get_plan(slot)
 		if plan != null:
-			essence = str(plan.snapshot()["root"]["essence"]["id"]).trim_prefix("essence.")
+			var cached: Dictionary = _slot_cue_ids.get(slot,{})
+			if cached.is_empty() or cached["plan"] != plan:
+				var root: Dictionary = plan.snapshot()["root"]
+				cached = {"plan":plan,"essence":str(root["essence"]["id"]).trim_prefix("essence."),
+					"form":str(root.get("manifestation",{}).get("id",""))}
+				_slot_cue_ids[slot] = cached
+			essence = cached["essence"]
+			form_id = cached["form"]
 	var result: Dictionary = player.process_command(command)
 	if audio_sink.is_valid():
 		if player.dashes > _audio_dashes:
 			_cue("sfx.dash",sim.actor.position)
 		if slot >= 0:
 			if bool(result.get("accepted",false)):
-				_cue("sfx.cast." + (essence if essence in ["fire","water","lightning"] else "neutral"),sim.actor.position)
+				_event_cue("cast:" + essence,sim.actor.position,"sfx.cast.neutral")
+				if form_id in ["form.beam","form.field"]:
+					_event_cue("form:" + form_id,sim.actor.position)
 			elif str(result.get("reason","")) not in NON_CAST_REJECTIONS:
 				_cue("sfx.cast.rejected",sim.actor.position)
 	_audio_dashes = player.dashes
@@ -273,6 +293,12 @@ func issue(command: Dictionary) -> Dictionary:
 func _cue(id: String, at = null) -> void:
 	if audio_sink.is_valid():
 		audio_sink.call(id,at)
+
+## AD-151: cue by data-driven event key (audio_cues_v1.json "events"); output-only.
+func _event_cue(key: String, at = null, fallback: String = "") -> void:
+	var id := str(AudioDirector.load_events().get(key,fallback))
+	if id != "":
+		_cue(id,at)
 
 func step() -> void:
 	if state != "playing" or sim.clock.paused:
@@ -316,41 +342,68 @@ func step() -> void:
 		state = "cleared"
 		clear_tick = sim.clock.tick
 		_notify("ARENA CLEARED - 1/2/3 next, R replay",sim.actor.position)
-	var new_reactions: int = sim.trace.filter_records(-1,"","reaction").size()
+	var new_reactions: int = sim.trace.count_of("reaction")
 	if new_reactions > reactions:
 		_notify("ARC x%d" % [new_reactions-reactions],sim.actor.position)
 		reactions = new_reactions
 	var age: int = sim.clock.tick-68
-	feedback = feedback.filter(func(v): return int(v["tick"]) >= age)
+	if not feedback.is_empty():
+		var kept_feedback: Array = []
+		for v in feedback:
+			if int(v["tick"]) >= age:
+				kept_feedback.append(v)
+		feedback = kept_feedback
 	elapsed_frame_ms = float(Time.get_ticks_usec()-start_usec)/1000.0
 
 ## AD-020: derive audio cues from this tick's trace/AI changes. Reads only; mutates audio cursors.
 func _audio_step(before: Array) -> void:
-	var hits: int = sim.trace.filter_records(-1,"","hit").size()
+	var hits: int = sim.trace.count_of("hit")
 	if hits > _audio_hits:
 		_cue("sfx.hit.generic",sim.actor.position)
 	_audio_hits = hits
-	var arcs: int = sim.trace.filter_records(-1,"","reaction").size()
-	if arcs > _audio_reactions:
-		_cue("sfx.react.arc",sim.actor.position)
-	_audio_reactions = arcs
-	var removed := 0
-	for entry in sim.trace.filter_records(-1,"","status"):
+	var keys := {}
+	for type in _audio_trace:
+		for entry in sim.trace.records_since(type,int(_audio_trace[type])):
+			var reason := str(entry.get("reason",""))
+			match type:
+				"reaction":
+					keys["reaction:" + reason] = true
+				"artifact":
+					keys["artifact:" + reason.trim_prefix("artifact.")] = true
+				"trigger":
+					keys["trigger:" + (reason if reason != "" else "trigger.on_hit")] = true
+		_audio_trace[type] = sim.trace.count_of(type)
+	for key in keys:
+		_event_cue(key,sim.actor.position,"sfx.react.arc" if key.begins_with("reaction:") else "")
+	if env_props != null:
+		var env_keys := {}
+		for entry in env_props.events.slice(_audio_env):
+			env_keys["env:%s:%s" % [entry["kind"],entry["action"]]] = true
+		_audio_env = env_props.events.size()
+		for key in env_keys:
+			_event_cue(key,sim.actor.position)
+	if _audio_status_seen > sim.trace.count_of("status"):
+		_audio_status_seen = 0
+		_audio_extinguish = 0
+	var removed := _audio_extinguish
+	for entry in sim.trace.records_since("status",_audio_status_seen):
 		if str(entry.get("reason","")) == "burning:removed":
 			removed += 1
+	_audio_status_seen = sim.trace.count_of("status")
 	if removed > _audio_extinguish:
-		_cue("sfx.react.extinguish",sim.actor.position)
+		_event_cue("status:burning:removed",sim.actor.position,"sfx.react.extinguish")
 	_audio_extinguish = removed
 	for index in enemies.size():
 		var enemy = enemies[index]
 		var at: Vector2 = enemy.target.position
 		if enemy.state == "windup" and before[index][0] != "windup":
 			if "boss" in enemy.target.tags:
-				_cue("sfx.boss.tele_a" if int(enemy.cycle)%2 == 0 else "sfx.boss.tele_b",at)
+				var side := "a" if int(enemy.cycle)%2 == 0 else "b"
+				_event_cue("telegraph:%s:%s" % [enemy.kind,side],at,"sfx.boss.tele_" + side)
 			else:
-				_cue("sfx.tele." + enemy.kind,at)
+				_event_cue("telegraph:" + enemy.kind,at,"sfx.tele." + enemy.kind)
 		if enemy.get("phase") != null and int(enemy.get("phase")) == 2 and int(before[index][1]) == 1:
-			_cue("sfx.boss.phase",at)
+			_event_cue("phase:" + enemy.kind,at,"sfx.boss.phase")
 
 func alive_enemies() -> int:
 	var count := 0
@@ -413,20 +466,19 @@ func spawn_enemy_projectile(source_id: int, origin: Vector2, direction: Vector2,
 	_notify("! SHOT",origin)
 
 func advance_enemy_projectiles() -> void:
+	var lifetime := int(data["enemy_projectile"]["lifetime_ticks"])
 	for projectile in enemy_shots.duplicate():
 		var source = sim.targets.get_target(int(projectile["source_id"]))
 		if source == null or not source.alive():
 			enemy_shots.erase(projectile)
 			continue
 		projectile["age"] += 1
-		if projectile["age"] > int(data["enemy_projectile"]["lifetime_ticks"]):
+		if projectile["age"] > lifetime:
 			enemy_shots.erase(projectile)
 			continue
 		var start: Vector2 = projectile["position"]
 		var destination: Vector2 = start+projectile["direction"]*float(projectile["speed"])/float(sim.clock.tick_rate)
-		var wall_time := 1.0
-		for wall in world.walls:
-			wall_time = minf(wall_time,Projectile.segment_wall_time(start,destination,wall,float(projectile["radius"])))
+		var wall_time := Projectile.sweep_walls(start,destination,world.walls,float(projectile["radius"]),1.0)
 		if not world.bounds.has_point(destination):
 			wall_time = minf(wall_time,Projectile._bounds_exit_time(start,destination,world.bounds))
 		var hit_time: float = Projectile._segment_circle_time(start,destination,sim.actor.position,float(projectile["radius"])+sim.actor.radius)

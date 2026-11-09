@@ -13,6 +13,7 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	preload("res://tests/test_context.gd").set_frozen_balance(true)
 	var outputs: Dictionary = {}
 	for case_name in CASES:
 		outputs[case_name] = run_case(case_name)

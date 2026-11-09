@@ -1,14 +1,24 @@
 extends RefCounted
 ## AD-068: modal pause menu behaviour (standalone, no run needed).
 const Pause = preload("res://ui/pause_menu.gd")
+const SkinA = preload("res://ui/skin_a.gd")
 
 func run(t) -> void:
 	var menu = Pause.new()
 	(Engine.get_main_loop() as SceneTree).root.add_child(menu)
-	for n in ["ResumeButton", "SettingsButton", "RetryButton", "QuitButton", "ConfirmButton", "CancelButton"]:
+	for n in ["ResumeButton", "LoadoutButton", "SettingsButton", "SaveQuitButton", "QuitButton", "ConfirmButton", "CancelButton"]:
 		t.check(menu.find_child(n, true, false) is Button, "AD-068 pause has " + n)
 	for k in Pause.TEXT:
 		t.check(String(Pause.TEXT[k]) != "", "AD-068 pause text " + k)
+	t.check(menu.find_child("RetryButton", true, false) == null and menu.find_child("ControlsButton", true, false) == null, "AD-152 pause has no Retry/Controls buttons")
+	t.equal(menu.backdrop.texture.region, Rect2(SkinA.kit()["sprites"]["ad_ui_modal_backdrop_50"]["x"], SkinA.kit()["sprites"]["ad_ui_modal_backdrop_50"]["y"], SkinA.kit()["sprites"]["ad_ui_modal_backdrop_50"]["w"], SkinA.kit()["sprites"]["ad_ui_modal_backdrop_50"]["h"]), "AD-152 pause backdrop is the _50 sprite")
+	var loadouts := [0]
+	menu.loadout_requested.connect(func(): loadouts[0] += 1)
+	menu.loadout_button.emit_signal("pressed")
+	t.equal(loadouts[0], 1, "AD-152 LoadoutButton emits loadout_requested")
+	menu.open_controls()
+	t.check(menu.is_settings_open() and menu.is_controls_open(), "AD-152 open_controls opens Settings > Controls")
+	menu.close_settings()
 	var quits := [0]
 	var retries := [0]
 	var resumes := [0]
@@ -41,7 +51,7 @@ func run(t) -> void:
 	menu.cancel_confirm()
 	menu.open_settings()
 	t.check(menu.is_settings_open() and not menu.panel.visible, "AD-068 settings opens")
-	t.check(menu.settings_screen.volume_sliders.size() == 4, "AD-068 settings has volume sliders")
+	t.check(menu.settings_screen.volume_sliders.size() == 5, "AD-068 settings has volume sliders")
 	menu.request_quit()
 	menu.handle_cancel()
 	t.check(not menu.is_settings_open() and menu.is_confirm_open(), "AD-068 cancel closes settings first")

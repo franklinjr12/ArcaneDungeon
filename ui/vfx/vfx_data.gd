@@ -47,11 +47,28 @@ static func texture(path: String, fallback_kind: String) -> Texture2D:
 	if path != "" and ResourceLoader.exists(path):
 		var loaded = load(path)
 		if loaded is Texture2D:
-			tex = loaded
+			tex = _first_frame(path, loaded)
 	if tex == null:
 		tex = _procedural(fallback_kind)
 	_textures[key] = tex
 	return tex
+
+## Multi-frame strips (sibling .json with a frames list) show frame 0 only; visuals never change sim timing.
+static func _first_frame(path: String, full: Texture2D) -> Texture2D:
+	var jp := path.get_basename() + ".json"
+	if not FileAccess.file_exists(jp):
+		return full
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(jp))
+	if not (parsed is Dictionary) or not (parsed.get("frames") is Array) or parsed["frames"].is_empty():
+		return full
+	var f: Dictionary = parsed["frames"][0].get("frame", {})
+	var r := Rect2(float(f.get("x", 0)), float(f.get("y", 0)), float(f.get("w", 0)), float(f.get("h", 0)))
+	if r.size.x <= 0.0 or r.size.y <= 0.0 or not Rect2(Vector2.ZERO, full.get_size()).encloses(r) or r.size == full.get_size():
+		return full
+	var at := AtlasTexture.new()
+	at.atlas = full
+	at.region = r
+	return at
 
 static func _procedural(kind: String) -> Texture2D:
 	var grad := Gradient.new()

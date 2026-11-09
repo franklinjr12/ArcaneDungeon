@@ -1,0 +1,608 @@
+{
+ "screen": "summary_lose",
+ "canvas": [
+  640,
+  360
+ ],
+ "safe_area": {
+  "x": 16,
+  "y": 9,
+  "w": 608,
+  "h": 342
+ },
+ "status": "CANDIDATE",
+ "skin": "AD-095 kit (skin A, Franklin 2026-11-04)",
+ "coordinate_origin": "top-left, px at 640x360 (engine scales x2 = 1280x720 exactly)",
+ "note": "rects are the final sprite/text bounds; 9-slice sprites are stretched with the margins in ad_ui_kit.json; labels are engine text (m5x7) positioned at x,y (top-left of the glyph box)",
+ "fonts": {
+  "label": "arc_fnt_m5x7",
+  "small": "arc_fnt_silkscreen"
+ },
+ "focus_order": [
+  "btn_retry_seed",
+  "btn_new_run",
+  "btn_main_menu"
+ ],
+ "widgets": [
+  {
+   "id": "modal_backdrop",
+   "type": "backdrop",
+   "x": 0,
+   "y": 0,
+   "w": 640,
+   "h": 360,
+   "sprite": "ad_ui_modal_backdrop_25",
+   "tiled": true
+  },
+  {
+   "id": "panel",
+   "type": "panel",
+   "x": 16,
+   "y": 18,
+   "w": 372,
+   "h": 332,
+   "sprite": "ad_ui_panel_large"
+  },
+  {
+   "id": "title_header",
+   "type": "header",
+   "x": 102,
+   "y": 10,
+   "w": 200,
+   "h": 16,
+   "sprite": "ad_ui_header"
+  },
+  {
+   "id": "title",
+   "type": "label",
+   "x": 176,
+   "y": 15,
+   "w": 52,
+   "h": 7,
+   "text": "RUN OVER"
+  },
+  {
+   "id": "result",
+   "type": "label",
+   "x": 147,
+   "y": 36,
+   "w": 110,
+   "h": 14,
+   "text": "DEFEATED"
+  },
+  {
+   "id": "result_sub",
+   "type": "label",
+   "x": 92,
+   "y": 54,
+   "w": 220,
+   "h": 7,
+   "text": "FELL TO A STORM CRYSTAL IN STAGE 2."
+  },
+  {
+   "id": "stats",
+   "type": "panel",
+   "x": 28,
+   "y": 66,
+   "w": 348,
+   "h": 76,
+   "sprite": "ad_ui_panel_inset"
+  },
+  {
+   "id": "st0_l",
+   "type": "label",
+   "x": 36,
+   "y": 72,
+   "w": 87,
+   "h": 7,
+   "text": "STAGE REACHED"
+  },
+  {
+   "id": "st0_v",
+   "type": "label",
+   "x": 36,
+   "y": 81,
+   "w": 28,
+   "h": 7,
+   "text": "2 / 2"
+  },
+  {
+   "id": "st1_l",
+   "type": "label",
+   "x": 208,
+   "y": 72,
+   "w": 87,
+   "h": 7,
+   "text": "ROOMS CLEARED"
+  },
+  {
+   "id": "st1_v",
+   "type": "label",
+   "x": 208,
+   "y": 81,
+   "w": 6,
+   "h": 7,
+   "text": "9"
+  },
+  {
+   "id": "st2_l",
+   "type": "label",
+   "x": 36,
+   "y": 94,
+   "w": 26,
+   "h": 7,
+   "text": "TIME"
+  },
+  {
+   "id": "st2_v",
+   "type": "label",
+   "x": 36,
+   "y": 103,
+   "w": 31,
+   "h": 7,
+   "text": "21:40"
+  },
+  {
+   "id": "st3_l",
+   "type": "label",
+   "x": 208,
+   "y": 94,
+   "w": 107,
+   "h": 7,
+   "text": "ENEMIES DEFEATED"
+  },
+  {
+   "id": "st3_v",
+   "type": "label",
+   "x": 208,
+   "y": 103,
+   "w": 13,
+   "h": 7,
+   "text": "58"
+  },
+  {
+   "id": "st4_l",
+   "type": "label",
+   "x": 36,
+   "y": 116,
+   "w": 80,
+   "h": 7,
+   "text": "DAMAGE DEALT"
+  },
+  {
+   "id": "st4_v",
+   "type": "label",
+   "x": 36,
+   "y": 125,
+   "w": 31,
+   "h": 7,
+   "text": "3 040"
+  },
+  {
+   "id": "st5_l",
+   "type": "label",
+   "x": 208,
+   "y": 116,
+   "w": 100,
+   "h": 7,
+   "text": "COINS COLLECTED"
+  },
+  {
+   "id": "st5_v",
+   "type": "label",
+   "x": 208,
+   "y": 125,
+   "w": 18,
+   "h": 7,
+   "text": "118"
+  },
+  {
+   "id": "hdr_loadout",
+   "type": "header",
+   "x": 28,
+   "y": 148,
+   "w": 348,
+   "h": 12,
+   "sprite": "ad_ui_header_small"
+  },
+  {
+   "id": "label_21",
+   "type": "label",
+   "x": 159,
+   "y": 151,
+   "w": 86,
+   "h": 7,
+   "text": "FINAL LOADOUT"
+  },
+  {
+   "id": "spell_1",
+   "type": "slot",
+   "x": 32,
+   "y": 166,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    36,
+    170,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "spell_key_1",
+   "type": "label",
+   "x": 60,
+   "y": 168,
+   "w": 20,
+   "h": 7,
+   "text": "LMB"
+  },
+  {
+   "id": "spell_nm_1",
+   "type": "label",
+   "x": 60,
+   "y": 178,
+   "w": 26,
+   "h": 7,
+   "text": "FIRE"
+  },
+  {
+   "id": "spell_2",
+   "type": "slot",
+   "x": 120,
+   "y": 166,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    124,
+    170,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "spell_key_2",
+   "type": "label",
+   "x": 148,
+   "y": 168,
+   "w": 20,
+   "h": 7,
+   "text": "RMB"
+  },
+  {
+   "id": "spell_nm_2",
+   "type": "label",
+   "x": 148,
+   "y": 178,
+   "w": 34,
+   "h": 7,
+   "text": "WATER"
+  },
+  {
+   "id": "spell_3",
+   "type": "slot",
+   "x": 208,
+   "y": 166,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    212,
+    170,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "spell_key_3",
+   "type": "label",
+   "x": 236,
+   "y": 168,
+   "w": 6,
+   "h": 7,
+   "text": "Q"
+  },
+  {
+   "id": "spell_nm_3",
+   "type": "label",
+   "x": 236,
+   "y": 178,
+   "w": 40,
+   "h": 7,
+   "text": "HOMING"
+  },
+  {
+   "id": "spell_4",
+   "type": "slot",
+   "x": 296,
+   "y": 166,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    300,
+    170,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "spell_key_4",
+   "type": "label",
+   "x": 324,
+   "y": 168,
+   "w": 6,
+   "h": 7,
+   "text": "E"
+  },
+  {
+   "id": "spell_nm_4",
+   "type": "label",
+   "x": 324,
+   "y": 178,
+   "w": 53,
+   "h": 7,
+   "text": "PIERCING"
+  },
+  {
+   "id": "art_1",
+   "type": "slot",
+   "x": 32,
+   "y": 196,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    36,
+    200,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "art_2",
+   "type": "slot",
+   "x": 75,
+   "y": 196,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    79,
+    200,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "art_3",
+   "type": "slot",
+   "x": 118,
+   "y": 196,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    122,
+    200,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "art_4",
+   "type": "slot",
+   "x": 161,
+   "y": 196,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    165,
+    200,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "art_5",
+   "type": "slot",
+   "x": 204,
+   "y": 196,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    208,
+    200,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "art_6",
+   "type": "slot",
+   "x": 247,
+   "y": 196,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    251,
+    200,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "art_7",
+   "type": "slot",
+   "x": 290,
+   "y": 196,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    294,
+    200,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "art_8",
+   "type": "slot",
+   "x": 333,
+   "y": 196,
+   "w": 24,
+   "h": 24,
+   "sprite": "ad_ui_slot24_ready",
+   "state": "ready",
+   "icon_rect": [
+    337,
+    200,
+    16,
+    16
+   ]
+  },
+  {
+   "id": "hdr_disc",
+   "type": "header",
+   "x": 28,
+   "y": 228,
+   "w": 348,
+   "h": 12,
+   "sprite": "ad_ui_header_small"
+  },
+  {
+   "id": "label_43",
+   "type": "label",
+   "x": 134,
+   "y": 231,
+   "w": 135,
+   "h": 7,
+   "text": "NEW IN THE COMPENDIUM"
+  },
+  {
+   "id": "disc_1",
+   "type": "label",
+   "x": 52,
+   "y": 250,
+   "w": 52,
+   "h": 7,
+   "text": "+2 RUNES"
+  },
+  {
+   "id": "disc_2",
+   "type": "label",
+   "x": 168,
+   "y": 250,
+   "w": 71,
+   "h": 7,
+   "text": "+1 REACTION"
+  },
+  {
+   "id": "disc_3",
+   "type": "label",
+   "x": 284,
+   "y": 250,
+   "w": 71,
+   "h": 7,
+   "text": "+1 ARTIFACT"
+  },
+  {
+   "id": "seed",
+   "type": "label",
+   "x": 28,
+   "y": 272,
+   "w": 84,
+   "h": 7,
+   "text": "SEED  K7Q-2M9"
+  },
+  {
+   "id": "milestone",
+   "type": "label",
+   "x": 28,
+   "y": 282,
+   "w": 249,
+   "h": 7,
+   "text": "MILESTONE 8 ARTIFACTS: 1 MORE TO UNLOCK"
+  },
+  {
+   "id": "btn_retry_seed",
+   "type": "button",
+   "x": 28,
+   "y": 306,
+   "w": 108,
+   "h": 24,
+   "sprite": "ad_ui_btn_focus",
+   "state": "focus",
+   "text": "RETRY SEED",
+   "action": "retry_seed"
+  },
+  {
+   "id": "btn_retry_seed_label",
+   "type": "label",
+   "x": 49,
+   "y": 314,
+   "w": 66,
+   "h": 7,
+   "text": "RETRY SEED"
+  },
+  {
+   "id": "btn_new_run",
+   "type": "button",
+   "x": 148,
+   "y": 306,
+   "w": 108,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "NEW SEED",
+   "action": "new_run"
+  },
+  {
+   "id": "btn_new_run_label",
+   "type": "label",
+   "x": 176,
+   "y": 314,
+   "w": 52,
+   "h": 7,
+   "text": "NEW SEED"
+  },
+  {
+   "id": "btn_main_menu",
+   "type": "button",
+   "x": 268,
+   "y": 306,
+   "w": 108,
+   "h": 24,
+   "sprite": "ad_ui_btn_normal",
+   "state": "normal",
+   "text": "MAIN MENU",
+   "action": "main_menu"
+  },
+  {
+   "id": "btn_main_menu_label",
+   "type": "label",
+   "x": 293,
+   "y": 314,
+   "w": 58,
+   "h": 7,
+   "text": "MAIN MENU"
+  }
+ ]
+}

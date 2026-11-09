@@ -7,6 +7,8 @@ var compiler
 var unlocked: Array = []
 var slots: Array = []
 var allow_edit := true
+## Validity verdict per slot index (FORMULA_INVALID / FORMULA_STALE / OK); see check_slot for the validity conditions.
+var _check_memo: Dictionary = {}
 
 func _init(rune_registry, accessible: Array, max_complexity: int = 12) -> void:
 	registry = rune_registry
@@ -82,18 +84,35 @@ func check_slot(index: int) -> String:
 		return "SLOT_INVALID"
 	if slots[index]["compiled"] == null:
 		return "SLOT_EMPTY"
-	var check: Dictionary
-	if not slots[index]["builtin_definition"].is_empty():
-		check = compiler.compile_builtin(slots[index]["builtin_definition"])
-	else:
-		check = compiler.compile(slots[index]["formula"],unlocked)
-	if not check["ok"]:
-		return "FORMULA_INVALID"
-	if check["compiled_spell"].snapshot()["registry_revision"] != slots[index]["compiled"].snapshot()["registry_revision"]:
-		return "FORMULA_STALE"
+	var verdict := _validity(index)
+	if verdict != "OK":
+		return verdict
 	if slots[index]["cooldown"] > 0:
 		return "COOLDOWN"
 	return "READY"
+
+## Compiler verdict for a filled slot, memoized while the compiled plan, formula, builtin definition, unlocked list and registry revision are unchanged.
+func _validity(index: int) -> String:
+	var slot: Dictionary = slots[index]
+	var memo = _check_memo.get(index)
+	if memo != null and is_same(memo["compiled"],slot["compiled"]) and memo["formula"] == slot["formula"] \
+			and memo["builtin_definition"] == slot["builtin_definition"] and memo["unlocked"] == unlocked \
+			and memo["revision"] == registry.revision:
+		return memo["verdict"]
+	var check: Dictionary
+	if not slot["builtin_definition"].is_empty():
+		check = compiler.compile_builtin(slot["builtin_definition"])
+	else:
+		check = compiler.compile(slot["formula"],unlocked)
+	var verdict := "OK"
+	if not check["ok"]:
+		verdict = "FORMULA_INVALID"
+	elif check["compiled_spell"].snapshot()["registry_revision"] != slot["compiled"].snapshot()["registry_revision"]:
+		verdict = "FORMULA_STALE"
+	_check_memo[index] = {"compiled":slot["compiled"],"formula":slot["formula"].duplicate(true),
+		"builtin_definition":slot["builtin_definition"].duplicate(true),"unlocked":unlocked.duplicate(),
+		"revision":registry.revision,"verdict":verdict}
+	return verdict
 
 func cooldown_tick() -> void:
 	for slot in slots:

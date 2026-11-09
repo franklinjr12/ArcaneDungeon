@@ -1,6 +1,8 @@
 extends RefCounted
 ## TASK-009: bounded FIFO events. Callbacks may enqueue but cannot recursively drain.
 const MagicEvent = preload("res://magic/runtime/magic_event.gd")
+const DEPTH_REJECTED := -1
+const BUDGET_REJECTED := -2
 var clock
 var limits
 var trace
@@ -22,18 +24,36 @@ func push(event_data: Dictionary) -> Dictionary:
 	if not validation["ok"]:
 		return {"accepted":false,"reason":"EVENT_INVALID","issues":validation["issues"]}
 	var event: Dictionary = item.snapshot()
+	var event_id := _enqueue(event)
+	if event_id == DEPTH_REJECTED:
+		return {"accepted":false,"reason":"EVENT_DEPTH_EXCEEDED"}
+	if event_id == BUDGET_REJECTED:
+		return {"accepted":false,"reason":"EVENT_BUDGET_EXCEEDED"}
+	return {"accepted":true,"event":event.duplicate(true)}
+
+## Same validation, budgets and traces as push() without the deep copies; returns the event_id, or -1 when rejected.
+func push_id(fields: Dictionary) -> int:
+	var item = MagicEvent.new()
+	if not item.from_dict(fields)["ok"]:
+		return -1
+	var event_id := _enqueue(item.view())
+	return event_id if event_id > 0 else -1
+
+## Shared by push() and push_id(); `event` is a record owned by the caller and is stored as is.
+## Returns the new event_id, or DEPTH_REJECTED / BUDGET_REJECTED.
+func _enqueue(event: Dictionary) -> int:
 	var root := int(event["root_cast_id"])
 	if event["depth"] > limits.get_limit("max_event_depth"):
 		_budget_exceeded(event,"event_depth","max_event_depth")
-		return {"accepted":false,"reason":"EVENT_DEPTH_EXCEEDED"}
+		return DEPTH_REJECTED
 	if int(_event_counts.get(root,0)) >= limits.get_limit("max_events_per_root_cast"):
 		_budget_exceeded(event,"events_per_cast","max_events_per_root_cast")
-		return {"accepted":false,"reason":"EVENT_BUDGET_EXCEEDED"}
+		return BUDGET_REJECTED
 	event["event_id"] = clock.next_id("event")
 	event["sequence"] = event["event_id"]
 	_event_counts[root] = int(_event_counts.get(root,0)) + 1
 	_pending.append(event)
-	return {"accepted":true,"event":event.duplicate(true)}
+	return int(event["event_id"])
 
 func reserve_effect(root_cast_id: int, lifetime_ticks: int, cast_id: int = 0, formula_id: String = "") -> bool:
 	var context := {"root_cast_id":root_cast_id,"cast_id":cast_id,"formula_id":formula_id}
@@ -73,7 +93,7 @@ func drain(on_event: Callable, budget: int = 1024) -> Dictionary:
 	while not _pending.is_empty() and count < budget:
 		# FIFO in monotonic event sequence; enqueued during callbacks goes last.
 		var data: Dictionary = _pending.pop_front()
-		on_event.call(data.duplicate(true))
+		on_event.call(data)
 		count += 1
 	_draining = false
 	return {"ok":true,"processed":count,"remaining":_pending.size()}

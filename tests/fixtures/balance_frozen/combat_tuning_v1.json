@@ -1,0 +1,413 @@
+{
+  "schema_version": 1,
+  "water": {
+    "wet_interval_ticks": 15
+  },
+  "arena": {
+    "width": 1320,
+    "height": 900,
+    "viewport_width": 916,
+    "viewport_height": 650,
+    "player_spawn": [
+      185,
+      450
+    ],
+    "walls": [
+      [
+        570,
+        165,
+        64,
+        210
+      ],
+      [
+        570,
+        535,
+        64,
+        200
+      ],
+      [
+        890,
+        360,
+        86,
+        175
+      ]
+    ],
+    "spawn_markers": [
+      [
+        375,
+        270
+      ],
+      [
+        1080,
+        255
+      ],
+      [
+        1120,
+        640
+      ],
+      [
+        700,
+        455
+      ],
+      [
+        410,
+        665
+      ],
+      [
+        1050,
+        500
+      ]
+    ]
+  },
+  "player": {
+    "move_speed": 255,
+    "radius": 17,
+    "max_hp": 150,
+    "dash_speed": 640,
+    "dash_duration_ticks": 11,
+    "dash_invulnerable_ticks": 9,
+    "dash_cooldown_ticks": 53,
+    "dash_recovery_ticks": 9,
+    "hit_flash_ticks": 8,
+    "max_burst_distance": 345
+  },
+  "enemy_projectile": {
+    "radius": 11,
+    "lifetime_ticks": 175
+  },
+  "enemies": {
+    "bone_thrall": {
+      "display_name": "Bone thrall",
+      "hp": 95,
+      "radius": 23,
+      "move_speed": 118,
+      "perception_radius": 1250,
+      "preferred_range": 42,
+      "attack_range": 76,
+      "telegraph_ticks": 31,
+      "recovery_ticks": 28,
+      "cooldown_ticks": 10,
+      "damage": 14,
+      "attack_kind": "melee",
+      "color": "#e49a73",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}]
+    },
+    "fallen_adept": {
+      "display_name": "Fallen adept",
+      "hp": 80,
+      "radius": 23,
+      "move_speed": 101,
+      "perception_radius": 1250,
+      "preferred_range": 325,
+      "attack_range": 560,
+      "telegraph_ticks": 43,
+      "recovery_ticks": 30,
+      "cooldown_ticks": 17,
+      "damage": 11,
+      "projectile_speed": 310,
+      "spread_degrees": 0,
+      "attack_kind": "ranged",
+      "color": "#8cbaea",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "keep_distance", "approach_margin": 45, "retreat_margin": 60, "approach_without_sight": true}, {"id": "ranged_attack"}]
+    },
+    "grave_hound": {
+      "display_name": "Grave hound",
+      "hp": 85,
+      "radius": 23,
+      "move_speed": 154,
+      "perception_radius": 1250,
+      "preferred_range": 250,
+      "attack_range": 420,
+      "telegraph_ticks": 34,
+      "recovery_ticks": 26,
+      "cooldown_ticks": 18,
+      "damage": 9,
+      "projectile_speed": 340,
+      "spread_degrees": 0,
+      "attack_kind": "ranged",
+      "strafe_factor": 0.8,
+      "color": "#bf9dde",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "keep_distance", "approach_margin": 35, "retreat_margin": 50, "approach_weight": 0.75, "retreat_weight": 0.75}, {"id": "ranged_attack"}]
+    },
+    "ossuary_shieldbearer": {
+      "_note": "AD-137 PROPOSED numbers (not approved design). Counters: flank (turn rate 2.5 deg/tick) or Force knockback (break_impulse_speed).",
+      "display_name": "Ossuary shieldbearer",
+      "hp": 150,
+      "radius": 26,
+      "move_speed": 78,
+      "perception_radius": 1250,
+      "preferred_range": 46,
+      "attack_range": 80,
+      "telegraph_ticks": 40,
+      "recovery_ticks": 34,
+      "cooldown_ticks": 14,
+      "damage": 16,
+      "attack_kind": "melee",
+      "color": "#9fb0b8",
+      "turn_rate_degrees_per_tick": 2.5,
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}, {"id": "shield_front", "front_damage_scale": 0.2, "front_arc_degrees": 70, "break_impulse_speed": 150}]
+    },
+    "wailing_spirit": {
+      "_note": "AD-137 PROPOSED numbers. phase_walls ignore_sight=false: it drifts through walls but still needs line of sight to wail, so cover still protects. Counters: Fire (weak, x1.5), hit it outside the intangible window (warned by a flicker).",
+      "display_name": "Wailing spirit",
+      "hp": 55,
+      "radius": 20,
+      "move_speed": 92,
+      "perception_radius": 1250,
+      "preferred_range": 260,
+      "attack_range": 420,
+      "telegraph_ticks": 45,
+      "recovery_ticks": 30,
+      "cooldown_ticks": 40,
+      "damage": 9,
+      "projectile_speed": 260,
+      "spread_degrees": 0,
+      "attack_kind": "ranged",
+      "color": "#8fe3d6",
+      "channel_resistances": {"fire": -0.5},
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "keep_distance", "approach_margin": 50, "retreat_margin": 70, "approach_without_sight": true}, {"id": "ranged_attack"}, {"id": "phase_walls", "ignore_sight": false}, {"id": "intangible_cycle", "period_ticks": 180, "warn_ticks": 30, "intangible_ticks": 45, "intangible_damage_scale": 0.0}]
+    },
+    "corpse_bloat": {
+      "_note": "AD-137 PROPOSED numbers. Counter: kill it at range (> explode_radius); the Wet puddle it leaves is a Lightning setup.",
+      "display_name": "Corpse bloat",
+      "hp": 170,
+      "radius": 30,
+      "move_speed": 62,
+      "perception_radius": 1250,
+      "preferred_range": 50,
+      "attack_range": 84,
+      "telegraph_ticks": 62,
+      "recovery_ticks": 36,
+      "cooldown_ticks": 20,
+      "damage": 18,
+      "attack_kind": "melee",
+      "color": "#a3c466",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}, {"id": "explode_on_death", "explode_radius": 90, "explode_damage": 22}, {"id": "death_puddle", "puddle_radius": 90, "puddle_duration_ticks": 300, "puddle_interval_ticks": 30}]
+    },
+    "cistern_slime": {
+      "_note": "AD-139 PROPOSED numbers. Counter: splits into 2 slimelets on death; burst it with an area spell or kill the slimelets one by one.",
+      "display_name": "Cistern slime",
+      "hp": 120,
+      "radius": 28,
+      "move_speed": 70,
+      "perception_radius": 1250,
+      "preferred_range": 46,
+      "attack_range": 80,
+      "telegraph_ticks": 40,
+      "recovery_ticks": 30,
+      "cooldown_ticks": 16,
+      "damage": 12,
+      "attack_kind": "melee",
+      "color": "#5fb89a",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}, {"id": "split_on_death", "split_kind": "cistern_slimelet", "count": 2, "split_radius": 30}]
+    },
+    "cistern_slimelet": {
+      "_note": "AD-139 PROPOSED numbers. Spawned by cistern_slime; deliberately has no split component.",
+      "display_name": "Cistern slimelet",
+      "hp": 32,
+      "radius": 15,
+      "move_speed": 130,
+      "perception_radius": 1250,
+      "preferred_range": 30,
+      "attack_range": 54,
+      "telegraph_ticks": 26,
+      "recovery_ticks": 24,
+      "cooldown_ticks": 10,
+      "damage": 7,
+      "attack_kind": "melee",
+      "color": "#8fdcc0",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}]
+    },
+    "drowned_acolyte": {
+      "_note": "AD-139 PROPOSED numbers. Casts a Wet zone on where you stood when the cast began (telegraph >= 40 ticks), so keep moving; Wet sets up Lightning.",
+      "display_name": "Drowned acolyte",
+      "hp": 60,
+      "radius": 21,
+      "move_speed": 88,
+      "perception_radius": 1250,
+      "preferred_range": 300,
+      "attack_range": 440,
+      "telegraph_ticks": 48,
+      "recovery_ticks": 30,
+      "cooldown_ticks": 90,
+      "damage": 0,
+      "attack_kind": "ranged",
+      "color": "#5d8fd1",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "keep_distance", "approach_margin": 50, "retreat_margin": 70, "approach_without_sight": true}, {"id": "zone_cast", "zone_radius": 80, "zone_duration_ticks": 240, "zone_interval_ticks": 15}]
+    },
+    "deep_eel": {
+      "_note": "AD-139 PROPOSED numbers. Lurks in deep water and lunges out after a ripple telegraph (30 ticks = 0.5 s at 60 Hz). Counter: stay out of the lunge line, or bait the ripple, step aside and punish while it is beached.",
+      "display_name": "Deep eel",
+      "hp": 70,
+      "radius": 22,
+      "move_speed": 110,
+      "perception_radius": 1250,
+      "preferred_range": 0,
+      "attack_range": 130,
+      "telegraph_ticks": 30,
+      "recovery_ticks": 60,
+      "cooldown_ticks": 60,
+      "damage": 12,
+      "attack_kind": "line",
+      "color": "#2f6f8f",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "water_lurk"}, {"id": "lunge", "charge_speed": 520, "charge_ticks": 14, "contact_padding": 4}]
+    },
+    "rust_golem": {
+      "_note": "AD-140 PROPOSED numbers. Armoured slow bruiser: resists neutral/fire/water/force 30%, Cold 50%, weak to Lightning (x1.5). Counter: Lightning, especially Wet + Lightning.",
+      "display_name": "Rust golem",
+      "hp": 220,
+      "radius": 30,
+      "move_speed": 55,
+      "perception_radius": 1250,
+      "preferred_range": 50,
+      "attack_range": 90,
+      "telegraph_ticks": 50,
+      "recovery_ticks": 40,
+      "cooldown_ticks": 30,
+      "damage": 20,
+      "attack_kind": "melee",
+      "color": "#a0583a",
+      "channel_resistances": {"lightning": -0.5, "cold": 0.5, "neutral": 0.3, "fire": 0.3, "water": 0.3, "force": 0.3},
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}]
+    },
+    "lantern_wisp": {
+      "_note": "AD-140 PROPOSED numbers. Support: allies within 220 take 30% damage while it lives; it does not attack and keeps away. Counter: kill the wisp first.",
+      "display_name": "Lantern wisp",
+      "hp": 45,
+      "radius": 18,
+      "move_speed": 95,
+      "perception_radius": 1250,
+      "preferred_range": 260,
+      "attack_range": 300,
+      "telegraph_ticks": 40,
+      "recovery_ticks": 30,
+      "cooldown_ticks": 60,
+      "damage": 0,
+      "attack_kind": "ranged",
+      "color": "#ffd36b",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "keep_distance", "approach_margin": 50, "retreat_margin": 70, "approach_without_sight": true}, {"id": "support_buff", "buff_radius": 220, "buff_damage_scale": 0.3}]
+    },
+    "storm_crystal": {
+      "_note": "AD-140 PROPOSED numbers. Static turret: telegraphed Charged pulse around itself; Lightning that hits it arcs to the nearest other target. Counter: stay out of the pulse ring and hit it with Lightning when enemies are close to it.",
+      "display_name": "Storm crystal",
+      "hp": 90,
+      "radius": 24,
+      "move_speed": 0,
+      "perception_radius": 1250,
+      "preferred_range": 0,
+      "attack_range": 150,
+      "telegraph_ticks": 45,
+      "recovery_ticks": 30,
+      "cooldown_ticks": 120,
+      "damage": 10,
+      "attack_kind": "melee",
+      "color": "#9fd8ff",
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "turret"}, {"id": "charged_pulse", "pulse_radius": 150}, {"id": "conductor"}]
+    }
+  },
+  "scenarios": {
+    "single": {
+      "name": "Single Bone thrall",
+      "enemies": [
+        [
+          "bone_thrall",
+          375,
+          450
+        ]
+      ]
+    },
+    "mixed": {
+      "name": "Mixed Wave",
+      "enemies": [
+        [
+          "bone_thrall",
+          375,
+          270
+        ],
+        [
+          "fallen_adept",
+          1080,
+          255
+        ],
+        [
+          "grave_hound",
+          1100,
+          640
+        ]
+      ]
+    },
+    "cluster": {
+      "name": "Wet / Lightning Cluster",
+      "enemies": [
+        [
+          "bone_thrall",
+          375,
+          390
+        ],
+        [
+          "fallen_adept",
+          440,
+          450
+        ],
+        [
+          "grave_hound",
+          390,
+          510
+        ]
+      ]
+    },
+    "empty": {
+      "name": "M3 managed encounter",
+      "enemies": []
+    }
+  },
+  "starter_loadouts": [
+    [
+      "sample.fire_shot",
+      "sample.water_burst"
+    ],
+    [
+      "sample.split_fire_trigger",
+      "sample.pierce_water_trigger"
+    ],
+    [
+      "sample.water_burst",
+      "sample.lightning_shot"
+    ]
+  ],
+  "mini_bosses": {
+    "ruins_adept_elite": {
+      "_note": "AD-141 PROPOSED numbers (Demo Plan Q1 default pending Franklin)",
+      "kind": "fallen_adept", "base_enemy": "fallen_adept", "display_name": "Elite fallen adept",
+      "radius": 30, "hp": 260, "patterns": ["targeted","fan"],
+      "windup_ticks": 48, "second_phase_windup_ticks": 40, "min_telegraph_ticks": 36,
+      "recovery_ticks": 40, "phase_threshold": 0.5,
+      "shot_damage": 11, "shot_speed": 310, "shot_spread": 0,
+      "fan_shots": 5, "fan_arc_degrees": 50,
+      "radial_shots": 8, "radial_damage": 8, "telegraph_radius": 190, "color": "#b49cf0"
+    },
+    "cistern_crystal_elite": {
+      "_note": "AD-141 PROPOSED numbers (Demo Plan Q1 default pending Franklin)",
+      "kind": "storm_crystal", "base_enemy": "storm_crystal", "display_name": "Elite storm crystal",
+      "radius": 30, "hp": 280, "patterns": ["pulse","radial"],
+      "pulse_radius": 150, "pulse_damage": 12,
+      "windup_ticks": 50, "second_phase_windup_ticks": 40, "min_telegraph_ticks": 36,
+      "recovery_ticks": 40, "phase_threshold": 0.5,
+      "radial_shots": 8, "radial_damage": 8, "shot_damage": 10, "shot_speed": 280, "shot_spread": 0,
+      "telegraph_radius": 150, "color": "#7fe0ff"
+    }
+  }
+}

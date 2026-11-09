@@ -189,7 +189,7 @@
   "merchant": {
     "rune_price": 40,
     "max_hp_upgrade_price": 35,
-    "max_hp_upgrade_amount": 25,
+    "max_hp_upgrade_amount": 70,
     "stock_numeric_upgrade": "max_hp",
     "seed_salt": 47017,
     "rune_count_min": 1,
@@ -206,7 +206,7 @@
     "ruins_warden": {
       "kind": "undead_warden",
       "display_name": "Undead warden",
-      "hp": 590,
+      "hp": 9000,
       "radius": 49,
       "position": [
         1030,
@@ -217,7 +217,7 @@
       "phase_threshold": 0.5,
       "second_phase_windup_ticks": 33,
       "radial_shots": 8,
-      "radial_damage": 9,
+      "radial_damage": 12,
       "shot_damage": 16,
       "shot_speed": 300,
       "shot_spread": 0,
@@ -227,8 +227,13 @@
       "_note": "AD-142 PROPOSED numbers (Demo Plan default 'Drowned Archivist', pending Franklin)",
       "kind": "drowned_archivist",
       "display_name": "Drowned Archivist",
-      "hp": 950,
-      "channel_resistances": {"fire": 0.8, "water": -0.2, "lightning": -0.5, "neutral": 0.1},
+      "hp": 9500,
+      "channel_resistances": {
+        "fire": 0.8,
+        "water": -0.2,
+        "lightning": -0.5,
+        "neutral": 0.1
+      },
       "radius": 49,
       "position": [
         1030,
@@ -269,25 +274,66 @@
       ],
       "water_bolt_shots": 5,
       "water_bolt_arc_degrees": 40,
-      "water_bolt_damage": 10,
+      "water_bolt_damage": 6,
       "wet_zone_radius": 90,
       "wet_zone_duration_ticks": 180,
       "wet_zone_interval_ticks": 30,
       "flood_duration_ticks": 240,
       "flood_sets": [
         [
-          {"kind": "shallow", "rect": [300, 120, 320, 220]},
-          {"kind": "shallow", "rect": [300, 560, 320, 220]}
+          {
+            "kind": "shallow",
+            "rect": [
+              300,
+              120,
+              320,
+              220
+            ]
+          },
+          {
+            "kind": "shallow",
+            "rect": [
+              300,
+              560,
+              320,
+              220
+            ]
+          }
         ],
         [
-          {"kind": "shallow", "rect": [560, 330, 260, 240]},
-          {"kind": "shallow", "rect": [700, 100, 260, 160]}
+          {
+            "kind": "shallow",
+            "rect": [
+              560,
+              330,
+              260,
+              240
+            ]
+          },
+          {
+            "kind": "shallow",
+            "rect": [
+              700,
+              100,
+              260,
+              160
+            ]
+          }
         ]
       ],
-      "wisp_offsets": [[60, -170], [60, 170]],
+      "wisp_offsets": [
+        [
+          60,
+          -170
+        ],
+        [
+          60,
+          170
+        ]
+      ],
       "wisp_cap": 2,
       "storm_pulse_radius": 220,
-      "storm_pulse_damage": 14
+      "storm_pulse_damage": 8
     }
   },
   "stages": [
@@ -313,6 +359,7 @@
     },
     {
       "id": "cistern",
+      "music_context": "cistern",
       "combat_rooms": {
         "min": 5,
         "max": 6
@@ -365,6 +412,58 @@
               "bone_thrall",
               375,
               270
+            ],
+            [
+              "bone_thrall",
+              1080,
+              255
+            ],
+            [
+              "bone_thrall",
+              1120,
+              640
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 420,
+          "enemies": [
+            [
+              "bone_thrall",
+              1120,
+              640
+            ],
+            [
+              "bone_thrall",
+              700,
+              455
+            ],
+            [
+              "bone_thrall",
+              410,
+              665
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 840,
+          "enemies": [
+            [
+              "bone_thrall",
+              410,
+              665
+            ],
+            [
+              "bone_thrall",
+              1050,
+              500
+            ],
+            [
+              "bone_thrall",
+              375,
+              270
             ]
           ]
         }
@@ -395,8 +494,76 @@
           "enemies": [
             [
               "bone_thrall",
+              1120,
+              640
+            ],
+            [
+              "bone_thrall",
+              700,
+              455
+            ],
+            [
+              "bone_thrall",
+              410,
+              665
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 420,
+          "enemies": [
+            [
+              "bone_thrall",
+              410,
+              665
+            ],
+            [
+              "bone_thrall",
+              1050,
+              500
+            ],
+            [
+              "bone_thrall",
               375,
               270
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 840,
+          "enemies": [
+            [
+              "bone_thrall",
+              375,
+              270
+            ],
+            [
+              "bone_thrall",
+              1080,
+              255
+            ],
+            [
+              "bone_thrall",
+              1120,
+              640
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 1260,
+          "enemies": [
+            [
+              "bone_thrall",
+              1120,
+              640
+            ],
+            [
+              "bone_thrall",
+              700,
+              455
             ],
             [
               "bone_thrall",
@@ -432,8 +599,60 @@
           "enemies": [
             [
               "fallen_adept",
+              410,
+              665
+            ],
+            [
+              "fallen_adept",
+              1050,
+              500
+            ],
+            [
+              "fallen_adept",
+              375,
+              270
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 420,
+          "enemies": [
+            [
+              "fallen_adept",
+              375,
+              270
+            ],
+            [
+              "fallen_adept",
               1080,
               255
+            ],
+            [
+              "fallen_adept",
+              1120,
+              640
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 840,
+          "enemies": [
+            [
+              "fallen_adept",
+              1120,
+              640
+            ],
+            [
+              "fallen_adept",
+              700,
+              455
+            ],
+            [
+              "fallen_adept",
+              410,
+              665
             ]
           ]
         }
@@ -464,13 +683,81 @@
           "enemies": [
             [
               "bone_thrall",
-              700,
-              455
+              375,
+              270
             ],
             [
               "fallen_adept",
               1080,
               255
+            ],
+            [
+              "bone_thrall",
+              1120,
+              640
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 420,
+          "enemies": [
+            [
+              "fallen_adept",
+              1120,
+              640
+            ],
+            [
+              "bone_thrall",
+              700,
+              455
+            ],
+            [
+              "fallen_adept",
+              410,
+              665
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 840,
+          "enemies": [
+            [
+              "bone_thrall",
+              410,
+              665
+            ],
+            [
+              "fallen_adept",
+              1050,
+              500
+            ],
+            [
+              "bone_thrall",
+              375,
+              270
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 1260,
+          "enemies": [
+            [
+              "fallen_adept",
+              375,
+              270
+            ],
+            [
+              "bone_thrall",
+              1080,
+              255
+            ],
+            [
+              "fallen_adept",
+              1120,
+              640
             ]
           ]
         }
@@ -506,8 +793,55 @@
             ],
             [
               "bone_thrall",
+              700,
+              455
+            ],
+            [
+              "grave_hound",
+              410,
+              665
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 420,
+          "enemies": [
+            [
+              "bone_thrall",
+              410,
+              665
+            ],
+            [
+              "grave_hound",
+              1050,
+              500
+            ],
+            [
+              "bone_thrall",
               375,
               270
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 840,
+          "enemies": [
+            [
+              "grave_hound",
+              375,
+              270
+            ],
+            [
+              "bone_thrall",
+              1080,
+              255
+            ],
+            [
+              "grave_hound",
+              1120,
+              640
             ]
           ]
         }
@@ -538,24 +872,81 @@
           "enemies": [
             [
               "bone_thrall",
-              375,
-              270
+              410,
+              665
             ],
             [
               "fallen_adept",
-              1080,
-              255
+              1050,
+              500
+            ],
+            [
+              "grave_hound",
+              375,
+              270
             ]
           ]
         },
         {
-          "trigger": "on_clear",
-          "delay_ticks": 30,
+          "trigger": "start",
+          "delay_ticks": 420,
+          "enemies": [
+            [
+              "fallen_adept",
+              375,
+              270
+            ],
+            [
+              "grave_hound",
+              1080,
+              255
+            ],
+            [
+              "bone_thrall",
+              1120,
+              640
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 840,
           "enemies": [
             [
               "grave_hound",
               1120,
               640
+            ],
+            [
+              "bone_thrall",
+              700,
+              455
+            ],
+            [
+              "fallen_adept",
+              410,
+              665
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 1260,
+          "enemies": [
+            [
+              "bone_thrall",
+              410,
+              665
+            ],
+            [
+              "fallen_adept",
+              1050,
+              500
+            ],
+            [
+              "grave_hound",
+              375,
+              270
             ]
           ]
         }
@@ -586,8 +977,34 @@
           "enemies": [
             [
               "fallen_adept",
+              375,
+              270
+            ],
+            [
+              "fallen_adept",
               1080,
               255
+            ],
+            [
+              "bone_thrall",
+              1120,
+              640
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 420,
+          "enemies": [
+            [
+              "fallen_adept",
+              1120,
+              640
+            ],
+            [
+              "bone_thrall",
+              700,
+              455
             ],
             [
               "fallen_adept",
@@ -597,13 +1014,23 @@
           ]
         },
         {
-          "trigger": "on_clear",
-          "delay_ticks": 30,
+          "trigger": "start",
+          "delay_ticks": 840,
           "enemies": [
             [
               "bone_thrall",
-              700,
-              455
+              410,
+              665
+            ],
+            [
+              "fallen_adept",
+              1050,
+              500
+            ],
+            [
+              "fallen_adept",
+              375,
+              270
             ]
           ]
         }
@@ -634,18 +1061,81 @@
           "enemies": [
             [
               "bone_thrall",
+              1120,
+              640
+            ],
+            [
+              "fallen_adept",
+              700,
+              455
+            ],
+            [
+              "grave_hound",
+              410,
+              665
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 420,
+          "enemies": [
+            [
+              "fallen_adept",
+              410,
+              665
+            ],
+            [
+              "grave_hound",
+              1050,
+              500
+            ],
+            [
+              "bone_thrall",
+              375,
+              270
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 840,
+          "enemies": [
+            [
+              "grave_hound",
               375,
               270
             ],
             [
-              "fallen_adept",
+              "bone_thrall",
               1080,
               255
             ],
             [
-              "grave_hound",
+              "fallen_adept",
               1120,
               640
+            ]
+          ]
+        },
+        {
+          "trigger": "start",
+          "delay_ticks": 1260,
+          "enemies": [
+            [
+              "bone_thrall",
+              1120,
+              640
+            ],
+            [
+              "fallen_adept",
+              700,
+              455
+            ],
+            [
+              "grave_hound",
+              410,
+              665
             ]
           ]
         }
@@ -714,10 +1204,42 @@
       "boss": "cistern_boss",
       "layout": {
         "water": [
-          {"kind": "shallow", "rect": [380, 130, 260, 170]},
-          {"kind": "shallow", "rect": [380, 600, 260, 170]},
-          {"kind": "shallow", "rect": [700, 360, 150, 180]},
-          {"kind": "deep", "rect": [520, 20, 120, 80]}
+          {
+            "kind": "shallow",
+            "rect": [
+              380,
+              130,
+              260,
+              170
+            ]
+          },
+          {
+            "kind": "shallow",
+            "rect": [
+              380,
+              600,
+              260,
+              170
+            ]
+          },
+          {
+            "kind": "shallow",
+            "rect": [
+              700,
+              360,
+              150,
+              180
+            ]
+          },
+          {
+            "kind": "deep",
+            "rect": [
+              520,
+              20,
+              120,
+              80
+            ]
+          }
         ]
       }
     },

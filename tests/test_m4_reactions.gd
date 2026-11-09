@@ -112,6 +112,9 @@ func run(t) -> void:
 	resolution.resolve(_payload("essence.water"),target.target,boss.sim.targets,1)
 	resolution.resolve(_payload("essence.lightning"),target.target,boss.sim.targets,2)
 	t.check(target.target.health.current<hp_before,"TASK-050 boss has no special elemental immunity in prototype")
+	t.with_frozen_balance(func(): _reward_after_kill(t)) # AD-175: fixed 1000-damage kill assumes the frozen enemy HP
+
+func _reward_after_kill(t) -> void:
 	var flow = Flow.new(150)
 	var mob = flow.session.enemies[0]
 	mob.target.receive_damage(1000,"fire",1,100)
