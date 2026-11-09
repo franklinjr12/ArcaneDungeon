@@ -2,12 +2,12 @@
 
 Regenerate: `python3 scripts/audio_check.py` (reads game/audio/audio_cues_v1.json and assets/audio/).
 
-| group | total | placeholder or silent | dropped |
-|---|---|---|---|
-| Music | 4 | 4 | 0 |
-| Ambience | 2 | 2 | 0 |
-| SFX | 71 | 71 | 0 |
-| Total | 77 | 77 | 0 |
+| group | total | placeholder or silent | dropped | failed | unverified |
+|---|---|---|---|---|---|
+| Music | 4 | 4 | 0 | 0 | 0 |
+| Ambience | 2 | 2 | 0 | 0 | 0 |
+| SFX | 71 | 71 | 0 | 0 | 0 |
+| Total | 77 | 77 | 0 | 0 | 0 |
 
 ## Missing: generate these
 
@@ -200,5 +200,6 @@ None.
 - Loudness peak: <= -1 dBFS
 - Length: music 15-300 s; ambience 5-120 s; sfx 0.03-5 s; telegraph 0.1-1.5 s
 - Loop (music, loop cues): seam jump <= 0.1 of full scale; loop end within 2048 frames of file end
-- Ogg: peak and loop seam are not checked (no stdlib decoder)
+- Loop: explicit loop points must start at 0 and end within the tolerance (the whole file loops); no loop points means a whole-file loop
+- Ogg: must be Vorbis; peak and loop seam need ffmpeg on PATH, otherwise UNVERIFIED (not a failure)
 

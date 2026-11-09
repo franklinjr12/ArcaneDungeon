@@ -9,7 +9,9 @@ import sys
 import tempfile
 import unittest
 import wave
+from array import array
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'scripts'))
@@ -71,6 +73,45 @@ def write_dummy_wav(path, seconds=0.2, amp=0.5, freq=440.0, rate=44100):
         w.setsampwidth(2)
         w.setframerate(rate)
         w.writeframes(struct.pack('<%dh' % n, *samples))
+
+
+def make_wav(path, rate, seconds, amp, channels=1, smpl=None, samples=None):
+    """16-bit PCM WAV; a sine at amp of full scale unless samples (list of ints per frame) is given.
+    smpl is (start, end) inclusive frames for a smpl chunk."""
+    n = int(round(seconds * rate))
+    if samples is None:
+        samples = [int(round(amp * 32767 * math.sin(2 * math.pi * 440 * i / rate))) for i in range(n)]
+    inter = [v for v in samples for _ in range(channels)]
+    pcm = array('h', inter).tobytes()
+    chunks = (b'fmt ' + struct.pack('<IHHIIHH', 16, 1, channels, rate, rate * 2 * channels, 2 * channels, 16)
+              + b'data' + struct.pack('<I', len(pcm)) + pcm)
+    if smpl:
+        body = struct.pack('<9I', 0, 0, 0, 60, 0, 0, 0, 1, 0) + struct.pack('<6I', 0, 0, smpl[0], smpl[1], 0, 0)
+        chunks += b'smpl' + struct.pack('<I', len(body)) + body
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(b'RIFF' + struct.pack('<I', 4 + len(chunks)) + b'WAVE' + chunks)
+
+
+def ogg_page(serial, granule, packets, htype=0):
+    lacing = b''
+    for pk in packets:
+        lacing += b'\xff' * (len(pk) // 255) + bytes([len(pk) % 255])
+    return (b'OggS' + struct.pack('<BBqIIIB', 0, htype, granule, serial, 0, 0, len(lacing))
+            + lacing + b''.join(packets))
+
+
+def make_ogg(path, rate, channels, granule, tags, head=b'\x01vorbis'):
+    """Minimal Ogg: identification page, comment page, one last page carrying the granule (CRC left zero)."""
+    ident = head + struct.pack('<IBIiii', 0, channels, rate, 0, 0, 0)
+    # Vorbis ident layout: version(4) channels(1) rate(4) ...; head is 7 bytes so shift to put channels at 11
+    ident = head + b'\x00' * (11 - len(head)) + bytes([channels]) + struct.pack('<I', rate) + b'\x00' * 12
+    vendor = b'test'
+    com = b'\x03vorbis' + struct.pack('<I', len(vendor)) + vendor + struct.pack('<I', len(tags))
+    for t in tags:
+        com += struct.pack('<I', len(t)) + t.encode()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(ogg_page(7, 0, [ident], 2) + ogg_page(7, 0, [com])
+                     + ogg_page(9, 5, [b'other']) + ogg_page(7, granule, [b'audio'], 4))
 
 
 def section(report, start, end=None):
@@ -172,6 +213,144 @@ class AudioCheckTest(unittest.TestCase):
         self.assertEqual((rc1, rc2), (0, 0))
         self.assertEqual(first.read_bytes(), second.read_bytes())
         self.assertNotIn(b'\r', first.read_bytes())
+    def test_failed_drop_listed_in_missing_and_exit_1(self):
+        make_wav(self.root / 'assets/audio/sfx/sfx_hit_dummy.wav', 22050, 0.2, 0.5)
+        rc, stdout, report = self.run_main()
+        self.assertEqual(rc, 1)
+        self.assertIn('problem sfx.hit.dummy: sample rate', stdout)
+        self.assertIn('| sfx.hit.dummy | assets/audio/sfx/sfx_hit_dummy.wav | dropped file failed: sample rate',
+                      section(report, '### SFX', '## Dropped files'))
+        self.assertIn('FAIL: sample rate', section(report, '## Dropped files', '## Unmapped files'))
+
+    def test_valid_dummy_dropped_wav_ok(self):
+        make_wav(self.root / 'assets/audio/sfx/sfx_hit_dummy.wav', 44100, 0.2, 0.5)
+        rc, _, report = self.run_main()
+        self.assertEqual(rc, 0)
+        self.assertIn('| sfx.hit.dummy | assets/audio/sfx/sfx_hit_dummy.wav | wav | 44100 | 1 | 0.20 | -6.02 | n/a | OK |', report)
+
+    def test_unverified_ogg_exits_0(self):
+        make_ogg(self.root / 'assets/audio/music/mus_ruins.ogg', 44100, 2, 44100 * 20, [])
+        with mock.patch.object(ac, 'decode_ogg', return_value=None):
+            rc, _, report = self.run_main()
+        self.assertEqual(rc, 0)
+        self.assertIn('UNVERIFIED: ', report)
+
+
+SFX = {'id': 'sfx.x', 'group': 'sfx', 'telegraph': False, 'loop': False}
+MUSIC = {'id': 'music.x', 'group': 'music', 'telegraph': False, 'loop': True}
+SHORT_MUSIC = {'music': (0.1, 5.0)}
+
+
+class CheckEntryTest(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.tmp = Path(tmp.name)
+
+    def sfx_wav(self, name='a.wav', rate=44100, seconds=0.2, amp=0.5, **kw):
+        p = self.tmp / name
+        make_wav(p, rate, seconds, amp, **kw)
+        return ac.check_entry(SFX, p)
+
+    def music_wav(self, samples, rate=44100, smpl=None):
+        p = self.tmp / 'm.wav'
+        make_wav(p, rate, 0, 0, samples=samples, smpl=smpl)
+        with mock.patch.dict(ac.LENGTH_SEC, SHORT_MUSIC):
+            return ac.check_entry(MUSIC, p)
+
+    def music_ogg(self, tags=(), head=b'\x01vorbis', samples='loud', ffmpeg=True):
+        p = self.tmp / 'm.ogg'
+        make_ogg(p, 44100, 1, 44100, list(tags), head)
+        dec = array('f', [0.0, 0.5, 0.0] if samples == 'ok' else [0.0, 0.99, 0.0]) if ffmpeg else None
+        with mock.patch.dict(ac.LENGTH_SEC, SHORT_MUSIC), mock.patch.object(ac, 'decode_ogg', return_value=dec):
+            return ac.check_entry(MUSIC, p)
+
+    def test_valid_wav_ok(self):
+        r = self.sfx_wav()
+        self.assertEqual((r['failures'], r['unverified']), ([], []))
+        self.assertEqual((r['rate'], r['channels']), (44100, 1))
+        self.assertEqual(ac.result_text(r), 'OK')
+
+    def test_peak_zero_dbfs_fails(self):
+        r = self.sfx_wav(samples=[0, 32767, 0, 32767] * 2000)
+        self.assertTrue(any(f.startswith('peak') for f in r['failures']))
+
+    def test_peak_exactly_minus_one_passes(self):
+        v = 10 ** (-1.0 / 20)
+        raw = array('f', [0.0, v, 0.0] * 3000)
+        data = (b'fmt ' + struct.pack('<IHHIIHH', 16, 3, 1, 44100, 44100 * 4, 4, 32)
+                + b'data' + struct.pack('<I', len(raw) * 4) + raw.tobytes())
+        p = self.tmp / 'f.wav'
+        p.write_bytes(b'RIFF' + struct.pack('<I', 4 + len(data)) + b'WAVE' + data)
+        r = ac.check_entry(SFX, p)
+        self.assertEqual(r['failures'], [])
+        self.assertAlmostEqual(r['peak'], -1.0, places=4)
+
+    def test_silent_fails(self):
+        r = self.sfx_wav(amp=0.0)
+        self.assertTrue(any('silent' in f for f in r['failures']))
+
+    def test_rates(self):
+        self.assertTrue(any('sample rate' in f for f in self.sfx_wav(rate=22050)['failures']))
+        self.assertEqual(self.sfx_wav(rate=32000)['failures'], [])
+
+    def test_too_short_fails(self):
+        r = self.sfx_wav(seconds=0.01)
+        self.assertTrue(any('length' in f for f in r['failures']))
+
+    def test_garbage_wav_fails_without_exception(self):
+        p = self.tmp / 'g.wav'
+        for blob in (b'garbage bytes here', b'RIFF\x04\x00\x00\x00WAVE', b'RIFF\x10\x00\x00\x00WAVEfmt \xff\xff\xff\xff'):
+            p.write_bytes(blob)
+            self.assertTrue(ac.check_entry(SFX, p)['failures'])
+
+    def test_wrong_suffix_fails(self):
+        p = self.tmp / 'a.mp3'
+        p.write_bytes(b'x')
+        self.assertTrue(ac.check_entry(SFX, p)['failures'])
+
+    def test_music_seam(self):
+        n = 44100 // 2
+        quiet = [0, 3000, 6000] * (n // 3)
+        self.assertEqual(self.music_wav(quiet + [0])['failures'], [])
+        jump = self.music_wav([0] + [6000] * n + [20000])
+        self.assertTrue(any('loop seam jump' in f for f in jump['failures']))
+
+    def test_smpl_loop_points(self):
+        n = 44100 // 2
+        body = [0, 3000, 6000] * (n // 3) + [0]
+        last = len(body) - 1
+        self.assertEqual(self.music_wav(body, smpl=(0, last))['failures'], [])
+        self.assertTrue(any('loop start' in f for f in self.music_wav(body, smpl=(100, last))['failures']))
+
+    def test_ogg_ok_and_unverified(self):
+        self.assertEqual(self.music_ogg(samples='ok')['failures'], [])
+        r = self.music_ogg(ffmpeg=False)
+        self.assertEqual(r['failures'], [])
+        self.assertEqual(len(r['unverified']), 1)
+        self.assertTrue(ac.result_text(r).startswith('UNVERIFIED: '))
+
+    def test_ogg_loud_fails(self):
+        r = self.music_ogg(samples='loud')
+        self.assertTrue(any(f.startswith('peak') for f in r['failures']))
+
+    def test_ogg_loopstart_fails(self):
+        r = self.music_ogg(tags=['loopstart=1000', 'LOOPLENGTH=43100'], samples='ok')
+        self.assertTrue(any('loop start' in f for f in r['failures']))
+        self.assertEqual(self.music_ogg(tags=['LOOPSTART=0', 'LOOPLENGTH=44100'], samples='ok')['failures'], [])
+        self.assertTrue(self.music_ogg(tags=['LOOPSTART=abc'], samples='ok')['failures'])
+
+    def test_opus_fails(self):
+        r = self.music_ogg(head=b'OpusHead', samples='ok')
+        self.assertTrue(any('Opus' in f for f in r['failures']))
+
+    def test_truncated_ogg_fails(self):
+        p = self.tmp / 't.ogg'
+        make_ogg(p, 44100, 1, 44100, [])
+        for cut in (3, 30, 60, 100):
+            p.write_bytes(p.read_bytes()[:cut])
+            self.assertTrue(ac.check_entry(SFX, p)['failures'])
+            make_ogg(p, 44100, 1, 44100, [])
 
 
 if __name__ == '__main__':

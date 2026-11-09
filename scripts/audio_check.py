@@ -6,13 +6,13 @@ a placeholder or are silent, checks dropped files, and writes docs/demo/AUDIO_ST
 Never generates audio. Usage: audio_check.py [--root DIR] [--cues FILE] [--output FILE]
 """
 import argparse
-import io
 import json
 import math
-import re
+import shutil
 import struct
+import subprocess
 import sys
-import wave
+from array import array
 from pathlib import Path, PurePosixPath
 
 import gen_placeholder_audio as gen
@@ -29,7 +29,6 @@ LENGTH_SEC = {'music': (15.0, 300.0), 'ambience': (5.0, 120.0), 'sfx': (0.03, 5.
 LOOP_SEAM_MAX = 0.1
 # The loop end may sit at most this many frames before the file end.
 LOOP_END_TOLERANCE_FRAMES = 2048
-PEAK_LIMIT = 32768 * 10 ** (MAX_PEAK_DBFS / 20)
 UNMAPPED_SUFFIXES = ('.wav', '.ogg', '.mp3', '.flac', '.m4a', '.opus', '.aiff')
 GROUP_ORDER = ('music', 'ambience', 'sfx')
 GROUP_TITLE = {'music': 'Music', 'ambience': 'Ambience', 'sfx': 'SFX'}
@@ -39,10 +38,6 @@ MISSING = ('placeholder', 'silent')
 def rel(res):
     """res:// path -> repo-relative posix path (res:// is the repo root)."""
     return res[len('res://'):] if res.startswith('res://') else res
-
-
-def dbfs(peak):
-    return 20 * math.log10(peak / 32768.0) if peak else float('-inf')
 
 
 def length_key(entry):
@@ -106,98 +101,260 @@ def classify(entry, root, cache):
         entry['fallback'] = ''
 
 
-def check_format_length(rate, n, entry, problems):
-    if rate not in ALLOWED_RATES:
-        problems.append('sample rate %d not in %s' % (rate, ALLOWED_RATES))
-    secs = n / rate if rate else 0.0
-    lo, hi = LENGTH_SEC[length_key(entry)]
-    if not lo <= secs <= hi:
-        problems.append('length %.2f s outside %g-%g s' % (secs, lo, hi))
+def le_array(code, raw):
+    """array from little-endian bytes (whole items only)."""
+    a = array(code)
+    a.frombytes(raw[:len(raw) - len(raw) % a.itemsize])
+    if sys.byteorder == 'big':
+        a.byteswap()
+    return a
 
 
-def check_loop_bounds(start, end, n, problems):
-    if not 0 <= start < end <= n - 1:
-        problems.append('loop %d-%d outside the file' % (start, end))
-        return False
-    if n - 1 - end > LOOP_END_TOLERANCE_FRAMES:
-        problems.append('loop end %d is more than %d frames before the file end' % (end, LOOP_END_TOLERANCE_FRAMES))
-        return False
-    return True
-
-
-def find_smpl_loop(data):
-    """First loop in the WAV smpl chunk as (start, end) frames, or None."""
+def read_wav(path):
+    """Parse a WAV: dict(rate, channels, frames, samples (full scale = 1.0), loop (start, end inclusive) or None).
+    Raises ValueError with a message for anything unreadable."""
+    data = Path(path).read_bytes()
+    if len(data) < 12 or data[:4] != b'RIFF' or data[8:12] != b'WAVE':
+        raise ValueError('not a RIFF/WAVE file')
+    fmt = pcm = loop = None
     pos = 12
     while pos + 8 <= len(data):
         cid = data[pos:pos + 4]
         size = struct.unpack_from('<I', data, pos + 4)[0]
         body = pos + 8
-        if cid == b'smpl' and size >= 60 and struct.unpack_from('<I', data, body + 28)[0] >= 1:
-            return struct.unpack_from('<II', data, body + 44)
+        chunk = data[body:body + size]
+        if cid == b'fmt ':
+            if len(chunk) < 16:
+                raise ValueError('truncated fmt chunk')
+            tag, ch, rate, _, _, bits = struct.unpack_from('<HHIIHH', chunk, 0)
+            if tag == 0xFFFE:
+                if len(chunk) < 26:
+                    raise ValueError('truncated WAVE_FORMAT_EXTENSIBLE fmt chunk')
+                tag = struct.unpack_from('<H', chunk, 24)[0]
+            fmt = (tag, ch, rate, bits)
+        elif cid == b'data' and pcm is None:
+            pcm = chunk
+        elif cid == b'smpl' and len(chunk) >= 52 and struct.unpack_from('<I', chunk, 28)[0] >= 1:
+            loop = struct.unpack_from('<II', chunk, 44)
         pos = body + size + (size & 1)
-    return None
-
-
-def check_wav(path, entry, problems):
-    data = path.read_bytes()
-    try:
-        with wave.open(io.BytesIO(data), 'rb') as w:
-            ch, width, rate, n = w.getnchannels(), w.getsampwidth(), w.getframerate(), w.getnframes()
-            raw = w.readframes(n)
-    except (wave.Error, EOFError) as err:
-        problems.append('not a readable PCM WAV (%s)' % err)
-        return
-    if width != 2:
-        problems.append('%d-bit samples, need 16-bit' % (8 * width))
-        return
-    check_format_length(rate, n, entry, problems)
-    samples = struct.unpack_from('<%dh' % (len(raw) // 2), raw)
-    peak = max((abs(v) for v in samples), default=0)
-    if peak > PEAK_LIMIT:
-        problems.append('peak %.1f dBFS above %g dBFS' % (dbfs(peak), MAX_PEAK_DBFS))
-    if entry['loop']:
-        loop = find_smpl_loop(data)
-        if loop is None:
-            problems.append('loop points missing (smpl chunk)')
-        elif check_loop_bounds(loop[0], loop[1], n, problems):
-            jump = abs(samples[loop[1] * ch] - samples[loop[0] * ch]) / 32768.0
-            if jump > LOOP_SEAM_MAX:
-                problems.append('loop seam jump %.3f above %g' % (jump, LOOP_SEAM_MAX))
-
-
-def check_ogg(path, entry, problems, notes):
-    data = path.read_bytes()
-    ident = data.find(b'\x01vorbis', 0, 4096)
-    if data[:4] != b'OggS' or ident < 0:
-        problems.append('not a readable Ogg Vorbis file')
-        return
-    rate = struct.unpack_from('<I', data, ident + 12)[0]
-    last = data.rfind(b'OggS')
-    n = struct.unpack_from('<q', data, last + 6)[0] if last >= 0 else 0
-    check_format_length(rate, max(n, 0), entry, problems)
-    notes.append('peak and loop seam not checked for ogg (no stdlib decoder)')
-    if entry['loop']:
-        head = data[:65536]
-        start = re.search(rb'LOOPSTART=(\d+)', head, re.IGNORECASE)
-        length = re.search(rb'LOOPLENGTH=(\d+)', head, re.IGNORECASE)
-        if not start or not length:
-            problems.append('loop points missing (LOOPSTART/LOOPLENGTH comments)')
+    if fmt is None:
+        raise ValueError('missing fmt chunk')
+    if pcm is None:
+        raise ValueError('missing data chunk')
+    tag, ch, rate, bits = fmt
+    if ch < 1 or rate < 1:
+        raise ValueError('invalid channels or rate in fmt chunk')
+    if tag == 1 and bits in (8, 16, 24, 32):
+        if bits == 8:
+            samples = array('f', ((b - 128) / 128.0 for b in pcm))
+        elif bits == 16:
+            samples = array('f', (v / 32768.0 for v in le_array('h', pcm)))
+        elif bits == 24:
+            samples = array('f', (int.from_bytes(pcm[i:i + 3], 'little', signed=True) / 8388608.0
+                                  for i in range(0, len(pcm) - 2, 3)))
         else:
-            s = int(start.group(1))
-            check_loop_bounds(s, s + int(length.group(1)), n, problems)
-
-
-def check_file(path, entry):
-    """Returns (problems, notes) for a dropped file; empty problems means it passes."""
-    problems, notes = [], []
-    suffix = path.suffix.lower()
-    if suffix not in ALLOWED_SUFFIXES:
-        problems.append('format %s is not wav or ogg' % suffix)
-    elif suffix == '.wav':
-        check_wav(path, entry, problems)
+            samples = array('f', (v / 2147483648.0 for v in le_array('i', pcm)))
+    elif tag == 3 and bits == 32:
+        samples = le_array('f', pcm)
     else:
-        check_ogg(path, entry, problems, notes)
-    return problems, notes
+        raise ValueError('unsupported WAV format (tag %d, %d-bit); need PCM 8/16/24/32-bit or float32' % (tag, bits))
+    frames = len(samples) // ch
+    return {'rate': rate, 'channels': ch, 'frames': frames, 'samples': samples[:frames * ch], 'loop': loop}
+
+
+def ogg_packets(data):
+    """(first two packets, last non-negative granule) of the first logical stream; ValueError if malformed."""
+    pos, serial, packets, cur, granule = 0, None, [], b'', None
+    while pos < len(data):
+        if data[pos:pos + 4] != b'OggS' or pos + 27 > len(data):
+            raise ValueError('malformed or truncated Ogg page at byte %d' % pos)
+        gran = struct.unpack_from('<q', data, pos + 6)[0]
+        ser = struct.unpack_from('<I', data, pos + 14)[0]
+        nseg = data[pos + 26]
+        if pos + 27 + nseg > len(data):
+            raise ValueError('truncated Ogg page header')
+        lacing = data[pos + 27:pos + 27 + nseg]
+        body = pos + 27 + nseg
+        end = body + sum(lacing)
+        if end > len(data):
+            raise ValueError('truncated Ogg page data')
+        if serial is None:
+            serial = ser
+        if ser == serial:
+            if gran >= 0:
+                granule = gran
+            for lace in lacing:
+                cur += data[body:body + lace]
+                body += lace
+                if lace < 255:
+                    if len(packets) < 2:
+                        packets.append(cur)
+                    cur = b''
+        pos = end
+    return packets, granule
+
+
+def read_ogg(path):
+    """Parse an Ogg Vorbis file: dict(rate, channels, frames, tags (upper-case name -> value)).
+    Raises ValueError with a message for anything unreadable."""
+    data = Path(path).read_bytes()
+    if data[:4] != b'OggS':
+        raise ValueError('not an Ogg file')
+    packets, granule = ogg_packets(data)
+    if not packets:
+        raise ValueError('no Ogg packets')
+    head = packets[0]
+    if head.startswith(b'OpusHead'):
+        raise ValueError("Ogg Opus stream; Godot's AudioStreamOggVorbis needs Vorbis, not Opus")
+    if not head.startswith(b'\x01vorbis') or len(head) < 16:
+        raise ValueError('first packet is not a Vorbis identification header')
+    channels = head[11]
+    rate = struct.unpack_from('<I', head, 12)[0]
+    if len(packets) < 2 or not packets[1].startswith(b'\x03vorbis'):
+        raise ValueError('missing Vorbis comment header')
+    com = packets[1]
+    tags = {}
+    try:
+        vlen = struct.unpack_from('<I', com, 7)[0]
+        pos = 11 + vlen
+        count = struct.unpack_from('<I', com, pos)[0]
+        pos += 4
+        for _ in range(count):
+            n = struct.unpack_from('<I', com, pos)[0]
+            item = com[pos + 4:pos + 4 + n]
+            if len(item) < n:
+                raise ValueError('truncated Vorbis comment')
+            pos += 4 + n
+            name, sep, value = item.decode('utf-8', 'replace').partition('=')
+            if sep:
+                tags[name.upper()] = value
+    except struct.error:
+        raise ValueError('truncated Vorbis comment header')
+    if granule is None or channels < 1 or rate < 1:
+        raise ValueError('no valid granule position, channels or rate')
+    return {'rate': rate, 'channels': channels, 'frames': granule, 'tags': tags}
+
+
+def decode_ogg(path):
+    """Normalised float samples via ffmpeg, or None when ffmpeg is not on PATH. ValueError if decoding fails."""
+    ffmpeg = shutil.which('ffmpeg')
+    if ffmpeg is None:
+        return None
+    try:
+        proc = subprocess.run([ffmpeg, '-v', 'error', '-i', str(path), '-f', 'f32le', '-acodec', 'pcm_f32le', '-'],
+                              capture_output=True, timeout=120)
+    except (OSError, subprocess.SubprocessError) as err:
+        raise ValueError('ffmpeg could not run (%s)' % err)
+    if proc.returncode != 0:
+        raise ValueError('ffmpeg decode failed')
+    return le_array('f', proc.stdout)
+
+
+def loop_from_tags(tags, frames):
+    """(start, end exclusive) from LOOPSTART and LOOPEND/LOOPLENGTH tags, or None; ValueError if non-numeric."""
+    if not any(k in tags for k in ('LOOPSTART', 'LOOPEND', 'LOOPLENGTH')):
+        return None
+    try:
+        start = int(tags.get('LOOPSTART', '0'))
+        if 'LOOPEND' in tags:
+            end = int(tags['LOOPEND'])
+        elif 'LOOPLENGTH' in tags:
+            end = start + int(tags['LOOPLENGTH'])
+        else:
+            end = frames
+    except ValueError:
+        raise ValueError('loop tags are not numeric')
+    return start, end
+
+
+def check_entry(entry, path):
+    """Check one dropped file. Returns dict with format, rate, channels, length, peak, loop (measured, may be None),
+    failures and unverified (lists of strings)."""
+    res = {'format': '', 'rate': None, 'channels': None, 'length': None, 'peak': None, 'loop': None,
+           'failures': [], 'unverified': []}
+    fails = res['failures']
+    path = Path(path)
+    suffix = path.suffix.lower()
+    res['format'] = suffix.lstrip('.')
+    if suffix not in ALLOWED_SUFFIXES:
+        fails.append('format %s is not wav or ogg' % (suffix or 'none'))
+        return res
+    try:
+        head = path.read_bytes()[:12]
+    except OSError as err:
+        fails.append('cannot read file (%s)' % err)
+        return res
+    if suffix == '.wav' and not (head[:4] == b'RIFF' and head[8:12] == b'WAVE'):
+        fails.append('content is not WAV (.wav suffix)')
+        return res
+    if suffix == '.ogg' and head[:4] != b'OggS':
+        fails.append('content is not Ogg (.ogg suffix)')
+        return res
+    samples = None
+    try:
+        if suffix == '.wav':
+            info = read_wav(path)
+            samples = info['samples']
+            loop = (info['loop'][0], info['loop'][1] + 1) if info['loop'] else None
+        else:
+            info = read_ogg(path)
+            loop = None
+            if entry['loop']:
+                loop = loop_from_tags(info['tags'], info['frames'])
+            samples = decode_ogg(path)
+            if samples is None:
+                res['unverified'].append('peak and loop seam not checked, install ffmpeg on PATH')
+    except ValueError as err:
+        fails.append(str(err))
+        return res
+    rate, ch, frames = info['rate'], info['channels'], info['frames']
+    res.update(rate=rate, channels=ch, length=frames / rate, loop=loop)
+    if rate not in ALLOWED_RATES:
+        fails.append('sample rate %d not in %s' % (rate, ALLOWED_RATES))
+    lo, hi = LENGTH_SEC[length_key(entry)]
+    if not lo <= res['length'] <= hi:
+        fails.append('length %.2f s outside %g-%g s' % (res['length'], lo, hi))
+    if samples is not None:
+        peak = max((abs(v) for v in samples), default=0.0)
+        res['peak'] = 20 * math.log10(peak) if peak > 0 else float('-inf')
+        if peak <= 0:
+            fails.append('silent (all samples zero)')
+        elif res['peak'] > MAX_PEAK_DBFS + 1e-6:
+            fails.append('peak %.2f dBFS above %g dBFS' % (res['peak'], MAX_PEAK_DBFS))
+    if entry['loop']:
+        if loop is not None:
+            # AudioDirector loops the whole file (loop_offset unused), so explicit points must span it.
+            if loop[0] != 0:
+                fails.append('loop start %d must be 0 (the whole file loops)' % loop[0])
+            if not 0 <= frames - loop[1] <= LOOP_END_TOLERANCE_FRAMES:
+                fails.append('loop end %d must be within %d frames of the file end (%d frames)'
+                             % (loop[1], LOOP_END_TOLERANCE_FRAMES, frames))
+        if samples is not None and len(samples) >= ch:
+            last = (len(samples) // ch - 1) * ch
+            jump = max(abs(samples[c] - samples[last + c]) for c in range(ch))
+            if jump > LOOP_SEAM_MAX:
+                fails.append('loop seam jump %.3f above %g' % (jump, LOOP_SEAM_MAX))
+    return res
+
+
+def result_text(res):
+    if res['failures']:
+        return 'FAIL: ' + '; '.join(res['failures'])
+    if res['unverified']:
+        return 'UNVERIFIED: ' + '; '.join(res['unverified'])
+    return 'OK'
+
+
+def dropped_row(e):
+    r = e['check']
+    peak = '' if r['peak'] is None else ('-inf' if r['peak'] == float('-inf') else '%.2f' % r['peak'])
+    loop = 'whole file' if not r['loop'] else '%d-%d' % r['loop']
+    if not e['loop']:
+        loop = 'n/a'
+    return [e['id'], rel(e['stream']), r['format'],
+            '' if r['rate'] is None else str(r['rate']),
+            '' if r['channels'] is None else str(r['channels']),
+            '' if r['length'] is None else '%.2f' % r['length'], peak, loop, result_text(r)]
 
 
 def find_unmapped(root, entries):
@@ -242,6 +399,14 @@ def target_text(entry):
     return text + (', loop' if entry['loop'] else '')
 
 
+def failed(e):
+    return bool(e.get('check') and e['check']['failures'])
+
+
+def unverified(e):
+    return bool(e.get('check') and e['check']['unverified']) and not failed(e)
+
+
 def section_lines(rows, headers, empty='None.'):
     return md_table(headers, rows) if rows else [empty]
 
@@ -252,27 +417,25 @@ def render_report(entries, unmapped):
            'Regenerate: `python3 scripts/audio_check.py` (reads game/audio/audio_cues_v1.json and assets/audio/).', '']
 
     summary = []
-    for g in GROUP_ORDER:
-        items = [e for e in entries if e['group'] == g]
-        summary.append((GROUP_TITLE[g], len(items),
-                        sum(e['status'] in MISSING for e in items),
-                        sum(e['status'] == 'dropped' for e in items)))
-    summary.append(('Total', len(entries), sum(e['status'] in MISSING for e in entries),
-                    sum(e['status'] == 'dropped' for e in entries)))
-    out += md_table(['group', 'total', 'placeholder or silent', 'dropped'],
-                    [[str(c) if isinstance(c, int) else c for c in row] for row in summary])
+    for title, items in [(GROUP_TITLE[g], [e for e in entries if e['group'] == g]) for g in GROUP_ORDER] + [('Total', entries)]:
+        summary.append([title, str(len(items)), str(sum(e['status'] in MISSING for e in items)),
+                        str(sum(e['status'] == 'dropped' for e in items)),
+                        str(sum(failed(e) for e in items)), str(sum(unverified(e) for e in items))])
+    out += md_table(['group', 'total', 'placeholder or silent', 'dropped', 'failed', 'unverified'], summary)
     out.append('')
 
     out += ['## Missing: generate these', '']
     for g in GROUP_ORDER:
-        rows = [[e['id'], rel(e['stream']), e['fallback'], target_text(e)]
-                for e in ordered if e['group'] == g and e['status'] in MISSING]
+        rows = [[e['id'], rel(e['stream']),
+                 'dropped file failed: ' + '; '.join(e['check']['failures']) if failed(e) else e['fallback'],
+                 target_text(e)]
+                for e in ordered if e['group'] == g and (e['status'] in MISSING or failed(e))]
         out += ['### ' + GROUP_TITLE[g], '']
         out += section_lines(rows, ['id', 'file to create', 'current fallback', 'target']) + ['']
 
     out += ['## Dropped files', '']
-    out += section_lines([[e['id'], rel(e['stream'])] for e in ordered if e['status'] == 'dropped'],
-                         ['id', 'file']) + ['']
+    out += section_lines([dropped_row(e) for e in ordered if e['status'] == 'dropped'],
+                         ['id', 'file', 'format', 'rate Hz', 'channels', 'length s', 'peak dBFS', 'loop', 'result']) + ['']
 
     out += ['## Unmapped files', '']
     out += section_lines([[r, hint] for r, hint in unmapped], ['file', 'hint']) + ['']
@@ -287,7 +450,9 @@ def render_report(entries, unmapped):
     out += ['- Length: %s' % '; '.join('%s %g-%g s' % (k, lo, hi) for k, (lo, hi) in LENGTH_SEC.items())]
     out += ['- Loop (music, loop cues): seam jump <= %g of full scale; loop end within %d frames of file end'
             % (LOOP_SEAM_MAX, LOOP_END_TOLERANCE_FRAMES),
-            '- Ogg: peak and loop seam are not checked (no stdlib decoder)', '']
+            '- Loop: explicit loop points must start at 0 and end within the tolerance (the whole file loops); '
+            'no loop points means a whole-file loop',
+            '- Ogg: must be Vorbis; peak and loop seam need ffmpeg on PATH, otherwise UNVERIFIED (not a failure)', '']
     return '\n'.join(out) + '\n'
 
 
@@ -306,23 +471,23 @@ def main(argv=None):
     for e in entries:
         classify(e, root, cache)
         if e['status'] == 'dropped':
-            e['problems'], e['notes'] = check_file(root / rel(e['stream']), e)
-        else:
-            e['problems'], e['notes'] = [], []
+            e['check'] = check_entry(e, root / rel(e['stream']))
     unmapped = find_unmapped(root, entries)
 
     ordered = sorted(entries, key=lambda e: (GROUP_ORDER.index(e['group']), e['id']))
     for e in ordered:
         print('%s %s %s' % (e['id'], e['group'], e['status']))
-        for p in e['problems']:
-            print('  problem %s: %s' % (e['id'], p))
-        for n in e['notes']:
-            print('  note %s: %s' % (e['id'], n))
+        if e.get('check'):
+            for p in e['check']['failures']:
+                print('  problem %s: %s' % (e['id'], p))
+            for n in e['check']['unverified']:
+                print('  unverified %s: %s' % (e['id'], n))
     for g in GROUP_ORDER:
         items = [e for e in entries if e['group'] == g]
-        print('%s: total %d, placeholder or silent %d, dropped %d' % (
+        print('%s: total %d, placeholder or silent %d, dropped %d, failed %d, unverified %d' % (
             GROUP_TITLE[g], len(items), sum(e['status'] in MISSING for e in items),
-            sum(e['status'] == 'dropped' for e in items)))
+            sum(e['status'] == 'dropped' for e in items), sum(failed(e) for e in items),
+            sum(unverified(e) for e in items)))
     for r, hint in unmapped:
         print('unmapped %s%s' % (r, ' (%s)' % hint if hint else ''))
 
@@ -330,7 +495,7 @@ def main(argv=None):
     with open(output, 'w', encoding='utf-8', newline='\n') as f:
         f.write(render_report(entries, unmapped))
     print('wrote %s' % output)
-    return 1 if unmapped else 0
+    return 1 if unmapped or any(failed(e) for e in entries) else 0
 
 
 if __name__ == '__main__':
