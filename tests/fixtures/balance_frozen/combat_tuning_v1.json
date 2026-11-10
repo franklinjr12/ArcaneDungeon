@@ -60,6 +60,7 @@
     ]
   },
   "player": {
+    "perfect_dodge_flash_ticks": 0,
     "move_speed": 255,
     "radius": 17,
     "max_hp": 150,
@@ -92,7 +93,7 @@
       "color": "#e49a73",
       "channel_resistances": {"force": 0.0, "cold": 0.0},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}]
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack", "lunge_distance": 0, "lunge_ticks": 0}]
     },
     "fallen_adept": {
       "display_name": "Fallen adept",
@@ -112,7 +113,7 @@
       "color": "#8cbaea",
       "channel_resistances": {"lightning": 0.0},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "keep_distance", "approach_margin": 45, "retreat_margin": 60, "approach_without_sight": true}, {"id": "ranged_attack"}]
+      "behaviours": [{"id": "keep_distance", "approach_margin": 45, "retreat_margin": 60, "approach_without_sight": true}, {"id": "ranged_attack", "burst_shots": 1, "burst_interval_ticks": 0}]
     },
     "grave_hound": {
       "display_name": "Grave hound",
@@ -133,7 +134,7 @@
       "color": "#bf9dde",
       "channel_resistances": {"fire": 0.0},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "keep_distance", "approach_margin": 35, "retreat_margin": 50, "approach_weight": 0.75, "retreat_weight": 0.75}, {"id": "ranged_attack"}]
+      "behaviours": [{"id": "keep_distance", "approach_margin": 35, "retreat_margin": 50, "approach_weight": 0.75, "retreat_weight": 0.75}, {"id": "ranged_attack", "burst_shots": 1, "burst_interval_ticks": 0}]
     },
     "ossuary_shieldbearer": {
       "_note": "AD-137 PROPOSED numbers (not approved design). Counters: flank (turn rate 2.5 deg/tick) or Force knockback (break_impulse_speed).",
@@ -153,7 +154,7 @@
       "turn_rate_degrees_per_tick": 2.5,
       "channel_resistances": {"force": 0.0},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}, {"id": "shield_front", "front_damage_scale": 0.2, "front_arc_degrees": 70, "break_impulse_speed": 150}]
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack", "lunge_distance": 0, "lunge_ticks": 0}, {"id": "shield_front", "front_damage_scale": 0.2, "front_arc_degrees": 70, "break_impulse_speed": 150}]
     },
     "wailing_spirit": {
       "_note": "AD-137 PROPOSED numbers. phase_walls ignore_sight=false: it drifts through walls but still needs line of sight to wail, so cover still protects. Counters: Fire (weak, x1.5), hit it outside the intangible window (warned by a flicker).",
@@ -174,7 +175,7 @@
       "color": "#8fe3d6",
       "channel_resistances": {"fire": -0.5, "neutral": 0.0},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "keep_distance", "approach_margin": 50, "retreat_margin": 70, "approach_without_sight": true}, {"id": "ranged_attack"}, {"id": "phase_walls", "ignore_sight": false}, {"id": "intangible_cycle", "period_ticks": 180, "warn_ticks": 30, "intangible_ticks": 45, "intangible_damage_scale": 0.0}]
+      "behaviours": [{"id": "keep_distance", "approach_margin": 50, "retreat_margin": 70, "approach_without_sight": true}, {"id": "ranged_attack", "burst_shots": 1, "burst_interval_ticks": 0}, {"id": "phase_walls", "ignore_sight": false}, {"id": "intangible_cycle", "period_ticks": 180, "warn_ticks": 30, "intangible_ticks": 45, "intangible_damage_scale": 0.0}]
     },
     "corpse_bloat": {
       "_note": "AD-137 PROPOSED numbers. Counter: kill it at range (> explode_radius); the Wet puddle it leaves is a Lightning setup.",
@@ -193,7 +194,7 @@
       "color": "#a3c466",
       "channel_resistances": {"fire": 0.0},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}, {"id": "explode_on_death", "explode_radius": 90, "explode_damage": 22}, {"id": "death_puddle", "puddle_radius": 90, "puddle_duration_ticks": 300, "puddle_interval_ticks": 30}]
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack", "lunge_distance": 0, "lunge_ticks": 0}, {"id": "explode_on_death", "explode_radius": 90, "explode_damage": 22}, {"id": "death_puddle", "puddle_radius": 90, "puddle_duration_ticks": 300, "puddle_interval_ticks": 30}]
     },
     "cistern_slime": {
       "_note": "AD-139 PROPOSED numbers. Counter: splits into 2 slimelets on death; burst it with an area spell or kill the slimelets one by one.",
@@ -212,7 +213,7 @@
       "color": "#5fb89a",
       "channel_resistances": {"lightning": 0.0, "water": 0.0},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}, {"id": "split_on_death", "split_kind": "cistern_slimelet", "count": 2, "split_radius": 30}]
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack", "lunge_distance": 0, "lunge_ticks": 0}, {"id": "split_on_death", "split_kind": "cistern_slimelet", "count": 2, "split_radius": 30}]
     },
     "cistern_slimelet": {
       "_note": "AD-139 PROPOSED numbers. Spawned by cistern_slime; deliberately has no split component.",
@@ -231,7 +232,7 @@
       "color": "#8fdcc0",
       "channel_resistances": {"cold": 0.0},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}]
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack", "lunge_distance": 0, "lunge_ticks": 0}]
     },
     "drowned_acolyte": {
       "_note": "AD-139 PROPOSED numbers. Casts a Wet zone on where you stood when the cast began (telegraph >= 40 ticks), so keep moving; Wet sets up Lightning.",
@@ -288,7 +289,7 @@
       "color": "#a0583a",
       "channel_resistances": {"lightning": -0.5, "cold": 0.5, "neutral": 0.3, "fire": 0.3, "water": 0.3, "force": 0.3},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}]
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack", "lunge_distance": 0, "lunge_ticks": 0}]
     },
     "lantern_wisp": {
       "_note": "AD-140 PROPOSED numbers. Support: allies within 220 take 30% damage while it lives; it does not attack and keeps away. Counter: kill the wisp first.",

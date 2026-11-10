@@ -95,6 +95,7 @@
     "arc_damage_scale": 0.975,
     "regen_mana_per_tick": 0.6,
     "player_max_mana": 120,
+    "perfect_dodge_mana_refund": 15,
     "base_target_hp": 120,
     "player_team": 1,
     "enemy_team": 2,
