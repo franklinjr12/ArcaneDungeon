@@ -60,6 +60,7 @@
     ]
   },
   "player": {
+    "perfect_dodge_flash_ticks": 0,
     "move_speed": 255,
     "radius": 17,
     "max_hp": 150,

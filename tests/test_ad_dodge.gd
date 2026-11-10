@@ -1,5 +1,6 @@
 extends RefCounted
 const Session = preload("res://combat/combat_session.gd")
+const Canvas = preload("res://ui/combat_canvas.gd")
 
 func run(t) -> void:
 	_live_reach(t)
@@ -7,6 +8,8 @@ func run(t) -> void:
 	_wall_stop(t)
 	_no_lunge_instant(t)
 	run_bursts(t)
+	_perfect_dodge(t)
+	t.with_frozen_balance(func(): _perfect_frozen(t))
 
 func _spawn(kind: String, offset: Vector2, overrides: Dictionary = {}) -> Array:
 	var s = Session.new(136,"empty",0)
@@ -162,3 +165,72 @@ func _shot_dirs(kind: String, offset: Vector2, player_move: Vector2) -> Array:
 				seen[shot["id"]] = true
 				dirs.append(shot["direction"])
 	return dirs
+
+var _aid := 9000
+
+func _hit(s, src: int) -> Dictionary:
+	_aid += 1
+	return s.damage_player(src,10.0,"physical",_aid)
+
+func _dash(s) -> void:
+	s.player.process_command({"dash":true,"move":Vector2.RIGHT})
+
+func _perfect_dodge(t) -> void:
+	var pair := _spawn("bone_thrall",Vector2(60,0))
+	var s = pair[0]
+	var src: int = pair[1].target.id
+	t.check(s.player.perfect_dodges == 0 and s.player.perfect_flash == 0,"AD-196 perfect dodge starts clear")
+	# normal hit: no refund
+	s.sim.mana = 50.0
+	var hp0: float = s.sim.actor.health.current
+	_hit(s,src)
+	t.check(s.sim.mana == 50.0 and s.player.perfect_dodges == 0 and s.sim.actor.health.current < hp0,"AD-196 normal hit gives no refund")
+	# dash into an active hit (melee or projectile both reach damage_player)
+	_dash(s)
+	hp0 = s.sim.actor.health.current
+	var r := _hit(s,src)
+	t.check(r["reason"] == "INVULNERABLE" and s.sim.actor.health.current == hp0,"AD-196 dash hit deals no damage")
+	t.check(s.sim.mana == 65.0 and s.player.perfect_dodges == 1 and s.player.perfect_flash > 0,"AD-196 perfect dodge refunds 15 mana, flashes")
+	# second hit in the same dash: no second refund
+	_hit(s,src)
+	t.check(s.sim.mana == 65.0 and s.player.perfect_dodges == 1,"AD-196 one refund per dash")
+	# flash counts down
+	for i in 20:
+		s.player.step_timers()
+	t.check(s.player.perfect_flash == 0,"AD-196 perfect flash counts down to 0")
+	# new dash can refund again
+	s.player.invulnerable_left = 0
+	s.player.dash_left = 0
+	s.player.dash_cooldown = 0
+	s.player.recovery_left = 0
+	_dash(s)
+	_hit(s,src)
+	t.check(s.sim.mana == 80.0 and s.player.perfect_dodges == 2,"AD-196 new dash refunds again")
+	# expired i-frames: hit lands, no refund
+	s.player.invulnerable_left = 0
+	hp0 = s.sim.actor.health.current
+	_hit(s,src)
+	t.check(s.sim.mana == 80.0 and s.player.perfect_dodges == 2 and s.sim.actor.health.current < hp0,"AD-196 hit after i-frames refunds nothing")
+	# clamp at max
+	var p2 := _spawn("bone_thrall",Vector2(60,0))
+	var s2 = p2[0]
+	s2.sim.mana = float(s2.sim.settings["combat"]["player_max_mana"])-5.0
+	_dash(s2)
+	_hit(s2,p2[1].target.id)
+	t.check(s2.sim.mana == float(s2.sim.settings["combat"]["player_max_mana"]),"AD-196 refund clamps at max mana")
+	# canvas flash
+	var canvas = Canvas.new()
+	canvas.size = Vector2(916,650)
+	canvas.session = s2
+	var at := Vector2(100,100)
+	t.check(s2.player.perfect_flash > 0 and not canvas.mage_flash_entry(false,at,0,Vector2.ZERO,{}).is_empty(),"AD-196 perfect flash shows when not reduced")
+	t.check(canvas.mage_flash_entry(true,at,0,Vector2.ZERO,{}).is_empty(),"AD-196 perfect flash hidden under reduce-flash")
+	canvas.free()
+
+func _perfect_frozen(t) -> void:
+	var pair := _spawn("bone_thrall",Vector2(60,0))
+	var s = pair[0]
+	s.sim.mana = 50.0
+	_dash(s)
+	_hit(s,pair[1].target.id)
+	t.check(s.sim.mana == 50.0 and s.player.perfect_dodges == 0 and s.player.perfect_flash == 0,"AD-196 frozen balance: no refund")

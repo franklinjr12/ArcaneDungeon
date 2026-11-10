@@ -17,6 +17,10 @@ var dashes := 0
 var casts := 0
 var last_message := ""
 var hit_flash := 0
+## AD-196 perfect dodge: count, flash ticks left, and whether this dash already refunded.
+var perfect_dodges := 0
+var perfect_flash := 0
+var perfect_dodge_spent := false
 ## Manifestation id per slot, keyed on the compiled plan object so a hot-swapped spell refreshes it.
 var _slot_forms: Dictionary = {}
 ## AD-143 Warding Lantern: remaining shield charges; each absorbs one damage_player call.
@@ -39,6 +43,9 @@ func reset() -> void:
 	casts = 0
 	last_message = ""
 	hit_flash = 0
+	perfect_dodges = 0
+	perfect_flash = 0
+	perfect_dodge_spent = false
 	shield = 0
 	modal = false
 
@@ -66,6 +73,7 @@ func process_command(command: Dictionary) -> Dictionary:
 		else:
 			bonus_dashes_left -= 1
 		dashes += 1
+		perfect_dodge_spent = false
 		sim.artifact_dash()
 	var wanted: Vector2 = delta*float(tuning["move_speed"])/float(sim.clock.tick_rate)
 	if dash_left > 0:
@@ -123,3 +131,4 @@ func step_timers() -> void:
 			bonus_dashes_left = dash_charges_bonus
 	invulnerable_left = maxi(0,invulnerable_left-1)
 	hit_flash = maxi(0,hit_flash-1)
+	perfect_flash = maxi(0,perfect_flash-1)

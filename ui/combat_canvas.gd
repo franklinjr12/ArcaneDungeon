@@ -204,6 +204,7 @@ func _draw() -> void:
 ## AD-149: hit-flash overlay entry for the mage, or {} when there is nothing to flash (dead, expired or reduce-flash).
 func mage_flash_entry(reduced: bool, at: Vector2, tick: int, motion: Vector2, anim: Dictionary) -> Dictionary:
 	var strength := ReduceMotion.hit_flash_strength(reduced,session.player.hit_flash,int(session.player.tuning.get("hit_flash_ticks",1)))
+	strength = maxf(strength,ReduceMotion.hit_flash_strength(reduced,session.player.perfect_flash,int(session.player.tuning.get("perfect_dodge_flash_ticks",1))))
 	if not session.sim.actor.alive() or strength <= 0.0:
 		return {}
 	return {"kind":"mage","at":at,"tick":tick,"motion":motion,"anim":anim,"strength":strength}
