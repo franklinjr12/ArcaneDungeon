@@ -126,7 +126,7 @@ static func validate(settings: Dictionary) -> Array:
 				issues.append({"code":"BOSS_MOVE_MODE","path":path+".mode","message":"mode must be one of %s" % str(DISCRETE.keys())})
 				continue
 			_missing(spec,DISCRETE[mode],path,issues)
-			var needs_anchors: bool = mode != "leap" or str(spec.get("target","player")) == "anchor"
+			var needs_anchors: bool = (mode != "leap" or str(spec.get("target","player")) == "anchor") and str(spec.get("exit","")) != "pool" # AD-201: a pool exit uses `pools`
 			if needs_anchors and not has_anchors:
 				issues.append({"code":"BOSS_MOVE_ANCHORS","path":path,"message":"%s needs a non-empty top-level 'anchors' array" % mode})
 	return issues

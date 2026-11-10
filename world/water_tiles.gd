@@ -172,6 +172,13 @@ func is_electrified(pos: Vector2) -> bool:
 func is_frozen(pos: Vector2) -> bool:
 	return _frozen.has(_cell_of(pos))
 
+## AD-201: true if any frozen cell centre lies within `radius` of `center`.
+func frozen_near(center: Vector2, radius: float) -> bool:
+	for cell in _frozen:
+		if _cell_center(cell).distance_to(center) <= radius:
+			return true
+	return false
+
 func clear_states() -> void:
 	_electrified.clear()
 	_frozen.clear()

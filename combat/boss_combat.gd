@@ -7,6 +7,7 @@ const Movement = preload("res://combat/boss_moves/boss_movement.gd")
 const Hazards = preload("res://combat/boss_moves/boss_hazards.gd")
 const Warden = preload("res://combat/boss_moves/warden_patterns.gd")
 const Elite = preload("res://combat/boss_moves/elite_patterns.gd")
+const Archivist = preload("res://combat/boss_moves/archivist_patterns.gd")
 const Lurk = preload("res://combat/enemy_behaviours/water_lurk.gd")
 const EnvProps = preload("res://world/env_props.gd")
 const FLOOD_TAG := "archivist_flood"
@@ -59,7 +60,7 @@ var _beam_dir := 1.0
 
 ## Pool, movement, hazard, transition and stagger issues for a boss settings dictionary (empty = valid).
 static func validate(settings: Dictionary) -> Array:
-	return Pool.validate(settings)+Movement.validate(settings)+Hazards.validate(settings)+_validate_beats(settings)+Warden.validate(settings)+Elite.validate(settings)
+	return Pool.validate(settings)+Movement.validate(settings)+Hazards.validate(settings)+_validate_beats(settings)+Warden.validate(settings)+Elite.validate(settings)+Archivist.validate(settings)
 
 static func _number_from(value, minimum: float) -> bool:
 	return (typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT) and float(value) >= minimum
@@ -228,7 +229,9 @@ func advance(session) -> void:
 			_move_tick(session)
 		"submerged":
 			if state_tick >= int(_move["submerged_ticks"]):
-				_open_move_windup(session,"emerge",float(_move["radius"]),int(_move["emerge_telegraph_ticks"]),_pick_anchor(session,_move,target.position))
+				var exit_pool := Archivist.uses_pools(_move)
+				var exit_at: Vector2 = Archivist.exit_point(self,session,_move) if exit_pool else _pick_anchor(session,_move,target.position)
+				_open_move_windup(session,"emerge",float(_move["radius"]),int(_move["emerge_telegraph_ticks"]),exit_at,{"pool_ripple":true} if exit_pool else {})
 		"roar":
 			if state_tick >= int(tuning["phases"][phase-1]["transition"]["roar_ticks"]):
 				_end_roar(session)
@@ -499,10 +502,10 @@ static func _anchor_vector(anchor) -> Vector2:
 func _pick_anchor(session, spec: Dictionary, fallback: Vector2) -> Vector2:
 	return session.world.pick_anchor(tuning.get("anchors",[]),session.sim.actor.position,target.radius,str(spec.get("anchor_pick","farthest")) == "farthest",fallback)
 
-func _open_move_windup(session, kind: String, radius: float, ticks: int, landing: Vector2) -> void:
+func _open_move_windup(session, kind: String, radius: float, ticks: int, landing: Vector2, extra: Dictionary = {}) -> void:
 	_move_to = landing
 	_windup_attack = kind
-	_open_windup(session,kind,{"kind":kind,"origin":target.position,"telegraph_ticks":ticks,"range":radius,"telegraph_shape":"slam","landing":landing})
+	_open_windup(session,kind,{"kind":kind,"origin":target.position,"telegraph_ticks":ticks,"range":radius,"telegraph_shape":"slam","landing":landing}.merged(extra))
 
 func _finish_windup(session) -> void:
 	match str(intent.snapshot()["kind"]):
@@ -521,6 +524,8 @@ func _finish_windup(session) -> void:
 			target.position = _move_to
 			submerged = false
 			target.untargetable = false
+			if Archivist.finish_emerge(self,session,_move):
+				return
 			if float(_move.get("damage",0.0)) > 0.0:
 				_slam_damage(session)
 			_end_move(session)

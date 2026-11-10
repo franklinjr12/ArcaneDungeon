@@ -72,7 +72,7 @@ The boss has a private `RandomNumberGenerator` seeded lazily from `session.seed*
 - A submerged boss is not drawn; the emerge telegraph still shows where it will appear.
 
 ## Validator codes
-`BOSS_POOL_TOO_SMALL`, `BOSS_POOL_WEIGHT`, `BOSS_POOL_COMBO`, `BOSS_MOVE_MODE`, `BOSS_MOVE_PARAM`, `BOSS_MOVE_ANCHORS`, `BOSS_HAZARD_TYPE`, `BOSS_HAZARD_PARAM`, `BOSS_HAZARD_DEEP_WATER`, `BOSS_TRANSITION_PARAM`, `BOSS_STAGGER_PARAM`, `BOSS_POOL_RANGE`, `BOSS_WARDEN_PARAM`. The test also validates the live `run_v2.json` `boss` and `bosses` plus `combat_tuning_v1.json` `mini_bosses`: no issues.
+`BOSS_POOL_TOO_SMALL`, `BOSS_POOL_WEIGHT`, `BOSS_POOL_COMBO`, `BOSS_MOVE_MODE`, `BOSS_MOVE_PARAM`, `BOSS_MOVE_ANCHORS`, `BOSS_HAZARD_TYPE`, `BOSS_HAZARD_PARAM`, `BOSS_HAZARD_DEEP_WATER`, `BOSS_TRANSITION_PARAM`, `BOSS_STAGGER_PARAM`, `BOSS_POOL_RANGE`, `BOSS_WARDEN_PARAM`, `BOSS_ELITE_PARAM`, `BOSS_ARCHIVIST_PARAM`. The test also validates the live `run_v2.json` `boss` and `bosses` plus `combat_tuning_v1.json` `mini_bosses`: no issues.
 
 ## Example
 ```json
@@ -114,6 +114,14 @@ Code: `boss_moves/elite_patterns.gd`, `boss_moves/elite_minion.gd` (an `EliteMin
 - `homing_skull` (top level) `{hp,radius,speed,turn_deg_per_tick,lifetime_ticks,damage,cap}`: pattern `homing_skull` (slam telegraph, phase windup) queues a skull unless the boss owns `cap` live or queued skulls. The skull turns toward the player, dies on a wall or at `lifetime_ticks`, hits once (it keeps flying through dash i-frames) and can be shot down. `damage` is scaled like other boss damage; hp is not.
 - `decoy` (top level) `{hp,radius,damage_multiplier,copies:[patterns]}` + phase `spawn_decoy:true`: when that phase's roar begins one decoy appears at the anchor farthest from the boss (needs anchors). While it lives it shows the telegraph and casts the same fan/targeted/radial/skull from its own position at `damage_multiplier` x damage. hp is not difficulty scaled.
 - Skulls and the decoy die with the boss. Validator code `BOSS_ELITE_PARAM`.
+
+## Drowned Archivist kit (AD-201 step 1)
+Code: `boss_moves/archivist_patterns.gd`. Tests: `tests/test_ad_final_boss_v2.gd`. Validator code `BOSS_ARCHIVIST_PARAM` (bad `pools`, `emerge_status`, `freeze_stun`, or a pool exit with fewer than 2 pools).
+- `pools` (top level) `[[x,y],...]`: pool centres. A `submerge` move with `"exit":"pool"` surfaces at one of them, never one within 8 px of the boss (the pool it dove from), chosen with the move's `anchor_pick` (default `farthest` from the player) via `pick_anchor`. A pool exit needs `pools` (>= 2), not `anchors`. Without `exit` the move is unchanged.
+- Ripple: that emerge windup's intent gains `"pool_ripple":true` (the `slam` shape stays at the landing point). Its length is the move's `emerge_telegraph_ticks` (difficulty scale + `min_telegraph_ticks` floor, as before).
+- Splash ring: a `shockwave` {speed,width,max_radius,damage} on the submerge move starts the Warden leap ring (`boss_ring`, hits once, walls block it) at the emerge point. Damage gets the usual difficulty scaling.
+- `emerge_status` (top level, e.g. `"wet"`): applied to the boss when it emerges, from `settings.statuses`, so Lightning reacts on it.
+- `freeze_stun` `{ticks,radius}` (needs `water_freeze` and `stagger`): if `water.frozen_near(emerge point, radius)` when the emerge finishes, the boss appears untargetable-free and stunned via `stun()` for `ticks` (stagger damage multiplier, `STAGGERED`), with no slam, ring or emerge status. A pending phase roar still wins over the stun. `WaterTiles.frozen_near(center, radius)` is true if any frozen cell centre lies within `radius`.
 
 ## Not done
 `cistern_boss` is the other framework user; the mini-bosses still use the old data. `ruins_warden` now uses the framework (AD-199, above).
