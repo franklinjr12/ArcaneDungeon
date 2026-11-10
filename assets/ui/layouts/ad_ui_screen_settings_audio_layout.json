@@ -31,6 +31,7 @@
   "slider_sound_effects",
   "slider_interface",
   "slider_ambience",
+  "slider_enemy_sfx",
   "toggle_mute_unfocused",
   "toggle_priority",
   "btn_test_sfx"
@@ -402,10 +403,39 @@
    "text": "40%"
   },
   {
+   "id": "label_enemy_sfx",
+   "type": "label",
+   "x": 44,
+   "y": 199,
+   "w": 54,
+   "h": 7,
+   "text": "ENEMY SFX"
+  },
+  {
+   "id": "slider_enemy_sfx",
+   "type": "slider",
+   "x": 196,
+   "y": 194,
+   "w": 170,
+   "h": 14,
+   "sprite": "ad_ui_slider_track",
+   "value": 100,
+   "state": "normal"
+  },
+  {
+   "id": "val_5",
+   "type": "label",
+   "x": 376,
+   "y": 198,
+   "w": 20,
+   "h": 7,
+   "text": "100%"
+  },
+  {
    "id": "div_1",
    "type": "divider",
    "x": 36,
-   "y": 200,
+   "y": 224,
    "w": 368,
    "h": 5,
    "sprite": "ad_ui_divider_h"
@@ -414,7 +444,7 @@
    "id": "hdr_options",
    "type": "header",
    "x": 36,
-   "y": 210,
+   "y": 234,
    "w": 368,
    "h": 12,
    "sprite": "ad_ui_header_small"
@@ -423,7 +453,7 @@
    "id": "label_40",
    "type": "label",
    "x": 196,
-   "y": 213,
+   "y": 237,
    "w": 47,
    "h": 7,
    "text": "OPTIONS"
@@ -432,7 +462,7 @@
    "id": "label_41",
    "type": "label",
    "x": 44,
-   "y": 232,
+   "y": 256,
    "w": 126,
    "h": 7,
    "text": "MUTE WHEN UNFOCUSED"
@@ -441,7 +471,7 @@
    "id": "toggle_mute_unfocused",
    "type": "toggle",
    "x": 246,
-   "y": 227,
+   "y": 251,
    "w": 28,
    "h": 14,
    "sprite": "ad_ui_toggle_on_normal",
@@ -452,7 +482,7 @@
    "id": "toggle_mute_unfocused_value",
    "type": "label",
    "x": 280,
-   "y": 231,
+   "y": 255,
    "w": 13,
    "h": 7,
    "text": "ON"

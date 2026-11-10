@@ -488,6 +488,7 @@ settings.audio.music,Music
 settings.audio.sfx,Sound effects
 settings.audio.ui,Interface
 settings.audio.ambience,Ambience
+settings.audio.enemy_sfx,Enemy SFX
 settings.audio.mute_unfocused,Mute when unfocused
 settings.video.frame_limit,Frame limit
 settings.video.vsync,VSync
@@ -506,6 +507,7 @@ settings.help.music,Background music loudness.
 settings.help.sfx,Spells; hits and footsteps.
 settings.help.ui,Menu clicks and interface cues.
 settings.help.ambience,Room hum; torches and water.
+settings.help.enemysfx,Enemy attack warning sounds.
 settings.help.mute_unfocused,Silences the game while its window is in the background.
 settings.help.window_mode,"Windowed, fullscreen or borderless. Applies at once."
 settings.help.ui_scale,Scales in-run overlays that are not part of the menu skin. Menus and the HUD always fit the window.

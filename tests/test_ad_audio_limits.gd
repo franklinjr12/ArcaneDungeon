@@ -1,6 +1,7 @@
 extends RefCounted
 ## AD-191: enemy/cast cue rate limits, voice caps, telegraph priority, EnemySFX bus.
 const Director = preload("res://game/audio/audio_director.gd")
+const SettingsModel = preload("res://game/core/settings.gd")
 
 func _cues_matching(d, pred: Callable) -> Array:
 	var out: Array = []
@@ -90,4 +91,12 @@ func run(t) -> void:
 		t.check(not ("attack" in id or "fired" in id), "AD-191 no attack cue: " + id)
 	for k in d.event_keys():
 		t.check(not ("attack" in k or "fired" in k), "AD-191 no attack event: " + k)
+	# (i) EnemySFX volume setting
+	var fresh = SettingsModel.new()
+	t.equal(float(fresh.volumes["EnemySFX"]), 1.0, "AD-191 EnemySFX default volume 1.0")
+	fresh.volumes["EnemySFX"] = 0.5
+	fresh.apply_audio()
+	t.check(absf(AudioServer.get_bus_volume_db(idx) - linear_to_db(0.5)) < 0.001, "AD-191 EnemySFX bus follows 0.5")
+	fresh.volumes["EnemySFX"] = 1.0
+	fresh.apply_audio()
 	d.free()
