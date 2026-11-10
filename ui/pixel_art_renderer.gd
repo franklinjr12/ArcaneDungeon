@@ -161,6 +161,7 @@ static var _actors: Dictionary = {}
 static var _actors_loaded := false
 static var _actor_scale := 2.0
 static var _actor_sheets: Dictionary = {}
+static var _extra_sheets: Dictionary = {}
 
 static func actor_manifest() -> Dictionary:
 	if not _actors_loaded:
@@ -168,6 +169,7 @@ static func actor_manifest() -> Dictionary:
 		var m = JSON.parse_string(FileAccess.get_file_as_string(ACTOR_MANIFEST))
 		if m is Dictionary:
 			_actors = m.get("actors", {})
+			_extra_sheets = m.get("sheets", {})
 			_actor_scale = float(m.get("scale", 2))
 	return _actors
 
@@ -331,6 +333,151 @@ static func draw_actor_glows(ci: CanvasItem, alpha_mult: float = 1.0) -> void:
 			r.position += it["at"]
 			ci.draw_texture_rect_region(it["tex"], r, it["region"], col)
 	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+## AD-200: non-actor sheets listed under actors_manifest "sheets" (storm beam, water states). Pure lookups; {} when absent.
+static func extra_sheet(name: String) -> Dictionary:
+	actor_manifest()
+	return _extra_sheets.get(name, {})
+
+## Sheet frame region for tag frame `index` (clamped) of an extra sheet, or {} when the sheet/png/json/tag is missing.
+static func extra_sheet_frame(name: String, tag: String, index: int) -> Dictionary:
+	var sh := extra_sheet(name)
+	var tg: Dictionary = sh.get("tags", {}).get(tag, {})
+	if tg.is_empty() or not FileAccess.file_exists(str(sh["json"])) or not ResourceLoader.exists(str(sh["png"])):
+		return {}
+	var data := _actor_sheet(str(sh["json"]), str(sh["png"]))
+	var fr: Dictionary = data["json"]["frames"][int(tg["from"]) + clampi(index, 0, int(tg["frames"]) - 1)]
+	var r: Dictionary = fr["frame"]
+	var o: Dictionary = fr.get("spriteSourceSize", {"x": 0, "y": 0})
+	var out := {"tex": data["tex"], "region": Rect2(r["x"], r["y"], r["w"], r["h"]), "offset": Vector2(o["x"], o["y"]), "glow": null}
+	if sh.get("glow_png") != null and ResourceLoader.exists(str(sh["glow_png"])):
+		if not _glow_tex.has(sh["glow_png"]):
+			_glow_tex[sh["glow_png"]] = load(sh["glow_png"])
+		out["glow"] = _glow_tex[sh["glow_png"]]
+	return out
+
+## AD-200 art_kind for a summoned helper (decoy, homing skull, small crystal): the owner's tuning names it under the
+## same key as the summon spec ('kind' of the spec, or the key itself). Drawing only; the sim kind never changes.
+static func summon_art_kind(owner_tuning: Dictionary, kind: String) -> String:
+	for key in ["homing_skull", "decoy", "small_crystals"]:
+		var spec = owner_tuning.get(key)
+		if spec is Dictionary and spec.has("art_kind") and kind == str(spec.get("kind", key)):
+			return str(spec["art_kind"])
+	return kind
+
+## AD-200: blink landing marker (ground sigil) over the blink telegraph; its 4 frames stretch over the windup.
+static func draw_blink_sigil(canvas: CanvasItem, at: Vector2, state_tick: int, window_ticks: int) -> void:
+	if actor_has_tag("blink_anchor_sigil", "telegraph"):
+		var n := actor_tag_frames("blink_anchor_sigil", "telegraph")
+		draw_actor(canvas, "blink_anchor_sigil", at, {"tag": "telegraph", "index": stretched_index(state_tick, window_ticks, n)})
+
+const BEAM_ANGLES := 16
+const BEAM_SHEET := "storm_beam"
+static var _beam_layout: Array = []
+
+## Pure: index 0..15 (22.5 degree steps, a00 east, clockwise on screen = Godot y-down angles) nearest to `angle` radians.
+static func beam_angle_index(angle: float) -> int:
+	return posmod(floori(rad_to_deg(angle) / 22.5 + 0.5), BEAM_ANGLES)
+
+## Pure: segment count for a beam of `length` world units (1 art px = 2 world units): ceil(length / |step|).
+static func beam_tile_count(length: float, step: Vector2) -> int:
+	return ceili(length / _actor_scale / maxf(step.length(), 0.001))
+
+static func beam_step(index: int) -> Vector2:
+	if _beam_layout.is_empty():
+		var path := str(extra_sheet(BEAM_SHEET).get("layout", ""))
+		if path != "" and FileAccess.file_exists(path):
+			var lay = JSON.parse_string(FileAccess.get_file_as_string(path))
+			if lay is Dictionary:
+				_beam_layout = lay.get("angles", [])
+	if index < 0 or index >= _beam_layout.size():
+		return Vector2.ZERO
+	var st: Array = _beam_layout[index]["step"]
+	return Vector2(float(st[0]), float(st[1]))
+
+## Placement list [{tag, index, k}] of one beam in draw order (segs, end cap, start cap); k = step multiple of the tile anchor.
+## Telegraph: segs then the end marker. Never rotates a texture (the sheet has a pre-rendered tile set per angle).
+static func beam_parts(angle_index: int, n: int, telegraph: bool) -> Array:
+	var tag := "a%02d" % angle_index
+	var parts: Array = []
+	for k in n:
+		parts.append({"tag": ("tele_%s_seg" if telegraph else "beam_%s_seg") % tag, "k": k})
+	parts.append({"tag": ("tele_%s_end" if telegraph else "beam_%s_end") % tag, "k": n})
+	if not telegraph:
+		parts.append({"tag": "beam_%s_start" % tag, "k": 0})
+	return parts
+
+## boss_beam hazard drawn from the storm beam sheet; a plain coloured band when the sheet is missing. `reduced` holds frame 0.
+static func draw_beam(canvas: CanvasItem, hazard: Dictionary, at: Vector2, tick: int, reduced: bool) -> void:
+	var angle := float(hazard["beam_angle"])
+	var length := float(hazard["radius"])
+	var tele := bool(hazard.get("telegraph", false))
+	var idx := beam_angle_index(angle)
+	var step := beam_step(idx)
+	var sc := _actor_scale
+	if step == Vector2.ZERO or extra_sheet_frame(BEAM_SHEET, "beam_a00_seg", 0).is_empty():
+		var col := Color(1.0, 0.45, 0.45, 0.35) if tele else Color(0.85, 0.95, 1.0, 0.85)
+		canvas.draw_line(at, at + Vector2.RIGHT.rotated(angle) * length, col, float(hazard.get("beam_width", 20.0)))
+		return
+	var n := beam_tile_count(length, step)
+	var anchor := Vector2(16, 16)
+	var anc = extra_sheet(BEAM_SHEET).get("anchor")
+	if anc is Array:
+		anchor = Vector2(float(anc[0]), float(anc[1]))
+	for part in beam_parts(idx, n, tele):
+		var tg: Dictionary = extra_sheet(BEAM_SHEET)["tags"].get(part["tag"], {})
+		if tg.is_empty():
+			continue
+		var fi := 0 if reduced else loop_index(tg["ms"], tick)
+		var fr := extra_sheet_frame(BEAM_SHEET, part["tag"], fi)
+		if fr.is_empty():
+			continue
+		var cell: Vector2 = at + (step * float(part["k"]) - anchor + fr["offset"]) * sc
+		canvas.draw_texture_rect_region(fr["tex"], Rect2(cell, fr["region"].size * sc), fr["region"])
+
+const WATER_STATES := "water_states"
+
+## Pure: electrified-cell look from the cell index only (no RNG): variant 1..4 (20/40/20/20 percent) and frame offset 0..3.
+static func elec_choice(cell: Vector2i) -> Dictionary:
+	var h: int = (cell.x * 73856093 ^ cell.y * 19349663) & 0x7fffffff
+	var r := h % 100
+	return {"variant": 1 if r < 20 else (2 if r < 60 else (3 if r < 80 else 4)), "offset": (h / 100) % 4}
+
+## Tag + frame for a state_view cell ({} for none). Frozen cells are shallow only; electrified use the v1..v4 tags (never the legacy ones).
+static func water_state_tag(state: String, deep: bool, cell: Vector2i, tick: int, reduced: bool) -> Dictionary:
+	var sh := extra_sheet(WATER_STATES)
+	if state == "frozen":
+		var ftag := "frozen_deep" if deep else "frozen_shallow"
+		var fms: Array = sh.get("tags", {}).get(ftag, {}).get("ms", [])
+		return {"tag": ftag, "index": 0 if fms.is_empty() else loop_index(fms, tick)}
+	var ch := elec_choice(cell)
+	var tag := "elec_%s_v%d" % ["deep" if deep else "shallow", ch["variant"]]
+	var ms: Array = sh.get("tags", {}).get(tag, {}).get("ms", [])
+	if ms.is_empty():
+		return {}
+	return {"tag": tag, "index": 0 if reduced else (loop_index(ms, tick) + int(ch["offset"])) % ms.size()}
+
+## AD-200: session.water.state_view() cells (electrified / frozen) over the base water. Skipped quietly without the sheet.
+static func _draw_water_states(canvas: CanvasItem, session, offset: Vector2, tick: int, reduced: bool) -> void:
+	if extra_sheet(WATER_STATES).is_empty():
+		return
+	var deeps: Array[Rect2] = session.water.deep_rects()
+	for item in session.water.state_view():
+		var rect: Rect2 = item["cell_rect"]
+		var cell := Vector2i(floori(rect.position.x / 32.0), floori(rect.position.y / 32.0))
+		var deep := false
+		for d in deeps:
+			deep = deep or d.has_point(rect.get_center())
+		var pick := water_state_tag(str(item["state"]), deep, cell, tick, reduced)
+		if pick.is_empty():
+			continue
+		var fr := extra_sheet_frame(WATER_STATES, pick["tag"], int(pick["index"]))
+		if fr.is_empty():
+			continue
+		var dest := Rect2(rect.position - offset, fr["region"].size * _actor_scale)
+		canvas.draw_texture_rect_region(fr["tex"], dest, fr["region"])
+		if fr["glow"] != null:
+			_queue_glow({"tex": fr["glow"], "rect": dest, "region": fr["region"], "mirror": false, "at": Vector2.ZERO})
 
 const CISTERN_TILES := "ad_til_flooded_cistern"
 
@@ -1111,7 +1258,7 @@ static func draw_enemy_markers(canvas: CanvasItem, enemy, at: Vector2, tick: int
 			canvas.draw_arc(at,target.radius+10.0,0.0,TAU,32,Color(1.0,0.85,0.3,0.9),3.0)
 
 ## AD-138 placeholder water: translucent shallow, darker opaque deep. Visual only.
-static func draw_water(canvas: CanvasItem, session, offset: Vector2) -> void:
+static func draw_water(canvas: CanvasItem, session, offset: Vector2, reduced: bool = false) -> void:
 	if session.water == null:
 		return
 	var cistern := _cistern_ready()
@@ -1126,6 +1273,7 @@ static func draw_water(canvas: CanvasItem, session, offset: Vector2) -> void:
 			_draw_water_cells(canvas, rect, "deep_loop" if deep else "water_loop", tick, Color(1, 1, 1, 1.0 if deep else 0.85))
 			continue
 		canvas.draw_rect(rect,Color(0.08,0.2,0.45,1.0) if deep else Color(0.55,0.78,0.95,0.4))
+	_draw_water_states(canvas, session, offset, tick, reduced)
 
 ## Fills rect with 32-unit cells of a looped cistern tag; partial edge cells are clipped by region size.
 ## Shore/deep 47-blob edge autotiling is out of scope here.
@@ -1238,10 +1386,13 @@ static func draw_env_props(canvas: CanvasItem, session, offset: Vector2, stage: 
 					Vector2(mid.x+3,mid.y+2),Vector2(mid.x-2,rect.end.y)]),crack,1.5)
 				canvas.draw_line(Vector2(mid.x+3,mid.y+2),Vector2(rect.end.x,mid.y+8),crack,1.0)
 
-static func draw_hazards(canvas: CanvasItem, session, offset: Vector2) -> void:
+static func draw_hazards(canvas: CanvasItem, session, offset: Vector2, reduced: bool = false) -> void:
 	for hazard in session.hazards:
 		var kind := str(hazard["kind"])
 		if kind == "boss_warning":
+			continue
+		if kind == "boss_beam":
+			draw_beam(canvas,hazard,hazard["position"]-offset,session.sim.clock.tick,reduced)
 			continue
 		if kind == "boss_water_warning":
 			var rect: Rect2 = hazard["rect"]
