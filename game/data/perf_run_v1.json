@@ -1,4 +1,4 @@
-{"schema_version":1,"overlay_refresh_ms":250,"seed":20261022,
+{"schema_version":1,"overlay_refresh_ms":250,"seed":26,
 "rooms":["ruins_c07","cistern_p10","ruins_boss","cistern_boss"],
 "ticks_per_room":600,"warmup_frames":30,"target_p95_frame_ms":16.7,"enemy_health":1000000.0,
 "spawn_grid":{"y":[120,800,90],"x":[260,1200,110]},

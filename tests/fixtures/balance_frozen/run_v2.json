@@ -311,6 +311,7 @@
       ],
       "optional_room": "ruins_treasure",
       "boss_room": "ruins_boss",
+      "workshop_before_boss": false,
       "workshop_after": true
     },
     {
@@ -334,6 +335,7 @@
       ],
       "optional_room": "cistern_challenge_v1",
       "boss_room": "cistern_boss",
+      "workshop_before_boss": false,
       "workshop_after": false
     }
   ],
