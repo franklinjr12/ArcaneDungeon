@@ -213,6 +213,19 @@ class AudioCheckTest(unittest.TestCase):
         self.assertEqual((rc1, rc2), (0, 0))
         self.assertEqual(first.read_bytes(), second.read_bytes())
         self.assertNotIn(b'\r', first.read_bytes())
+
+    def test_marked_cue_changes_block_survives_regeneration(self):
+        block = '%s\n## Cue tuning (AD-191)\n| a | b |\n%s' % (ac.CUE_CHANGES_START, ac.CUE_CHANGES_END)
+        out = self.tmp / 'kept.md'
+        out.write_text('hand text\n\n' + block + '\n', encoding='utf-8')
+        rc1, _, _ = self.run_main(output=out)
+        rc2, _, report = self.run_main(output=out)
+        self.assertEqual((rc1, rc2), (0, 0))
+        self.assertEqual(report.count(ac.CUE_CHANGES_START), 1)
+        self.assertEqual(report.count(ac.CUE_CHANGES_END), 1)
+        self.assertIn(block, report)
+        self.assertNotIn('hand text', report)
+
     def test_failed_drop_listed_in_missing_and_exit_1(self):
         make_wav(self.root / 'assets/audio/sfx/sfx_hit_dummy.wav', 22050, 0.2, 0.5)
         rc, stdout, report = self.run_main()
