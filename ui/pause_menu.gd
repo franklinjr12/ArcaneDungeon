@@ -4,10 +4,12 @@ extends Control
 const VisualTheme = preload("res://ui/pixel_theme.gd")
 const SkinA = preload("res://ui/skin_a.gd")
 const SettingsScreen = preload("res://ui/settings_screen.gd")
+const FeedbackSnapshot = preload("res://ui/feedback_snapshot.gd")
 const TEXT := {
 	"title": "pause.title",
 	"resume": "pause.resume",
 	"loadout": "pause.loadout",
+	"controls": "pause.controls",
 	"settings": "pause.settings",
 	"retry": "pause.retry",
 	"abandon": "pause.abandon",
@@ -20,8 +22,9 @@ const TEXT := {
 	"retry_prompt": "pause.retry_prompt",
 	"quit_prompt": "pause.quit_prompt",
 	"hint": "pause.hint",
+	"open_reports": "pause.open_reports",
 }
-const BUTTON_IDS := {"btn_resume": "ResumeButton", "btn_loadout": "LoadoutButton", "btn_settings": "SettingsButton", "btn_save_quit": "SaveQuitButton", "btn_abandon": "QuitButton"}
+const BUTTON_IDS := {"btn_resume": "ResumeButton", "btn_loadout": "LoadoutButton", "btn_controls": "ControlsButton", "btn_settings": "SettingsButton", "btn_save_quit": "SaveQuitButton", "btn_open_reports": "OpenReportsButton", "btn_abandon": "QuitButton"}
 signal resume_requested
 signal loadout_requested
 signal retry_confirmed
@@ -38,13 +41,16 @@ var run_info_label: Label
 var hint_label: Label
 var resume_button: Button
 var loadout_button: Button
+var controls_button: Button
 var settings_button: Button
 var quit_button: Button
 var save_quit_button: Button
+var open_reports_button: Button
 var confirm_button: Button
 var cancel_button: Button
 var settings_screen = null
 var _pending := ""
+var _opened_from_controls := false
 var _tips_on := true
 var _buttons: Dictionary = {}  # layout id -> Button
 var _widgets: Dictionary = {}  # layout id -> widget rect
@@ -80,11 +86,13 @@ func _ready() -> void:
 	hint_label = _text("hint", tr(TEXT["hint"]), "disabled")
 	resume_button = _button(panel, "ResumeButton", tr(TEXT["resume"]), director, func(): resume_requested.emit())
 	loadout_button = _button(panel, "LoadoutButton", tr(TEXT["loadout"]), director, func(): loadout_requested.emit())
+	controls_button = _button(panel, "ControlsButton", tr(TEXT["controls"]), director, func(): open_controls())
 	settings_button = _button(panel, "SettingsButton", tr(TEXT["settings"]), director, func(): open_settings())
 	save_quit_button = _button(panel, "SaveQuitButton", tr(TEXT["save_quit"]), director, func(): request_save_quit())
 	save_quit_button.visible = false
+	open_reports_button = _button(panel, "OpenReportsButton", tr(TEXT["open_reports"]), director, func(): open_reports_folder())
 	quit_button = _button(panel, "QuitButton", tr(TEXT["abandon"]), director, func(): request_quit())
-	_buttons = {"btn_resume": resume_button, "btn_loadout": loadout_button, "btn_settings": settings_button, "btn_save_quit": save_quit_button, "btn_abandon": quit_button}
+	_buttons = {"btn_resume": resume_button, "btn_loadout": loadout_button, "btn_controls": controls_button, "btn_settings": settings_button, "btn_save_quit": save_quit_button, "btn_open_reports": open_reports_button, "btn_abandon": quit_button}
 	confirm_box = Control.new()
 	confirm_box.name = "ConfirmBox"
 	confirm_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -187,6 +195,11 @@ func _link_focus() -> void:
 		b.focus_neighbor_top = b.get_path_to(chain[(i - 1 + chain.size()) % chain.size()])
 		b.focus_neighbor_bottom = b.get_path_to(chain[(i + 1) % chain.size()])
 
+func open_reports_folder() -> void:
+	FeedbackSnapshot.ensure_reports_dir()
+	if DisplayServer.get_name() != "headless":
+		OS.shell_open(FeedbackSnapshot.reports_dir_path())
+
 func _button(parent: Control, node_name: String, text: String, director, action: Callable) -> Button:
 	var b := Button.new()
 	b.name = node_name
@@ -255,6 +268,7 @@ func open_settings() -> void:
 		settings_screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		add_child(settings_screen)
 		settings_screen.back_requested.connect(close_settings)
+	_opened_from_controls = false
 	settings_screen.visible = true
 	panel.visible = false
 
@@ -262,11 +276,13 @@ func close_settings() -> void:
 	if settings_screen != null:
 		settings_screen.visible = false
 	panel.visible = true
-	settings_button.grab_focus()
+	(controls_button if _opened_from_controls else settings_button).grab_focus()
+	_opened_from_controls = false
 
 ## AD-152: the controls help moved to Settings > Controls.
 func open_controls() -> void:
 	open_settings()
+	_opened_from_controls = true
 	settings_screen.select_tab("controls")
 
 func close_controls() -> void:

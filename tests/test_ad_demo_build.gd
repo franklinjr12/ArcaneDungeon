@@ -21,6 +21,10 @@ func _clean() -> void:
 
 func run(t) -> void:
 	_clean()
+	var demo = JSON.parse_string(FileAccess.get_file_as_string("res://game/data/demo_v1.json"))
+	t.check(demo is Dictionary and demo.get("version") is String and demo["version"] != "", "AD-186 demo_v1.json has a version")
+	t.equal(BuildInfo.version(), demo["version"], "AD-186 BuildInfo.version reads demo_v1.json")
+	t.equal(BuildInfo.as_dict()["version"], demo["version"], "AD-186 BuildInfo.as_dict version matches demo_v1.json")
 	t.check(BuildInfo.label() != "" and BuildInfo.label().contains(BuildInfo.version()), "AD-157 build label contains version")
 	var off = Log.new()
 	off.begin_session(LOCK, DIR)

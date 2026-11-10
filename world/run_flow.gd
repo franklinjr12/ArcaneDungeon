@@ -6,6 +6,7 @@ const Room = preload("res://world/room_template.gd")
 const Encounter = preload("res://world/encounter_director.gd")
 const Reward = preload("res://world/reward_generator.gd")
 const Merchant = preload("res://world/merchant.gd")
+const RunLog = preload("res://game/core/run_log.gd")
 const Artifacts = preload("res://world/artifacts.gd")
 const AudioDirector = preload("res://game/audio/audio_director.gd")
 const Editor = preload("res://magic/editor/spell_editor.gd")
@@ -49,6 +50,7 @@ var kills := 0
 var ticks_elapsed := 0
 var spells_used := 0
 var _counted_kills: Dictionary = {}
+var run_log = RunLog.new()
 var logs: Array = []
 var experiment = ExperimentLog.new()
 var _prior_reactions := 0
@@ -196,6 +198,8 @@ func start_new(run_seed: int) -> void:
 	if session != null:
 		session.player.shield = 0
 	experiment.record("run_restart")
+	run_log = RunLog.new()
+	run_log.begin(run_seed)
 	_enter_current()
 
 func _live_arcs(sim) -> int:
@@ -321,6 +325,7 @@ func _enter_current() -> Dictionary:
 	_cue("amb.workshop" if mode == "workshop" else "amb.ruins")
 	_cue("music." + music_context_for_room())
 	experiment.record("room_enter",{"room_index":run.sequence_index})
+	run_log.enter_room(run.sequence_index,str(room.values["id"]),str(room.values["type"]),ticks_elapsed)
 	logs.append({"kind":"room_enter","id":room.values["id"],"index":run.sequence_index})
 	return {"ok":true}
 
@@ -409,6 +414,7 @@ func step(command: Dictionary = {}) -> Dictionary:
 		if not enemy.target.alive() and not _counted_kills.has(enemy.target.id):
 			_counted_kills[enemy.target.id] = true
 			kills += 1
+			run_log.add_enemy_death(str(enemy.kind))
 	experiment.mark_tick(session.sim.clock.tick)
 	_track_enemies()
 	var reaction_records: Array = session.sim.trace.filter_records(-1,"","reaction")
@@ -422,9 +428,11 @@ func step(command: Dictionary = {}) -> Dictionary:
 	_prior_reactions = reactions_now
 	if encounter != null:
 		encounter.advance()
+	run_log.sample(ticks_elapsed,session.damage_received,session.sim.clock.tick_rate)
 	if session.state == "dead":
 		state = "dead"
 		outcome = "lost"
+		run_log.finish("lost",run.artifacts,_death_cause())
 		experiment.record("death",{"room_index":run.sequence_index})
 	elif session.state == "cleared" or (room.values["type"] == "boss" and session.alive_enemies() == 0):
 		_finish_combat()
@@ -458,6 +466,7 @@ func _finish_combat() -> void:
 		win_events += 1
 		experiment.record("slice_complete",{"room_index":run.sequence_index})
 		state = "won"
+		run_log.finish("won",run.artifacts,null)
 		reward_collected = true
 		reward_options.clear()
 	elif room.values["type"] == "boss":
@@ -468,6 +477,18 @@ func _finish_combat() -> void:
 		reward_options = rewards.choices(run,str(room.values["id"]))
 	experiment.record("room_clear",{"room_index":run.sequence_index})
 	logs.append({"kind":"combat_clear","id":room.values["id"]})
+
+func _death_cause() -> Dictionary:
+	var kind := "unknown"
+	var channel := ""
+	if not session.damage_events.is_empty():
+		var last: Dictionary = session.damage_events.back()
+		channel = str(last.get("channel",""))
+		for enemy in session.enemies:
+			if enemy.target.id == int(last.get("source_id",-1)):
+				kind = str(enemy.kind)
+				break
+	return {"cause":kind,"channel":channel,"room_id":str(room.values["id"]),"room_index":run.sequence_index}
 
 func summary() -> Dictionary:
 	return {"outcome":outcome,"seed":run.seed,"rooms_cleared":rooms_cleared,"kills":kills,
@@ -631,6 +652,7 @@ func close_editor(apply_changes: bool, duration_seconds: float = 0.0) -> Diction
 		session.sim.loadout.allow_edit = false
 		if not equipped["ok"]:
 			return equipped
+		run_log.add_spell(str(run.formulas[edit_slot].get("formula_id","")),edit_slot,run.sequence_index,run.formulas[edit_slot])
 		if prelude and edit_slot == int(config["sigil_desk"]["formula_index"]):
 			prelude_built = true
 		experiment.record("formula_edit",{"room_index":run.sequence_index,"slot":edit_slot},run.formulas[edit_slot])
@@ -718,7 +740,7 @@ func save_payload() -> Dictionary:
 			"boss_defeated_events":boss_defeated_events,"transition_count":transition_count},
 		"seen_enemies":enemies,"seen_reactions":reactions,
 		"meta_locked_runes":meta_locked_runes.duplicate(),"meta_locked_artifacts":meta_locked_artifacts.duplicate(),
-		"merchant_stock":merchant.stock.duplicate(true),"edit_policy":edit_policy}
+		"merchant_stock":merchant.stock.duplicate(true),"edit_policy":edit_policy,"run_log":run_log.snapshot()}
 
 static func _whole(v) -> bool:
 	return typeof(v) in [TYPE_INT,TYPE_FLOAT] and is_finite(float(v)) and float(v) == floorf(float(v))
@@ -804,6 +826,8 @@ func resume(payload: Variant) -> Dictionary:
 	outcome = ""
 	win_events = 0
 	arcs = 0
+	run_log = RunLog.new()
+	run_log.restore(_intify(payload.get("run_log")),run.seed)
 	var entered: Dictionary = _enter_current()
 	if not entered.get("ok",false):
 		return entered

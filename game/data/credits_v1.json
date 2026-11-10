@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "sections": [
+    {
+      "title_key": "credits.section.made_by",
+      "entries": [
+        {"name": "Franklin / Arcane Studio", "detail": ""}
+      ]
+    },
+    {
+      "title_key": "credits.section.tools",
+      "entries": [
+        {"name": "Godot Engine", "detail": "MIT licence, Godot Engine contributors; includes the engine default UI font"},
+        {"name": "Aseprite", "detail": "pixel art authoring"}
+      ]
+    },
+    {
+      "title_key": "credits.section.third_party",
+      "entries": [
+        {"name": "m5x7 font", "detail": "CC0, Daniel Linssen"},
+        {"name": "Silkscreen font", "detail": "OFL 1.1, Jason Kottke"},
+        {"name": "Placeholder sounds", "detail": "Generated for this project, CC0"}
+      ]
+    }
+  ]
+}

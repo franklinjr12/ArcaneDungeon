@@ -12,8 +12,10 @@ const DEFAULTS := {
 	"reduce_flashes": false,
 	"screen_shake": true,
 	"telemetry_opt_in": false,
+	"tips_enabled": true,
 	"window_mode": "windowed",
 	"lighting": "high",
+	"show_fps": false,
 	"ui_scale": 1.0,
 	"schema_version": 1,
 }
@@ -22,8 +24,10 @@ var volumes: Dictionary = {}
 var reduce_flashes: bool = false
 var screen_shake: bool = true
 var telemetry_opt_in: bool = false
+var tips_enabled: bool = true
 var window_mode: String = "windowed"
 var lighting: String = "high"
+var show_fps: bool = false
 var ui_scale: float = 1.0
 ## action -> Array of event dicts (InputActions.event_to_dict); empty means project defaults.
 var bindings: Dictionary = {}
@@ -40,8 +44,10 @@ func reset() -> void:
 	reduce_flashes = d["reduce_flashes"]
 	screen_shake = d["screen_shake"]
 	telemetry_opt_in = d["telemetry_opt_in"]
+	tips_enabled = d["tips_enabled"]
 	window_mode = d["window_mode"]
 	lighting = d["lighting"]
+	show_fps = d["show_fps"]
 	ui_scale = d["ui_scale"]
 	bindings = {}
 
@@ -52,8 +58,10 @@ func to_config(cfg: ConfigFile) -> void:
 	cfg.set_value("accessibility", "reduce_flashes", reduce_flashes)
 	cfg.set_value("accessibility", "screen_shake", screen_shake)
 	cfg.set_value("privacy", "telemetry_opt_in", telemetry_opt_in)
+	cfg.set_value("accessibility", "tips_enabled", tips_enabled)
 	cfg.set_value("display", "window_mode", window_mode)
 	cfg.set_value("display", "lighting", lighting)
+	cfg.set_value("display", "show_fps", show_fps)
 	cfg.set_value("display", "ui_scale", snap_ui_scale(ui_scale))
 	for action in bindings:
 		cfg.set_value("controls", str(action), bindings[action])
@@ -67,6 +75,8 @@ func from_config(cfg: ConfigFile) -> void:
 	reduce_flashes = _bool(cfg, "accessibility", "reduce_flashes", reduce_flashes)
 	screen_shake = _bool(cfg, "accessibility", "screen_shake", screen_shake)
 	telemetry_opt_in = _bool(cfg, "privacy", "telemetry_opt_in", telemetry_opt_in)
+	tips_enabled = _bool(cfg, "accessibility", "tips_enabled", tips_enabled)
+	show_fps = _bool(cfg, "display", "show_fps", show_fps)
 	var mode = cfg.get_value("display", "window_mode", "")
 	if typeof(mode) == TYPE_STRING and mode in WINDOW_MODES:
 		window_mode = mode

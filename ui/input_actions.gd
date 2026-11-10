@@ -22,7 +22,7 @@ static func cast_slot_for_mouse_button(button: int) -> int:
 	return cast_slot_for_event(ev)
 
 const REBINDABLE := ["move_up","move_down","move_left","move_right","cast_slot_1","cast_slot_2",
-	"cast_slot_3","cast_slot_4","dash","interact","pause"]
+	"cast_slot_3","cast_slot_4","dash","interact","pause","report"]
 
 static func default_events(action: String) -> Array:
 	var out: Array = []
@@ -154,3 +154,16 @@ class MouseAimSource extends RefCounted:
 
 static func default_aim_source():
 	return MouseAimSource.new()
+
+static func event_text(ev) -> String:
+	if ev == null:
+		return TranslationServer.translate("settings.controls.unbound")
+	if ev is InputEventKey and ev.physical_keycode != 0:
+		var code: int = ev.physical_keycode if DisplayServer.get_name() == "headless" else DisplayServer.keyboard_get_keycode_from_physical(ev.physical_keycode)
+		return OS.get_keycode_string(code if code != KEY_NONE else ev.physical_keycode)
+	return ev.as_text()
+
+## First bound event of an action as display text (follows rebinding).
+static func action_text(action: String) -> String:
+	var events := InputMap.action_get_events(action) if InputMap.has_action(action) else []
+	return event_text(events[0] if not events.is_empty() else null)

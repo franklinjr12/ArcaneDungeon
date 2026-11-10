@@ -4,7 +4,9 @@ const SkinA = preload("res://ui/skin_a.gd")
 const ReduceMotion = preload("res://ui/reduce_motion.gd")
 const SettingsScreen = preload("res://ui/settings_screen.gd")
 const BuildInfo = preload("res://game/core/build_info.gd")
+const PerfRun = preload("res://game/core/perf_run.gd")
 const CompendiumScreen = preload("res://ui/compendium_screen.gd")
+const CreditsScreen = preload("res://ui/credits_screen.gd")
 ## AD-067: GDD §8 Title screen. Sandbox/Arena are shown only in debug builds.
 const TEXT := {
 	"title": "menu.title",
@@ -13,6 +15,7 @@ const TEXT := {
 	"new_run": "menu.new_run",
 	"compendium": "menu.compendium",
 	"settings": "menu.settings",
+	"credits": "menu.credits",
 	"quit": "menu.quit",
 	"debug": "menu.debug",
 	"sandbox": "menu.sandbox",
@@ -22,13 +25,14 @@ const TEXT := {
 var show_debug_entries = null
 var settings_screen: Control = null
 var compendium_screen: Control = null
+var credits_screen: Control = null
 var panel: Panel
 
 const TITLE_DIR := "res://assets/ui/title/"
 const LOGO_DIR := "res://assets/ui/logo/"
 const PARALLAX := [["par_far", 2.0], ["par_mid", 5.0], ["par_near", 10.0]]
 const OVERSCAN := 16.0
-const BUTTON_IDS := {"btn_continue": "ContinueButton", "btn_new_run": "NewRunButton", "btn_compendium": "CompendiumButton", "btn_settings": "SettingsButton", "btn_quit": "QuitButton"}
+const BUTTON_IDS := {"btn_continue": "ContinueButton", "btn_new_run": "NewRunButton", "btn_compendium": "CompendiumButton", "btn_settings": "SettingsButton", "btn_credits": "CreditsButton", "btn_quit": "QuitButton"}
 var _layers: Array = []  # {rect, depth}
 var _logo: TextureRect
 var _logo_glow: TextureRect
@@ -43,6 +47,10 @@ func _ready() -> void:
 	var save_service = get_node_or_null("/root/SaveService")
 	if save_service != null:
 		save_service.settings.apply_display(get_window())
+	if PerfRun.requested():
+		PerfRun.launch(get_tree())
+		visible = false
+		return
 	if show_debug_entries == null:
 		show_debug_entries = OS.is_debug_build()
 	_build_backdrop()
@@ -82,6 +90,8 @@ func _ready() -> void:
 	_buttons["btn_compendium"].pressed.connect(open_compendium)
 	_buttons["btn_settings"] = _button(panel, "SettingsButton", tr(TEXT["settings"]))
 	_buttons["btn_settings"].pressed.connect(open_settings)
+	_buttons["btn_credits"] = _button(panel, "CreditsButton", tr(TEXT["credits"]))
+	_buttons["btn_credits"].pressed.connect(open_credits)
 	_buttons["btn_quit"] = _button(panel, "QuitButton", tr(TEXT["quit"]))
 	_buttons["btn_quit"].pressed.connect(func(): get_tree().quit())
 	if show_debug_entries:
@@ -238,16 +248,36 @@ func _close_compendium() -> void:
 	_logo_glow.show()
 	panel.get_node("CompendiumButton").grab_focus()
 
+func open_credits() -> void:
+	if credits_screen == null:
+		credits_screen = CreditsScreen.new()
+		credits_screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		add_child(credits_screen)
+		credits_screen.back_requested.connect(_close_credits)
+	credits_screen.show()
+	panel.hide()
+	_logo.hide()
+	_logo_glow.hide()
+
+func _close_credits() -> void:
+	credits_screen.hide()
+	panel.show()
+	_logo.show()
+	_logo_glow.show()
+	panel.get_node("CreditsButton").grab_focus()
+
 ## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.
 const SHOT_RUN_STATES := ["combat","reward","loadout","workshop_editor","merchant","pause","summary","summary_win","sigil_desk"]
 
 func apply_debug_shot_state(state: String) -> bool:
-	if not OS.is_debug_build() or not state in ["title","settings","compendium","compendium_runes","compendium_reactions","compendium_enemies","compendium_artifacts","settings_audio","settings_video","settings_controls","settings_access"]:
+	if not OS.is_debug_build() or not state in ["title","settings","compendium","compendium_runes","compendium_reactions","compendium_enemies","compendium_artifacts","credits","settings_audio","settings_video","settings_controls","settings_access"]:
 		return false
 	if state.begins_with("settings"):
 		open_settings()
 		if state != "settings" and settings_screen.has_method("select_tab"):
 			settings_screen.select_tab(state.trim_prefix("settings_"))
+	elif state == "credits":
+		open_credits()
 	elif state == "compendium":
 		open_compendium()
 	elif state.begins_with("compendium_"):
@@ -261,7 +291,7 @@ func _debug_shot_entry() -> void:
 	var state := OS.get_environment("AD_UI_SHOT_STATE")
 	if state == "":
 		return
-	if state in SHOT_RUN_STATES:
+	if state in SHOT_RUN_STATES or state.begins_with("tip_") or state == "pause_controls":
 		get_tree().change_scene_to_file.call_deferred("res://scenes/run.tscn")
 	elif apply_debug_shot_state(state):
 		await _debug_shot_capture()

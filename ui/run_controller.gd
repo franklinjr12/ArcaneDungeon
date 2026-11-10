@@ -14,9 +14,11 @@ const Art = preload("res://ui/pixel_art_renderer.gd")
 const InputActions = preload("res://ui/input_actions.gd")
 var aim_source = InputActions.default_aim_source()
 const PauseMenu = preload("res://ui/pause_menu.gd")
+const FeedbackSnapshot = preload("res://ui/feedback_snapshot.gd")
 const LoadoutView = preload("res://ui/loadout_view.gd")
 const EditorView = preload("res://ui/skin_a_editor.gd")
 const MerchantScript = preload("res://world/merchant.gd")
+const PerfOverlay = preload("res://debug/perf_overlay.gd")
 var flow
 var config_path: String = Flow.CONFIG_V2
 var guide = Prompts.new()
@@ -50,11 +52,13 @@ var dev_panel: PanelContainer
 var dev_label: Label
 ## null = resolve from OS.is_debug_build() in _ready (same meaning as main_menu.show_debug_entries); tests set false before add_child.
 var show_dev_tools = null
+## AD-187: set before add_child to run the perf-run fixture (never touches saves, profile or desk).
+var perf_seed = null
 var _notice_seen := ""
 var _notice_until_ms := 0
 var _last_wet_kills := 0
 var _last_arcs := 0
-const TELEMETRY_INDEX := {"room1":3,"first_reward":4,"first_workshop":5}
+const TELEMETRY_INDEX := {"room1":3,"first_reward":4,"first_workshop":5,"telegraph":6,"spells_are_runes":7}
 var arena_canvas
 var test_canvas
 var portrait_hud # alias of arena_canvas.slot_hud (the only HP/MP display)
@@ -78,6 +82,8 @@ var cursor := Vector2(400,440)
 var opened_editor_ms := 0
 var refresh_counter := 0
 var editor_open := false
+var last_sim_usec := 0
+var perf_overlay
 var loadout_list: VBoxContainer
 var loadout_slot_buttons: Array = []
 var scene_key := ""
@@ -104,15 +110,20 @@ const TEST_RANGE_SIZE := Vector2(916,650)
 const DESK_DOOR_RADIUS := 34.0
 const EDITOR_SIZE := Vector2(632,665) # AD-153: 296 canvas px at x2 (skin A editor column) plus the panel frame and scrollbar
 var _prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
+var feedback_snapshot
+var _report_paused_clocks := false
+var _report_prev_mouse_mode := Input.MOUSE_MODE_VISIBLE
 
 func _ready() -> void:
 	VisualTheme.apply(self)
 	if show_dev_tools == null:
 		show_dev_tools = OS.is_debug_build()
-	flow = Flow.new(-1, config_path)
+	flow = Flow.new(-1 if perf_seed == null else perf_seed, config_path)
 	var resume_save = get_node_or_null("/root/SaveService")
 	var resumed := false
-	if resume_save != null:
+	if perf_seed != null:
+		resumed = true
+	elif resume_save != null:
 		var wanted: bool = resume_save.resume_requested
 		resume_save.resume_requested = false
 		if wanted:
@@ -134,7 +145,7 @@ func _ready() -> void:
 	var save = get_node_or_null("/root/SaveService")
 	if save != null:
 		_settings = save.settings
-		if _settings.telemetry_opt_in:
+		if _settings.telemetry_opt_in and perf_seed == null:
 			flow.experiment.configure(true)
 			flow.experiment.begin_session()
 		_settings.apply_audio()
@@ -226,6 +237,10 @@ func _build() -> void:
 	pause_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	pause_menu.visible = false
 	add_child(pause_menu)
+	feedback_snapshot = FeedbackSnapshot.new()
+	feedback_snapshot.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(feedback_snapshot)
+	feedback_snapshot.closed.connect(_on_report_closed)
 	pause_menu.resume_requested.connect(close_pause)
 	pause_menu.retry_confirmed.connect(_pause_retry)
 	pause_menu.quit_confirmed.connect(_pause_quit)
@@ -358,6 +373,24 @@ func _build_overlays() -> void:
 	shop_overlay = Overlay.new(true)
 	shop_overlay.director = _director
 	add_child(shop_overlay)
+	perf_overlay = PerfOverlay.new()
+	perf_overlay.settings = _settings
+	perf_overlay.source = self
+	add_child(perf_overlay)
+	if perf_seed != null:
+		perf_overlay.visible = false
+		perf_overlay.set_process(false)
+
+## AD-187: numbers for the Show FPS overlay.
+func perf_stats() -> Dictionary:
+	var enemies := 0
+	var effects := 0
+	if flow != null and flow.session != null:
+		for e in flow.session.enemies:
+			if e.target.alive():
+				enemies += 1
+		effects = flow.session.sim.queue.active_effect_count()
+	return {"sim_ms": last_sim_usec / 1000.0, "enemies": enemies, "effects": effects}
 
 ## Dev-only F3 overlay: only built when show_dev_tools (and debug keys) are on; starts hidden.
 func _build_dev_overlay() -> void:
@@ -433,7 +466,28 @@ func _fit_editor_panel() -> void:
 	editor_panel.custom_minimum_size = Vector2(minf(EDITOR_SIZE.x,size.x*0.5),0)
 
 func is_paused() -> bool:
-	return pause_menu != null and pause_menu.visible
+	return (pause_menu != null and pause_menu.visible) or (feedback_snapshot != null and feedback_snapshot.is_open())
+
+func open_report() -> void:
+	if flow == null or not flow.initialized or feedback_snapshot.is_open():
+		return
+	var image = FeedbackSnapshot.capture(get_viewport())
+	_report_paused_clocks = can_pause() and not pause_menu.visible
+	if _report_paused_clocks:
+		_set_clocks_paused(true)
+	_report_prev_mouse_mode = Input.mouse_mode
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	feedback_snapshot.open(image, flow.run_log.to_dict())
+
+func _on_report_closed(saved_path: String) -> void:
+	if _report_paused_clocks:
+		_set_clocks_paused(false)
+	_report_paused_clocks = false
+	Input.mouse_mode = _report_prev_mouse_mode
+	if not saved_path.is_empty():
+		current_notice = tr("report.saved")
+		if not pause_menu.visible:
+			_update_labels()
 
 func can_pause() -> bool:
 	return not editor_open and flow.state in ["fighting","cleared","workshop"]
@@ -472,6 +526,7 @@ func close_pause() -> void:
 		pause_menu.close_settings()
 	if pause_menu.is_controls_open():
 		pause_menu.close_controls()
+	guide.refresh_bindings()
 	if pause_menu.is_confirm_open():
 		pause_menu.cancel_confirm()
 	pause_menu.visible = false
@@ -493,11 +548,15 @@ func _pause_retry() -> void:
 	_retry_same_seed()
 
 func _autosave() -> void:
+	if perf_seed != null:
+		return
 	var save = get_node_or_null("/root/SaveService")
 	if save != null and flow.can_save():
 		save.save_run(flow.save_payload())
 
 func _drop_save() -> void:
+	if perf_seed != null:
+		return
 	var save = get_node_or_null("/root/SaveService")
 	if save != null:
 		save.delete_run()
@@ -574,6 +633,15 @@ func _reset_test_range() -> void:
 	_update_labels()
 
 func _input(event: InputEvent) -> void:
+	if feedback_snapshot != null and feedback_snapshot.is_open():
+		if event.is_action_pressed("pause") and not event.is_echo():
+			feedback_snapshot.cancel()
+			get_viewport().set_input_as_handled()
+		return
+	if event.is_action_pressed("report") and not event.is_echo():
+		open_report()
+		get_viewport().set_input_as_handled()
+		return
 	if is_paused():
 		if event.is_action_pressed("pause") and not event.is_echo():
 			pause_menu.handle_cancel()
@@ -632,12 +700,27 @@ func _process(delta: float) -> void:
 			display_frame_samples.remove_at(0)
 		low_fps = fps if low_fps <= 0.0 else minf(low_fps,fps)
 
+## AD-187: one perf-run tick; mirrors the post-simulation work of _physics_process.
+func perf_step(command: Dictionary) -> void:
+	var sim_start := Time.get_ticks_usec()
+	flow.step(command)
+	last_sim_usec = Time.get_ticks_usec() - sim_start
+	arena_canvas.queue_redraw()
+	portrait_hud.queue_redraw()
+	test_canvas.queue_redraw()
+	refresh_counter += 1
+	if refresh_counter%7 == 0:
+		_update_labels()
+
 func _physics_process(_delta: float) -> void:
+	if perf_seed != null:
+		return
 	if flow == null or not flow.initialized:
 		return
 	if is_paused():
 		cast_pending = -1
 		return
+	var sim_start := Time.get_ticks_usec()
 	if not editor_open:
 		if flow.state == "fighting":
 			var dir := Input.get_vector("move_left","move_right","move_up","move_down")
@@ -654,6 +737,7 @@ func _physics_process(_delta: float) -> void:
 			_move_test_mage(Input.get_vector("move_left","move_right","move_up","move_down"))
 			flow.range_sim.step()
 			_desk_door_walk()
+	last_sim_usec = Time.get_ticks_usec() - sim_start
 	cast_pending = -1
 	arena_canvas.queue_redraw()
 	portrait_hud.queue_redraw()
@@ -1096,17 +1180,25 @@ func _update_labels() -> void:
 	notice_panel.visible = current_notice != "" and Time.get_ticks_msec() < _notice_until_ms
 	pause_button.disabled = not can_pause()
 	_update_dev_label()
-	if tip != null:
+	if tip != null and _debug_pinned_tip != "":
+		guide.current = _debug_pinned_tip
+		tip.text = tr("run.tip") % guide.tips[_debug_pinned_tip]
+		tip_panel.visible = true
+	elif tip != null:
+		if _settings != null:
+			guide.enabled = _settings.tips_enabled
 		_watch_hint_signals()
 		var active := ""
-		if flow.mode == "workshop" and not flow.prelude:
+		if flow.prelude and not editor_open:
+			active = "spells_are_runes"
+		elif flow.mode == "workshop" and not flow.prelude:
 			active = "first_workshop"
-		elif flow.state == "fighting" and str(flow.room.values["id"]) == "s1_r1":
+		elif flow.state == "fighting" and flow.run.sequence_index == 0:
 			active = "room1"
 		elif flow.state == "cleared" and not flow.reward_collected:
 			active = "first_reward"
 		var hint: String = guide.next_hint()
-		if guide.HINT_IDS.has(guide.current) and not guide.dismissed and hint == "":
+		if (guide.HINT_IDS.has(guide.current) or guide.is_timed_active()) and not guide.dismissed and hint == "":
 			active = guide.current
 		elif hint != "" and (active == "" or guide.seen.has(active)):
 			active = hint  # an unseen AD-042 tip is shown first, then the pending hint takes over
@@ -1154,6 +1246,12 @@ func _update_dev_label() -> void:
 
 ## AD-084: read-only watch on run-flow counters; never pauses the sim or opens dialogs.
 func _watch_hint_signals() -> void:
+	guide.tick(Time.get_ticks_msec())
+	if flow.state == "fighting" and flow.session != null:
+		for enemy in flow.session.enemies:
+			if enemy.state == "windup":
+				guide.note_telegraph()
+				break
 	if flow.mode == "workshop" and not flow.prelude:
 		guide.note_workshop(3 - flow.run.formulas.size())
 		if flow.run.formulas.size() >= 3 and guide.current == "workshop_empty_slot":
@@ -1167,6 +1265,8 @@ func _watch_hint_signals() -> void:
 	_last_arcs = arc_now
 
 func _persist_tip(id: String) -> void:
+	if perf_seed != null:
+		return
 	var save = get_node_or_null("/root/SaveService")
 	if save == null:
 		return
@@ -1472,8 +1572,16 @@ func _close_editor(apply_changes: bool) -> void:
 	_redraw_panel()
 
 ## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.
+const DEBUG_TIP_BASE := {"tip_room1":"combat","tip_telegraph":"combat","tip_wet_try_lightning":"combat","tip_first_reward":"reward","tip_first_workshop":"workshop","tip_workshop_empty_slot":"workshop","tip_test_on_dummy":"workshop","tip_spells_are_runes":"sigil_desk"}
+var _debug_pinned_tip := ""
+
 func apply_debug_shot_state(state: String) -> bool:
-	if not OS.is_debug_build() or not state in ["combat","reward","loadout","workshop_editor","merchant","pause","summary","summary_win","sigil_desk"]:
+	if not OS.is_debug_build():
+		return false
+	if DEBUG_TIP_BASE.has(state):
+		_debug_pinned_tip = state.trim_prefix("tip_")
+		state = DEBUG_TIP_BASE[state]
+	if not state in ["combat","reward","loadout","workshop","workshop_editor","merchant","pause","pause_controls","summary","summary_win","sigil_desk"]:
 		return false
 	if state == "sigil_desk":
 		if not flow.prelude and not (flow.prelude_available() and flow.enter_prelude()["ok"]):
@@ -1492,7 +1600,7 @@ func apply_debug_shot_state(state: String) -> bool:
 				if enemy.target.alive():
 					enemy.target.receive_damage(100000,"fire",1,100)
 			flow.step()
-	elif state == "workshop_editor" or state == "merchant":
+	elif state == "workshop_editor" or state == "merchant" or state == "workshop":
 		for i in flow.rooms.size():
 			if str(flow.rooms[i].get("type","")) == "workshop":
 				flow.run.sequence_index = i
@@ -1513,8 +1621,13 @@ func apply_debug_shot_state(state: String) -> bool:
 		_open_editor(1) # slot 0 (Basic Bolt) is locked; slot 1 is the first editable one
 	elif state == "merchant":
 		_set_shop_open(true)
+	elif state == "workshop":
+		_set_shop_open(false)
 	elif state == "pause":
 		open_pause()
+	elif state == "pause_controls":
+		open_pause()
+		pause_menu.open_controls()
 	elif state == "loadout":
 		open_loadout_view()
 	return true

@@ -2,7 +2,7 @@ extends Control
 ## AD-067 / AD-152: skin A settings screen (AD-095 kit, AD-096 layouts), 4 tabs. Reused by the title screen and the
 ## pause menu; the owner listens to back_requested and decides what to do (this screen never frees itself).
 ## Mock widgets without a backing Settings field are rendered but disabled; owner/game-design follow-ups:
-##  audio: mute-when-unfocused, spell-sounds-top-priority.  video: frame limit, vsync, particles, glow, show FPS;
+##  audio: mute-when-unfocused, spell-sounds-top-priority.  video: frame limit, vsync, particles, glow;
 ##  the mock resolution dropdown slot hosts the UI scale slider instead (no free row under the Display header).
 ##  access: colour-blind mode, text size (UI scale lives in the video tab), strong telegraphs, hold to cast, aim assist,
 ##  visual sound cues.  The Music slider is disabled only if no Music audio bus exists; Pause stays fixed to Esc.
@@ -31,7 +31,7 @@ const TEXT := {
 }
 const CONFLICT_COLOR := Color(1, 0.45, 0.4)
 ## action -> id stem used by the layout JSON rebind rows.
-const RB_STEM := {"cast_slot_1": "cast_1", "cast_slot_2": "cast_2", "cast_slot_3": "cast_3", "cast_slot_4": "cast_4"}
+const RB_STEM := {"cast_slot_1": "cast_1", "cast_slot_2": "cast_2", "cast_slot_3": "cast_3", "cast_slot_4": "cast_4", "report": "screenshot"}
 signal back_requested
 
 ## Kit painting (scaled 9-slice / tile), shared by the skin controls below.
@@ -243,8 +243,10 @@ var music_slider: HSlider
 var flash_toggle: Button
 var shake_toggle: Button
 var telemetry_toggle: Button
+var tips_toggle: Button
 var open_logs_button: Button
 var lighting_toggle: Button
+var fps_toggle: Button
 var back_button: Button
 var apply_button: Button
 var window_mode_option: OptionButton
@@ -640,7 +642,13 @@ func _build_video(page: Control) -> void:
 		_light_state())
 	_unbacked_dropdown(tab, page, "dd_particles", "settings.video.particles", "particles", "settings.value.full")
 	_unbacked_toggle(tab, page, "toggle_glow", "settings.video.glow", "glow", true)
-	_unbacked_toggle(tab, page, "toggle_fps", "settings.video.fps", "fps", false)
+	fps_toggle = _toggle(tab, page, "toggle_fps", "settings.video.fps", "fps", _settings.show_fps, func(on: bool):
+		_settings.show_fps = on
+		_save())
+	fps_toggle.disabled = _read_only
+	_sync_hooks.append(func():
+		fps_toggle.set_pressed_no_signal(_settings.show_fps)
+		fps_toggle.get_meta("value_label").text = tr("settings.value.on" if _settings.show_fps else "settings.value.off"))
 	_preview_rect = _w(tab, "preview")
 	_box(page, "ad_ui_panel_inset", _preview_rect)
 	_text(page, tr("settings.lighting.preview"), {"x": _preview_rect["x"], "y": _preview_rect["y"] + 2, "w": _preview_rect["w"], "h": 12}, HORIZONTAL_ALIGNMENT_CENTER)
@@ -765,7 +773,10 @@ func _build_access(page: Control) -> void:
 	telemetry_toggle = _toggle(tab, page, "", "settings.telemetry", "telemetry", _settings.telemetry_opt_in, func(on: bool):
 		_settings.telemetry_opt_in = on
 		_save(), {"x": last["x"], "y": last["y"] + 18, "w": last["w"], "h": last["h"]})
-	var logs_rect := {"x": last["x"], "y": last["y"] + 36, "w": last["w"], "h": last["h"]}
+	tips_toggle = _toggle(tab, page, "", "settings.tips", "tips", _settings.tips_enabled, func(on: bool):
+		_settings.tips_enabled = on
+		_save(), {"x": last["x"], "y": last["y"] + 36, "w": last["w"], "h": last["h"]})
+	var logs_rect := {"x": 410, "y": 226, "w": 178, "h": 18}
 	open_logs_button = _button(page, "btn_open_logs", tr("settings.open_logs"), tab)
 	_items[_items.size() - 1]["w"] = logs_rect
 	open_logs_button.disabled = _read_only
@@ -774,9 +785,9 @@ func _build_access(page: Control) -> void:
 		if DisplayServer.get_name() != "headless":
 			OS.shell_open(ExperimentLog.log_dir_path()))
 	_help_hook(open_logs_button, tab, "open_logs", "settings.open_logs")
-	for c in [flash_toggle, shake_toggle, telemetry_toggle]:
+	for c in [flash_toggle, shake_toggle, telemetry_toggle, tips_toggle]:
 		c.disabled = _read_only
-	for pair in [[flash_toggle, func(): return _settings.reduce_flashes], [shake_toggle, func(): return not _settings.screen_shake], [telemetry_toggle, func(): return _settings.telemetry_opt_in]]:
+	for pair in [[flash_toggle, func(): return _settings.reduce_flashes], [shake_toggle, func(): return not _settings.screen_shake], [telemetry_toggle, func(): return _settings.telemetry_opt_in], [tips_toggle, func(): return _settings.tips_enabled]]:
 		var t: Button = pair[0]
 		var getter: Callable = pair[1]
 		_sync_hooks.append(func():
@@ -968,12 +979,7 @@ func _refresh_conflict_panel(eff: Dictionary) -> void:
 	cancel_button.disabled = not actionable
 
 func _event_text(ev) -> String:
-	if ev == null:
-		return tr("settings.controls.unbound")
-	if ev is InputEventKey and ev.physical_keycode != 0:
-		var code: int = ev.physical_keycode if DisplayServer.get_name() == "headless" else DisplayServer.keyboard_get_keycode_from_physical(ev.physical_keycode)
-		return OS.get_keycode_string(code if code != KEY_NONE else ev.physical_keycode)
-	return ev.as_text()
+	return InputActions.event_text(ev)
 
 func _commit(bindings: Dictionary) -> void:
 	_settings.bindings = bindings

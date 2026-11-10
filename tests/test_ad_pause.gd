@@ -10,7 +10,7 @@ func run(t) -> void:
 		t.check(menu.find_child(n, true, false) is Button, "AD-068 pause has " + n)
 	for k in Pause.TEXT:
 		t.check(String(Pause.TEXT[k]) != "", "AD-068 pause text " + k)
-	t.check(menu.find_child("RetryButton", true, false) == null and menu.find_child("ControlsButton", true, false) == null, "AD-152 pause has no Retry/Controls buttons")
+	t.check(menu.find_child("RetryButton", true, false) == null and menu.find_child("ControlsButton", true, false) is Button, "AD-185 pause has Controls but no Retry button")
 	t.equal(menu.backdrop.texture.region, Rect2(SkinA.kit()["sprites"]["ad_ui_modal_backdrop_50"]["x"], SkinA.kit()["sprites"]["ad_ui_modal_backdrop_50"]["y"], SkinA.kit()["sprites"]["ad_ui_modal_backdrop_50"]["w"], SkinA.kit()["sprites"]["ad_ui_modal_backdrop_50"]["h"]), "AD-152 pause backdrop is the _50 sprite")
 	var loadouts := [0]
 	menu.loadout_requested.connect(func(): loadouts[0] += 1)

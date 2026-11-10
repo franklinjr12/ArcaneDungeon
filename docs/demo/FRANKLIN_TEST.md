@@ -1,17 +1,136 @@
-# Franklin demo test checklist
+# Friends Demo v1 checklist (for Franklin)
 
-**Time budget (estimate):** non-combat sections 1, 2, 4, 6, 7 and 9 sum to about 20 min. Add the route median rounded up (31 min, from the AD-176 invulnerable route run) for about 51 min. This is an estimate, not a measurement, and it is above the 30-40 min target.
+These 8 gates decide whether the demo is ready to hand to friends. Franklin decides each one. Nothing below is marked as passed for you. QA results: [docs/benchmarks/ad_demo_qa.md](../benchmarks/ad_demo_qa.md), section "Friends Demo v1". Build and launch steps: [docs/demo/README.md](README.md).
 
-**Expected run length** (AD-176, simulation minutes; menus and reading excluded):
+## G1 Feel
 
-- Natural bot runs (weak, typical, skilled) all end in death, 0 of 60 won. Totals are 9.1-13.4 min. In AD-175, all of these runs died at the Undead Warden (`ruins_boss`).
-- Invulnerable route bot takes 19.5-35.7 min for the whole route. 11 of 20 finished, in 30.2-35.7 min; 9 hit the 360 s room cap.
-- The 30-40 min target is **not met**.
-- Stage 2 sections (5 and 8) may be unreachable without surviving the Undead Warden: no bot won natural play in AD-175 or AD-176.
+**Requirement:** rooms are quick and satisfying, no room runs over about 3 min, bosses feel like events and not sponges, and a winning run takes 25-40 min. The run length is a human guideline: read it from the run log and the summary timer, not from a bot number.
 
-## Build and launch
+**What you do:**
 
-Build and launch steps: [docs/demo/README.md](README.md). On the title screen, check that the build stamp matches the one you were given. The game shows as **ARCANE DUNGEON** (title string `menu.title`). Turn on **Local telemetry (opt-in)** first.
+1. Play 3 full runs.
+2. After each run, note the summary timer, the longest room, and how each boss felt.
+3. Open the run log JSON of each run (see Reporting) to read the room times.
+
+**Evidence:** bot numbers are INFO only. In the 20-seed smoke the longest bot room was 91.6 s and bot wins took 2.3-4.3 min, far below 25-40 min. Bots do not decide G1.
+
+**Status:** Franklin to check.
+
+**G1 result:** PASS / FAIL  Notes:
+
+## G2 Onboarding
+
+**Requirement:** a friend with no explanation moves, dashes, casts, reads a telegraph and crafts one spell within about 5 min.
+
+**What you do:**
+
+1. Give the build to one friend. Say nothing about the controls.
+2. Watch and time them. Do not help.
+3. Note which of the five steps they reached in 5 min: move, dash, cast, read a telegraph, craft one spell.
+
+**Evidence:** `docs/demo/ONBOARDING.md` says this human test has not been run.
+
+**Status:** Franklin to check.
+
+**G2 result:** PASS / FAIL  Notes:
+
+## G3 Stability
+
+**Requirement:** no crash or softlock in the 20-seed smoke and in your runs. Workshop save and quit works.
+
+**What you do:**
+
+1. Play your runs from G1 and note any crash, freeze or stuck room.
+2. In the workshop, press Esc > Save & Quit, then Title > Continue. The run must resume where you left it.
+
+**Evidence:** 20-seed smoke (natural + route): 80 of 80 rows ok, no crash, no script error, no room hit the 360 s cap. Test suite 19558 passed, 0 failed, including the resume suite.
+
+**Status:** partial. Smoke and the resume test are clean. Franklin to check your own runs and the workshop save and quit by hand.
+
+**G3 result:** PASS / FAIL  Notes:
+
+## G4 Performance
+
+**Requirement:** 60 FPS at 1080p on the reference PC (i5 11th gen / GTX 1660) with Lighting High. Lighting Low is allowed as a documented fallback.
+
+**What you do:**
+
+1. Follow [PERF_TEST.md](PERF_TEST.md) on the reference PC.
+2. Run `perf_test_high.bat`.
+3. Run `perf_test_low.bat` only if High fails, and record that result as a retest, not a pass at High.
+4. Also check the FPS overlay and the F8 report dialog by hand. The UI matrix cannot shoot them.
+
+**Evidence:** only headless numbers from a shared 2-core VM exist. They are INFO and not valid for G4. The sim probe was over its budget in 3 of 4 rooms there, and the host was not idle. Not run on the reference PC.
+
+**Status:** Franklin to check.
+
+**G4 result:** PASS / FAIL  Notes:
+
+## G5 Build
+
+**Requirement:** one script makes versioned Windows and Linux zips. The release build has no debug keys or menus. It launches without Godot.
+
+**What you do:**
+
+1. Optional: run `python3 scripts/export_demo.py --godot <godot>` yourself.
+2. Copy `Sigilwright-0.1.0-demo-windows.zip` to a PC without Godot, unzip it and start the game.
+3. Check that the title screen shows the build stamp and that no debug keys or menus work.
+
+**Evidence:** `export_demo.py` exit 0. It made the 0.1.0-demo Windows and Linux zips. All 4 Linux zip checks passed, including the release probe for debug keys. The Windows zip was exported but not run.
+
+**Status:** partial. Franklin to check that the Windows zip starts on a PC without Godot.
+
+**G5 result:** PASS / FAIL  Notes:
+
+## G6 Feedback
+
+**Requirement:** a run log JSON per run, an F8 snapshot, a feedback form, and clear "send this folder" instructions.
+
+**What you do:**
+
+1. Finish one run.
+2. Press F8 once, type one line and save.
+3. Check that the run JSON and the report exist in the folders listed under Reporting.
+4. Read [FEEDBACK_FORM.md](FEEDBACK_FORM.md) and the send instructions. Check that a friend could follow them.
+
+**Evidence:** the run log and F8 snapshot test suites ran clean. The feedback form exists. The F8 dialog was not checked in a real build.
+
+**Status:** partial. Franklin to check F8 in a real build and the instructions text.
+
+**G6 result:** PASS / FAIL  Notes:
+
+## G7 Assets
+
+**Requirement:** the placeholder list is known. Your audio is in, or accepted as placeholder. Credits and licences are complete.
+
+**What you do:**
+
+1. Read [ASSET_STATUS.md](ASSET_STATUS.md) and [AUDIO_STATUS.md](AUDIO_STATUS.md).
+2. Decide whether to ship placeholder audio.
+3. Open Credits from the main menu and check it.
+4. Find the licence of `art/export/fnt/arc_fnt_digits_3x5.png` and record it. It is flagged because none is recorded.
+
+**Evidence:** 393 art files: 390 placeholder, 3 third-party, 1 flagged (the digits font above). Audio: 77 of 77 cues are placeholder or silent. The credits screen is built from `game/data/credits_v1.json` and is in the UI matrix.
+
+**Status:** partial. Licences are not complete until the font licence is found. Franklin to check that and to accept placeholder audio.
+
+**G7 result:** PASS / FAIL  Notes:
+
+## G8 Known issues
+
+**Requirement:** a known issues list ships in the friends package.
+
+**What you do:**
+
+1. Read the KNOWN ISSUES section of `README_FRIENDS.txt` inside the zip.
+2. Read [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
+3. Decide whether `KNOWN_ISSUES.md` must also ship. `scripts/export_demo.py` currently bundles only README_FRIENDS.md and FEEDBACK_FORM.md.
+
+**Evidence:** the README KNOWN ISSUES section ships in the zip. `KNOWN_ISSUES.md` exists in the repo but is not bundled.
+
+**Status:** partial. Franklin to check that the README list is enough, or order `KNOWN_ISSUES.md` bundled.
+
+**G8 result:** PASS / FAIL  Notes:
 
 ## Keys
 
@@ -29,16 +148,21 @@ Defaults. All are rebindable in Settings > Controls.
 | Retry same seed | R |
 | Reset test targets | T |
 | Pick reward 1-9 | number keys 1-9 |
+| Send a report | F8 |
 
-Fill the last column of each row with Pass, Fail, or a short Note.
+## Detailed walkthrough (supports G1-G3, G6)
 
-## 1. Title, menus and settings (~4 min)
+Build and launch: [README.md](README.md). On the title screen, check that the build stamp matches the one you were given. The game title shows SIGILWRIGHT (string `menu.title`). Turn on **Local telemetry (opt-in)** first. Known problems you do not need to report: [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
+
+Fill the last column of each row with Pass, Fail, or a short Note. Stage 2 sections (5 and 8) need you to survive the Undead Warden.
+
+### 1. Title, menus and settings (~4 min)
 
 
 
 | # | Do | Expect | Pass / Fail / Note |
 |---|---|---|---|
-| 1 | Launch. Read the build stamp on the title screen. | Title shows ARCANE DUNGEON and the build stamp from the build you were given. |  |
+| 1 | Launch. Read the build stamp on the title screen. | Title shows SIGILWRIGHT and the build stamp from the build you were given. |  |
 | 2 | Press Esc/mouse through Settings tabs: Audio, Video, Controls, Accessibility. | All four tabs open and close; sliders respond. |  |
 | 3 | Video: change Light quality (High / Low) and Frame limit. | Dropdown changes apply; Lighting help text appears. |  |
 | 4 | Controls: rebind one key (e.g. dash), then try an already-used key. | `Press a key...` prompt; conflict panel `X is already used by Y. Swap or cancel?`. Reset keys restores defaults. |  |
@@ -46,7 +170,7 @@ Fill the last column of each row with Pass, Fail, or a short Note.
 | 6 | Open Compendium; click Runes, Reactions, Enemies, Artifacts. | Four tabs listed; entries show names, not raw keys. |  |
 | 7 | Title -> New Run -> Sigil Desk, timed. | Menus take under 15 s. (There is no difficulty menu in the demo; difficulty is data-only.) |  |
 
-## 2. Sigil Desk prelude (~4 min)
+### 2. Sigil Desk prelude (~4 min)
 
 First run only; the desk lists 3 given runes: Lightning, Projectile, Split.
 
@@ -58,7 +182,7 @@ First run only; the desk lists 3 given runes: Lightning, Projectile, Split.
 | 11 | Walk into the right-hand door, or press F. | Run starts in Stage 1. |  |
 | 12 | Start a second run (Retry same seed or New seed); find the desk again. | `Skip the desk` is offered and works. |  |
 
-## 3. Stage 1: Ruins and Undead Warden (natural median ~11 min, see Expected run length)
+### 3. Stage 1: Ruins and Undead Warden
 
 
 
@@ -70,7 +194,7 @@ First run only; the desk lists 3 given runes: Lightning, Projectile, Split.
 | 16 | Fight the **Undead Warden** boss. | Telegraphed wind-up before attacks; at half HP a faster second phase with radial shots. |  |
 | 17 | Dash (Space) through a telegraph. | Dash dodges damage; no stuck states. |  |
 
-## 4. Workshop and merchant (~4 min)
+### 4. Workshop and merchant (~4 min)
 
 
 
@@ -83,7 +207,7 @@ First run only; the desk lists 3 given runes: Lightning, Projectile, Split.
 | 22 | Press **REROLL** once, then try again. | First reroll changes stock; second is blocked (`REROLLED`). |  |
 | 23 | Check any artifact you hold, in the loadout (Tab) and Compendium > Artifacts. | Name and description show; effect works in play. |  |
 
-## 5. Stage 2: Flooded Cistern (time: see Expected run length)
+### 5. Stage 2: Flooded Cistern
 
 
 
@@ -95,7 +219,7 @@ First run only; the desk lists 3 given runes: Lightning, Projectile, Split.
 | 27 | Fight Drowned Acolyte, Cistern Slime (splits into Slimelets), Deep Eel. | Each enemy is distinct and has a readable telegraph. |  |
 | 28 | Clear the Cistern rooms to the Drowned Archivist door. | No stuck rooms. |  |
 
-## 6. New runes (~5 min)
+### 6. New runes (~5 min)
 
 Build each in the workshop, then cast on enemies/dummy. Check the visible effect.
 
@@ -112,7 +236,7 @@ Build each in the workshop, then cast on enemies/dummy. Check the visible effect
 | 37 | **On Expire** trigger. | Second effect fires when the first ends. |  |
 | 38 | **Timer** trigger. | Second effect fires after a delay. |  |
 
-## 7. Lighting and VFX (~2 min)
+### 7. Lighting and VFX (~2 min)
 
 
 
@@ -121,7 +245,7 @@ Build each in the workshop, then cast on enemies/dummy. Check the visible effect
 | 39 | Compare Settings > Video > Light quality High, Low and Lighting off (lighting hint says Off = low-end PCs). | Rooms get darker with High/Low; Off is bright and flat. Enemies and floor stay readable in all modes. |  |
 | 40 | Cast with lighting on. | Spells glow and light nearby floor; no stutter you can feel. |  |
 
-## 8. Final boss, summary, save and resume (time: see Expected run length)
+### 8. Final boss, summary, save and resume
 
 
 
@@ -134,7 +258,7 @@ Build each in the workshop, then cast on enemies/dummy. Check the visible effect
 | 45 | Mid-run: Esc -> **Save & Quit**, then Title -> **Continue**. | Run resumes where you left it. |  |
 | 46 | Esc -> Settings, Loadout and Abandon. | Each opens; Abandon asks first. |  |
 
-## 9. Send logs back (~1 min)
+### 9. Send logs back (~1 min)
 
 
 
@@ -142,25 +266,13 @@ Build each in the workshop, then cast on enemies/dummy. Check the visible effect
 |---|---|---|---|
 | 47 | Settings > Accessibility > **Open log folder**; collect every `session_*.json` and `crash_*.txt`. | Files exist (telemetry must have been on from the start). |  |
 
-## Known issues (do not report)
-
-From [docs/benchmarks/ad_demo_qa.md](../benchmarks/ad_demo_qa.md):
-
-| # | Area | Symptom | Severity |
-|---|---|---|---|
-| 1 | perf (sim) | Sim p95 over the 4.0 ms budget in all 4 probed rooms on the QA host. | high on QA host |
-| 2 | perf (sign-off) | 60 FPS sign-off on reference hardware (i5 / GTX 1660) pending. Your run helps here: note FPS if it dips. | high |
-| 3 | perf (GPU) | GPU and draw cost not measured (headless QA). | medium |
-| 4 | balance | Run length not met: natural bots never won (0/60 in AD-176; all died at 9-13 min). Invulnerable route runs took 19.5-35.7 min, with 9/20 timeouts at the room cap. | high for pacing |
-| 5 | QA coverage | Natural smoke run by AD-176 on tuned data: 0/60 wins; route smoke 9/20 timeouts. Determinism not re-run. | low |
-| 6 | tooling | Fresh checkout needs `godot --headless --path . --import` once before tests. | low |
-| 7 | UI coverage | UI matrix has no Sigil Desk state; fullscreen untestable under Xvfb. Section 2 and the Video tab here cover it by hand. | low |
-| 8 | perf (noise) | QA perf numbers were taken on a shared host. | low |
-
 ## Reporting
 
-Send every `session_*.json` and `crash_*.txt` from the log folder, plus the failed check numbers and notes from this page. Nothing is uploaded automatically.
+Send the folders below, plus the gate results and the failed check numbers and notes from this page. Nothing is uploaded automatically.
 
-- Windows: `%APPDATA%\Godot\app_userdata\ArcaneDungeon\logs`
-- Linux: `~/.local/share/godot/app_userdata/ArcaneDungeon/logs`
-- Or Settings > Accessibility > **Open log folder**.
+Folder: `%APPDATA%\Godot\app_userdata\Sigilwright\` (Linux: `~/.local/share/godot/app_userdata/Sigilwright/`)
+
+- `logs`: `session_*.json` and `crash_*.txt`, only with telemetry on.
+- `runs`: one JSON per run.
+- `reports`: F8 reports.
+- `perf`: perf run JSON.
