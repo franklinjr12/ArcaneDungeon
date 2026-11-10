@@ -128,6 +128,8 @@ static func build_sequence(cfg: Dictionary, run_seed: int) -> Array:
 			pool[j] = swap
 		var ids: Array = pool.slice(0,wanted)
 		ids.append(stage["optional_room"])
+		if bool(stage.get("workshop_before_boss",false)):
+			ids.append("workshop")
 		ids.append(stage["boss_room"])
 		if bool(stage.get("workshop_after",false)):
 			ids.append("workshop")

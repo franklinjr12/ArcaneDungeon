@@ -35,6 +35,7 @@
   "edit_policy": "workshop_only",
   "max_active_enemies": 8,
   "reward_choices": 3,
+  "reward_guarantee_item": false,
   "reaction_bias_weight": 0.4,
   "resonant_clear": {"min_reactions": 3, "rarity_order": ["common", "uncommon", "rare"], "bonus_coins": 25, "seed_salt": 61681},
   "reward_pool": [
@@ -311,6 +312,7 @@
       ],
       "optional_room": "ruins_treasure",
       "boss_room": "ruins_boss",
+      "workshop_before_boss": false,
       "workshop_after": true
     },
     {
@@ -334,6 +336,7 @@
       ],
       "optional_room": "cistern_challenge_v1",
       "boss_room": "cistern_boss",
+      "workshop_before_boss": false,
       "workshop_after": false
     }
   ],

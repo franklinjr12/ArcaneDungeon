@@ -28,13 +28,14 @@
   },
   "initial_currency": 0,
   "duplicate_reward_currency": 12,
-  "room_reward_currency": 24,
+  "room_reward_currency": 40,
   "boss_currency": 95,
   "workshop_restore_hp": 150,
   "workshop_restore_mana": 120,
   "edit_policy": "workshop_only",
   "max_active_enemies": 8,
   "reward_choices": 3,
+  "reward_guarantee_item": true,
   "reaction_bias_weight": 0.4,
   "resonant_clear": {"min_reactions": 3, "rarity_order": ["common", "uncommon", "rare"], "bonus_coins": 25, "seed_salt": 61681},
   "reward_pool": [
@@ -342,8 +343,8 @@
     {
       "id": "ruins",
       "combat_rooms": {
-        "min": 5,
-        "max": 6
+        "min": 3,
+        "max": 3
       },
       "pool": [
         "ruins_c01",
@@ -357,14 +358,15 @@
       ],
       "optional_room": "ruins_treasure",
       "boss_room": "ruins_boss",
-      "workshop_after": true
+      "workshop_before_boss": true,
+      "workshop_after": false
     },
     {
       "id": "cistern",
       "music_context": "cistern",
       "combat_rooms": {
-        "min": 5,
-        "max": 6
+        "min": 3,
+        "max": 3
       },
       "pool": [
         "cistern_p01",
@@ -380,6 +382,7 @@
       ],
       "optional_room": "cistern_challenge_v1",
       "boss_room": "cistern_boss",
+      "workshop_before_boss": true,
       "workshop_after": false
     }
   ],

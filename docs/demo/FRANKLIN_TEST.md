@@ -4,7 +4,7 @@ These 8 gates decide whether the demo is ready to hand to friends. Franklin deci
 
 ## G1 Feel
 
-**Requirement:** rooms are quick and satisfying, no room runs over about 3 min, bosses feel like events and not sponges, and a winning run takes 25-40 min. The run length is a human guideline: read it from the run log and the summary timer, not from a bot number.
+**Requirement:** rooms are quick and satisfying, no room runs over about 3 min, bosses feel like events and not sponges, and a winning run takes 18-25 min. The run length is a human guideline: read it from the run log and the summary timer, not from a bot number.
 
 **What you do:**
 
@@ -12,7 +12,16 @@ These 8 gates decide whether the demo is ready to hand to friends. Franklin deci
 2. After each run, note the summary timer, the longest room, and how each boss felt.
 3. Open the run log JSON of each run (see Reporting) to read the room times.
 
-**Evidence:** bot numbers are INFO only. In the 20-seed smoke the longest bot room was 91.6 s and bot wins took 2.3-4.3 min, far below 25-40 min. Bots do not decide G1.
+**Evidence:** bot numbers are INFO only and do not decide G1. 20-seed smoke on the shorter run (AD-224: 3 combat rooms per stage, a Sigil Desk before each boss): 80 of 80 rows ok=true, both runs exit 0. All 20 route rows (typical build) won with rooms=12 (8 combat/optional rooms + 2 desk visits + 2 bosses) in 4.0-7.0 min, mean 5.4 min. Natural mode: no typical or skilled bot won (mean death time 2.5 and 2.7 min); 2 of 20 weak bots won, in 2.8 and 3.1 min. Bots are far below 18-25 min.
+
+Runes and artifacts collected per run (5 seeds, typical and skilled bots, INFO only; all 10 bot runs died before the end in both columns):
+
+| Build | Runes before | Runes after | Change | Artifacts before | Artifacts after |
+|---|---|---|---|---|---|
+| typical | 12.4 | 5.8 | -53% | 0.0 | 0.0 |
+| skilled | 13.0 | 5.6 | -57% | 0.0 | 0.0 |
+
+The rune count falls by far more than the 15% target. It follows from fewer rooms with one pick each. It is not tuned.
 
 **Status:** Franklin to check.
 
@@ -190,9 +199,7 @@ First run only; the desk lists 3 given runes: Lightning, Projectile, Split.
 |---|---|---|---|
 | 13 | Clear the first combat room. | Doors open when the room is clear; reward cards appear. |  |
 | 14 | Pick a reward with mouse click and with keys 1-3. | Rune or card is added to your pool/loadout; coins or duplicate-refund behave. |  |
-| 15 | Clear 2-3 more rooms; try the optional side door if offered (`Enter the side door` / `Take the main path`). | Both choices work, no softlock. |  |
-| 16 | Fight the **Undead Warden** boss. | Telegraphed wind-up before attacks; at half HP a faster second phase with radial shots. |  |
-| 17 | Dash (Space) through a telegraph. | Dash dodges damage; no stuck states. |  |
+| 15 | Clear the remaining combat rooms (3 per stage), then try the optional door (`Enter the side door` / `Take the main path`). | Both choices work, no softlock. |  |
 
 ### 4. Workshop and merchant (~4 min)
 
@@ -200,12 +207,14 @@ First run only; the desk lists 3 given runes: Lightning, Projectile, Split.
 
 | # | Do | Expect | Pass / Fail / Note |
 |---|---|---|---|
-| 18 | Enter the workshop after the boss. | HP and mana restored; spell editor opens. |  |
+| 18 | The Sigil Desk opens after the optional room, right before the boss. | Mana refilled, HP carried over, editor opens. |  |
 | 19 | Make a legal edit (swap a rune in a slot) and confirm. | Edit accepted; loadout updates. |  |
 | 20 | Make an illegal edit (e.g. an invalid rune order or too many runes). | Edit rejected with a reason shown; nothing changes. |  |
-| 21 | Open the merchant (`Traders Guild Outpost`) and buy a rune or max-HP upgrade. | Coins go down by the price; item arrives. |  |
+| 21 | Open the merchant (`Traders Guild Outpost`) and buy a rune or max-HP upgrade. | Coins go down by the price; item arrives. The first desk comes before any boss coins, so buying is mainly possible at the second desk after the 95 boss coins. |  |
 | 22 | Press **REROLL** once, then try again. | First reroll changes stock; second is blocked (`REROLLED`). |  |
 | 23 | Check any artifact you hold, in the loadout (Tab) and Compendium > Artifacts. | Name and description show; effect works in play. |  |
+| 16 | Fight the **Undead Warden** boss. | Telegraphed wind-up before attacks; at half HP a faster second phase with radial shots. |  |
+| 17 | Dash (Space) through a telegraph. | Dash dodges damage; no stuck states. |  |
 
 ### 5. Stage 2: Flooded Cistern
 
@@ -217,7 +226,7 @@ First run only; the desk lists 3 given runes: Lightning, Projectile, Split.
 | 25 | Walk on water, then cast Lightning near water. | Walking/spell behaviour changes on water (shock/wet reaction). |  |
 | 26 | Cast Cold at a puddle; cast Fire at a crate or cobweb. | Puddle freezes into ice; crate/cobweb burns. Braziers glow. |  |
 | 27 | Fight Drowned Acolyte, Cistern Slime (splits into Slimelets), Deep Eel. | Each enemy is distinct and has a readable telegraph. |  |
-| 28 | Clear the Cistern rooms to the Drowned Archivist door. | No stuck rooms. |  |
+| 28 | Clear the Cistern rooms, then the second Sigil Desk, then the Drowned Archivist door. | No stuck rooms. |  |
 
 ### 6. New runes (~5 min)
 
