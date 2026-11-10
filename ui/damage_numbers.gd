@@ -1,6 +1,9 @@
 extends RefCounted
-## AD-015 (GDD §5): damage numbers are always neutral white; element shown by a symbol left of the number.
+## AD-015 (GDD §5): normal damage numbers stay neutral white; element shown by a symbol left of the number.
+## AD-194: weak/resisted hits are tinted (bright/grey) at owner request.
 const COLOR := Color(1,1,1,1)
+const COLOR_WEAK := Color("#ffe14d")
+const COLOR_RESIST := Color("#8a8a8a")
 const SYMBOLS := {"fire":"flame","water":"droplet","lightning":"bolt"}
 # Presentation-only constants, not gameplay tunables.
 const LIFETIME_TICKS := 40
@@ -15,8 +18,9 @@ static func symbol_for(element: String) -> String:
 	var key := element.trim_prefix("essence.")
 	return SYMBOLS.get(key,"")
 
-static func format(amount: float, element: String) -> Dictionary:
-	return {"text": str(maxi(1,roundi(amount))), "symbol": symbol_for(element), "color": COLOR}
+static func format(amount: float, element: String, tier: String = "") -> Dictionary:
+	var color := COLOR_WEAK if tier == "weak" else (COLOR_RESIST if tier == "resist" else COLOR)
+	return {"text": str(maxi(1,roundi(amount))), "symbol": symbol_for(element), "color": color}
 
 ## AD-093: pure deterministic layout. items: {anchor: top-left, size, group, order}. Groups are processed in
 ## first-appearance order, items in spawn order; an item overlapping any placed rect moves up until clear.
@@ -63,7 +67,7 @@ func update(targets: Array, tick: int) -> void:
 		var first: int = target.damage_log.size()-count
 		for i in count:
 			var entry: Dictionary = target.damage_log[first+i]
-			var popup := format(float(entry["amount"]),str(entry["channel"]))
+			var popup := format(float(entry["amount"]),str(entry["channel"]),str(entry.get("tier","")))
 			popup["position"] = target.position
 			popup["target_id"] = target.id
 			popup["spawn_tick"] = tick

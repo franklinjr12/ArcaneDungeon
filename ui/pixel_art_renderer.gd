@@ -1031,8 +1031,8 @@ static func damage_glyph_width(symbol: String, text: String) -> float:
 	var last: Dictionary = layout[-1]
 	return (float(last["x"]) + (last["region"] as Rect2).size.x) * float(_map.get("scale", 2))
 
-## Draws the layout left to right, top-aligned at `at`, white constant, nearest. Returns the width in world units.
-static func draw_damage_number(canvas: CanvasItem, symbol: String, text: String, at: Vector2) -> float:
+## Draws the layout left to right, top-aligned at `at`, tinted by `color` (default white), nearest. Returns the width in world units.
+static func draw_damage_number(canvas: CanvasItem, symbol: String, text: String, at: Vector2, color: Color = Color.WHITE) -> float:
 	var layout := damage_glyph_layout(symbol, text)
 	if layout.is_empty():
 		return 0.0
@@ -1041,7 +1041,7 @@ static func draw_damage_number(canvas: CanvasItem, symbol: String, text: String,
 	var right := 0.0
 	for item in layout:
 		var r: Rect2 = item["region"]
-		canvas.draw_texture_rect_region(tex, Rect2(at + Vector2(float(item["x"]) * sc, 0.0), r.size * sc), r, Color.WHITE)
+		canvas.draw_texture_rect_region(tex, Rect2(at + Vector2(float(item["x"]) * sc, 0.0), r.size * sc), r, color)
 		right = maxf(right, (float(item["x"]) + r.size.x) * sc)
 	return right
 

@@ -403,6 +403,8 @@ compendium.section.runes,Runes
 compendium.section.reactions,Reactions
 compendium.section.enemies,Enemies
 compendium.section.artifacts,Artifacts
+compendium.weak,WEAK
+compendium.resist,RESIST
 compendium.milestones,Milestones
 compendium.progress,%d/%d
 compendium.met,[done]

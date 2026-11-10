@@ -343,7 +343,7 @@ func _draw_floating_text(offset: Vector2, tick: int) -> void:
 	for i in items.size():
 		var item: Dictionary = items[i]
 		if item["kind"] == "damage":
-			Art.draw_damage_number(self,item["popup"]["symbol"],item["popup"]["text"],rects[i].position)
+			Art.draw_damage_number(self,item["popup"]["symbol"],item["popup"]["text"],rects[i].position,item["popup"]["color"])
 		else:
 			_label(rects[i].position+Vector2(0,font.get_ascent(12)),item["text"],item["color"])
 

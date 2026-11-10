@@ -336,9 +336,9 @@ func _golem_resist(t) -> void:
 	var lightning: float = _hit_loss(s,golem,"lightning")
 	var cold: float = _hit_loss(s,golem,"cold")
 	var neutral: float = _hit_loss(s,golem,"neutral")
-	t.check(lightning > _hit_loss(s,thrall,"lightning"),"AD-140 golem takes more Lightning than a thrall (%f)" % lightning)
-	t.check(cold < _hit_loss(s,thrall,"cold"),"AD-140 golem takes less Cold than a thrall (%f)" % cold)
-	t.check(neutral < _hit_loss(s,thrall,"neutral"),"AD-140 golem takes less neutral damage than a thrall (%f)" % neutral)
+	t.check(lightning > base,"AD-140 golem takes more Lightning than a thrall (%f)" % lightning)
+	t.check(cold < base,"AD-140 golem takes less Cold than a thrall (%f)" % cold)
+	t.check(neutral < base,"AD-140 golem takes less neutral damage than a thrall (%f)" % neutral)
 	t.check(lightning > cold,"AD-140 golem Lightning-weak vs Cold-resistant")
 
 func _wisp_scene() -> Array:
