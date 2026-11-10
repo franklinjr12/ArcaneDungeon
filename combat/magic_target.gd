@@ -42,7 +42,8 @@ func receive_damage(amount: float, channel: String, attacker_team: int, armor_sc
 	if dealt > 0:
 		hit_count += 1
 		total_received += dealt
-		damage_log.append({"amount": dealt, "channel": channel})
+		var res := float(health.resistances.get(channel,0.0))
+		damage_log.append({"amount": dealt, "channel": channel, "tier": "weak" if res < 0.0 else ("resist" if res > 0.0 else "")})
 		if damage_log.size() > 16:
 			damage_log.pop_front()
 	return dealt

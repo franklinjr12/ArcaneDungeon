@@ -23,6 +23,7 @@ func run(t) -> void:
 	var enemies: Dictionary = data["enemies"]
 	_data(t, enemies)
 	_behaviour(t)
+	_colours(t)
 
 func _negatives(res: Dictionary) -> Array:
 	var out: Array = []
@@ -57,3 +58,20 @@ func _behaviour(t) -> void:
 	t.check(is_equal_approx(_hit("bone_thrall","force"),base*1.5),"AD-194 thrall weak to Force takes 1.5x physical")
 	t.check(is_equal_approx(_hit("bone_thrall","cold"),base*0.5),"AD-194 thrall resists Cold to 0.5x physical")
 	t.check(is_equal_approx(_hit("storm_crystal","lightning"),0.0),"AD-194 storm crystal is immune to Lightning")
+
+func _colours(t) -> void:
+	const DN = preload("res://ui/damage_numbers.gd")
+	const Target = preload("res://combat/magic_target.gd")
+	t.check(DN.format(5.0,"fire","weak")["color"] == DN.COLOR_WEAK,"AD-194 weak number colour")
+	t.check(DN.format(5.0,"fire","resist")["color"] == DN.COLOR_RESIST,"AD-194 resist number colour")
+	t.check(DN.format(5.0,"fire")["color"] == Color.WHITE,"AD-194 normal number stays white")
+	var target = Target.new(5,2,Vector2(10,20),100.0,18.0,0.0,{"fire":-0.5,"cold":0.5})
+	var tracker := DN.new()
+	tracker.update([target],0)
+	for channel in ["fire","cold","physical"]:
+		target.receive_damage(5.0,channel,1,1.0)
+	var tiers: Array = target.damage_log.map(func(e): return e["tier"])
+	t.check(tiers == ["weak","resist",""],"AD-194 damage_log tiers (%s)" % str(tiers))
+	tracker.update([target],10)
+	var colours: Array = tracker.popups.map(func(p): return p["color"])
+	t.check(colours == [DN.COLOR_WEAK,DN.COLOR_RESIST,Color.WHITE],"AD-194 popup colours in order")
