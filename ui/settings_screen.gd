@@ -20,12 +20,13 @@ const MUSIC_BUS := "Music"
 const FRAME_LIMIT_KEYS := {0: "settings.value.unlimited", 30: "settings.value.fps30", 60: "settings.value.fps60", 120: "settings.value.fps120"}
 ## bus -> [slider id, value label id] in the layout JSON (iteration order = row order).
 const BUS_ROWS := {"Master": ["slider_master", "val_0"], "Music": ["slider_music", "val_1"], "SFX": ["slider_sound_effects", "val_2"],
-	"UI": ["slider_interface", "val_3"], "Ambience": ["slider_ambience", "val_4"]}
+	"UI": ["slider_interface", "val_3"], "Ambience": ["slider_ambience", "val_4"],
+	"EnemySFX": ["slider_enemy_sfx", "val_5"]}
 ## Help shown when a tab opens (id -> label key), before any row is focused.
 const FIRST_HELP := {"audio": ["master", "settings.audio.master"], "video": ["lighting", "settings.lighting"], "access": ["reduce_flash", "settings.flashes"]}
 const TEXT := {
 	"tabs": {"audio": "settings.tab.audio", "video": "settings.tab.video", "controls": "settings.tab.controls", "access": "settings.tab.access"},
-	"buses": {"Master": "settings.audio.master", "Music": "settings.audio.music", "SFX": "settings.audio.sfx", "UI": "settings.audio.ui", "Ambience": "settings.audio.ambience"},
+	"buses": {"Master": "settings.audio.master", "Music": "settings.audio.music", "SFX": "settings.audio.sfx", "UI": "settings.audio.ui", "Ambience": "settings.audio.ambience", "EnemySFX": "settings.audio.enemy_sfx"},
 	"modes": ["settings.mode.windowed", "settings.mode.fullscreen", "settings.mode.borderless"],
 	"qualities": ["settings.lighting.high", "settings.lighting.low"],
 }

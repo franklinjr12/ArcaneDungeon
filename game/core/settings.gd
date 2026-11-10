@@ -1,7 +1,7 @@
 extends RefCounted
 ## AD-019: player settings model (audio volumes per bus, accessibility toggles, telemetry opt-in).
 const InputActions = preload("res://ui/input_actions.gd")
-const BUSES := ["Master", "SFX", "Ambience", "UI", "Music"]
+const BUSES := ["Master", "SFX", "Ambience", "UI", "Music", "EnemySFX"]
 const WINDOW_MODES := ["windowed", "fullscreen", "borderless"]
 const UI_SCALE_MIN := 0.9
 const UI_SCALE_MAX := 1.5
@@ -9,7 +9,7 @@ const UI_SCALE_STEP := 0.1
 const LIGHTING_MODES := ["high", "low", "off"]
 const FRAME_LIMITS := [0, 30, 60, 120]
 const DEFAULTS := {
-	"volumes": {"Master": 1.0, "SFX": 1.0, "Ambience": 1.0, "UI": 1.0, "Music": 1.0},
+	"volumes": {"Master": 1.0, "SFX": 1.0, "Ambience": 1.0, "UI": 1.0, "Music": 1.0, "EnemySFX": 1.0},
 	"reduce_flashes": false,
 	"screen_shake": true,
 	"telemetry_opt_in": false,

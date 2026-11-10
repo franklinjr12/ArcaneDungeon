@@ -21,7 +21,7 @@ func run(t) -> void:
 	(Engine.get_main_loop() as SceneTree).root.add_child(screen)
 	var keys: Array = screen.volume_sliders.keys()
 	keys.sort()
-	t.equal(keys, ["Ambience", "Master", "Music", "SFX", "UI"], "AD-067 one slider per bus")
+	t.equal(keys, ["Ambience", "EnemySFX", "Master", "Music", "SFX", "UI"], "AD-067 one slider per bus")
 	t.check(screen.flash_toggle != null and screen.shake_toggle != null and screen.telemetry_toggle != null, "AD-067 toggles exist")
 	t.check(not screen.flash_toggle.button_pressed and not screen.shake_toggle.button_pressed and not screen.telemetry_toggle.button_pressed, "AD-067 toggles start unpressed")
 	screen.volume_sliders["SFX"].value = 0.35

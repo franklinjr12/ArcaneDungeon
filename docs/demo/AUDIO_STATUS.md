@@ -203,3 +203,44 @@ None.
 - Loop: explicit loop points must start at 0 and end within the tolerance (the whole file loops); no loop points means a whole-file loop
 - Ogg: must be Vorbis; peak and loop seam need ffmpeg on PATH, otherwise UNVERIFIED (not a failure)
 
+
+<!-- cue-changes:start -->
+## Cue tuning (AD-191)
+
+Old values are from `origin/master`, new values from `game/audio/audio_cues_v1.json`. Telegraph cues are the priority-3 enemy windup cues (`sfx.tele.*`, `sfx.boss.*.tele_*`).
+
+| cue id | max_voices old->new | volume_db old->new | pitch old->new | rate limit old->new | bus old->new |
+|---|---|---|---|---|---|
+| sfx.cast.neutral | 3->2 | 0 dB->-10 dB | none->±6% | none->90 ms | SFX->SFX |
+| sfx.cast.fire | 3->2 | 0 dB->-10 dB | none->±6% | none->90 ms | SFX->SFX |
+| sfx.cast.water | 3->2 | 0 dB->-10 dB | none->±6% | none->90 ms | SFX->SFX |
+| sfx.cast.lightning | 3->2 | 0 dB->-10 dB | none->±6% | none->90 ms | SFX->SFX |
+| sfx.hit.generic | 6->2 | 0 dB->-12 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.cast.rejected | 3->2 | 0 dB->-10 dB | none->±6% | none->90 ms | SFX->SFX |
+| sfx.tele.bone_thrall | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.tele.fallen_adept | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.tele.grave_hound | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.boss.tele_a | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.boss.tele_b | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.cast.cold | 3->2 | 0 dB->-10 dB | none->±6% | none->90 ms | SFX->SFX |
+| sfx.cast.force | 3->2 | 0 dB->-10 dB | none->±6% | none->90 ms | SFX->SFX |
+| sfx.tele.ossuary_shieldbearer | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.tele.wailing_spirit | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.tele.corpse_bloat | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.tele.cistern_slime | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.tele.cistern_slimelet | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.tele.drowned_acolyte | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.tele.deep_eel | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.tele.rust_golem | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.tele.lantern_wisp | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.tele.storm_crystal | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.boss.drowned_archivist.tele_a | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+| sfx.boss.drowned_archivist.tele_b | 4->2 | 0 dB->-10 dB | none->±6% | none->120 ms | SFX->SFX |
+
+Notes:
+
+- Telegraph priority stays 3 (unstealable), and they stay out of ducking.
+- No enemy 'attack fired' cue exists (enemies only emit the windup telegraph, `combat/combat_session.gd`), so nothing needed muting; `tests/test_ad_audio_limits.gd` guards that none is added.
+- PROPOSED: `sfx.hit.generic` is treated as the enemy hit cue but stays on SFXBed, and casts stay off the EnemySFX bus, so neither gets the low-pass filter and the Enemy SFX slider controls telegraphs only.
+- Telegraph bus: the table shows the bus as it is in the current cue file (`SFX`). The `EnemySFX` bus exists in settings, but the telegraph cues do not route to it and have no 5 kHz low-pass yet, so the Enemy SFX slider does not affect them until the cue data is changed.
+<!-- cue-changes:end -->

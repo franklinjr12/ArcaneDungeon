@@ -7,31 +7,46 @@
    "stream": "res://assets/audio/sfx/sfx_cast_neutral.wav",
    "bus": "SFX",
    "priority": 1,
-   "max_voices": 3
+   "max_voices": 2,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 90
   },
   "sfx.cast.fire": {
    "stream": "res://assets/audio/sfx/sfx_cast_fire.wav",
    "bus": "SFX",
    "priority": 1,
-   "max_voices": 3
+   "max_voices": 2,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 90
   },
   "sfx.cast.water": {
    "stream": "res://assets/audio/sfx/sfx_cast_water.wav",
    "bus": "SFX",
    "priority": 1,
-   "max_voices": 3
+   "max_voices": 2,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 90
   },
   "sfx.cast.lightning": {
    "stream": "res://assets/audio/sfx/sfx_cast_lightning.wav",
    "bus": "SFX",
    "priority": 1,
-   "max_voices": 3
+   "max_voices": 2,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 90
   },
   "sfx.hit.generic": {
    "stream": "res://assets/audio/sfx/sfx_hit_generic.wav",
    "bus": "SFX",
    "priority": 1,
-   "max_voices": 6
+   "max_voices": 2,
+   "volume_db": -12.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120
   },
   "sfx.react.arc": {
    "stream": "res://assets/audio/sfx/sfx_react_arc.wav",
@@ -61,37 +76,60 @@
    "stream": "res://assets/audio/sfx/sfx_cast_rejected.wav",
    "bus": "SFX",
    "priority": 1,
-   "max_voices": 3
+   "max_voices": 2,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 90
   },
   "sfx.tele.bone_thrall": {
    "stream": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4
+   "max_voices": 2,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.tele.fallen_adept": {
    "stream": "res://assets/audio/sfx/sfx_tele_fallen_adept.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4
+   "max_voices": 2,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.tele.grave_hound": {
    "stream": "res://assets/audio/sfx/sfx_tele_grave_hound.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4
+   "max_voices": 2,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.boss.tele_a": {
    "stream": "res://assets/audio/sfx/sfx_boss_tele_a.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4
+   "max_voices": 2,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.boss.tele_b": {
    "stream": "res://assets/audio/sfx/sfx_boss_tele_b.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4
+   "max_voices": 2,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.boss.phase": {
    "stream": "res://assets/audio/sfx/sfx_boss_phase.wav",
@@ -190,16 +228,22 @@
    "placeholder": "res://assets/audio/sfx/sfx_cast_neutral.wav",
    "bus": "SFX",
    "priority": 1,
-   "max_voices": 3,
-   "provided": true
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 90
   },
   "sfx.cast.force": {
    "stream": "res://assets/audio/sfx/sfx_cast_force.ogg",
    "placeholder": "res://assets/audio/sfx/sfx_cast_neutral.wav",
    "bus": "SFX",
    "priority": 1,
-   "max_voices": 3,
-   "provided": true
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 90
   },
   "sfx.form.beam": {
    "stream": "res://assets/audio/sfx/sfx_form_beam.ogg",
@@ -294,96 +338,144 @@
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4,
-   "provided": true
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.tele.wailing_spirit": {
    "stream": "res://assets/audio/sfx/sfx_tele_wailing_spirit.ogg",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4,
-   "provided": true
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.tele.corpse_bloat": {
    "stream": "res://assets/audio/sfx/sfx_tele_corpse_bloat.ogg",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4,
-   "provided": true
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.tele.cistern_slime": {
    "stream": "res://assets/audio/sfx/sfx_tele_cistern_slime.ogg",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4,
-   "provided": true
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.tele.cistern_slimelet": {
    "stream": "res://assets/audio/sfx/sfx_tele_cistern_slimelet.ogg",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4,
-   "provided": true
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.tele.drowned_acolyte": {
    "stream": "res://assets/audio/sfx/sfx_tele_drowned_acolyte.ogg",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4,
-   "provided": true
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.tele.deep_eel": {
    "stream": "res://assets/audio/sfx/sfx_tele_deep_eel.ogg",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4,
-   "provided": true
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.tele.rust_golem": {
    "stream": "res://assets/audio/sfx/sfx_tele_rust_golem.ogg",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4,
-   "provided": true
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.tele.lantern_wisp": {
    "stream": "res://assets/audio/sfx/sfx_tele_lantern_wisp.ogg",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4,
-   "provided": true
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.tele.storm_crystal": {
    "stream": "res://assets/audio/sfx/sfx_tele_storm_crystal.ogg",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4,
-   "provided": true
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.boss.drowned_archivist.tele_a": {
    "stream": "res://assets/audio/sfx/sfx_boss_drowned_archivist_tele_a.ogg",
    "placeholder": "res://assets/audio/sfx/sfx_boss_tele_a.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4,
-   "provided": true
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.boss.drowned_archivist.tele_b": {
    "stream": "res://assets/audio/sfx/sfx_boss_drowned_archivist_tele_b.ogg",
    "placeholder": "res://assets/audio/sfx/sfx_boss_tele_b.wav",
    "bus": "SFX",
    "priority": 3,
-   "max_voices": 4,
-   "provided": true
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
   },
   "sfx.boss.drowned_archivist.phase": {
    "stream": "res://assets/audio/sfx/sfx_boss_drowned_archivist_phase.ogg",
