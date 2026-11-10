@@ -33,7 +33,7 @@ From the title everything below worked, apart from the rows noted. From pause ev
 | Audio: master / music / SFX sliders | change volume immediately, persist | works (title); no effect (pause) | input unblocked |
 | Audio: mute when unfocused | mute while window unfocused | disabled-unbacked | implemented, persisted |
 | Audio: other mock widgets (spell sounds priority etc.) | n/a | disabled-unbacked | removed, see below |
-| Video: fullscreen / window mode | apply immediately | works; borderless to windowed kept the full-screen size | window size restored |
+| Video: fullscreen / window mode | apply immediately | FIXED in AD-225 (earlier "works" was verified only headless/Xvfb, not on Windows); F11 and Alt+Enter toggle it too (rebindable), choice persisted | window size restored |
 | Video: VSync | toggle vsync | disabled-unbacked | implemented, persisted |
 | Video: frame limit | cap FPS | disabled-unbacked | implemented, persisted |
 | Video: lighting High/Low/Off, Show FPS | apply immediately | works (title); no effect (pause) | input unblocked |
@@ -83,3 +83,21 @@ Removed because there is no backing feature, and building one is either larger t
 8. Click Abandon, then Cancel, then Abandon and Confirm; check Save & Quit and Open Reports.
 9. Turn on VSync, set a frame limit, then close the game.
 10. Restart and reopen Settings from the title; the values you changed are still set.
+
+## Overlay exits (AD-225)
+
+Every overlay has an on-screen exit; asserted by `tests/test_ad_menus_functional.gd` (`_overlay_exits`).
+
+| Overlay | On-screen exit | Other exits |
+|---|---|---|
+| Loadout view | CLOSE (`LoadoutCloseButton`) and Continue | right-click, loadout key, Esc |
+| Spell editor | Cancel (`EditorCancelButton`) | Esc |
+| Compendium | Back | Esc |
+| Merchant | Leave (`btn_leave`) | Esc |
+| Reward pick | choosing a card; skip button on the desk when skippable | number keys |
+
+## Franklin 1-minute Windows check
+
+1. Settings > Video: toggle fullscreen with the dropdown, then with F11, then with Alt+Enter. Relaunch and confirm the last choice persisted.
+2. In a cleared room open the loadout; close it with the CLOSE button, again with right-click, again with the loadout key.
+3. Open the merchant, the spell editor (workshop) and the compendium (title); close each with the mouse.

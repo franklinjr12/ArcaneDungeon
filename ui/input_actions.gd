@@ -11,6 +11,10 @@ static func cast_slot_for_event(event: InputEvent) -> int:
 static func slot_for_mouse_button(button: int) -> int:
 	return 0 if button == MOUSE_BUTTON_LEFT else 1
 
+## AD-225: right mouse button press (overlays use it as a close gesture).
+static func is_secondary_press(event: InputEvent) -> bool:
+	return event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT
+
 static func debug_keys_enabled() -> bool:
 	return OS.is_debug_build()
 
