@@ -642,6 +642,7 @@
   "reaction:wet_cold_freeze": "sfx.react.freeze",
   "reaction:frozen_force_shatter": "sfx.react.shatter",
   "reaction:fire_thaw_steam": "sfx.react.steam",
+  "reaction:water_extinguish": "sfx.react.extinguish",
   "status:burning:removed": "sfx.react.extinguish",
   "telegraph:bone_thrall": "sfx.tele.bone_thrall",
   "telegraph:fallen_adept": "sfx.tele.fallen_adept",
