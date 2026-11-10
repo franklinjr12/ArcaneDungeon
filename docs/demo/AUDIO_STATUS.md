@@ -6,8 +6,8 @@ Regenerate: `python3 scripts/audio_check.py` (reads game/audio/audio_cues_v1.jso
 |---|---|---|---|---|---|
 | Music | 4 | 4 | 0 | 0 | 0 |
 | Ambience | 2 | 2 | 0 | 0 | 0 |
-| SFX | 71 | 71 | 0 | 0 | 0 |
-| Total | 77 | 77 | 0 | 0 | 0 |
+| SFX | 73 | 73 | 0 | 0 | 0 |
+| Total | 79 | 79 | 0 | 0 | 0 |
 
 ## Missing: generate these
 
@@ -15,10 +15,10 @@ Regenerate: `python3 scripts/audio_check.py` (reads game/audio/audio_cues_v1.jso
 
 | id | file to create | current fallback | target |
 |---|---|---|---|
-| music.boss | assets/audio/music/mus_boss.ogg | assets/audio/amb/amb_ruins.wav | ogg, 15-300 s, loop |
-| music.cistern | assets/audio/music/mus_cistern.ogg | assets/audio/amb/amb_ruins.wav | ogg, 15-300 s, loop |
-| music.ruins | assets/audio/music/mus_ruins.ogg | assets/audio/amb/amb_ruins.wav | ogg, 15-300 s, loop |
-| music.workshop | assets/audio/music/mus_workshop.ogg | assets/audio/amb/amb_workshop.wav | ogg, 15-300 s, loop |
+| music.boss | assets/audio/music/mus_boss.wav | assets/audio/amb/amb_ruins.wav | wav, 15-300 s, loop |
+| music.cistern | assets/audio/music/mus_cistern.wav | assets/audio/amb/amb_ruins.wav | wav, 15-300 s, loop |
+| music.ruins | assets/audio/music/mus_ruins.wav | assets/audio/amb/amb_ruins.wav | wav, 15-300 s, loop |
+| music.workshop | assets/audio/music/mus_workshop.wav | assets/audio/amb/amb_workshop.wav | wav, 15-300 s, loop |
 
 ### Ambience
 
@@ -31,71 +31,73 @@ Regenerate: `python3 scripts/audio_check.py` (reads game/audio/audio_cues_v1.jso
 
 | id | file to create | current fallback | target |
 |---|---|---|---|
-| sfx.artifact.archivists_quill | assets/audio/sfx/sfx_artifact_archivists_quill.ogg | assets/audio/sfx/sfx_pickup_rune.wav | ogg, 0.03-5 s |
-| sfx.artifact.echo_chamber | assets/audio/sfx/sfx_artifact_echo_chamber.ogg | assets/audio/sfx/sfx_pickup_rune.wav | ogg, 0.03-5 s |
-| sfx.artifact.ember_heart | assets/audio/sfx/sfx_artifact_ember_heart.ogg | assets/audio/sfx/sfx_pickup_rune.wav | ogg, 0.03-5 s |
-| sfx.artifact.gravity_lens | assets/audio/sfx/sfx_artifact_gravity_lens.ogg | assets/audio/sfx/sfx_pickup_rune.wav | ogg, 0.03-5 s |
-| sfx.artifact.momentum_rune | assets/audio/sfx/sfx_artifact_momentum_rune.ogg | assets/audio/sfx/sfx_pickup_rune.wav | ogg, 0.03-5 s |
-| sfx.artifact.rebound_sigil | assets/audio/sfx/sfx_artifact_rebound_sigil.ogg | assets/audio/sfx/sfx_pickup_rune.wav | ogg, 0.03-5 s |
-| sfx.artifact.residue_crystal | assets/audio/sfx/sfx_artifact_residue_crystal.ogg | assets/audio/sfx/sfx_pickup_rune.wav | ogg, 0.03-5 s |
-| sfx.artifact.shatterheart | assets/audio/sfx/sfx_artifact_shatterheart.ogg | assets/audio/sfx/sfx_pickup_rune.wav | ogg, 0.03-5 s |
-| sfx.artifact.split_prism | assets/audio/sfx/sfx_artifact_split_prism.ogg | assets/audio/sfx/sfx_pickup_rune.wav | ogg, 0.03-5 s |
-| sfx.artifact.stormglass | assets/audio/sfx/sfx_artifact_stormglass.ogg | assets/audio/sfx/sfx_pickup_rune.wav | ogg, 0.03-5 s |
-| sfx.artifact.tidewalkers_boots | assets/audio/sfx/sfx_artifact_tidewalkers_boots.ogg | assets/audio/sfx/sfx_pickup_rune.wav | ogg, 0.03-5 s |
-| sfx.artifact.warding_lantern | assets/audio/sfx/sfx_artifact_warding_lantern.ogg | assets/audio/sfx/sfx_pickup_rune.wav | ogg, 0.03-5 s |
+| sfx.artifact.archivists_quill | assets/audio/sfx/sfx_artifact_archivists_quill.wav | assets/audio/sfx/sfx_pickup_rune.wav | wav, 0.03-5 s |
+| sfx.artifact.echo_chamber | assets/audio/sfx/sfx_artifact_echo_chamber.wav | assets/audio/sfx/sfx_pickup_rune.wav | wav, 0.03-5 s |
+| sfx.artifact.ember_heart | assets/audio/sfx/sfx_artifact_ember_heart.wav | assets/audio/sfx/sfx_pickup_rune.wav | wav, 0.03-5 s |
+| sfx.artifact.gravity_lens | assets/audio/sfx/sfx_artifact_gravity_lens.wav | assets/audio/sfx/sfx_pickup_rune.wav | wav, 0.03-5 s |
+| sfx.artifact.momentum_rune | assets/audio/sfx/sfx_artifact_momentum_rune.wav | assets/audio/sfx/sfx_pickup_rune.wav | wav, 0.03-5 s |
+| sfx.artifact.rebound_sigil | assets/audio/sfx/sfx_artifact_rebound_sigil.wav | assets/audio/sfx/sfx_pickup_rune.wav | wav, 0.03-5 s |
+| sfx.artifact.residue_crystal | assets/audio/sfx/sfx_artifact_residue_crystal.wav | assets/audio/sfx/sfx_pickup_rune.wav | wav, 0.03-5 s |
+| sfx.artifact.shatterheart | assets/audio/sfx/sfx_artifact_shatterheart.wav | assets/audio/sfx/sfx_pickup_rune.wav | wav, 0.03-5 s |
+| sfx.artifact.split_prism | assets/audio/sfx/sfx_artifact_split_prism.wav | assets/audio/sfx/sfx_pickup_rune.wav | wav, 0.03-5 s |
+| sfx.artifact.stormglass | assets/audio/sfx/sfx_artifact_stormglass.wav | assets/audio/sfx/sfx_pickup_rune.wav | wav, 0.03-5 s |
+| sfx.artifact.tidewalkers_boots | assets/audio/sfx/sfx_artifact_tidewalkers_boots.wav | assets/audio/sfx/sfx_pickup_rune.wav | wav, 0.03-5 s |
+| sfx.artifact.warding_lantern | assets/audio/sfx/sfx_artifact_warding_lantern.wav | assets/audio/sfx/sfx_pickup_rune.wav | wav, 0.03-5 s |
 | sfx.boss.death | assets/audio/sfx/sfx_boss_death.wav | generated placeholder (same file) | wav, 0.03-5 s |
-| sfx.boss.drowned_archivist.phase | assets/audio/sfx/sfx_boss_drowned_archivist_phase.ogg | assets/audio/sfx/sfx_boss_phase.wav | ogg, 0.03-5 s |
-| sfx.boss.drowned_archivist.tele_a | assets/audio/sfx/sfx_boss_drowned_archivist_tele_a.ogg | assets/audio/sfx/sfx_boss_tele_a.wav | ogg, 0.1-1.5 s |
-| sfx.boss.drowned_archivist.tele_b | assets/audio/sfx/sfx_boss_drowned_archivist_tele_b.ogg | assets/audio/sfx/sfx_boss_tele_b.wav | ogg, 0.1-1.5 s |
+| sfx.boss.drowned_archivist.phase | assets/audio/sfx/sfx_boss_drowned_archivist_phase.wav | assets/audio/sfx/sfx_boss_phase.wav | wav, 0.03-5 s |
+| sfx.boss.drowned_archivist.tele_a | assets/audio/sfx/sfx_boss_drowned_archivist_tele_a.wav | assets/audio/sfx/sfx_boss_tele_a.wav | wav, 0.1-1.5 s |
+| sfx.boss.drowned_archivist.tele_b | assets/audio/sfx/sfx_boss_drowned_archivist_tele_b.wav | assets/audio/sfx/sfx_boss_tele_b.wav | wav, 0.1-1.5 s |
 | sfx.boss.phase | assets/audio/sfx/sfx_boss_phase.wav | generated placeholder (same file) | wav, 0.03-5 s |
 | sfx.boss.tele_a | assets/audio/sfx/sfx_boss_tele_a.wav | generated placeholder (same file) | wav, 0.1-1.5 s |
 | sfx.boss.tele_b | assets/audio/sfx/sfx_boss_tele_b.wav | generated placeholder (same file) | wav, 0.1-1.5 s |
-| sfx.cast.cold | assets/audio/sfx/sfx_cast_cold.ogg | assets/audio/sfx/sfx_cast_neutral.wav | ogg, 0.03-5 s |
+| sfx.cast.cold | assets/audio/sfx/sfx_cast_cold.wav | assets/audio/sfx/sfx_cast_neutral.wav | wav, 0.03-5 s |
 | sfx.cast.fire | assets/audio/sfx/sfx_cast_fire.wav | generated placeholder (same file) | wav, 0.03-5 s |
-| sfx.cast.force | assets/audio/sfx/sfx_cast_force.ogg | assets/audio/sfx/sfx_cast_neutral.wav | ogg, 0.03-5 s |
+| sfx.cast.force | assets/audio/sfx/sfx_cast_force.wav | assets/audio/sfx/sfx_cast_neutral.wav | wav, 0.03-5 s |
 | sfx.cast.lightning | assets/audio/sfx/sfx_cast_lightning.wav | generated placeholder (same file) | wav, 0.03-5 s |
 | sfx.cast.neutral | assets/audio/sfx/sfx_cast_neutral.wav | generated placeholder (same file) | wav, 0.03-5 s |
 | sfx.cast.rejected | assets/audio/sfx/sfx_cast_rejected.wav | generated placeholder (same file) | wav, 0.03-5 s |
 | sfx.cast.water | assets/audio/sfx/sfx_cast_water.wav | generated placeholder (same file) | wav, 0.03-5 s |
 | sfx.dash | assets/audio/sfx/sfx_dash.wav | generated placeholder (same file) | wav, 0.03-5 s |
 | sfx.dash.iframe | assets/audio/sfx/sfx_dash_iframe.wav | generated placeholder (same file) | wav, 0.03-5 s |
-| sfx.env.break | assets/audio/sfx/sfx_env_break.ogg | assets/audio/sfx/sfx_hit_generic.wav | ogg, 0.03-5 s |
-| sfx.env.burn_out | assets/audio/sfx/sfx_env_burn_out.ogg | assets/audio/sfx/sfx_hit_generic.wav | ogg, 0.03-5 s |
-| sfx.env.freeze | assets/audio/sfx/sfx_env_freeze.ogg | assets/audio/sfx/sfx_hit_generic.wav | ogg, 0.03-5 s |
-| sfx.env.ignite | assets/audio/sfx/sfx_env_ignite.ogg | assets/audio/sfx/sfx_hit_generic.wav | ogg, 0.03-5 s |
-| sfx.env.thaw | assets/audio/sfx/sfx_env_thaw.ogg | assets/audio/sfx/sfx_hit_generic.wav | ogg, 0.03-5 s |
-| sfx.form.beam | assets/audio/sfx/sfx_form_beam.ogg | assets/audio/sfx/sfx_cast_neutral.wav | ogg, 0.03-5 s |
-| sfx.form.field | assets/audio/sfx/sfx_form_field.ogg | assets/audio/sfx/sfx_cast_neutral.wav | ogg, 0.03-5 s |
+| sfx.env.break | assets/audio/sfx/sfx_env_break.wav | assets/audio/sfx/sfx_hit_generic.wav | wav, 0.03-5 s |
+| sfx.env.burn_out | assets/audio/sfx/sfx_env_burn_out.wav | assets/audio/sfx/sfx_hit_generic.wav | wav, 0.03-5 s |
+| sfx.env.freeze | assets/audio/sfx/sfx_env_freeze.wav | assets/audio/sfx/sfx_hit_generic.wav | wav, 0.03-5 s |
+| sfx.env.ignite | assets/audio/sfx/sfx_env_ignite.wav | assets/audio/sfx/sfx_hit_generic.wav | wav, 0.03-5 s |
+| sfx.env.thaw | assets/audio/sfx/sfx_env_thaw.wav | assets/audio/sfx/sfx_hit_generic.wav | wav, 0.03-5 s |
+| sfx.form.beam | assets/audio/sfx/sfx_form_beam.wav | assets/audio/sfx/sfx_cast_neutral.wav | wav, 0.03-5 s |
+| sfx.form.field | assets/audio/sfx/sfx_form_field.wav | assets/audio/sfx/sfx_cast_neutral.wav | wav, 0.03-5 s |
 | sfx.hit.generic | assets/audio/sfx/sfx_hit_generic.wav | generated placeholder (same file) | wav, 0.03-5 s |
-| sfx.mod.chain | assets/audio/sfx/sfx_mod_chain.ogg | assets/audio/sfx/sfx_react_arc.wav | ogg, 0.03-5 s |
-| sfx.mod.generic | assets/audio/sfx/sfx_mod_generic.ogg | assets/audio/sfx/sfx_cast_neutral.wav | ogg, 0.03-5 s |
+| sfx.mod.chain | assets/audio/sfx/sfx_mod_chain.wav | assets/audio/sfx/sfx_react_arc.wav | wav, 0.03-5 s |
+| sfx.mod.generic | assets/audio/sfx/sfx_mod_generic.wav | assets/audio/sfx/sfx_cast_neutral.wav | wav, 0.03-5 s |
 | sfx.pickup.currency | assets/audio/sfx/sfx_pickup_currency.wav | generated placeholder (same file) | wav, 0.03-5 s |
 | sfx.pickup.rune | assets/audio/sfx/sfx_pickup_rune.wav | generated placeholder (same file) | wav, 0.03-5 s |
 | sfx.player.death | assets/audio/sfx/sfx_player_death.wav | generated placeholder (same file) | wav, 0.03-5 s |
 | sfx.player.hurt | assets/audio/sfx/sfx_player_hurt.wav | generated placeholder (same file) | wav, 0.03-5 s |
 | sfx.react.arc | assets/audio/sfx/sfx_react_arc.wav | generated placeholder (same file) | wav, 0.03-5 s |
 | sfx.react.extinguish | assets/audio/sfx/sfx_react_extinguish.wav | generated placeholder (same file) | wav, 0.03-5 s |
-| sfx.react.freeze | assets/audio/sfx/sfx_react_freeze.ogg | assets/audio/sfx/sfx_react_extinguish.wav | ogg, 0.03-5 s |
-| sfx.react.shatter | assets/audio/sfx/sfx_react_shatter.ogg | assets/audio/sfx/sfx_react_arc.wav | ogg, 0.03-5 s |
-| sfx.react.steam | assets/audio/sfx/sfx_react_steam.ogg | assets/audio/sfx/sfx_react_extinguish.wav | ogg, 0.03-5 s |
+| sfx.react.freeze | assets/audio/sfx/sfx_react_freeze.wav | assets/audio/sfx/sfx_react_extinguish.wav | wav, 0.03-5 s |
+| sfx.react.shatter | assets/audio/sfx/sfx_react_shatter.wav | assets/audio/sfx/sfx_react_arc.wav | wav, 0.03-5 s |
+| sfx.react.steam | assets/audio/sfx/sfx_react_steam.wav | assets/audio/sfx/sfx_react_extinguish.wav | wav, 0.03-5 s |
 | sfx.room.cleared | assets/audio/sfx/sfx_room_cleared.wav | generated placeholder (same file) | wav, 0.03-5 s |
 | sfx.tele.bone_thrall | assets/audio/sfx/sfx_tele_bone_thrall.wav | generated placeholder (same file) | wav, 0.1-1.5 s |
-| sfx.tele.cistern_slime | assets/audio/sfx/sfx_tele_cistern_slime.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | ogg, 0.1-1.5 s |
-| sfx.tele.cistern_slimelet | assets/audio/sfx/sfx_tele_cistern_slimelet.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | ogg, 0.1-1.5 s |
-| sfx.tele.corpse_bloat | assets/audio/sfx/sfx_tele_corpse_bloat.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | ogg, 0.1-1.5 s |
-| sfx.tele.deep_eel | assets/audio/sfx/sfx_tele_deep_eel.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | ogg, 0.1-1.5 s |
-| sfx.tele.drowned_acolyte | assets/audio/sfx/sfx_tele_drowned_acolyte.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | ogg, 0.1-1.5 s |
+| sfx.tele.cistern_slime | assets/audio/sfx/sfx_tele_cistern_slime.wav | assets/audio/sfx/sfx_tele_bone_thrall.wav | wav, 0.1-1.5 s |
+| sfx.tele.cistern_slimelet | assets/audio/sfx/sfx_tele_cistern_slimelet.wav | assets/audio/sfx/sfx_tele_bone_thrall.wav | wav, 0.1-1.5 s |
+| sfx.tele.corpse_bloat | assets/audio/sfx/sfx_tele_corpse_bloat.wav | assets/audio/sfx/sfx_tele_bone_thrall.wav | wav, 0.1-1.5 s |
+| sfx.tele.deep_eel | assets/audio/sfx/sfx_tele_deep_eel.wav | assets/audio/sfx/sfx_tele_bone_thrall.wav | wav, 0.1-1.5 s |
+| sfx.tele.drowned_acolyte | assets/audio/sfx/sfx_tele_drowned_acolyte.wav | assets/audio/sfx/sfx_tele_bone_thrall.wav | wav, 0.1-1.5 s |
 | sfx.tele.fallen_adept | assets/audio/sfx/sfx_tele_fallen_adept.wav | generated placeholder (same file) | wav, 0.1-1.5 s |
+| sfx.tele.ghoul_stalker | assets/audio/sfx/sfx_tele_ghoul_stalker.wav | assets/audio/sfx/sfx_tele_bone_thrall.wav | wav, 0.1-1.5 s |
 | sfx.tele.grave_hound | assets/audio/sfx/sfx_tele_grave_hound.wav | generated placeholder (same file) | wav, 0.1-1.5 s |
-| sfx.tele.lantern_wisp | assets/audio/sfx/sfx_tele_lantern_wisp.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | ogg, 0.1-1.5 s |
-| sfx.tele.ossuary_shieldbearer | assets/audio/sfx/sfx_tele_ossuary_shieldbearer.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | ogg, 0.1-1.5 s |
-| sfx.tele.rust_golem | assets/audio/sfx/sfx_tele_rust_golem.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | ogg, 0.1-1.5 s |
-| sfx.tele.storm_crystal | assets/audio/sfx/sfx_tele_storm_crystal.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | ogg, 0.1-1.5 s |
-| sfx.tele.wailing_spirit | assets/audio/sfx/sfx_tele_wailing_spirit.ogg | assets/audio/sfx/sfx_tele_bone_thrall.wav | ogg, 0.1-1.5 s |
-| sfx.trigger.on_expire | assets/audio/sfx/sfx_trigger_on_expire.ogg | assets/audio/sfx/sfx_hit_generic.wav | ogg, 0.03-5 s |
-| sfx.trigger.on_hit | assets/audio/sfx/sfx_trigger_on_hit.ogg | assets/audio/sfx/sfx_hit_generic.wav | ogg, 0.03-5 s |
-| sfx.trigger.on_kill | assets/audio/sfx/sfx_trigger_on_kill.ogg | assets/audio/sfx/sfx_hit_generic.wav | ogg, 0.03-5 s |
-| sfx.trigger.timer | assets/audio/sfx/sfx_trigger_timer.ogg | assets/audio/sfx/sfx_hit_generic.wav | ogg, 0.03-5 s |
+| sfx.tele.lantern_wisp | assets/audio/sfx/sfx_tele_lantern_wisp.wav | assets/audio/sfx/sfx_tele_bone_thrall.wav | wav, 0.1-1.5 s |
+| sfx.tele.ossuary_shieldbearer | assets/audio/sfx/sfx_tele_ossuary_shieldbearer.wav | assets/audio/sfx/sfx_tele_bone_thrall.wav | wav, 0.1-1.5 s |
+| sfx.tele.riptide_leaper | assets/audio/sfx/sfx_tele_riptide_leaper.wav | assets/audio/sfx/sfx_tele_bone_thrall.wav | wav, 0.1-1.5 s |
+| sfx.tele.rust_golem | assets/audio/sfx/sfx_tele_rust_golem.wav | assets/audio/sfx/sfx_tele_bone_thrall.wav | wav, 0.1-1.5 s |
+| sfx.tele.storm_crystal | assets/audio/sfx/sfx_tele_storm_crystal.wav | assets/audio/sfx/sfx_tele_bone_thrall.wav | wav, 0.1-1.5 s |
+| sfx.tele.wailing_spirit | assets/audio/sfx/sfx_tele_wailing_spirit.wav | assets/audio/sfx/sfx_tele_bone_thrall.wav | wav, 0.1-1.5 s |
+| sfx.trigger.on_expire | assets/audio/sfx/sfx_trigger_on_expire.wav | assets/audio/sfx/sfx_hit_generic.wav | wav, 0.03-5 s |
+| sfx.trigger.on_hit | assets/audio/sfx/sfx_trigger_on_hit.wav | assets/audio/sfx/sfx_hit_generic.wav | wav, 0.03-5 s |
+| sfx.trigger.on_kill | assets/audio/sfx/sfx_trigger_on_kill.wav | assets/audio/sfx/sfx_hit_generic.wav | wav, 0.03-5 s |
+| sfx.trigger.timer | assets/audio/sfx/sfx_trigger_timer.wav | assets/audio/sfx/sfx_hit_generic.wav | wav, 0.03-5 s |
 | ui.cancel | assets/audio/ui/ui_cancel.wav | generated placeholder (same file) | wav, 0.03-5 s |
 | ui.confirm | assets/audio/ui/ui_confirm.wav | generated placeholder (same file) | wav, 0.03-5 s |
 | ui.editor_error | assets/audio/ui/ui_editor_error.wav | generated placeholder (same file) | wav, 0.03-5 s |
@@ -176,9 +178,11 @@ None.
 | sfx.tele.deep_eel | sfx | placeholder |
 | sfx.tele.drowned_acolyte | sfx | placeholder |
 | sfx.tele.fallen_adept | sfx | placeholder |
+| sfx.tele.ghoul_stalker | sfx | placeholder |
 | sfx.tele.grave_hound | sfx | placeholder |
 | sfx.tele.lantern_wisp | sfx | placeholder |
 | sfx.tele.ossuary_shieldbearer | sfx | placeholder |
+| sfx.tele.riptide_leaper | sfx | placeholder |
 | sfx.tele.rust_golem | sfx | placeholder |
 | sfx.tele.storm_crystal | sfx | placeholder |
 | sfx.tele.wailing_spirit | sfx | placeholder |
