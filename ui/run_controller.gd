@@ -1589,6 +1589,9 @@ func apply_debug_shot_state(state: String) -> bool:
 	if DEBUG_TIP_BASE.has(state):
 		_debug_pinned_tip = state.trim_prefix("tip_")
 		state = DEBUG_TIP_BASE[state]
+	var resonance_shot := state == "combat_resonance"
+	if resonance_shot:
+		state = "combat"
 	if not state in ["combat","reward","loadout","workshop","workshop_editor","merchant","pause","pause_controls","pause_settings","pause_settings_audio","pause_settings_video","pause_settings_access","pause_confirm_abandon","summary","summary_win","sigil_desk"]:
 		return false
 	if state == "sigil_desk":
@@ -1646,6 +1649,10 @@ func apply_debug_shot_state(state: String) -> bool:
 		pause_menu.request_quit()
 	elif state == "loadout":
 		open_loadout_view()
+	if resonance_shot:
+		var sim = flow.session.sim
+		sim.resonance_popups.append({"id":"frozen_force_shatter","amount":12,"tick":sim.clock.tick+40}) # future-dated so the capture lands while still bright
+		sim.resonance_popups.append({"id":"wet_cold_freeze","amount":12,"tick":sim.clock.tick+40}) # future-dated so the capture lands while still bright
 	return true
 
 func _debug_shot_entry() -> void:

@@ -155,6 +155,7 @@ func _draw() -> void:
 	if running != null and running.run != null:
 		_draw_run_info(running,sc)
 	_draw_slots(live,sc)
+	_draw_resonance(live,sc)
 
 # --- layout helpers: each group anchors to its own screen edge/corner ---
 func _widget(id: String) -> Dictionary:
@@ -274,6 +275,41 @@ func _draw_run_info(running, sc: float) -> void:
 	var held := artifact_ids()
 	for i in held.size():
 		_slot("artifact_%d" % i,"ready",Art.artifact_icon(str(held[i])),sc)
+
+## Newest-first reaction popups ("SHATTER +12") that are still live; alpha fades linearly to 0 at life_ticks.
+static func resonance_views(popups: Array, tick: int, life_ticks: int) -> Array:
+	var out: Array = []
+	for i in range(popups.size()-1,-1,-1):
+		var age: int = maxi(0,tick-int(popups[i]["tick"]))
+		if age >= life_ticks:
+			continue
+		out.append({"text":TranslationServer.translate("hud.resonance_popup") % [TranslationServer.translate("hud.resonance."+str(popups[i]["id"])),int(popups[i]["amount"])],
+			"alpha":1.0-float(age)/float(life_ticks)})
+		if out.size() >= 3:
+			break
+	return out
+
+## Render-only: fading lines stacked downward to the right of the MP bar.
+func _draw_resonance(live, sc: float) -> void:
+	var life: int = int(live.sim.settings["reactions"].get("resonance",{}).get("popup_ticks",60))
+	var views := resonance_views(live.sim.resonance_popups,live.sim.clock.tick,life)
+	var bar := _rect("bar_mp",sc)
+	var value_box := _rect("txt_mp",sc)
+	if views.is_empty() or bar.size == Vector2.ZERO:
+		return
+	var fs := _font_size(sc)
+	var font := ThemeDB.fallback_font
+	var line_h := font.get_height(fs)
+	var y := bar.position.y+(bar.size.y-line_h)*0.5+font.get_ascent(fs)
+	for v in views:
+		var base := Vector2(maxf(bar.end.x,value_box.end.x)+8.0*sc,y)
+		var shadow := SHADOW
+		shadow.a = float(v["alpha"])
+		var col := Color("#ffdf95")
+		col.a = float(v["alpha"])
+		draw_string(font,base+Vector2(1,1),str(v["text"]),HORIZONTAL_ALIGNMENT_LEFT,-1,fs,shadow)
+		draw_string(font,base,str(v["text"]),HORIZONTAL_ALIGNMENT_LEFT,-1,fs,col)
+		y += line_h
 
 func _draw_slots(live, sc: float) -> void:
 	var white := SkinA.label_color("normal")

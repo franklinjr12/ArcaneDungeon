@@ -4,6 +4,7 @@ const Runner = preload("res://magic/runtime/spell_runner.gd")
 const Compiler = preload("res://magic/compile/spell_compiler.gd")
 const Target = preload("res://combat/magic_target.gd")
 const Resolver = preload("res://combat/interaction_resolver.gd")
+const Hud = preload("res://ui/pixel_hud.gd")
 const Store = preload("res://combat/target_store.gd")
 
 const CADENCE := 8
@@ -167,7 +168,23 @@ func _sim_tests(t) -> void:
 	t.check(alt >= 1.15*best,"AD-193 alternation >= 1.15x best mono-spam (%.0f vs %.0f)" % [alt,best])
 	t.equal(_sim("alt",""),alt,"AD-193 alternation sim is deterministic")
 
+func _hud_tests(t) -> void:
+	var shatter: String = Hud.resonance_views([{"id":"frozen_force_shatter","amount":12,"tick":10}],10,60)[0]["text"]
+	var expect: String = TranslationServer.translate("hud.resonance_popup") % [TranslationServer.translate("hud.resonance.frozen_force_shatter"),12]
+	t.equal(shatter,expect,"AD-193 resonance popup text uses hud.* keys")
+	t.check(shatter.contains("12"),"AD-193 resonance popup shows amount")
+	var many: Array = []
+	for i in 5:
+		many.append({"id":"wet_cold_freeze","amount":i,"tick":10+i})
+	var views: Array = Hud.resonance_views(many,14,60)
+	t.equal(views.size(),3,"AD-193 at most 3 popups")
+	t.check(str(views[0]["text"]).ends_with("+4"),"AD-193 newest popup first")
+	t.equal(float(Hud.resonance_views([many[0]],10,60)[0]["alpha"]),1.0,"AD-193 popup alpha 1 at age 0")
+	t.check(Hud.resonance_views([many[0]],70,60).is_empty(),"AD-193 popup dropped at life_ticks")
+	t.check(Hud.resonance_views([many[0]],40,60)[0]["alpha"] < 1.0,"AD-193 popup fades")
+
 func run(t) -> void:
+	_hud_tests(t)
 	_mana_tests(t)
 	_refund_tests(t)
 	_damage_tests(t)
