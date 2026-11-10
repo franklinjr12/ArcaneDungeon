@@ -517,6 +517,7 @@ func open_pause() -> void:
 	pause_menu.set_save_available(flow.can_save())
 	var seconds := int(flow.summary()["seconds"])
 	pause_menu.set_run_info(tr("pause.run_info") % [int(flow.room.values.get("stage",0))+1,int(flow.rooms_cleared)+1,seconds/60,seconds%60])
+	pause_menu.set_loadout_available(can_view_loadout())
 	pause_menu.visible = true
 
 func close_pause() -> void:
@@ -530,6 +531,13 @@ func close_pause() -> void:
 	if pause_menu.is_confirm_open():
 		pause_menu.cancel_confirm()
 	pause_menu.visible = false
+	if _settings != null and perf_seed == null and flow.experiment.enabled != _settings.telemetry_opt_in:
+		if _settings.telemetry_opt_in:
+			flow.experiment.configure(true)
+			flow.experiment.begin_session()
+		else:
+			flow.experiment.end_session()
+			flow.experiment.configure(false)
 	_set_clocks_paused(false)
 	Input.mouse_mode = _prev_mouse_mode
 
@@ -645,7 +653,7 @@ func _input(event: InputEvent) -> void:
 	if is_paused():
 		if event.is_action_pressed("pause") and not event.is_echo():
 			pause_menu.handle_cancel()
-		get_viewport().set_input_as_handled()
+			get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed("dash") and (reward_overlay.has_button_focus() or shop_overlay.has_button_focus()):
 		get_viewport().set_input_as_handled() # Space is the dash key and also "accept": never let it press a focused offer
@@ -1581,7 +1589,7 @@ func apply_debug_shot_state(state: String) -> bool:
 	if DEBUG_TIP_BASE.has(state):
 		_debug_pinned_tip = state.trim_prefix("tip_")
 		state = DEBUG_TIP_BASE[state]
-	if not state in ["combat","reward","loadout","workshop","workshop_editor","merchant","pause","pause_controls","summary","summary_win","sigil_desk"]:
+	if not state in ["combat","reward","loadout","workshop","workshop_editor","merchant","pause","pause_controls","pause_settings","pause_settings_audio","pause_settings_video","pause_settings_access","pause_confirm_abandon","summary","summary_win","sigil_desk"]:
 		return false
 	if state == "sigil_desk":
 		if not flow.prelude and not (flow.prelude_available() and flow.enter_prelude()["ok"]):
@@ -1628,6 +1636,14 @@ func apply_debug_shot_state(state: String) -> bool:
 	elif state == "pause_controls":
 		open_pause()
 		pause_menu.open_controls()
+	elif state.begins_with("pause_settings"):
+		open_pause()
+		pause_menu.open_settings()
+		if state != "pause_settings":
+			pause_menu.settings_screen.select_tab(state.trim_prefix("pause_settings_"))
+	elif state == "pause_confirm_abandon":
+		open_pause()
+		pause_menu.request_quit()
 	elif state == "loadout":
 		open_loadout_view()
 	return true

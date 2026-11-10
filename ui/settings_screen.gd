@@ -1,15 +1,14 @@
 extends Control
 ## AD-067 / AD-152: skin A settings screen (AD-095 kit, AD-096 layouts), 4 tabs. Reused by the title screen and the
 ## pause menu; the owner listens to back_requested and decides what to do (this screen never frees itself).
-## Mock widgets without a backing Settings field are rendered but disabled; owner/game-design follow-ups:
-##  audio: mute-when-unfocused, spell-sounds-top-priority.  video: frame limit, vsync, particles, glow;
-##  the mock resolution dropdown slot hosts the UI scale slider instead (no free row under the Display header).
-##  access: colour-blind mode, text size (UI scale lives in the video tab), strong telegraphs, hold to cast, aim assist,
-##  visual sound cues.  The Music slider is disabled only if no Music audio bus exists; Pause stays fixed to Esc.
+## Every control is backed by a Settings field (no disabled mock widgets). The mock resolution dropdown slot hosts the UI
+## scale slider and the Access tab re-uses the removed mock toggle rects for telemetry/tips. The Music slider row is hidden
+## if no Music audio bus exists; Pause stays fixed to Esc (AD-152).
 const VisualTheme = preload("res://ui/pixel_theme.gd")
 const ExperimentLog = preload("res://debug/experiment_log.gd")
 const SkinA = preload("res://ui/skin_a.gd")
 const Settings = preload("res://game/core/settings.gd")
+const OsShell = preload("res://ui/os_shell.gd")
 const InputActions = preload("res://ui/input_actions.gd")
 const TITLE_ART := "res://assets/ui/title/ad_ui_title_illustration.png"
 const TITLE_ART_LIGHT := "res://assets/ui/title/ad_ui_title_illustration_light.png"
@@ -18,6 +17,7 @@ const CONTENT := Rect2(28, 50, 584, 252)
 const TABS := ["audio", "video", "controls", "access"]
 const TEST_CUE := "ui.confirm"
 const MUSIC_BUS := "Music"
+const FRAME_LIMIT_KEYS := {0: "settings.value.unlimited", 30: "settings.value.fps30", 60: "settings.value.fps60", 120: "settings.value.fps120"}
 ## bus -> [slider id, value label id] in the layout JSON (iteration order = row order).
 const BUS_ROWS := {"Master": ["slider_master", "val_0"], "Music": ["slider_music", "val_1"], "SFX": ["slider_sound_effects", "val_2"],
 	"UI": ["slider_interface", "val_3"], "Ambience": ["slider_ambience", "val_4"]}
@@ -75,6 +75,10 @@ class Paint extends RefCounted:
 				if d.size.x > 0.0 and d.size.y > 0.0 and q.size.x > 0.0 and q.size.y > 0.0:
 					ci.draw_texture_rect_region(SkinA.ATLAS, d, q)
 
+	## Focus ring shared by every skinned control; the default SkinButton kind paints it itself.
+	static func focus_ring(ci: CanvasItem, rect: Rect2, sc: float) -> void:
+		draw(ci, "ad_ui_btn_focus", rect.grow(4.0 * sc), sc)
+
 	static func blank(w: int, h: int) -> ImageTexture:
 		return ImageTexture.create_from_image(Image.create(maxi(w, 1), maxi(h, 1), false, Image.FORMAT_RGBA8))
 
@@ -129,14 +133,19 @@ class SkinButton extends Button:
 		queue_redraw()
 
 	func _notification(what: int) -> void:
-		if what == NOTIFICATION_DRAW and _layer != null:
+		if (what == NOTIFICATION_DRAW or what == NOTIFICATION_FOCUS_ENTER or what == NOTIFICATION_FOCUS_EXIT) and _layer != null:
 			_layer.queue_redraw()
+
+	func shows_focus_ring() -> bool:
+		return has_focus()
 
 	func _lit() -> bool:
 		return is_hovered() or has_focus()
 
 	func paint(ci: Control) -> void:
 		var rect := Rect2(Vector2.ZERO, size)
+		if kind != "button" and shows_focus_ring():
+			Paint.focus_ring(ci, rect, sc)
 		match kind:
 			"tab":
 				Paint.draw(ci, "ad_ui_tab_active" if active else ("ad_ui_tab_hover" if _lit() else "ad_ui_tab_inactive"), rect, sc)
@@ -155,8 +164,8 @@ class SkinButton extends Button:
 			_:
 				if disabled:
 					Paint.draw(ci, "ad_ui_btn_disabled", rect, sc)
-				elif has_focus():
-					Paint.draw(ci, "ad_ui_btn_focus", rect.grow(4.0 * sc), sc)
+				elif shows_focus_ring():
+					Paint.focus_ring(ci, rect, sc)
 				elif button_pressed or get_draw_mode() == DRAW_PRESSED:
 					Paint.draw(ci, "ad_ui_btn_pressed", rect, sc)
 				elif is_hovered():
@@ -186,8 +195,11 @@ class SkinOption extends OptionButton:
 		queue_redraw()
 
 	func _notification(what: int) -> void:
-		if what == NOTIFICATION_DRAW and _layer != null:
+		if (what == NOTIFICATION_DRAW or what == NOTIFICATION_FOCUS_ENTER or what == NOTIFICATION_FOCUS_EXIT) and _layer != null:
 			_layer.queue_redraw()
+
+	func shows_focus_ring() -> bool:
+		return has_focus()
 
 	func paint(ci: Control) -> void:
 		var name := "ad_ui_dropdown_normal"
@@ -198,6 +210,8 @@ class SkinOption extends OptionButton:
 		elif is_hovered() or has_focus():
 			name = "ad_ui_dropdown_hover"
 		Paint.draw(ci, name, Rect2(Vector2.ZERO, size), sc)
+		if shows_focus_ring():
+			Paint.focus_ring(ci, Rect2(Vector2.ZERO, size), sc)
 
 class SkinSlider extends HSlider:
 	var sc := 1.0
@@ -227,6 +241,11 @@ class SkinSlider extends HSlider:
 			Paint.draw(self, "ad_ui_slider_fill", Rect2(track.position, Vector2(maxf(cx, 8.0 * sc), track.size.y)), sc)
 		var look := "disabled" if not editable else ("pressed" if has_focus() and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) else ("hover" if _hover or has_focus() else "normal"))
 		Paint.draw(self, "ad_ui_slider_grab_" + look, Rect2(cx - gw * 0.5, mid - gh * 0.5, gw, gh), sc)
+		if shows_focus_ring():
+			Paint.focus_ring(self, Rect2(Vector2.ZERO, size), sc)
+
+	func shows_focus_ring() -> bool:
+		return has_focus()
 
 	func _gui_input(_event: InputEvent) -> void:
 		queue_redraw()
@@ -260,12 +279,13 @@ var conflicts := {}
 var reset_button: Button
 var reset_keys_button: Button
 var test_button: Button
+var mute_toggle: Button
+var vsync_toggle: Button
+var frame_limit_option: OptionButton
 var swap_button: Button
 var cancel_button: Button
 var listening_action := ""
 var current_tab := ""
-## Rendered-but-unbacked widgets (see the header comment); tests assert they stay disabled.
-var disabled_widgets: Array = []
 var tab_buttons := {}
 var tab_pages := {}
 var _listen_slot := 0
@@ -397,31 +417,18 @@ func _bind(b: BaseButton) -> void:
 	if _director != null:
 		_director.bind_button(b)
 
-func _lock(c: Control, tip: bool = true) -> void:
-	if c is HSlider:
-		c.editable = false
-	elif c is BaseButton:
-		c.disabled = true
-	if tip:
-		c.tooltip_text = tr("settings.disabled_hint")
-
-func _unbacked(c: Control) -> void:
-	_lock(c)
-	disabled_widgets.append(c)
-
-func _help_hook(c: Control, tab: String, id: String, label_key: String, unbacked: bool = false) -> void:
+func _help_hook(c: Control, tab: String, id: String, label_key: String) -> void:
 	var show := func():
-		_show_help(tab, id, label_key, unbacked)
+		_show_help(tab, id, label_key)
 	c.focus_entered.connect(show)
 	c.mouse_entered.connect(show)
 
-func _show_help(tab: String, id: String, label_key: String, unbacked: bool = false) -> void:
+func _show_help(tab: String, id: String, label_key: String) -> void:
 	if not _help.has(tab):
 		return
 	var h: Dictionary = _help[tab]
 	h["title"].text = tr(label_key)
-	var body: String = tr("settings.help." + id)
-	h["body"].text = body + ("\n" + tr("settings.disabled_hint") if unbacked else "")
+	h["body"].text = tr("settings.help." + id)
 
 func _build_help(tab: String, page: Node) -> void:
 	var r := _w(tab, "help_panel")
@@ -468,15 +475,11 @@ func _toggle(tab: String, page: Node, tid: String, label_key: String, help_id: S
 		vl.text = tr("settings.value.on" if on else "settings.value.off")
 	refresh.call(value)
 	b.toggled.connect(refresh)
-	if on_change.is_valid():
-		b.toggled.connect(on_change)
-	else:
-		_unbacked(b)
-		vl.add_theme_color_override("font_color", SkinA.label_color("disabled"))
+	b.toggled.connect(on_change)
 	var row_ctrl := {"x": w["x"], "y": w["y"], "w": w["w"], "h": w["h"]}
-	_row_label(tab, page, tr(label_key), row_ctrl, not on_change.is_valid())
+	_row_label(tab, page, tr(label_key), row_ctrl)
 	_bind(b)
-	_help_hook(b, tab, help_id, label_key, not on_change.is_valid())
+	_help_hook(b, tab, help_id, label_key)
 	return b
 
 func _dropdown(tab: String, page: Node, did: String, label_key: String, help_id: String, items: Array, selected: int, on_select: Callable, rect_override: Dictionary = {}) -> SkinOption:
@@ -487,13 +490,10 @@ func _dropdown(tab: String, page: Node, did: String, label_key: String, help_id:
 	o.selected = selected
 	o.focus_mode = Control.FOCUS_ALL
 	_reg(o, page, w)
-	if on_select.is_valid():
-		o.item_selected.connect(on_select)
-	else:
-		_unbacked(o)
-	_row_label(tab, page, tr(label_key), w, not on_select.is_valid())
+	o.item_selected.connect(on_select)
+	_row_label(tab, page, tr(label_key), w)
 	_bind(o)
-	_help_hook(o, tab, help_id, label_key, not on_select.is_valid())
+	_help_hook(o, tab, help_id, label_key)
 	return o
 
 func _button(parent: Node, bid: String, text: String, tab: String, scrolled: bool = false) -> SkinButton:
@@ -554,29 +554,28 @@ func _build_audio(page: Control) -> void:
 		_help_hook(s, tab, bus.to_lower(), TEXT["buses"][bus])
 		if bus == MUSIC_BUS:
 			music_slider = s
-			if _read_only == false and not enabled:
-				disabled_widgets.append(s)
-				s.tooltip_text = tr("settings.disabled_hint")
+			if AudioServer.get_bus_index(MUSIC_BUS) < 0:
+				s.visible = false
+				s.get_meta("value_label").visible = false
 		volume_sliders[bus] = s
 		_sync_hooks.append(func():
 			s.set_value_no_signal(float(_settings.volumes.get(bus, 1.0)))
 			s.get_meta("value_label").text = "%d%%" % roundi(s.value * 100.0))
 	_box(page, "ad_ui_divider_h", _w(tab, "div_1"))
 	_section(tab, page, "hdr_options", tr("settings.section.options"))
-	_unbacked_toggle(tab, page, "toggle_mute_unfocused", "settings.audio.mute_unfocused", "mute_unfocused", true)
-	_unbacked_toggle(tab, page, "toggle_priority", "settings.audio.priority", "priority", false)
+	mute_toggle = _toggle(tab, page, "toggle_mute_unfocused", "settings.audio.mute_unfocused", "mute_unfocused", _settings.mute_unfocused, func(on: bool):
+		_settings.mute_unfocused = on
+		_save())
+	mute_toggle.disabled = _read_only
+	_sync_hooks.append(func():
+		mute_toggle.set_pressed_no_signal(_settings.mute_unfocused)
+		mute_toggle.get_meta("value_label").text = tr("settings.value.on" if _settings.mute_unfocused else "settings.value.off"))
 	test_button = _button(page, "btn_test_sfx", tr("settings.test"), tab)
 	if _director != null and _director.has_method("play"):
 		test_button.pressed.connect(func(): _director.play(TEST_CUE))
 	else:
-		_unbacked(test_button)
-	test_button.disabled = test_button.disabled or _read_only
-
-func _unbacked_toggle(tab: String, page: Node, tid: String, label_key: String, help_id: String, value: bool, rect_override: Dictionary = {}) -> SkinButton:
-	return _toggle(tab, page, tid, label_key, help_id, value, Callable(), rect_override)
-
-func _unbacked_dropdown(tab: String, page: Node, did: String, label_key: String, help_id: String, value_key: String) -> SkinOption:
-	return _dropdown(tab, page, did, label_key, help_id, [tr(value_key)], 0, Callable())
+		test_button.visible = false
+	test_button.disabled = _read_only
 
 # ---------------------------------------------------------------- video
 
@@ -593,7 +592,7 @@ func _build_video(page: Control) -> void:
 			_save())
 	window_mode_option.disabled = _read_only
 	_sync_hooks.append(func(): window_mode_option.select(maxi(Settings.WINDOW_MODES.find(_settings.window_mode), 0)))
-	# UI scale: the mock has no free row under the Display header, so it takes the (unbacked) resolution dropdown's rect.
+	# UI scale: the mock has no free row under the Display header, so it takes the mock resolution dropdown's rect.
 	var rr := _w(tab, "dd_resolution")
 	ui_scale_slider = SkinSlider.new()
 	ui_scale_slider.min_value = 90
@@ -614,8 +613,24 @@ func _build_video(page: Control) -> void:
 	_sync_hooks.append(func():
 		ui_scale_slider.set_value_no_signal(roundf(_settings.ui_scale * 100.0))
 		ui_scale_label.text = "%d%%" % int(ui_scale_slider.value))
-	_unbacked_dropdown(tab, page, "dd_frame_limit", "settings.video.frame_limit", "frame_limit", "settings.value.fps60")
-	_unbacked_toggle(tab, page, "toggle_vsync", "settings.video.vsync", "vsync", true)
+	var limits := []
+	for l in Settings.FRAME_LIMITS:
+		limits.append(tr(FRAME_LIMIT_KEYS[l]))
+	frame_limit_option = _dropdown(tab, page, "dd_frame_limit", "settings.video.frame_limit", "frame_limit", limits,
+		maxi(Settings.FRAME_LIMITS.find(_settings.frame_limit), 0), func(i: int):
+			_settings.frame_limit = Settings.FRAME_LIMITS[i]
+			_settings.apply_display(get_window())
+			_save())
+	frame_limit_option.disabled = _read_only
+	_sync_hooks.append(func(): frame_limit_option.select(maxi(Settings.FRAME_LIMITS.find(_settings.frame_limit), 0)))
+	vsync_toggle = _toggle(tab, page, "toggle_vsync", "settings.video.vsync", "vsync", _settings.vsync, func(on: bool):
+		_settings.vsync = on
+		_settings.apply_display(get_window())
+		_save())
+	vsync_toggle.disabled = _read_only
+	_sync_hooks.append(func():
+		vsync_toggle.set_pressed_no_signal(_settings.vsync)
+		vsync_toggle.get_meta("value_label").text = tr("settings.value.on" if _settings.vsync else "settings.value.off"))
 	_box(page, "ad_ui_divider_h", _w(tab, "div_1"))
 	_section(tab, page, "hdr_light", tr("settings.section.light"))
 	lighting_toggle = _toggle(tab, page, "toggle_lighting", "settings.lighting", "lighting", _settings.lighting != "off", func(on: bool):
@@ -640,11 +655,9 @@ func _build_video(page: Control) -> void:
 		lighting_toggle.set_pressed_no_signal(_settings.lighting != "off")
 		lighting_toggle.get_meta("value_label").text = tr("settings.value.on" if _settings.lighting != "off" else "settings.value.off")
 		_light_state())
-	_unbacked_dropdown(tab, page, "dd_particles", "settings.video.particles", "particles", "settings.value.full")
-	_unbacked_toggle(tab, page, "toggle_glow", "settings.video.glow", "glow", true)
 	fps_toggle = _toggle(tab, page, "toggle_fps", "settings.video.fps", "fps", _settings.show_fps, func(on: bool):
 		_settings.show_fps = on
-		_save())
+		_save(), {"x": 196, "y": 229, "w": 28, "h": 14})
 	fps_toggle.disabled = _read_only
 	_sync_hooks.append(func():
 		fps_toggle.set_pressed_no_signal(_settings.show_fps)
@@ -681,6 +694,7 @@ func _light_state() -> void:
 		_preview_light.visible = on
 	if lighting_option != null:
 		lighting_option.disabled = _read_only or not on
+	_link_page_focus()
 
 # ---------------------------------------------------------------- controls
 
@@ -760,30 +774,22 @@ func _build_access(page: Control) -> void:
 	shake_toggle = _toggle(tab, page, "toggle_reduce_shake", "settings.shake", "reduce_shake", not _settings.screen_shake, func(on: bool):
 		_settings.screen_shake = not on
 		_save())
-	_unbacked_dropdown(tab, page, "dd_colourblind", "settings.access.colourblind", "colourblind", "settings.value.off")
-	_unbacked_dropdown(tab, page, "dd_text_size", "settings.access.text_size", "text_size", "settings.value.large")
-	_unbacked_toggle(tab, page, "toggle_telegraph", "settings.access.telegraphs", "telegraphs", false)
 	_box(page, "ad_ui_divider_h", _w(tab, "div_1"))
-	_section(tab, page, "hdr_input", tr("settings.section.input"))
-	_unbacked_toggle(tab, page, "toggle_hold_cast", "settings.access.hold_cast", "hold_cast", false)
-	_unbacked_toggle(tab, page, "toggle_aim_assist", "settings.access.aim_assist", "aim_assist", true)
-	_unbacked_toggle(tab, page, "toggle_visual_cues", "settings.access.visual_cues", "visual_cues", true)
-	# Extra row (not in the mock): telemetry opt-in, one row below the last Input toggle.
-	var last := _w(tab, "toggle_visual_cues")
+	_section(tab, page, "hdr_input", tr("settings.section.general"))
+	# Rows re-use the rects of the removed mock toggles.
 	telemetry_toggle = _toggle(tab, page, "", "settings.telemetry", "telemetry", _settings.telemetry_opt_in, func(on: bool):
 		_settings.telemetry_opt_in = on
-		_save(), {"x": last["x"], "y": last["y"] + 18, "w": last["w"], "h": last["h"]})
+		_save(), _w(tab, "toggle_hold_cast"))
 	tips_toggle = _toggle(tab, page, "", "settings.tips", "tips", _settings.tips_enabled, func(on: bool):
 		_settings.tips_enabled = on
-		_save(), {"x": last["x"], "y": last["y"] + 36, "w": last["w"], "h": last["h"]})
+		_save(), _w(tab, "toggle_aim_assist"))
 	var logs_rect := {"x": 410, "y": 226, "w": 178, "h": 18}
 	open_logs_button = _button(page, "btn_open_logs", tr("settings.open_logs"), tab)
 	_items[_items.size() - 1]["w"] = logs_rect
 	open_logs_button.disabled = _read_only
 	open_logs_button.pressed.connect(func():
 		DirAccess.make_dir_recursive_absolute(ExperimentLog.LOG_DIR)
-		if DisplayServer.get_name() != "headless":
-			OS.shell_open(ExperimentLog.log_dir_path()))
+		OsShell.open_folder(ExperimentLog.log_dir_path()))
 	_help_hook(open_logs_button, tab, "open_logs", "settings.open_logs")
 	for c in [flash_toggle, shake_toggle, telemetry_toggle, tips_toggle]:
 		c.disabled = _read_only
@@ -846,6 +852,7 @@ func select_tab(id: String) -> void:
 		tab_buttons[t].active = t == id
 		tab_buttons[t].queue_redraw()
 	_relayout()
+	_link_page_focus(id)
 	if FIRST_HELP.has(id):
 		_show_help(id, FIRST_HELP[id][0], FIRST_HELP[id][1])
 	var owner := get_viewport().gui_get_focus_owner() if is_inside_tree() else null
@@ -855,6 +862,52 @@ func select_tab(id: String) -> void:
 func _step_tab(delta: int) -> void:
 	select_tab(TABS[(TABS.find(current_tab) + delta + TABS.size()) % TABS.size()])
 	tab_buttons[current_tab].grab_focus()
+
+## Explicit vertical focus chain for the current page: tab, page controls top to bottom, Back, Defaults, Apply (wrapping).
+func _link_page_focus(tab: String = "") -> void:
+	if tab == "":
+		tab = current_tab
+	if tab != current_tab or not tab_pages.has(tab):
+		return
+	var page: Node = tab_pages[tab]
+	var rows: Array = []
+	for it in _items:
+		var c: Control = it["c"]
+		if not (c is Button or c is OptionButton or c is HSlider) or c.focus_mode == Control.FOCUS_NONE or not page.is_ancestor_of(c):
+			continue
+		if not c.visible or (c is HSlider and not c.editable) or (not c is HSlider and c.disabled):
+			continue
+		rows.append({"c": c, "y": float(it["w"]["y"]), "x": float(it["w"]["x"])})
+	rows.sort_custom(func(a, b): return a["y"] < b["y"] or (a["y"] == b["y"] and a["x"] < b["x"]))
+	var chain: Array = [tab_buttons[tab]]
+	for r in rows:
+		chain.append(r["c"])
+	for b in [back_button, reset_button, apply_button]:
+		if b != null and not b.disabled:
+			chain.append(b)
+	for i in chain.size():
+		var c: Control = chain[i]
+		var nxt: NodePath = c.get_path_to(chain[(i + 1) % chain.size()])
+		var prv: NodePath = c.get_path_to(chain[(i + chain.size() - 1) % chain.size()])
+		c.focus_neighbor_bottom = nxt
+		c.focus_next = nxt
+		c.focus_neighbor_top = prv
+		c.focus_previous = prv
+
+func _popups() -> Array:
+	var out: Array = []
+	for o in [window_mode_option, lighting_option, frame_limit_option]:
+		if o != null:
+			out.append(o.get_popup())
+	return out
+
+## Hides an open dropdown popup; true when one was open (Esc then closes only the popup).
+func close_open_popup() -> bool:
+	for p in _popups():
+		if p.visible:
+			p.hide()
+			return true
+	return false
 
 func _tab_delta(event: InputEvent) -> int:
 	if event.is_action_pressed("ui_page_up"):
@@ -906,6 +959,7 @@ func reset_all() -> void:
 	for hook in _sync_hooks:
 		hook.call()
 	refresh_bindings()
+	_link_page_focus()
 
 # ---------------------------------------------------------------- rebinding
 
@@ -952,6 +1006,7 @@ func refresh_bindings() -> void:
 	_refresh_conflict_panel(eff)
 	if _listen_hint != null:
 		_listen_hint.visible = listening_action != ""
+	_link_page_focus()
 
 func _conflict_subject() -> String:
 	if _last_rebind.has("action") and conflicts.has(_last_rebind["action"]):
@@ -1042,8 +1097,21 @@ func reset_bindings() -> void:
 	refresh_bindings()
 
 func _input(event: InputEvent) -> void:
-	if listening_action == "":
+	if listening_action != "":
+		_listen_input(event)
 		return
+	if not is_visible_in_tree() or not _popups().all(func(p): return not p.visible):
+		return
+	var step := 0
+	if event.is_action_pressed("ui_focus_prev"):
+		step = -1
+	elif event.is_action_pressed("ui_focus_next"):
+		step = 1
+	if step != 0:
+		_step_tab(step)
+		get_viewport().set_input_as_handled()
+
+func _listen_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE:
 		get_viewport().set_input_as_handled()
 		listening_action = ""
@@ -1064,7 +1132,7 @@ func _input(event: InputEvent) -> void:
 	rebind_action(listening_action, ev, _listen_slot)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not visible:
+	if not is_visible_in_tree():
 		return
 	if event.is_action_pressed("ui_cancel"):
 		back_requested.emit()

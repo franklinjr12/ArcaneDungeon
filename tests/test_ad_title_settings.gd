@@ -62,7 +62,7 @@ func _tabs(t, screen, svc) -> void:
 	t.equal(screen.current_tab, "access", "AD-152 unknown tab id ignored")
 	screen.select_tab("video")
 	t.check(screen.lighting_toggle.button_pressed and svc.settings.lighting == "high", "AD-152 lighting toggle starts on (high)")
-	t.check(screen.fps_toggle != null and not screen.disabled_widgets.has(screen.fps_toggle) and not screen.fps_toggle.button_pressed, "AD-187 fps toggle backed and starts off")
+	t.check(screen.fps_toggle != null and not screen.fps_toggle.disabled and not screen.fps_toggle.button_pressed, "AD-187 fps toggle backed and starts off")
 	screen.fps_toggle.button_pressed = true
 	t.check(svc.settings.show_fps, "AD-187 fps toggle sets show_fps")
 	screen.lighting_toggle.button_pressed = false
@@ -75,10 +75,9 @@ func _tabs(t, screen, svc) -> void:
 	t.equal(svc.settings.lighting, "high", "AD-152 defaults button resets lighting")
 	t.check(not svc.settings.show_fps and not screen.fps_toggle.button_pressed, "AD-187 defaults button resets show_fps")
 	t.check(screen.lighting_toggle.button_pressed and screen.volume_sliders["SFX"].value == 1.0, "AD-152 defaults refreshes controls")
-	t.check(screen.disabled_widgets.size() >= 12, "AD-152 unbacked widgets tracked")
-	for c in screen.disabled_widgets:
-		var off: bool = (not c.editable) if c is HSlider else c.disabled
-		t.check(off, "AD-152 unbacked widget disabled: %s" % c.get_path())
+	var exempt := [screen.binding_buttons.get("pause"), screen.alt_buttons.get("pause")]
+	for tab in Screen.TABS:
+		_no_disabled(t, screen.tab_pages[tab], exempt, screen, tab)
 	t.check(screen.apply_button != null and screen.reset_keys_button != null, "AD-152 apply and reset-keys buttons exist")
 	var key := InputEventKey.new()
 	key.physical_keycode = KEY_E
@@ -91,6 +90,14 @@ func _tabs(t, screen, svc) -> void:
 	page_up.pressed = true
 	screen._unhandled_input(page_up)
 	t.equal(screen.current_tab, "audio", "AD-152 ui_page_up steps back")
+
+func _no_disabled(t, n: Node, exempt: Array, screen, tab: String) -> void:
+	for c in n.get_children():
+		if c is BaseButton and not exempt.has(c):
+			t.check(not c.disabled or (c == screen.lighting_option and screen.lighting_option.disabled and screen._settings.lighting == "off"), "AD-205 no disabled button in %s tab: %s" % [tab, c.get_path()])
+		elif c is HSlider:
+			t.check(c.editable, "AD-205 no non-editable slider in %s tab: %s" % [tab, c.get_path()])
+		_no_disabled(t, c, exempt, screen, tab)
 
 func _title(t) -> void:
 	var root = (Engine.get_main_loop() as SceneTree).root
