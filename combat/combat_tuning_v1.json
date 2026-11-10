@@ -92,7 +92,7 @@
       "color": "#e49a73",
       "channel_resistances": {"force": -0.5, "cold": 0.5},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}]
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack", "lunge_distance": 64, "lunge_ticks": 8}]
     },
     "fallen_adept": {
       "display_name": "Fallen adept",
@@ -153,7 +153,7 @@
       "turn_rate_degrees_per_tick": 2.5,
       "channel_resistances": {"force": -0.5},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}, {"id": "shield_front", "front_damage_scale": 0.2, "front_arc_degrees": 70, "break_impulse_speed": 150}]
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack", "lunge_distance": 50, "lunge_ticks": 8}, {"id": "shield_front", "front_damage_scale": 0.2, "front_arc_degrees": 70, "break_impulse_speed": 150}]
     },
     "wailing_spirit": {
       "_note": "AD-137 PROPOSED numbers. phase_walls ignore_sight=false: it drifts through walls but still needs line of sight to wail, so cover still protects. Counters: Fire (weak, x1.5), hit it outside the intangible window (warned by a flicker).",
@@ -193,7 +193,7 @@
       "color": "#a3c466",
       "channel_resistances": {"fire": -0.5},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}, {"id": "explode_on_death", "explode_radius": 90, "explode_damage": 22}, {"id": "death_puddle", "puddle_radius": 90, "puddle_duration_ticks": 300, "puddle_interval_ticks": 30}]
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack", "lunge_distance": 46, "lunge_ticks": 8}, {"id": "explode_on_death", "explode_radius": 90, "explode_damage": 22}, {"id": "death_puddle", "puddle_radius": 90, "puddle_duration_ticks": 300, "puddle_interval_ticks": 30}]
     },
     "cistern_slime": {
       "_note": "AD-139 PROPOSED numbers. Counter: splits into 2 slimelets on death; burst it with an area spell or kill the slimelets one by one.",
@@ -212,7 +212,7 @@
       "color": "#5fb89a",
       "channel_resistances": {"lightning": -0.5, "water": 0.5},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}, {"id": "split_on_death", "split_kind": "cistern_slimelet", "count": 2, "split_radius": 30}]
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack", "lunge_distance": 50, "lunge_ticks": 8}, {"id": "split_on_death", "split_kind": "cistern_slimelet", "count": 2, "split_radius": 30}]
     },
     "cistern_slimelet": {
       "_note": "AD-139 PROPOSED numbers. Spawned by cistern_slime; deliberately has no split component.",
@@ -223,7 +223,7 @@
       "perception_radius": 1250,
       "preferred_range": 30,
       "attack_range": 54,
-      "telegraph_ticks": 26,
+      "telegraph_ticks": 30,
       "recovery_ticks": 24,
       "cooldown_ticks": 10,
       "damage": 7,
@@ -231,7 +231,7 @@
       "color": "#8fdcc0",
       "channel_resistances": {"cold": -0.5},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}]
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack", "lunge_distance": 66, "lunge_ticks": 8}]
     },
     "drowned_acolyte": {
       "_note": "AD-139 PROPOSED numbers. Casts a Wet zone on where you stood when the cast began (telegraph >= 40 ticks), so keep moving; Wet sets up Lightning.",
@@ -288,7 +288,7 @@
       "color": "#a0583a",
       "channel_resistances": {"lightning": -0.5, "cold": 0.5, "neutral": 0.3, "fire": 0.5, "water": 0.3, "force": 0.3},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "chase"}, {"id": "melee_attack"}]
+      "behaviours": [{"id": "chase"}, {"id": "melee_attack", "lunge_distance": 50, "lunge_ticks": 8}]
     },
     "lantern_wisp": {
       "_note": "AD-140 PROPOSED numbers. Support: allies within 220 take 30% damage while it lives; it does not attack and keeps away. Counter: kill the wisp first.",
