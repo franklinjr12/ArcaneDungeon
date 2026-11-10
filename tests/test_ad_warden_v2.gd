@@ -6,6 +6,8 @@ const BossCombat = preload("res://combat/boss_combat.gd")
 const Warden = preload("res://combat/boss_moves/warden_patterns.gd")
 const Difficulty = preload("res://game/core/difficulty.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
+const Flow = preload("res://world/run_flow.gd")
+const Driver = preload("res://tests/m3_run_driver.gd")
 const AT := Vector2(1030,450)
 const COMBO := ["sweep_1","sweep_2","overhead_slam"]
 
@@ -36,6 +38,10 @@ func run(t) -> void:
 	_pillar_no_stun(t)
 	_pillar_validate(t)
 	_pillar_trace(t)
+	_live_data(t)
+	_live_room_fit(t)
+	_live_leap_stagger(t)
+	_live_movement_bench(t)
 
 func _melee() -> Dictionary:
 	return {"sweep_1":{"shape":"arc","windup_ticks":40,"reach":150,"arc_degrees":150,"damage":14},
@@ -674,3 +680,145 @@ func _pillar_trace(t) -> void:
 			out.append([boss.state,boss.target.position,_hp(s),s.world.walls.size(),boss.target.damage_scale])
 		return out
 	t.equal(run.call(1981),run.call(1981),"AD-199 identical seeds give an identical pillar and stun trace")
+
+## AD-199 step 4: live world/data/run_v2.json bosses.ruins_warden.
+const LIVE_FILE := "res://world/data/run_v2.json"
+const LIVE_BENCH_SEEDS := [1423,2718]
+const LIVE_BENCH_BUILDS := [0,2]
+const LIVE_BENCH_TICKS := 12000
+const LIVE_STILL_LIMIT := 120
+
+func _live_doc() -> Dictionary:
+	return JSON.parse_string(FileAccess.get_file_as_string(LIVE_FILE))
+
+func _live() -> Dictionary:
+	return _live_doc()["bosses"]["ruins_warden"]
+
+## Live data with one phase's pool replaced (and the timed summon removed) so a test can pick the move.
+func _live_with_pool(phase_index: int, pool: Array) -> Dictionary:
+	var cfg := _live()
+	cfg["phases"][phase_index]["pool"] = pool
+	cfg["phases"][phase_index].erase("timed_summon")
+	return cfg
+
+func _live_data(t) -> void:
+	var cfg := _live()
+	t.equal(BossCombat.validate(cfg),[],"AD-199 live ruins_warden validates")
+	t.equal(int(cfg["hp"]),1800,"AD-199 live ruins_warden keeps 1800 hp")
+	t.equal(cfg["phases"].map(func(p): return float(p["threshold"])),[1.0,0.6,0.25],"AD-199 live phase thresholds are 100/60/25 percent")
+	var melee: Dictionary = cfg["melee"]
+	t.equal(COMBO.map(func(k): return int(melee[k]["windup_ticks"])),[40,32,48],"AD-199 live melee windups are 40/32/48")
+	t.check(COMBO.all(func(k): return int(melee[k]["reach"]) == 150),"AD-199 live melee reach is 150 px")
+	var combo := [{"combo":COMBO,"gap_ticks":12}]
+	var enraged := _live_with_pool(2,combo)
+	var pair := _fresh(enraged,Vector2(-200,0))
+	pair[1].target.health.current = pair[1].target.health.maximum*0.2
+	var seen: Array = []
+	for i in 600:
+		pair[0].player.invulnerable_left = 10
+		pair[1].advance(pair[0])
+		if pair[1].state == "windup" and pair[1].state_tick == 0:
+			seen.append(int(pair[1].intent.snapshot()["telegraph_ticks"]))
+			if seen.size() == 3:
+				break
+	t.equal(seen,[34,30,41],"AD-199 live phase 3 combo windups are 34/30/41")
+	t.equal(pair[1].phase,3,"AD-199 the live boss reaches phase 3 below 25 percent")
+	var speeds: Array = cfg["phases"].map(func(p): return float(p["movement"]["speed"]))
+	var walk := float(cfg["walk_speed"])
+	t.equal(speeds,[walk,walk,walk*float(cfg["enrage_speed_multiplier"])],"AD-199 live walk speeds are walk_speed, walk_speed, walk_speed x enrage")
+	t.equal(speeds[2],144.0,"AD-199 enraged walk speed is 144")
+	t.equal(int(cfg["grave_rise"]["cap"]),3,"AD-199 live Grave rise cap is 3")
+	t.equal(int(cfg["phases"][2]["timed_summon"]["every_ticks"]),1200,"AD-199 live phase 3 summons every 1200 ticks")
+	var roar := _roared(_live(),Vector2(-300,0))
+	t.equal(roar[0].env_props.props.size() if roar[0].env_props != null else 0,4,"AD-199 the live phase 2 roar creates 4 pillars")
+
+func _live_room_fit(t) -> void:
+	var cfg := _live()
+	var flow = Flow.new(20261022,Flow.CONFIG_V2)
+	var index := -1
+	for i in flow.rooms.size():
+		if str(flow.rooms[i]["id"]) == "ruins_boss":
+			index = i
+	t.check(index >= 0,"AD-199 the v2 run has a ruins_boss room")
+	if index < 0:
+		return
+	flow.run.sequence_index = index
+	t.check(bool(flow._enter_current()["ok"]),"AD-199 the ruins_boss room opens with the live Warden")
+	var world = flow.session.world
+	var radius := float(cfg["radius"])
+	var anchors_fit: bool = cfg["anchors"].all(func(a): return world.valid_position(Vector2(float(a[0]),float(a[1])),radius))
+	t.check(anchors_fit,"AD-199 every live Warden anchor fits the ruins_boss room")
+	var pillars: Array = cfg["phases"][1]["transition"]["arena_change"]["props"]
+	var half := 32.0+float(flow.session.sim.actor.radius)
+	var points: Array = ["entrance","exit","reward"].map(func(k): return Vector2(float(flow.room.values[k][0]),float(flow.room.values[k][1])))
+	var fits := true
+	var clear := true
+	for prop in pillars:
+		var centre := Vector2(float(prop["position"][0]),float(prop["position"][1]))
+		fits = fits and world.valid_position(centre+Vector2(32,32),0.0) and world.valid_position(centre-Vector2(32,32),0.0)
+		for point in points:
+			clear = clear and absf(point.x-centre.x) > half and absf(point.y-centre.y) > half
+	t.check(fits,"AD-199 every live pillar fits the ruins_boss room")
+	t.check(clear,"AD-199 live pillars do not cover the entrance, exit or reward")
+
+func _live_leap_stagger(t) -> void:
+	var leap: Dictionary = _live()["phases"][1]["pool"][0].duplicate(true)
+	leap.erase("weight")
+	var pair := _landed(_live_with_pool(0,[leap]),Vector2(0,-300))
+	t.check(pair[1].state == "stagger" and pair[1].staggered,"AD-199 a live leap slam ends in stagger")
+	t.equal(pair[1].target.damage_scale,1.5,"AD-199 the live stagger takes 1.5x damage")
+
+class BenchHarness:
+	var session
+	var boss
+	var state := "fighting"
+	func step(command: Dictionary) -> void:
+		session.issue(command)
+		session.step()
+		if session.state != "playing" or not boss.target.alive():
+			state = "done"
+
+## Longest run of ticks where the boss stood still while acquiring, recovering or moving (windup, stagger, roar and submerged reset it).
+func _live_bench(run_seed: int, build: int) -> Dictionary:
+	var doc := _live_doc()
+	var s = Session.new(run_seed,"empty",build)
+	s.defer_clear = true
+	var boss = s.spawn_boss(doc["bosses"]["ruins_warden"],AT)
+	var h := BenchHarness.new()
+	h.session = s
+	h.boss = boss
+	var track := {"still":0,"max":0,"last":boss.target.position,"phases":[1],"dashes":0,"dash_left":0,"phase_tick":0}
+	var next_hp := [0.59,0.24]
+	var on_tick := func(_flow):
+		var state: String = boss.state
+		var position: Vector2 = boss.target.position
+		if ["acquire","recover","moving"].has(state):
+			track["still"] = int(track["still"])+1 if position == track["last"] else 0
+			track["max"] = maxi(int(track["max"]),int(track["still"]))
+		else:
+			track["still"] = 0
+		track["last"] = position
+		if not (track["phases"] as Array).has(boss.phase):
+			(track["phases"] as Array).append(boss.phase)
+			track["phase_tick"] = 0
+		track["phase_tick"] = int(track["phase_tick"])+1
+		var dash_left: int = s.player.dash_left
+		if dash_left > 0 and int(track["dash_left"]) == 0:
+			track["dashes"] = int(track["dashes"])+1
+		track["dash_left"] = dash_left
+		# A bot that stalls in a phase is pushed to the next one so every phase is exercised.
+		if boss.target.alive() and boss.phase <= next_hp.size() and int(track["phase_tick"]) > 1800:
+			boss.target.health.current = minf(boss.target.health.current,boss.target.health.maximum*float(next_hp[boss.phase-1]))
+	Driver.fight(h,LIVE_BENCH_TICKS,on_tick)
+	return {"max_still":int(track["max"]),"phases":track["phases"],"dead":not boss.target.alive(),
+		"seconds":float(s.sim.clock.tick)/60.0,"dashes":int(track["dashes"]),"player_alive":s.sim.actor.health.current > 0.0}
+
+func _live_movement_bench(t) -> void:
+	for run_seed in LIVE_BENCH_SEEDS:
+		for build in LIVE_BENCH_BUILDS:
+			var r := _live_bench(run_seed,build)
+			var label := "seed %d build %d" % [run_seed,build]
+			print("INFO WARDEN_BENCH %s fight_seconds=%.1f dash_uses=%d max_still_ticks=%d phases=%s dead=%s" % [label,r["seconds"],r["dashes"],r["max_still"],str(r["phases"]),str(r["dead"])])
+			t.check(int(r["max_still"]) <= LIVE_STILL_LIMIT,"AD-199 the live Warden never stands still more than 2 s while acquiring, recovering or moving (%s, %d ticks)" % [label,r["max_still"]])
+			if bool(r["dead"]):
+				t.equal(r["phases"],[1,2,3],"AD-199 the live Warden fight visits all 3 phases (%s)" % label)
