@@ -256,6 +256,7 @@ func _new_settings(t, root: Node, save) -> void:
 	var fresh = Service.new()
 	fresh.set_base_dir(DIR)
 	t.check(fresh.settings.frame_limit == 60 and not fresh.settings.vsync and fresh.settings.mute_unfocused, "AD-205 new settings persist to a fresh SaveService")
+	fresh.free()
 	var ad = root.get_node_or_null("AudioDirector")
 	if ad != null:
 		ad.notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
