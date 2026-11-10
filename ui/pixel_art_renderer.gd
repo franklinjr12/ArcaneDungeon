@@ -1011,6 +1011,10 @@ static func _collect_feedback(session, tick: int, memo: Dictionary, out: Array) 
 				item["rotation"] = dir.angle()
 		out.append(item)
 	out.append_array(hostile)
+	for hazard in session.hazards:
+		if hazard["kind"] == "boss_warning":
+			out.append({"event": "telegraph.circle", "at": hazard["position"], "age": int(hazard["age"]), "rotation": 0.0, "length": 0.0, "slot": 0,
+				"uniform": 2.0 * float(hazard["radius"]), "window": int(hazard["duration_ticks"])})
 	for p in pending:
 		_shot(shots, p[0], p[1], tick)
 		var shot: Dictionary = shots[shots.size() - 1]
@@ -1229,6 +1233,18 @@ static func draw_env_props(canvas: CanvasItem, session, offset: Vector2, stage: 
 
 static func draw_hazards(canvas: CanvasItem, session, offset: Vector2) -> void:
 	for hazard in session.hazards:
+		var kind := str(hazard["kind"])
+		if kind == "boss_warning":
+			continue
+		if kind == "boss_water_warning":
+			var rect: Rect2 = hazard["rect"]
+			canvas.draw_rect(Rect2(rect.position-offset,rect.size),Color(0.45,0.7,1.0,0.7),false,2.0)
+			continue
 		var at: Vector2 = hazard["position"]-offset
+		if kind == "boss_zone":
+			# AD-198: solid warm tint, no per-tick alpha change (reduce-flash safe).
+			canvas.draw_circle(at,float(hazard["radius"]),Color(0.9,0.3,0.15,0.4))
+			canvas.draw_arc(at,float(hazard["radius"]),0.0,TAU,40,Color(1.0,0.55,0.25,0.85),2.0)
+			continue
 		canvas.draw_circle(at,float(hazard["radius"]),Color(0.25,0.5,0.9,0.28))
 		canvas.draw_arc(at,float(hazard["radius"]),0.0,TAU,40,Color(0.45,0.7,1.0,0.6),1.5)

@@ -4,6 +4,7 @@ const Difficulty = preload("res://game/core/difficulty.gd")
 const AttackIntent = preload("res://combat/attack_intent.gd")
 const Pool = preload("res://combat/boss_moves/boss_pattern_pool.gd")
 const Movement = preload("res://combat/boss_moves/boss_movement.gd")
+const Hazards = preload("res://combat/boss_moves/boss_hazards.gd")
 const Lurk = preload("res://combat/enemy_behaviours/water_lurk.gd")
 const FLOOD_TAG := "archivist_flood"
 var target
@@ -33,10 +34,12 @@ var strafe_flipped := false
 var _move: Dictionary = {}
 var _move_from := Vector2.ZERO
 var _move_to := Vector2.ZERO
+## AD-198 arena hazards: created only when a phase has `hazards`.
+var _hazards
 
 ## Pool and movement issues for a boss settings dictionary (empty = valid).
 static func validate(settings: Dictionary) -> Array:
-	return Pool.validate(settings)+Movement.validate(settings)
+	return Pool.validate(settings)+Movement.validate(settings)+Hazards.validate(settings)
 
 func _init(target_entity, settings: Dictionary) -> void:
 	target = target_entity
@@ -59,6 +62,7 @@ func _init(target_entity, settings: Dictionary) -> void:
 		tuning["patterns"] = ["radial","targeted"]
 	if settings.has("phases"):
 		_init_phases(elite_damage,floor_ticks)
+		_enter_hazards()
 	tuning["color"] = str(settings.get("color","#e8c38b"))
 	tuning["attack_range"] = float(settings["telegraph_radius"])
 	tuning["telegraph_ticks"] = int(tuning["windup_ticks"])
@@ -79,6 +83,11 @@ func _init_phases(elite_damage: float, floor_ticks: int) -> void:
 			for key in ["telegraph_ticks","emerge_telegraph_ticks"]:
 				if move.has(key):
 					move[key] = maxi(Difficulty.scale_i(int(move[key]),"telegraph_length"),floor_ticks)
+		for hazard in entry.get("hazards",[]):
+			if hazard.has("damage"):
+				hazard["damage"] = Difficulty.scale_f(float(hazard["damage"])*elite_damage,"enemy_damage")
+			if hazard.has("warn_ticks"):
+				hazard["warn_ticks"] = maxi(Difficulty.scale_i(int(hazard["warn_ticks"]),"telegraph_length"),floor_ticks)
 	tuning["windup_ticks"] = int(tuning["phases"][0]["windup_ticks"])
 	tuning["patterns"] = tuning["phases"][0].get("patterns",[])
 
@@ -94,6 +103,8 @@ func advance(session) -> void:
 		submerged = false
 		target.untargetable = false
 		_drain_flood(session)
+		if _hazards != null:
+			_hazards.clear(self,session)
 		_state("dead",session.sim.clock.tick)
 		if not death_announced:
 			death_announced = true
@@ -103,7 +114,7 @@ func advance(session) -> void:
 		return
 	var hp_fraction: float = target.health.current/target.health.maximum
 	if tuning.has("phases"):
-		_update_phase(hp_fraction,session.sim.clock.tick)
+		_update_phase(hp_fraction,session.sim.clock.tick,session)
 	elif hp_fraction <= float(tuning["phase_threshold"]):
 		phase = 2
 	if flood_age >= 0:
@@ -111,6 +122,8 @@ func advance(session) -> void:
 		if flood_age >= int(tuning["flood_duration_ticks"]):
 			_drain_flood(session)
 	state_tick += 1
+	if _hazards != null:
+		_hazards.advance(self,session)
 	match state:
 		"acquire":
 			_walk(session)
@@ -135,6 +148,22 @@ func _walk(session) -> void:
 	if tuning.has("phases") and tuning["phases"][phase-1].has("movement"):
 		Movement.continuous_step(self,session,tuning["phases"][phase-1]["movement"])
 
+## Starts the current phase's hazard schedule (the controller exists only for bosses that define hazards).
+func _enter_hazards() -> void:
+	var specs: Array = tuning["phases"][phase-1].get("hazards",[])
+	if _hazards == null and specs.is_empty():
+		return
+	if _hazards == null:
+		_hazards = Hazards.new()
+	_hazards.enter_phase(specs)
+
+## Boss RNG, seeded lazily from the session seed and boss id; never the shared sim stream.
+func rng(session) -> RandomNumberGenerator:
+	if _rng == null:
+		_rng = RandomNumberGenerator.new()
+		_rng.seed = int(session.seed)*31+int(target.id)
+	return _rng
+
 func _has_pool() -> bool:
 	return tuning.has("phases") and tuning["phases"][phase-1].has("pool")
 
@@ -145,7 +174,7 @@ func _attack() -> String:
 	return str(patterns[cycle%patterns.size()])
 
 ## Phase = highest index whose threshold >= hp fraction; it only ever increases and restarts the pattern cycle.
-func _update_phase(hp_fraction: float, tick: int) -> void:
+func _update_phase(hp_fraction: float, tick: int, session) -> void:
 	var reached := phase
 	var phases: Array = tuning["phases"]
 	for index in phases.size():
@@ -158,6 +187,9 @@ func _update_phase(hp_fraction: float, tick: int) -> void:
 	_combo_queue.clear()
 	_last_key = ""
 	_current_entry = {}
+	if _hazards != null:
+		_hazards.clear(self,session)
+	_enter_hazards()
 	if state == "windup":
 		_reset_cycle_after_fire = true
 	else:
@@ -177,10 +209,7 @@ func _range_key(attack: String) -> String:
 func _pool_attack(session) -> String:
 	if not _combo_queue.is_empty():
 		return str(_combo_queue.pop_front())
-	if _rng == null:
-		_rng = RandomNumberGenerator.new()
-		_rng.seed = int(session.seed)*31+int(target.id)
-	_current_entry = Pool.pick(tuning["phases"][phase-1]["pool"],_last_key,["flood"] if flood_age >= 0 else [],_rng)
+	_current_entry = Pool.pick(tuning["phases"][phase-1]["pool"],_last_key,["flood"] if flood_age >= 0 else [],rng(session))
 	if _current_entry.has("move"):
 		return Pool.entry_key(_current_entry)
 	if not _current_entry.has("combo"):
