@@ -270,7 +270,7 @@ func _close_credits() -> void:
 const SHOT_RUN_STATES := ["combat","combat_resonance","reward","loadout","workshop_editor","merchant","pause","summary","summary_win","sigil_desk"]
 
 func apply_debug_shot_state(state: String) -> bool:
-	if not OS.is_debug_build() or not state in ["title","settings","compendium","compendium_runes","compendium_reactions","compendium_enemies","compendium_artifacts","credits","settings_audio","settings_video","settings_controls","settings_access"]:
+	if not OS.is_debug_build() or not state in ["title","settings","compendium","compendium_runes","compendium_reactions","compendium_enemies","compendium_enemies_known","compendium_artifacts","credits","settings_audio","settings_video","settings_controls","settings_access"]:
 		return false
 	if state.begins_with("settings"):
 		open_settings()
@@ -280,6 +280,12 @@ func apply_debug_shot_state(state: String) -> bool:
 		open_credits()
 	elif state == "compendium":
 		open_compendium()
+	elif state == "compendium_enemies_known": # AD-194 shot only; never writes the profile
+		open_compendium()
+		compendium_screen.select_tab("enemies")
+		compendium_screen._meta = compendium_screen._meta.duplicate(true)
+		compendium_screen._meta["discovered"]["enemies"] = compendium_screen._catalogs["enemies"].duplicate()
+		compendium_screen._fill_page("enemies")
 	elif state.begins_with("compendium_"):
 		open_compendium()
 		compendium_screen.select_tab(state.trim_prefix("compendium_"))

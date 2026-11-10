@@ -1,6 +1,8 @@
 extends RefCounted
 ## AD-194: every regular enemy has exactly one weakness channel (negative channel_resistances) in live data.
 const Session = preload("res://combat/combat_session.gd")
+const EnemyAffinity = preload("res://ui/enemy_affinity.gd")
+const Screen = preload("res://ui/compendium_screen.gd")
 
 const WEAK := {
 	"bone_thrall": "force",
@@ -24,6 +26,8 @@ func run(t) -> void:
 	_data(t, enemies)
 	_behaviour(t)
 	_colours(t)
+	_affinity(t, enemies)
+	_screen(t)
 
 func _negatives(res: Dictionary) -> Array:
 	var out: Array = []
@@ -75,3 +79,48 @@ func _colours(t) -> void:
 	tracker.update([target],10)
 	var colours: Array = tracker.popups.map(func(p): return p["color"])
 	t.check(colours == [DN.COLOR_WEAK,DN.COLOR_RESIST,Color.WHITE],"AD-194 popup colours in order")
+
+func _affinity(t, enemies: Dictionary) -> void:
+	t.equal(EnemyAffinity.of("rust_golem")["weak"], ["lightning"], "AD-194 golem weak list")
+	t.equal(EnemyAffinity.of("storm_crystal")["resist"], ["lightning"], "AD-194 crystal resist list")
+	t.check("lightning" in EnemyAffinity.of("drowned_archivist")["weak"], "AD-194 archivist weak to lightning")
+	t.equal(EnemyAffinity.of("nope"), {"weak": [], "resist": []}, "AD-194 unknown kind empty")
+	var channels := {}
+	for kind in enemies:
+		var aff: Dictionary = EnemyAffinity.of(kind)
+		for channel in aff["weak"] + aff["resist"]:
+			channels[channel] = true
+	for channel in channels:
+		var icon: AtlasTexture = EnemyAffinity.icon(channel)
+		t.check(icon != null and icon.region.has_area(), "AD-194 icon for %s" % channel)
+
+func _screen(t) -> void:
+	var root = (Engine.get_main_loop() as SceneTree).root
+	var old_size: Vector2i = root.size
+	root.size = Vector2i(1280, 720)
+	var screen = Screen.new()
+	root.add_child(screen)
+	screen.select_tab("enemies")
+	var vp := Rect2(Vector2.ZERO, screen.get_viewport_rect().size)
+	var ids: Array = screen.entries("enemies")
+	screen._meta = screen._meta.duplicate(true)
+	screen._meta["discovered"]["enemies"] = screen._catalogs["enemies"].duplicate()
+	for i in ids.size():
+		screen._select("enemies", i)
+		var d: Dictionary = screen._detail["enemies"]
+		var weak: Array = EnemyAffinity.of(ids[i])["weak"]
+		var shown := 0
+		for pic in d["weak_icons"]:
+			if pic.visible:
+				shown += 1
+				t.check(vp.encloses(Rect2(pic.global_position, pic.size)), "AD-194 %s weak icon inside viewport" % ids[i])
+		t.equal(shown, weak.size(), "AD-194 %s visible weak icons" % ids[i])
+	screen._meta["discovered"]["enemies"] = []
+	screen._select("enemies", 0)
+	var d2: Dictionary = screen._detail["enemies"]
+	var any: bool = d2["weak_label"].visible or d2["resist_label"].visible
+	for pic in d2["weak_icons"] + d2["resist_icons"]:
+		any = any or pic.visible
+	t.check(not any, "AD-194 undiscovered entry hides the rows")
+	screen.free()
+	root.size = old_size
