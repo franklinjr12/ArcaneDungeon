@@ -657,6 +657,8 @@
   "telegraph:rust_golem": "sfx.tele.rust_golem",
   "telegraph:lantern_wisp": "sfx.tele.lantern_wisp",
   "telegraph:storm_crystal": "sfx.tele.storm_crystal",
+  "telegraph:ghoul_stalker": "sfx.tele.bone_thrall",
+  "telegraph:riptide_leaper": "sfx.tele.cistern_slime",
   "telegraph:fallen_adept:a": "sfx.boss.tele_a",
   "telegraph:fallen_adept:b": "sfx.boss.tele_b",
   "telegraph:storm_crystal:a": "sfx.boss.tele_a",
