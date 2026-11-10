@@ -35,6 +35,8 @@ var water = null
 var water_shock := {}
 ## AD-150 [PROPOSED FOR PROTOTYPE]: world/env_props.gd instance or null. Null leaves every rule unchanged.
 var env_props = null
+## AD-202: layout.pits rects (walking blockers only), kept for rendering.
+var pits: Array = []
 var feedback: Array = []
 var damage_events: Array = []
 var ai_transitions: Array = []
@@ -93,6 +95,7 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	sim.collision_walls = world.walls.duplicate()
 	water = null
 	env_props = null
+	pits = []
 	sim.actor.health.maximum = Difficulty.scale_f(float(data["player"]["max_hp"]),"player_hp")
 	sim.actor.health.reset()
 	sim.actor.radius = float(data["player"]["radius"])

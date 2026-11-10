@@ -7,6 +7,8 @@ const Room = preload("res://world/room_template.gd")
 const Flow = preload("res://world/run_flow.gd")
 const POOLS := ["res://world/data/rooms_ruins_v1.json","res://world/data/rooms_cistern_v1.json"]
 
+const AD202_COVER_KINDS := ["pillar","cracked_pillar","rubble","sarcophagus","broken_wall","column"]
+
 # Same free strip as test_ad_cistern: arena walls end at y=735, so y 770-870 is open. The player stands at (100,820) and shoots right.
 const SPOT := Vector2(100,820)
 
@@ -254,7 +256,7 @@ func _templates(t) -> void:
 				for entry in props:
 					seen[str(entry["kind"])] = true
 		t.check(with_props >= 3,"AD-150 templates: %s has at least 3 templates with env props" % path.get_file())
-		t.equal(seen.keys().size(),EnvProps.KIND_IDS.filter(func(k): return k != "boss_pillar").size(),"AD-150 templates: %s covers every room prop kind (boss_pillar is boss-arena only)" % path.get_file())
+		t.equal(seen.keys().size(),EnvProps.KIND_IDS.filter(func(k): return k != "boss_pillar" and not AD202_COVER_KINDS.has(k)).size(),"AD-150 templates: %s covers every room prop kind (boss_pillar is boss-arena only, AD-202 cover kinds are layout-only)" % path.get_file())
 
 func _template_negatives(t) -> void:
 	var tuning := _tuning()

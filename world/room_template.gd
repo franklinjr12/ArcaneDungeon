@@ -21,6 +21,9 @@ func initialize(room: Dictionary, arena: Dictionary, known_enemy_types: Array) -
 	var merged: Dictionary = arena.duplicate(true)
 	var layout = room.get("layout",{})
 	if typeof(layout) == TYPE_DICTIONARY:
+		# AD-202: layout.arena_walls = false drops the shared arena walls (default true).
+		if layout.get("arena_walls",true) == false:
+			merged["walls"] = []
 		for dims in layout.get("walls",[]):
 			if typeof(dims) != TYPE_ARRAY or dims.size() != 4:
 				issues.append({"code":"ROOM_LAYOUT_INVALID","path":"layout.walls","message":"Wall requires x,y,w,h"})
@@ -35,6 +38,20 @@ func initialize(room: Dictionary, arena: Dictionary, known_enemy_types: Array) -
 			issues.append(issue)
 		if water_issues.is_empty():
 			world.add_ground_blockers(WaterTiles.new(layout["water"]).deep_rects())
+	# AD-202: optional layout.pits = [x,y,w,h] rects that block walking only, like deep water.
+	if typeof(layout) == TYPE_DICTIONARY and layout.has("pits"):
+		var pit_rects: Array = []
+		var pits_ok: bool = typeof(layout["pits"]) == TYPE_ARRAY
+		if pits_ok:
+			for dims in layout["pits"]:
+				if typeof(dims) != TYPE_ARRAY or not EnvProps._num_array(dims,4) or float(dims[2]) <= 0.0 or float(dims[3]) <= 0.0:
+					pits_ok = false
+					break
+				pit_rects.append(Rect2(float(dims[0]),float(dims[1]),float(dims[2]),float(dims[3])))
+		if pits_ok:
+			world.add_ground_blockers(pit_rects)
+		else:
+			issues.append({"code":"ROOM_LAYOUT_INVALID","path":"layout.pits","message":"Pits require [x,y,w,h] numbers with w,h > 0"})
 	# AD-150: optional layout.env_props. Solid props join the walls before every marker/spawn/reachability check,
 	# so a prop can never block entrance->exit, the reward or a spawn (props are never required to win).
 	var env_rects: Array = []
