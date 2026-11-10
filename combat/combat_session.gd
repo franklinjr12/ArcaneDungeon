@@ -155,6 +155,12 @@ func _flush_pending_spawns() -> void:
 		var spawned = spawn_enemy(str(spec["kind"]),spec["position"])
 		if spawned != null:
 			spawned.summoner_id = int(spec["summoner_id"])
+			var overrides: Dictionary = spec.get("overrides",{})
+			if overrides.has("hp"):
+				spawned.target.health.maximum = Difficulty.scale_f(float(overrides["hp"]),"enemy_hp")
+				spawned.target.health.current = spawned.target.health.maximum
+			if overrides.has("radius"):
+				spawned.target.radius = float(overrides["radius"])
 
 func add_hazard(spec: Dictionary) -> int:
 	var hazard: Dictionary = spec.duplicate(true)

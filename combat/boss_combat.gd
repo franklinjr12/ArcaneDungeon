@@ -52,6 +52,10 @@ var _summon_age := 0
 ## AD-199: ticks the current stagger lasts (a debris stun can differ from tuning.stagger.ticks) and how many env_props events the boss has read.
 var _stagger_ticks := 0
 var _env_event_index := 0
+## AD-200: index of the float_path waypoint being approached (-1 = not chosen yet) and the beam sweep in progress ({} = none; _beam_dir alternates each cast).
+var _waypoint := -1
+var _beam: Dictionary = {}
+var _beam_dir := 1.0
 
 ## Pool, movement, hazard, transition and stagger issues for a boss settings dictionary (empty = valid).
 static func validate(settings: Dictionary) -> Array:
@@ -124,6 +128,9 @@ func _init_phases(elite_damage: float, floor_ticks: int) -> void:
 	for key in ["water_bolt_damage","storm_pulse_damage"]:
 		if tuning.has(key):
 			tuning[key] = Difficulty.scale_f(float(tuning[key])*elite_damage,"enemy_damage")
+	for key in ["beam_sweep","electrify"]:
+		if tuning.has(key):
+			tuning[key]["damage"] = Difficulty.scale_f(float(tuning[key]["damage"])*elite_damage,"enemy_damage")
 	if tuning.has("homing_skull"):
 		tuning["homing_skull"]["damage"] = Difficulty.scale_f(float(tuning["homing_skull"]["damage"])*elite_damage,"enemy_damage")
 	var warden_attacks: Array = tuning.get("melee",{}).values()
@@ -179,15 +186,21 @@ func advance(session) -> void:
 		if not _aftermath.is_empty():
 			_aftermath.clear()
 			session.remove_hazards_from(target.id,["boss_ring"])
+		if tuning.has("beam_sweep") or tuning.has("electrify"):
+			Elite.cancel(self,session)
 		_state("dead",session.sim.clock.tick)
 		if not death_announced:
 			death_announced = true
-			if tuning.has("grave_rise") or tuning.has("homing_skull") or tuning.has("decoy"):
+			if tuning.has("electrify"):
+				session.clear_water_shock()
+			if tuning.has("grave_rise") or tuning.has("homing_skull") or tuning.has("decoy") or tuning.has("small_crystals"):
 				_dismiss_thralls(session)
 			session.on_enemy_death(self)
 		return
 	if session.state != "playing":
 		return
+	if tuning.has("water_freeze") and session.water != null:
+		Elite.freeze_water(self,session)
 	var hp_fraction: float = target.health.current/target.health.maximum
 	if tuning.has("phases"):
 		_update_phase(hp_fraction,session.sim.clock.tick,session)
@@ -209,6 +222,8 @@ func advance(session) -> void:
 			var duration := int(intent.snapshot()["telegraph_ticks"]) if tuning.has("phases") else (int(tuning["second_phase_windup_ticks"]) if phase == 2 else int(tuning["windup_ticks"]))
 			if state_tick >= duration:
 				_finish_windup(session)
+		"casting":
+			Elite.casting_tick(self,session)
 		"moving":
 			_move_tick(session)
 		"submerged":
@@ -310,11 +325,14 @@ func _begin_roar(session, lead: int) -> void:
 		_hazards.clear(self,session)
 	if tuning.has("spear_line"):
 		Warden.cancel_warnings(self,session)
+	if tuning.has("beam_sweep") or tuning.has("electrify"):
+		Elite.cancel(self,session)
 	transitions.append({"from":"phase%d" % phase,"to":"roar","tick":session.sim.clock.tick,"enemy_id":target.id})
 	state = "roar"
 	state_tick = -lead
 	_apply_arena_change(session,transition.get("arena_change",{}))
 	Elite.queue_decoy(self,session)
+	Elite.queue_crystals(self,session)
 	session._notify("! BOSS ROAR",target.position)
 	if phase != 2:
 		session._event_cue("phase:"+kind,target.position,"sfx.boss.phase")
@@ -326,6 +344,8 @@ func stun(session, ticks: int) -> void:
 	_combo_queue.clear()
 	_current_entry = {}
 	Warden.cancel_warnings(self,session)
+	if tuning.has("beam_sweep") or tuning.has("electrify"):
+		Elite.cancel(self,session)
 	staggered = true
 	target.damage_scale = float(tuning["stagger"]["damage_taken_multiplier"])
 	_stagger_ticks = ticks
@@ -495,6 +515,8 @@ func _finish_windup(session) -> void:
 		"blink":
 			target.position = _move_to
 			_end_move(session)
+		"beam_sweep":
+			Elite.begin_cast(self,session)
 		"emerge":
 			target.position = _move_to
 			submerged = false
@@ -554,7 +576,7 @@ func _fire(session) -> void:
 	if Warden.handles(tuning,attack):
 		Warden.fire(self,session,attack)
 	elif Elite.handles(tuning,attack):
-		Elite.fire(self,session,target.position)
+		Elite.fire(self,session,attack,target.position)
 	elif attack == "pulse":
 		if session.sim.actor.position.distance_to(target.position) <= float(tuning["pulse_radius"]):
 			session.damage_player(target.id,float(tuning["pulse_damage"]),"lightning")
@@ -582,6 +604,16 @@ func _fire(session) -> void:
 		cycle += 1
 
 ## Fan / water bolt / radial / targeted shots from `origin`, owned by `source_id` (the boss, or a decoy copying the cast with `mult` damage).
+## AD-200: a finished beam sweep counts as a cast of `attack` (same cycle bookkeeping as _fire), then the usual stagger/recover.
+func finish_cast(attack: String, session) -> void:
+	if _reset_cycle_after_fire:
+		_reset_cycle_after_fire = false
+		cycle = 0
+	else:
+		_last_key = attack
+		cycle += 1
+	_after_move_or_attack(session)
+
 func _fire_shots(session, attack: String, origin: Vector2, source_id: int, mult: float) -> void:
 	var speed := float(tuning["shot_speed"])
 	if attack == "fan" or attack == "water_bolt":
@@ -610,7 +642,7 @@ func _decoy_cast(session, attack: String) -> void:
 	decoy.end_windup()
 	var mult := float(tuning["decoy"]["damage_multiplier"])
 	if Elite.handles(tuning,attack):
-		Elite.fire(self,session,decoy.target.position,mult)
+		Elite.fire(self,session,attack,decoy.target.position,mult)
 	elif ["fan","radial","targeted"].has(attack):
 		_fire_shots(session,attack,decoy.target.position,decoy.target.id,mult)
 
@@ -627,14 +659,20 @@ func _fire_flood(session) -> void:
 	flood_age = 0
 
 ## Queues `kind` summons at `offsets` from the boss while live + queued summons stay under `cap`.
-func fire_summon(session, kind: String, offsets: Array, cap: int) -> void:
-	var radius := float(session.data["enemies"][kind]["radius"])
+## `overrides` {hp, radius} rides on the spawn spec; with it an offset that does not fit falls back to the nearest open point.
+func fire_summon(session, kind: String, offsets: Array, cap: int, overrides: Dictionary = {}) -> void:
+	var radius := float(overrides.get("radius",session.data["enemies"][kind]["radius"]))
 	for offset in offsets:
 		if session.summons_owned_by(target.id) >= cap:
 			break
 		var at: Vector2 = target.position+Vector2(float(offset[0]),float(offset[1]))
+		if not overrides.is_empty() and not session.world.valid_position(at,radius):
+			at = session.world.nearest_open_point(at,tuning.get("anchors",[]),radius,target.position)
 		if session.world.valid_position(at,radius):
-			session.pending_spawns.append({"kind":kind,"position":at,"summoner_id":target.id})
+			var spec := {"kind":kind,"position":at,"summoner_id":target.id}
+			if not overrides.is_empty():
+				spec["overrides"] = overrides
+			session.pending_spawns.append(spec)
 
 ## The boss's thralls fall with it so the room can clear; queued ones are dropped.
 func _dismiss_thralls(session) -> void:
