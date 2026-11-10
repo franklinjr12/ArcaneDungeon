@@ -35,3 +35,5 @@ Each chunk prints `AD_DEMO_BENCH_WALL seed=... build=... wall_s=...` per pair. I
 ## Related
 
 `tests/bench/boss_pacing_bench.gd` checks the final-boss window 150-210 s and may exit 1 on the current balance.
+
+The scripted-player sanity table also reports `dashes per fought room (mean)` (report only, no threshold).
