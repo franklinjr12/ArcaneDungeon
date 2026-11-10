@@ -123,6 +123,8 @@ func run(t) -> void:
 	_key(vp, KEY_ESCAPE)
 	t.check(not scene.is_paused(), "AD-205 Esc on bare pause panel resumes")
 
+	_new_settings(t, root, save)
+
 	save.set_base_dir("user://")
 	var d := DirAccess.open(DIR)
 	if d != null:
@@ -131,3 +133,39 @@ func run(t) -> void:
 		DirAccess.remove_absolute(DIR)
 	IA.reset_to_defaults()
 	vp.queue_free()
+
+func _new_settings(t, root: Node, save) -> void:
+	var Screen = preload("res://ui/settings_screen.gd")
+	var Service = preload("res://game/core/save_service.gd")
+	var screen = Screen.new()
+	screen.save_service = save
+	root.add_child(screen)
+	screen.select_tab("video")
+	t.check(save.settings.frame_limit == 0 and save.settings.vsync and not save.settings.mute_unfocused, "AD-205 new settings defaults")
+	screen.frame_limit_option.item_selected.emit(Settings_FRAME_LIMITS().find(60))
+	screen.vsync_toggle.button_pressed = false
+	screen.select_tab("audio")
+	screen.mute_toggle.button_pressed = true
+	t.equal(save.settings.frame_limit, 60, "AD-205 frame limit changes")
+	t.equal(Engine.max_fps, 60, "AD-205 frame limit applies to Engine.max_fps")
+	t.check(not save.settings.vsync and save.settings.mute_unfocused, "AD-205 vsync/mute change")
+	var fresh = Service.new()
+	fresh.set_base_dir(DIR)
+	t.check(fresh.settings.frame_limit == 60 and not fresh.settings.vsync and fresh.settings.mute_unfocused, "AD-205 new settings persist to a fresh SaveService")
+	var ad = root.get_node_or_null("AudioDirector")
+	if ad != null:
+		ad.notification(Node.NOTIFICATION_APPLICATION_FOCUS_OUT)
+		t.check(AudioServer.is_bus_mute(0), "AD-205 focus out mutes master when mute_unfocused")
+		ad.notification(Node.NOTIFICATION_APPLICATION_FOCUS_IN)
+		t.check(not AudioServer.is_bus_mute(0), "AD-205 focus in unmutes master")
+	else:
+		t.check(false, "AD-205 AudioDirector autoload present")
+	screen.reset_button.pressed.emit()
+	t.check(save.settings.frame_limit == 0 and save.settings.vsync and not save.settings.mute_unfocused and Engine.max_fps == 0, "AD-205 defaults reset new settings")
+	screen.queue_free()
+	Engine.max_fps = 0
+	AudioServer.set_bus_mute(0, false)
+	root.content_scale_factor = 1.0
+
+func Settings_FRAME_LIMITS() -> Array:
+	return preload("res://game/core/settings.gd").FRAME_LIMITS

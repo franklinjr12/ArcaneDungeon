@@ -41,6 +41,14 @@ func _ready() -> void:
 	if svc != null and svc.get("settings") != null:
 		svc.settings.apply_audio()
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		var svc = get_node_or_null("/root/SaveService")
+		if svc != null and svc.get("settings") != null and svc.settings.mute_unfocused:
+			AudioServer.set_bus_mute(0, true)
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		AudioServer.set_bus_mute(0, false)
+
 func load_table(data: Dictionary) -> void:
 	table = data if typeof(data.get("cues")) == TYPE_DICTIONARY else {}
 	if typeof(data.get("music")) == TYPE_DICTIONARY:
