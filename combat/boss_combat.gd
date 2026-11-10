@@ -2,6 +2,7 @@ extends RefCounted
 ## TASK-042 telegraphed phase boss using the same MagicTarget and hostile projectile pipeline.
 const Difficulty = preload("res://game/core/difficulty.gd")
 const AttackIntent = preload("res://combat/attack_intent.gd")
+const Pool = preload("res://combat/boss_moves/boss_pattern_pool.gd")
 const FLOOD_TAG := "archivist_flood"
 var target
 var kind := "undead_warden"
@@ -18,6 +19,12 @@ var _windup_attack := ""
 var _reset_cycle_after_fire := false
 var flood_count := 0
 var flood_age := -1
+## AD-198: opt-in weighted pool state. Own RNG (seeded lazily) so the shared sim stream is never consumed.
+var _rng: RandomNumberGenerator
+var _last_key := ""
+var _combo_queue: Array = []
+var _combo_gap := 0
+var _current_entry: Dictionary = {}
 
 func _init(target_entity, settings: Dictionary) -> void:
 	target = target_entity
@@ -52,7 +59,7 @@ func _init_phases(elite_damage: float, floor_ticks: int) -> void:
 	for entry in tuning["phases"]:
 		entry["windup_ticks"] = maxi(Difficulty.scale_i(int(entry["windup_ticks"]),"telegraph_length"),floor_ticks)
 	tuning["windup_ticks"] = int(tuning["phases"][0]["windup_ticks"])
-	tuning["patterns"] = tuning["phases"][0]["patterns"]
+	tuning["patterns"] = tuning["phases"][0].get("patterns",[])
 
 func _state(to: String, tick: int) -> void:
 	if state == to:
@@ -90,10 +97,16 @@ func advance(session) -> void:
 				_fire(session)
 				_state("recover",session.sim.clock.tick)
 		"recover":
-			if state_tick >= int(tuning["recovery_ticks"]):
+			var wait := _combo_gap if not _combo_queue.is_empty() else int(tuning["recovery_ticks"])
+			if state_tick >= wait:
 				_start_windup(session)
 
+func _has_pool() -> bool:
+	return tuning.has("phases") and tuning["phases"][phase-1].has("pool")
+
 func _attack() -> String:
+	if _has_pool():
+		return _windup_attack
 	var patterns: Array = tuning["phases"][phase-1]["patterns"] if tuning.has("phases") else tuning["patterns"]
 	return str(patterns[cycle%patterns.size()])
 
@@ -108,6 +121,9 @@ func _update_phase(hp_fraction: float, tick: int) -> void:
 		return
 	transitions.append({"from":"phase%d" % phase,"to":"phase%d" % reached,"tick":tick,"enemy_id":target.id})
 	phase = reached
+	_combo_queue.clear()
+	_last_key = ""
+	_current_entry = {}
 	if state == "windup":
 		_reset_cycle_after_fire = true
 	else:
@@ -123,11 +139,31 @@ func _range_key(attack: String) -> String:
 			return "storm_pulse_radius"
 	return "telegraph_radius"
 
+## Next pattern for a pool phase: the queued combo member, else a fresh weighted pick (flood is blocked while flooded).
+func _pool_attack(session) -> String:
+	if not _combo_queue.is_empty():
+		return str(_combo_queue.pop_front())
+	if _rng == null:
+		_rng = RandomNumberGenerator.new()
+		_rng.seed = int(session.seed)*31+int(target.id)
+	_current_entry = Pool.pick(tuning["phases"][phase-1]["pool"],_last_key,["flood"] if flood_age >= 0 else [],_rng)
+	if not _current_entry.has("combo"):
+		return str(_current_entry.get("pattern",""))
+	var combo: Array = _current_entry["combo"].duplicate()
+	var first := str(combo.pop_front())
+	_combo_queue = combo
+	_combo_gap = int(_current_entry.get("gap_ticks",12))
+	return first
+
 func _start_windup(session) -> void:
-	var attack := _attack()
-	if attack == "flood" and flood_age >= 0:
-		cycle += 1
+	var attack := ""
+	if _has_pool():
+		attack = _pool_attack(session)
+	else:
 		attack = _attack()
+		if attack == "flood" and flood_age >= 0:
+			cycle += 1
+			attack = _attack()
 	_windup_attack = attack
 	var ticks := int(tuning["phases"][phase-1]["windup_ticks"]) if tuning.has("phases") else (int(tuning["second_phase_windup_ticks"]) if phase == 2 else int(tuning["windup_ticks"]))
 	var fields := {"kind":attack,"origin":target.position,"telegraph_ticks":ticks,"range":float(tuning[_range_key(attack)])}
@@ -190,6 +226,7 @@ func _fire(session) -> void:
 		_reset_cycle_after_fire = false
 		cycle = 0
 	else:
+		_last_key = attack
 		cycle += 1
 
 func _fire_flood(session) -> void:
