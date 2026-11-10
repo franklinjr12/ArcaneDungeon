@@ -3,6 +3,8 @@ extends RefCounted
 const Difficulty = preload("res://game/core/difficulty.gd")
 const AttackIntent = preload("res://combat/attack_intent.gd")
 const Pool = preload("res://combat/boss_moves/boss_pattern_pool.gd")
+const Movement = preload("res://combat/boss_moves/boss_movement.gd")
+const Lurk = preload("res://combat/enemy_behaviours/water_lurk.gd")
 const FLOOD_TAG := "archivist_flood"
 var target
 var kind := "undead_warden"
@@ -25,6 +27,16 @@ var _last_key := ""
 var _combo_queue: Array = []
 var _combo_gap := 0
 var _current_entry: Dictionary = {}
+## AD-198 movement: `submerged` is a sim + presentation flag (the renderer hides the boss); the rest is the move in progress.
+var submerged := false
+var strafe_flipped := false
+var _move: Dictionary = {}
+var _move_from := Vector2.ZERO
+var _move_to := Vector2.ZERO
+
+## Pool and movement issues for a boss settings dictionary (empty = valid).
+static func validate(settings: Dictionary) -> Array:
+	return Pool.validate(settings)+Movement.validate(settings)
 
 func _init(target_entity, settings: Dictionary) -> void:
 	target = target_entity
@@ -58,6 +70,15 @@ func _init_phases(elite_damage: float, floor_ticks: int) -> void:
 			tuning[key] = Difficulty.scale_f(float(tuning[key])*elite_damage,"enemy_damage")
 	for entry in tuning["phases"]:
 		entry["windup_ticks"] = maxi(Difficulty.scale_i(int(entry["windup_ticks"]),"telegraph_length"),floor_ticks)
+		for pooled in entry.get("pool",[]):
+			if not pooled.has("move"):
+				continue
+			var move: Dictionary = pooled["move"]
+			if move.has("damage"):
+				move["damage"] = Difficulty.scale_f(float(move["damage"])*elite_damage,"enemy_damage")
+			for key in ["telegraph_ticks","emerge_telegraph_ticks"]:
+				if move.has(key):
+					move[key] = maxi(Difficulty.scale_i(int(move[key]),"telegraph_length"),floor_ticks)
 	tuning["windup_ticks"] = int(tuning["phases"][0]["windup_ticks"])
 	tuning["patterns"] = tuning["phases"][0].get("patterns",[])
 
@@ -70,6 +91,8 @@ func _state(to: String, tick: int) -> void:
 
 func advance(session) -> void:
 	if not target.alive():
+		submerged = false
+		target.untargetable = false
 		_drain_flood(session)
 		_state("dead",session.sim.clock.tick)
 		if not death_announced:
@@ -90,16 +113,27 @@ func advance(session) -> void:
 	state_tick += 1
 	match state:
 		"acquire":
+			_walk(session)
 			_start_windup(session)
 		"windup":
 			var duration := int(intent.snapshot()["telegraph_ticks"]) if tuning.has("phases") else (int(tuning["second_phase_windup_ticks"]) if phase == 2 else int(tuning["windup_ticks"]))
 			if state_tick >= duration:
-				_fire(session)
-				_state("recover",session.sim.clock.tick)
+				_finish_windup(session)
+		"moving":
+			_move_tick(session)
+		"submerged":
+			if state_tick >= int(_move["submerged_ticks"]):
+				_open_move_windup(session,"emerge",float(_move["radius"]),int(_move["emerge_telegraph_ticks"]),_pick_anchor(session,_move,target.position))
 		"recover":
+			_walk(session)
 			var wait := _combo_gap if not _combo_queue.is_empty() else int(tuning["recovery_ticks"])
 			if state_tick >= wait:
 				_start_windup(session)
+
+## Continuous phase movement; only called from acquire/recover so a telegraph never moves.
+func _walk(session) -> void:
+	if tuning.has("phases") and tuning["phases"][phase-1].has("movement"):
+		Movement.continuous_step(self,session,tuning["phases"][phase-1]["movement"])
 
 func _has_pool() -> bool:
 	return tuning.has("phases") and tuning["phases"][phase-1].has("pool")
@@ -147,6 +181,8 @@ func _pool_attack(session) -> String:
 		_rng = RandomNumberGenerator.new()
 		_rng.seed = int(session.seed)*31+int(target.id)
 	_current_entry = Pool.pick(tuning["phases"][phase-1]["pool"],_last_key,["flood"] if flood_age >= 0 else [],_rng)
+	if _current_entry.has("move"):
+		return Pool.entry_key(_current_entry)
 	if not _current_entry.has("combo"):
 		return str(_current_entry.get("pattern",""))
 	var combo: Array = _current_entry["combo"].duplicate()
@@ -164,6 +200,9 @@ func _start_windup(session) -> void:
 		if attack == "flood" and flood_age >= 0:
 			cycle += 1
 			attack = _attack()
+	if attack.begins_with("move:"):
+		_start_move(session,_current_entry["move"])
+		return
 	_windup_attack = attack
 	var ticks := int(tuning["phases"][phase-1]["windup_ticks"]) if tuning.has("phases") else (int(tuning["second_phase_windup_ticks"]) if phase == 2 else int(tuning["windup_ticks"]))
 	var fields := {"kind":attack,"origin":target.position,"telegraph_ticks":ticks,"range":float(tuning[_range_key(attack)])}
@@ -171,11 +210,90 @@ func _start_windup(session) -> void:
 		fields["target"] = session.sim.actor.position
 	elif attack == "flood":
 		fields["rects"] = _flood_entries().map(func(entry): return entry["rect"])
+	_open_windup(session,attack,fields)
+
+func _open_windup(session, attack: String, fields: Dictionary) -> void:
 	intent = AttackIntent.new(fields)
 	tuning["telegraph_ticks"] = intent.snapshot()["telegraph_ticks"]
 	tuning["attack_range"] = float(fields["range"])
 	_state("windup",session.sim.clock.tick)
 	session._notify("! BOSS "+attack.to_upper(),target.position)
+
+## AD-198: a discrete move counts as one no-repeat step. Reposition has no telegraph; leap and submerge reuse a slam windup.
+func _start_move(session, spec: Dictionary) -> void:
+	_move = spec
+	_last_key = "move:%s" % str(spec["mode"])
+	_move_from = target.position
+	match str(spec["mode"]):
+		"reposition":
+			_move_to = _pick_anchor(session,spec,target.position)
+			_state("moving",session.sim.clock.tick)
+		"leap":
+			var landing: Vector2
+			if str(spec.get("target","player")) == "anchor":
+				landing = _pick_anchor(session,spec,target.position)
+			else:
+				landing = session.world.nearest_open_point(session.sim.actor.position,tuning.get("anchors",[]),target.radius,target.position)
+			_move_to = landing
+			_open_move_windup(session,"leap",float(spec["radius"]),int(spec["telegraph_ticks"]),landing)
+		"submerge":
+			_open_move_windup(session,"submerge",float(spec["radius"]),int(spec["telegraph_ticks"]),target.position)
+
+## Anchor relative to the player (farthest = retreat, nearest = ambush); the boss's own spot when no anchor fits.
+func _pick_anchor(session, spec: Dictionary, fallback: Vector2) -> Vector2:
+	return session.world.pick_anchor(tuning.get("anchors",[]),session.sim.actor.position,target.radius,str(spec.get("anchor_pick","farthest")) == "farthest",fallback)
+
+func _open_move_windup(session, kind: String, radius: float, ticks: int, landing: Vector2) -> void:
+	_move_to = landing
+	_windup_attack = kind
+	_open_windup(session,kind,{"kind":kind,"origin":target.position,"telegraph_ticks":ticks,"range":radius,"telegraph_shape":"slam","landing":landing})
+
+func _finish_windup(session) -> void:
+	match str(intent.snapshot()["kind"]):
+		"leap":
+			_state("moving",session.sim.clock.tick)
+		"submerge":
+			submerged = true
+			target.untargetable = true
+			_state("submerged",session.sim.clock.tick)
+		"emerge":
+			target.position = _move_to
+			submerged = false
+			target.untargetable = false
+			if float(_move.get("damage",0.0)) > 0.0:
+				_slam_damage(session)
+			_end_move(session)
+		_:
+			_fire(session)
+			_state("recover",session.sim.clock.tick)
+
+func _slam_damage(session) -> void:
+	var player = session.sim.actor
+	if player.alive() and _move_to.distance_to(player.position) <= float(_move["radius"])+player.radius:
+		session.damage_player(target.id,float(_move["damage"]),str(_move.get("channel","physical")))
+
+func _end_move(session) -> void:
+	if _reset_cycle_after_fire:
+		_reset_cycle_after_fire = false
+		cycle = 0
+	_state("recover",session.sim.clock.tick)
+
+func _move_tick(session) -> void:
+	if str(_move["mode"]) == "leap":
+		var flight := int(_move["flight_ticks"])
+		if state_tick >= flight:
+			target.position = _move_to
+			_slam_damage(session)
+			_end_move(session)
+		else:
+			target.position = Lurk.step_free(session,target.position,(_move_to-_move_from)/float(flight),target.radius)
+		return
+	var gap: Vector2 = _move_to-target.position
+	if gap.length() <= 6.0 or state_tick >= int(_move["max_ticks"]):
+		_end_move(session)
+		return
+	var step := float(_move["speed"])/float(session.sim.clock.tick_rate)
+	target.position = session.world.move_body(target.position,session.world.navigate_direction(target.position,_move_to,target.radius)*minf(step,gap.length()),target.radius)
 
 func _flood_entries() -> Array:
 	var sets: Array = tuning["flood_sets"]

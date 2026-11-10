@@ -2,6 +2,8 @@ extends RefCounted
 ## AD-198 step 1: boss framework. Weighted per-phase pattern pools, combos, no immediate repeat, back-compat. All settings are synthetic.
 const Session = preload("res://combat/combat_session.gd")
 const Pool = preload("res://combat/boss_moves/boss_pattern_pool.gd")
+const BossCombat = preload("res://combat/boss_combat.gd")
+const ANCHORS := [[300,450],[1100,200],[1100,700]]
 const AT := Vector2(1030,450)
 
 func run(t) -> void:
@@ -11,6 +13,16 @@ func run(t) -> void:
 	_determinism(t)
 	_validate(t)
 	_legacy(t)
+	_walk(t)
+	_strafe(t)
+	_reposition(t)
+	_leap(t)
+	_leap_fallback(t)
+	_submerge(t)
+	_telegraph_floor(t)
+	_pick_anchor(t)
+	_stationary(t)
+	_validate_moves(t)
 
 func _base(extra: Dictionary = {}) -> Dictionary:
 	var cfg := {"kind":"test_boss","hp":2000,"radius":49,"recovery_ticks":30,"min_telegraph_ticks":36,"shot_speed":280,"shot_spread":0,
@@ -133,3 +145,184 @@ func _legacy(t) -> void:
 	var pool_trace := _trace(_base(),31,10)
 	var fresh2 = Session.new(31,"empty",0)
 	t.equal(pool_trace["session"].sim.clock.random_int(1,1000000),fresh2.sim.clock.random_int(1,1000000),"AD-198 pool boss leaves the sim RNG untouched")
+
+## Pool of three patterns plus a heavily weighted move, so the first pick is the move; shots deal no damage unless `shots` is set.
+func _move_cfg(move: Dictionary, shots: float = 0.0) -> Dictionary:
+	var pool: Array = [{"move":move,"weight":1000},{"pattern":"radial"},{"pattern":"fan"},{"pattern":"targeted"}]
+	return _base({"anchors":ANCHORS,"shot_damage":shots,"radial_damage":shots,"phases":[{"threshold":1.0,"windup_ticks":40,"pool":pool}]})
+
+func _movement_cfg(movement: Dictionary) -> Dictionary:
+	return _base({"shot_damage":0.0,"radial_damage":0.0,"phases":[{"threshold":1.0,"windup_ticks":40,"movement":movement,"pool":[{"pattern":"radial"},{"pattern":"fan"},{"pattern":"targeted"}]}]})
+
+func _walk(t) -> void:
+	var pair := _fresh(_movement_cfg({"mode":"walk_to_player","speed":90,"stop_range":200}))
+	var s = pair[0]
+	var boss = pair[1]
+	s.sim.actor.position = Vector2(1030,150)
+	var moved_in_windup := false
+	var previous: Vector2 = boss.target.position
+	var prev_state := ""
+	for i in 900:
+		boss.advance(s)
+		if boss.state == "windup" and prev_state == "windup" and boss.target.position != previous:
+			moved_in_windup = true
+		previous = boss.target.position
+		prev_state = boss.state
+	var distance: float = boss.target.position.distance_to(s.sim.actor.position)
+	t.check(distance < 299.0 and distance >= 199.9 and distance <= 202.0,"AD-198 walk_to_player closes from 300 and stops at stop_range (%.1f)" % distance)
+	t.check(not moved_in_windup,"AD-198 continuous movement never moves the boss during a windup")
+
+func _strafe(t) -> void:
+	var pair := _fresh(_movement_cfg({"mode":"strafe","speed":80,"preferred_range":200,"margin":50}))
+	var s = pair[0]
+	var boss = pair[1]
+	s.sim.actor.position = Vector2(1030,350)
+	var start: Vector2 = boss.target.position
+	var low := INF
+	var high := 0.0
+	for i in 600:
+		boss.advance(s)
+		if i > 120:
+			var distance: float = boss.target.position.distance_to(s.sim.actor.position)
+			low = minf(low,distance)
+			high = maxf(high,distance)
+	t.check(low >= 150.0 and high <= 250.0,"AD-198 strafe keeps distance in preferred_range +- margin (%.1f..%.1f)" % [low,high])
+	t.check(boss.target.position.distance_to(start) > 40.0,"AD-198 strafe actually moves the boss")
+
+func _reposition(t) -> void:
+	var pair := _fresh(_move_cfg({"mode":"reposition","anchor_pick":"farthest","speed":200,"max_ticks":300}))
+	var s = pair[0]
+	var boss = pair[1]
+	var entered := false
+	for i in 400:
+		var before: String = boss.state
+		boss.advance(s)
+		entered = entered or boss.state == "moving"
+		if before == "moving" and boss.state == "recover":
+			break
+	t.check(entered,"AD-198 reposition enters the moving state")
+	t.check(boss.target.position.distance_to(Vector2(1100,200)) <= 6.0,"AD-198 reposition arrives at the farthest anchor (tie goes to the lowest index): %s" % str(boss.target.position))
+	t.equal(boss._last_key,"move:reposition","AD-198 a move counts as one no-repeat step")
+
+func _leap(t) -> void:
+	var move := {"mode":"leap","target":"player","telegraph_ticks":50,"flight_ticks":24,"radius":110,"damage":12,"channel":"physical"}
+	for dodge in [false,true]:
+		var pair := _fresh(_move_cfg(move))
+		var s = pair[0]
+		var boss = pair[1]
+		s.sim.actor.position = Vector2(1030,150)
+		var health: float = s.sim.actor.health.current
+		var windup := 0
+		var landing := Vector2.ZERO
+		var moved := false
+		var hurt_early := false
+		var start: Vector2 = boss.target.position
+		for i in 300:
+			boss.advance(s)
+			if boss.state == "windup":
+				windup += 1
+				landing = boss.intent.snapshot()["landing"]
+				if dodge and windup == 20:
+					s.sim.actor.position = Vector2(400,650)
+				moved = moved or boss.target.position != start
+				hurt_early = hurt_early or s.sim.actor.health.current < health
+			elif windup > 0 and boss.state == "recover":
+				break
+		t.check(windup >= 36,"AD-198 leap telegraph is at least min_telegraph_ticks (%d)" % windup)
+		t.check(not moved and not hurt_early,"AD-198 leap does nothing before its telegraph ends")
+		t.equal(landing,Vector2(1030,150),"AD-198 leap landing is locked to the player position when the windup starts")
+		t.check(boss.target.position.distance_to(landing) < 0.01,"AD-198 leap lands at the locked point even if the player moved")
+		if dodge:
+			t.equal(s.sim.actor.health.current,health,"AD-198 a player outside the leap radius takes no damage")
+		else:
+			t.check(s.sim.actor.health.current < health,"AD-198 a player inside the leap radius is damaged")
+
+func _leap_fallback(t) -> void:
+	var pair := _fresh(_move_cfg({"mode":"leap","target":"player","telegraph_ticks":50,"flight_ticks":24,"radius":110,"damage":12}))
+	var s = pair[0]
+	var boss = pair[1]
+	s.sim.actor.position = Vector2(600,270)
+	var landing := Vector2.ZERO
+	for i in 5:
+		boss.advance(s)
+		if boss.state == "windup":
+			landing = boss.intent.snapshot()["landing"]
+			break
+	t.equal(landing,Vector2(300,450),"AD-198 a leap landing inside a wall falls back to the nearest valid anchor")
+	t.check(s.world.valid_position(landing,boss.target.radius),"AD-198 the fallback landing is a valid position")
+
+func _submerge(t) -> void:
+	var pair := _fresh(_move_cfg({"mode":"submerge","telegraph_ticks":40,"submerged_ticks":60,"emerge_telegraph_ticks":50,"anchor_pick":"farthest","radius":110,"damage":10}))
+	var s = pair[0]
+	var boss = pair[1]
+	var team: int = s.sim.actor.team
+	var emerge_ticks := 0
+	var hidden_ok := true
+	var start: Vector2 = boss.target.position
+	var saw_submerged := false
+	for i in 400:
+		boss.advance(s)
+		if boss.state == "submerged" or (boss.state == "windup" and str(boss.intent.snapshot()["kind"]) == "emerge"):
+			saw_submerged = true
+			hidden_ok = hidden_ok and boss.submerged and not boss.target.eligible(team) and boss.target.alive() and s.alive_enemies() == 1 \
+				and boss.target.receive_damage(50.0,"physical",team,1.0) == 0.0 and boss.target.position == start
+		if boss.state == "windup" and str(boss.intent.snapshot()["kind"]) == "emerge":
+			emerge_ticks += 1
+			t.equal(boss.intent.snapshot()["landing"],Vector2(1100,200),"AD-198 emerge telegraph shows the chosen anchor")
+		elif emerge_ticks > 0:
+			break
+	t.check(saw_submerged and hidden_ok,"AD-198 submerged boss is untargetable and hidden, yet alive and counted")
+	t.check(emerge_ticks >= 36,"AD-198 emerge is telegraphed for at least min_telegraph_ticks (%d)" % emerge_ticks)
+	t.equal(boss.target.position,Vector2(1100,200),"AD-198 boss reappears at the anchor only after the emerge telegraph")
+	t.check(not boss.submerged and boss.target.eligible(team),"AD-198 emerged boss is targetable again")
+	boss.target.health.current = 0.0
+	boss.advance(s)
+	t.check(boss.state == "dead" and not boss.submerged and not boss.target.untargetable,"AD-198 death clears the submerged flags")
+
+func _telegraph_floor(t) -> void:
+	var pool: Array = [{"move":{"mode":"leap","telegraph_ticks":3,"flight_ticks":24,"radius":110,"damage":12}},
+		{"move":{"mode":"submerge","telegraph_ticks":2,"submerged_ticks":60,"emerge_telegraph_ticks":1,"radius":110,"damage":10}},
+		{"pattern":"radial"},{"pattern":"fan"},{"pattern":"targeted"}]
+	var boss = _fresh(_base({"anchors":ANCHORS,"phases":[{"threshold":1.0,"windup_ticks":40,"pool":pool}]}))[1]
+	var leap: Dictionary = boss.tuning["phases"][0]["pool"][0]["move"]
+	var sub: Dictionary = boss.tuning["phases"][0]["pool"][1]["move"]
+	for value in [leap["telegraph_ticks"],sub["telegraph_ticks"],sub["emerge_telegraph_ticks"]]:
+		t.check(int(value) >= 36,"AD-198 move telegraph %d is clamped to min_telegraph_ticks" % int(value))
+
+func _pick_anchor(t) -> void:
+	var world = _fresh(_base())[0].world
+	var anchors: Array = [[1100,200],[1100,700],[300,450],[600,270]]
+	var from := Vector2(1100,450)
+	var tied: Array = [[1100,200],[1100,700],[600,270]]
+	t.equal(world.pick_anchor(tied,from,49.0,true,Vector2.ZERO),Vector2(1100,200),"AD-198 pick_anchor farthest tie goes to the lowest index")
+	t.equal(world.pick_anchor(tied,from,49.0,false,Vector2.ZERO),Vector2(1100,200),"AD-198 pick_anchor nearest tie goes to the lowest index")
+	t.equal(world.pick_anchor([[600,270]],from,49.0,true,Vector2(5,5)),Vector2(5,5),"AD-198 pick_anchor skips anchors inside walls and returns the fallback")
+	t.equal(world.nearest_open_point(Vector2(700,450),anchors,49.0,Vector2.ZERO),Vector2(700,450),"AD-198 nearest_open_point keeps a valid point")
+	t.equal(world.nearest_open_point(Vector2(600,270),anchors,49.0,Vector2.ZERO),Vector2(300,450),"AD-198 nearest_open_point snaps an invalid point to the nearest valid anchor")
+	t.equal(world.nearest_open_point(Vector2(600,270),[],49.0,Vector2(9,9)),Vector2(9,9),"AD-198 nearest_open_point falls back to the caller position")
+
+func _stationary(t) -> void:
+	var flat := _base()
+	flat.erase("anchors")
+	var pair := _fresh(flat)
+	for i in 600:
+		pair[1].advance(pair[0])
+	t.equal(pair[1].target.position,AT,"AD-198 a phase without movement or move entries never moves the boss")
+	t.check(not pair[1].submerged and not pair[1].target.untargetable,"AD-198 legacy boss is never submerged")
+
+func _validate_moves(t) -> void:
+	var good := _move_cfg({"mode":"reposition","speed":200,"max_ticks":120})
+	t.equal(BossCombat.validate(good),[],"AD-198 a valid movement config has no issues")
+	var bad_mode: Array = BossCombat.validate(_move_cfg({"mode":"teleport"})).map(func(i): return i["code"])
+	t.equal(bad_mode,["BOSS_MOVE_MODE"],"AD-198 validate flags an unknown move mode")
+	var bad_phase: Array = BossCombat.validate(_movement_cfg({"mode":"fly"})).map(func(i): return i["code"])
+	t.equal(bad_phase,["BOSS_MOVE_MODE"],"AD-198 validate flags an unknown phase movement mode")
+	var missing: Array = BossCombat.validate(_movement_cfg({"mode":"strafe","speed":80})).map(func(i): return i["code"])
+	t.equal(missing,["BOSS_MOVE_PARAM","BOSS_MOVE_PARAM"],"AD-198 validate flags missing strafe keys")
+	var no_anchors := good.duplicate(true)
+	no_anchors.erase("anchors")
+	var codes: Array = BossCombat.validate(no_anchors).map(func(i): return i["code"])
+	t.equal(codes,["BOSS_MOVE_ANCHORS"],"AD-198 validate flags a reposition without anchors")
+	var leap_no_anchors := _move_cfg({"mode":"leap","telegraph_ticks":40,"flight_ticks":20,"radius":100,"damage":5})
+	leap_no_anchors.erase("anchors")
+	t.equal(BossCombat.validate(leap_no_anchors),[],"AD-198 a leap at the player needs no anchors")
