@@ -224,7 +224,297 @@
       "shot_damage": 16,
       "shot_speed": 300,
       "shot_spread": 0,
-      "telegraph_radius": 190
+      "telegraph_radius": 190,
+      "min_telegraph_ticks": 30,
+      "walk_speed": 120,
+      "enrage_speed_multiplier": 1.2,
+      "anchors": [
+        [
+          700,
+          190
+        ],
+        [
+          700,
+          710
+        ],
+        [
+          300,
+          450
+        ],
+        [
+          1030,
+          450
+        ]
+      ],
+      "stagger": {
+        "ticks": 120,
+        "damage_taken_multiplier": 1.5
+      },
+      "pillar_debris": {
+        "radius": 190,
+        "stun_ticks": 120
+      },
+      "melee": {
+        "sweep_1": {
+          "shape": "arc",
+          "windup_ticks": 40,
+          "reach": 150,
+          "arc_degrees": 150,
+          "damage": 14
+        },
+        "sweep_2": {
+          "shape": "arc",
+          "windup_ticks": 32,
+          "reach": 150,
+          "arc_degrees": 150,
+          "damage": 14
+        },
+        "overhead_slam": {
+          "shape": "slam",
+          "windup_ticks": 48,
+          "reach": 150,
+          "damage": 24
+        }
+      },
+      "spear_line": {
+        "windup_ticks": 54,
+        "count": 3,
+        "start": 120,
+        "spacing": 150,
+        "radius": 62,
+        "damage": 16
+      },
+      "grave_rise": {
+        "windup_ticks": 54,
+        "kind": "bone_thrall",
+        "offsets": [
+          [
+            -110,
+            -110
+          ],
+          [
+            -110,
+            110
+          ]
+        ],
+        "cap": 3,
+        "radius": 80
+      },
+      "phases": [
+        {
+          "threshold": 1.0,
+          "windup_ticks": 48,
+          "movement": {
+            "mode": "walk_to_player",
+            "speed": 120,
+            "stop_range": 110
+          },
+          "pool": [
+            {
+              "combo": [
+                "sweep_1",
+                "sweep_2",
+                "overhead_slam"
+              ],
+              "gap_ticks": 12,
+              "max_range": 260,
+              "weight": 4
+            },
+            {
+              "pattern": "spear_line",
+              "weight": 3
+            },
+            {
+              "pattern": "grave_rise",
+              "weight": 2
+            },
+            {
+              "move": {
+                "mode": "reposition",
+                "speed": 120,
+                "max_ticks": 150,
+                "anchor_pick": "nearest"
+              },
+              "weight": 1
+            },
+            {
+              "move": {
+                "mode": "leap",
+                "target": "player",
+                "telegraph_ticks": 48,
+                "flight_ticks": 22,
+                "radius": 90,
+                "damage": 10
+              },
+              "min_range": 420,
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "threshold": 0.6,
+          "windup_ticks": 44,
+          "transition": {
+            "roar_ticks": 90,
+            "arena_change": {
+              "clear_hazards": true,
+              "props": [
+                {
+                  "id": "warden_pillar_1",
+                  "kind": "boss_pillar",
+                  "position": [
+                    470,
+                    250
+                  ]
+                },
+                {
+                  "id": "warden_pillar_2",
+                  "kind": "boss_pillar",
+                  "position": [
+                    470,
+                    650
+                  ]
+                },
+                {
+                  "id": "warden_pillar_3",
+                  "kind": "boss_pillar",
+                  "position": [
+                    850,
+                    250
+                  ]
+                },
+                {
+                  "id": "warden_pillar_4",
+                  "kind": "boss_pillar",
+                  "position": [
+                    850,
+                    650
+                  ]
+                }
+              ]
+            }
+          },
+          "movement": {
+            "mode": "strafe",
+            "speed": 120,
+            "preferred_range": 260,
+            "margin": 50
+          },
+          "pool": [
+            {
+              "move": {
+                "mode": "leap",
+                "target": "player",
+                "telegraph_ticks": 50,
+                "flight_ticks": 24,
+                "radius": 120,
+                "damage": 20,
+                "shockwave": {
+                  "speed": 340,
+                  "width": 36,
+                  "max_radius": 420,
+                  "damage": 14
+                },
+                "burst_delay_ticks": 18
+              },
+              "big": true,
+              "weight": 4
+            },
+            {
+              "pattern": "spear_line",
+              "weight": 3
+            },
+            {
+              "pattern": "grave_rise",
+              "weight": 2
+            },
+            {
+              "combo": [
+                "sweep_1",
+                "sweep_2",
+                "overhead_slam"
+              ],
+              "gap_ticks": 12,
+              "max_range": 260,
+              "weight": 2
+            },
+            {
+              "move": {
+                "mode": "reposition",
+                "speed": 120,
+                "max_ticks": 150,
+                "anchor_pick": "farthest"
+              },
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "threshold": 0.25,
+          "windup_ticks": 40,
+          "windup_scale": 0.85,
+          "transition": {
+            "roar_ticks": 60
+          },
+          "movement": {
+            "mode": "walk_to_player",
+            "speed": 144,
+            "stop_range": 110
+          },
+          "timed_summon": {
+            "first_ticks": 120,
+            "every_ticks": 1200
+          },
+          "pool": [
+            {
+              "combo": [
+                "sweep_1",
+                "sweep_2",
+                "overhead_slam"
+              ],
+              "gap_ticks": 12,
+              "max_range": 260,
+              "weight": 5
+            },
+            {
+              "pattern": "spear_line",
+              "weight": 2
+            },
+            {
+              "pattern": "radial",
+              "weight": 2
+            },
+            {
+              "move": {
+                "mode": "leap",
+                "target": "player",
+                "telegraph_ticks": 50,
+                "flight_ticks": 24,
+                "radius": 120,
+                "damage": 20,
+                "shockwave": {
+                  "speed": 340,
+                  "width": 36,
+                  "max_radius": 420,
+                  "damage": 14
+                },
+                "burst_delay_ticks": 18
+              },
+              "big": true,
+              "weight": 3
+            },
+            {
+              "move": {
+                "mode": "reposition",
+                "speed": 144,
+                "max_ticks": 120,
+                "anchor_pick": "nearest"
+              },
+              "weight": 1
+            }
+          ]
+        }
+      ]
     },
     "cistern_boss": {
       "_note": "AD-142 PROPOSED numbers (Demo Plan default 'Drowned Archivist', pending Franklin)",

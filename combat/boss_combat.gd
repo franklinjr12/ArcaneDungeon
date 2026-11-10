@@ -5,7 +5,9 @@ const AttackIntent = preload("res://combat/attack_intent.gd")
 const Pool = preload("res://combat/boss_moves/boss_pattern_pool.gd")
 const Movement = preload("res://combat/boss_moves/boss_movement.gd")
 const Hazards = preload("res://combat/boss_moves/boss_hazards.gd")
+const Warden = preload("res://combat/boss_moves/warden_patterns.gd")
 const Lurk = preload("res://combat/enemy_behaviours/water_lurk.gd")
+const EnvProps = preload("res://world/env_props.gd")
 const FLOOD_TAG := "archivist_flood"
 const ARENA_TAG := "boss_arena"
 var target
@@ -41,10 +43,16 @@ var _hazards
 var staggered := false
 var _pending_roar := false
 var _arena_water := false
+## AD-199: leap shockwave/burst entries still running (empty unless a leap move has `shockwave`) and ticks since the phase began (timed summon).
+var _aftermath: Array = []
+var _summon_age := 0
+## AD-199: ticks the current stagger lasts (a debris stun can differ from tuning.stagger.ticks) and how many env_props events the boss has read.
+var _stagger_ticks := 0
+var _env_event_index := 0
 
 ## Pool, movement, hazard, transition and stagger issues for a boss settings dictionary (empty = valid).
 static func validate(settings: Dictionary) -> Array:
-	return Pool.validate(settings)+Movement.validate(settings)+Hazards.validate(settings)+_validate_beats(settings)
+	return Pool.validate(settings)+Movement.validate(settings)+Hazards.validate(settings)+_validate_beats(settings)+Warden.validate(settings)
 
 static func _number_from(value, minimum: float) -> bool:
 	return (typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT) and float(value) >= minimum
@@ -72,6 +80,8 @@ static func _validate_beats(settings: Dictionary) -> Array:
 			var kind := str(entry.get("kind","")) if typeof(entry) == TYPE_DICTIONARY else ""
 			if kind != "shallow" or typeof(rect) != TYPE_ARRAY or rect.size() != 4 or not rect.all(func(v): return _number_from(v,-INF)):
 				issues.append({"code":"BOSS_TRANSITION_PARAM","path":"%s.arena_change.water[%d]" % [path,w],"message":"arena water must be shallow with rect [x,y,w,h]"})
+		if change.has("props") and not EnvProps.validate(change["props"],EnvProps.load_data().get("kinds",{})).is_empty():
+			issues.append({"code":"BOSS_TRANSITION_PARAM","path":path+".arena_change.props","message":"arena_change.props must be valid env prop entries"})
 	if settings.has("stagger"):
 		var stagger = settings["stagger"]
 		if typeof(stagger) != TYPE_DICTIONARY or not _number_from(stagger.get("ticks"),1.0):
@@ -111,6 +121,11 @@ func _init_phases(elite_damage: float, floor_ticks: int) -> void:
 	for key in ["water_bolt_damage","storm_pulse_damage"]:
 		if tuning.has(key):
 			tuning[key] = Difficulty.scale_f(float(tuning[key])*elite_damage,"enemy_damage")
+	var warden_attacks: Array = tuning.get("melee",{}).values()
+	if tuning.has("spear_line"):
+		warden_attacks.append(tuning["spear_line"])
+	for attack in warden_attacks:
+		attack["damage"] = Difficulty.scale_f(float(attack["damage"])*elite_damage,"enemy_damage")
 	for entry in tuning["phases"]:
 		entry["windup_ticks"] = maxi(Difficulty.scale_i(int(entry["windup_ticks"]),"telegraph_length"),floor_ticks)
 		for pooled in entry.get("pool",[]):
@@ -119,6 +134,8 @@ func _init_phases(elite_damage: float, floor_ticks: int) -> void:
 			var move: Dictionary = pooled["move"]
 			if move.has("damage"):
 				move["damage"] = Difficulty.scale_f(float(move["damage"])*elite_damage,"enemy_damage")
+			if move.has("shockwave"):
+				move["shockwave"]["damage"] = Difficulty.scale_f(float(move["shockwave"]["damage"])*elite_damage,"enemy_damage")
 			for key in ["telegraph_ticks","emerge_telegraph_ticks"]:
 				if move.has(key):
 					move[key] = maxi(Difficulty.scale_i(int(move[key]),"telegraph_length"),floor_ticks)
@@ -152,9 +169,16 @@ func advance(session) -> void:
 		_drain_flood(session)
 		if _hazards != null:
 			_hazards.clear(self,session)
+		if tuning.has("spear_line"):
+			Warden.cancel_warnings(self,session)
+		if not _aftermath.is_empty():
+			_aftermath.clear()
+			session.remove_hazards_from(target.id,["boss_ring"])
 		_state("dead",session.sim.clock.tick)
 		if not death_announced:
 			death_announced = true
+			if tuning.has("grave_rise"):
+				_dismiss_thralls(session)
 			session.on_enemy_death(self)
 		return
 	if session.state != "playing":
@@ -171,6 +195,7 @@ func advance(session) -> void:
 	state_tick += 1
 	if _hazards != null:
 		_hazards.advance(self,session)
+	Warden.advance(self,session)
 	match state:
 		"acquire":
 			_walk(session)
@@ -188,7 +213,7 @@ func advance(session) -> void:
 			if state_tick >= int(tuning["phases"][phase-1]["transition"]["roar_ticks"]):
 				_end_roar(session)
 		"stagger":
-			if state_tick >= int(tuning["stagger"]["ticks"]):
+			if state_tick >= _stagger_ticks:
 				staggered = false
 				target.damage_scale = 1.0
 				_start_windup(session)
@@ -239,6 +264,7 @@ func _update_phase(hp_fraction: float, tick: int, session) -> void:
 		return
 	transitions.append({"from":"phase%d" % phase,"to":"phase%d" % reached,"tick":tick,"enemy_id":target.id})
 	phase = reached
+	_summon_age = 0
 	_combo_queue.clear()
 	_last_key = ""
 	_current_entry = {}
@@ -277,6 +303,8 @@ func _begin_roar(session, lead: int) -> void:
 	target.damage_scale = 0.0
 	if _hazards != null:
 		_hazards.clear(self,session)
+	if tuning.has("spear_line"):
+		Warden.cancel_warnings(self,session)
 	transitions.append({"from":"phase%d" % phase,"to":"roar","tick":session.sim.clock.tick,"enemy_id":target.id})
 	state = "roar"
 	state_tick = -lead
@@ -285,12 +313,30 @@ func _begin_roar(session, lead: int) -> void:
 	if phase != 2:
 		session._event_cue("phase:"+kind,target.position,"sfx.boss.phase")
 
+## AD-199: a debris stun (cracked pillar broken near the boss) cuts the current action and opens the same damage window as a big-move stagger.
+func stun(session, ticks: int) -> void:
+	intent = null
+	_windup_attack = ""
+	_combo_queue.clear()
+	_current_entry = {}
+	Warden.cancel_warnings(self,session)
+	staggered = true
+	target.damage_scale = float(tuning["stagger"]["damage_taken_multiplier"])
+	_stagger_ticks = ticks
+	if state == "stagger":
+		state_tick = 0
+	else:
+		_state("stagger",session.sim.clock.tick)
+	session._notify("STAGGERED",target.position)
+
 func _apply_arena_change(session, change: Dictionary) -> void:
 	if bool(change.get("clear_hazards",false)):
 		session.remove_hazards_from(target.id)
 		_drain_flood(session)
 		if session.water != null:
 			session.water.remove_tag(ARENA_TAG)
+	if change.has("props"):
+		_place_props(session,change["props"])
 	var water: Array = change.get("water",[])
 	if water.is_empty():
 		return
@@ -299,6 +345,14 @@ func _apply_arena_change(session, change: Dictionary) -> void:
 	session.water.remove_tag(ARENA_TAG)
 	session.water.add_entries(water.map(func(entry): return {"kind":str(entry["kind"]),"rect":entry["rect"].duplicate(),"tag":ARENA_TAG}))
 	_arena_water = true
+
+## AD-199: installs the arena props, then moves the player or the boss out of any new pillar to the nearest open point.
+func _place_props(session, props: Array) -> void:
+	session.set_env_props(props)
+	var anchors: Array = tuning.get("anchors",[])
+	for body in [session.sim.actor,target]:
+		if not session.world.valid_position(body.position,body.radius):
+			body.position = session.world.nearest_open_point(body.position,anchors,body.radius,body.position)
 
 func _end_roar(session) -> void:
 	target.damage_scale = 1.0
@@ -315,6 +369,7 @@ func _after_move_or_attack(session) -> void:
 	elif bool(_current_entry.get("big",false)) and _combo_queue.is_empty() and tuning.has("stagger"):
 		staggered = true
 		target.damage_scale = float(tuning["stagger"]["damage_taken_multiplier"])
+		_stagger_ticks = int(tuning["stagger"]["ticks"])
 		_state("stagger",session.sim.clock.tick)
 		session._notify("STAGGERED",target.position)
 	else:
@@ -334,7 +389,13 @@ func _range_key(attack: String) -> String:
 func _pool_attack(session) -> String:
 	if not _combo_queue.is_empty():
 		return str(_combo_queue.pop_front())
-	_current_entry = Pool.pick(tuning["phases"][phase-1]["pool"],_last_key,["flood"] if flood_age >= 0 else [],rng(session))
+	var pool: Array = tuning["phases"][phase-1]["pool"]
+	var blocked: Array = ["flood"] if flood_age >= 0 else []
+	var distance: float = session.sim.actor.position.distance_to(target.position)
+	for entry in pool:
+		if (entry.has("max_range") and distance > float(entry["max_range"])) or (entry.has("min_range") and distance < float(entry["min_range"])):
+			blocked.append(Pool.entry_key(entry))
+	_current_entry = Pool.pick(pool,_last_key,blocked,rng(session))
 	if _current_entry.has("move"):
 		return Pool.entry_key(_current_entry)
 	if not _current_entry.has("combo"):
@@ -358,6 +419,9 @@ func _start_windup(session) -> void:
 		_start_move(session,_current_entry["move"])
 		return
 	_windup_attack = attack
+	if Warden.handles(tuning,attack):
+		_open_windup(session,attack,Warden.windup_fields(self,session,attack))
+		return
 	var ticks := int(tuning["phases"][phase-1]["windup_ticks"]) if tuning.has("phases") else (int(tuning["second_phase_windup_ticks"]) if phase == 2 else int(tuning["windup_ticks"]))
 	var fields := {"kind":attack,"origin":target.position,"telegraph_ticks":ticks,"range":float(tuning[_range_key(attack)])}
 	if attack == "wet_zone":
@@ -438,6 +502,8 @@ func _move_tick(session) -> void:
 		if state_tick >= flight:
 			target.position = _move_to
 			_slam_damage(session)
+			if _move.has("shockwave"):
+				Warden.start_aftermath(self,session,_move)
 			_end_move(session)
 		else:
 			target.position = Lurk.step_free(session,target.position,(_move_to-_move_from)/float(flight),target.radius)
@@ -464,7 +530,9 @@ func _fire(session) -> void:
 	if not target.alive() or not session.sim.actor.alive():
 		return
 	var attack := _windup_attack
-	if attack == "pulse":
+	if Warden.handles(tuning,attack):
+		Warden.fire(self,session,attack)
+	elif attack == "pulse":
 		if session.sim.actor.position.distance_to(target.position) <= float(tuning["pulse_radius"]):
 			session.damage_player(target.id,float(tuning["pulse_damage"]),"lightning")
 	elif attack == "fan" or attack == "water_bolt":
@@ -488,7 +556,7 @@ func _fire(session) -> void:
 	elif attack == "flood":
 		_fire_flood(session)
 	elif attack == "summon_wisps":
-		_fire_summon(session)
+		fire_summon(session,str(tuning.get("wisp_kind","lantern_wisp")),tuning["wisp_offsets"],int(tuning["wisp_cap"]))
 	elif attack == "storm_pulse":
 		_fire_storm_pulse(session)
 	else:
@@ -513,15 +581,23 @@ func _fire_flood(session) -> void:
 	session.water.add_entries(entries)
 	flood_age = 0
 
-func _fire_summon(session) -> void:
-	var kind := str(tuning.get("wisp_kind","lantern_wisp"))
+## Queues `kind` summons at `offsets` from the boss while live + queued summons stay under `cap`.
+func fire_summon(session, kind: String, offsets: Array, cap: int) -> void:
 	var radius := float(session.data["enemies"][kind]["radius"])
-	for offset in tuning["wisp_offsets"]:
-		if session.summons_owned_by(target.id) >= int(tuning["wisp_cap"]):
+	for offset in offsets:
+		if session.summons_owned_by(target.id) >= cap:
 			break
 		var at: Vector2 = target.position+Vector2(float(offset[0]),float(offset[1]))
 		if session.world.valid_position(at,radius):
 			session.pending_spawns.append({"kind":kind,"position":at,"summoner_id":target.id})
+
+## The boss's thralls fall with it so the room can clear; queued ones are dropped.
+func _dismiss_thralls(session) -> void:
+	session.pending_spawns = session.pending_spawns.filter(func(spec): return int(spec["summoner_id"]) != target.id)
+	for enemy in session.enemies:
+		var owner_id = enemy.get("summoner_id")
+		if owner_id != null and int(owner_id) == target.id and enemy.target.alive():
+			enemy.target.receive_damage(enemy.target.health.current+1.0,"neutral",session.sim.actor.team,1.0)
 
 func _fire_storm_pulse(session) -> void:
 	var actor = session.sim.actor

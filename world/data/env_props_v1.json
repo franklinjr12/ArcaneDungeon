@@ -18,6 +18,8 @@
     "urn": {"shape": "circle", "radius": 14, "solid_walk": false, "blocks_spells": false,
       "break_by": ["essence.force"], "coins": 3},
     "cracked_wall": {"shape": "rect", "size": [48, 48], "solid_walk": true, "blocks_spells": true,
-      "break_by": ["essence.force"], "coins": 8}
+      "break_by": ["essence.force"], "coins": 8},
+    "boss_pillar": {"shape": "rect", "size": [64, 64], "solid_walk": true, "blocks_spells": true,
+      "break_by": ["essence.force"], "coins": 0}
   }
 }

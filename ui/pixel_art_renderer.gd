@@ -986,6 +986,8 @@ static func _collect_feedback(session, tick: int, memo: Dictionary, out: Array) 
 		var item := {"at": target.position, "age": int(enemy.state_tick), "rotation": to_mage.angle(), "length": 0.0, "slot": 0,
 			"window": int(enemy.tuning["telegraph_ticks"])}
 		var shape := str(intent.get("telegraph_shape", ""))
+		if shape == "none":
+			continue
 		if shape == "arc":
 			item["event"] = "telegraph.arc"
 			item["at"] = intent["arc_center"]
@@ -1147,7 +1149,7 @@ static func _draw_water_cells(canvas: CanvasItem, rect: Rect2, tag: String, tick
 static func env_prop_frame(kind: String, state: String, lit: bool, stage: int, tick: int) -> Dictionary:
 	_export_data()
 	var base := {"crate": "burnable_crate", "urn": "breakable_urn", "puddle": "puddle", "cobweb": "cobweb",
-		"brazier": "brazier", "cracked_wall": "cracked_wall"}.get(kind, "") as String
+		"brazier": "brazier", "cracked_wall": "cracked_wall", "boss_pillar": "cracked_wall"}.get(kind, "") as String
 	if base == "" or state == "destroyed":
 		return {}
 	var stem := "ad_prp_" + base + ("_cistern" if stage == 2 else ("" if kind == "urn" else "_ruins"))
@@ -1246,6 +1248,12 @@ static func draw_hazards(canvas: CanvasItem, session, offset: Vector2) -> void:
 			canvas.draw_rect(Rect2(rect.position-offset,rect.size),Color(0.45,0.7,1.0,0.7),false,2.0)
 			continue
 		var at: Vector2 = hazard["position"]-offset
+		if kind == "boss_ring":
+			# AD-199: expanding danger ring at a constant colour (no per-tick alpha change, reduce-flash safe).
+			var ring_radius := float(hazard["ring_per_tick"])*float(hazard["age"])
+			if ring_radius > 0.0:
+				canvas.draw_arc(at,ring_radius,0.0,TAU,64,telegraph_colors("telegraph.circle",1.0)["outline"],float(hazard["ring_width"]))
+			continue
 		if kind == "boss_zone":
 			# AD-198: solid warm tint, no per-tick alpha change (reduce-flash safe).
 			canvas.draw_circle(at,float(hazard["radius"]),Color(0.9,0.3,0.15,0.4))

@@ -37,6 +37,19 @@ Common keys: `type`, `first_ticks` (>= 0, first start after the phase starts), `
 - `rising_water`: `duration_ticks`, `sets` (array of entry arrays used in turn, each entry `{"kind":"shallow","rect":[x,y,w,h]}`). Shallow only: `BOSS_HAZARD_DEEP_WATER`. Uses its own water tag and recedes after `duration_ticks`; other water is untouched.
 - Errors: `BOSS_HAZARD_TYPE`, `BOSS_HAZARD_PARAM`.
 
+### Undead Warden keys (AD-199)
+- `melee` (top level): named sweeps usable as pool `pattern`/`combo` members. `{"shape":"arc","windup_ticks","reach","arc_degrees","damage"}` draws a cone telegraph; `{"shape":"slam","windup_ticks","reach","damage"}` draws a circle (the dash test). Live: `sweep_1` 40, `sweep_2` 32, `overhead_slam` 48 ticks, reach 150.
+- `spear_line` (top level): `{windup_ticks,count,start,spacing,radius,damage}`. `count` ground warnings (`boss_warning` circles) in a line toward the player, starting `start` px from the boss every `spacing` px, then all hit. Its telegraph shape is `none`: the renderer skips the intent shape so no extra dash lane is drawn.
+- `grave_rise` (top level): `{windup_ticks,kind,offsets,cap,radius}`. Summons `kind` at each `offsets` entry relative to the boss, never above `cap` thralls alive (live: 2 per cast, cap 3). Thralls die with the boss.
+- Pool `max_range` / `min_range` (px, optional on any entry): the entry is blocked while the player is farther than `max_range` or closer than `min_range` from the boss (else the fallback is the whole pool). `BOSS_POOL_RANGE` if not a number > 0 or min > max.
+- Phase `windup_scale` (default 1.0): multiplies melee and spear windups for that phase, never below `min_telegraph_ticks` (live phase 3: 0.85, floor 30).
+- Leap `shockwave` `{speed,width,max_radius,damage}`: on landing an expanding ring (`boss_ring` hazard) hits once if the player is on the ring band (dash i-frames apply); walls block it. `burst_delay_ticks` (needs a `shockwave` plus `radial_shots`, `radial_damage`, `shot_speed` on the boss): a radial bone burst that many ticks after landing.
+- Phase `timed_summon` `{first_ticks,every_ticks}`: reuses the `grave_rise` block on a timer (live phase 3: first at 120 ticks, then every 1200 = 20 s). Pauses during roar, resets on a phase change.
+- `arena_change.props` (in `transition`): `[{"id","kind":"boss_pillar","position":[x,y]}]` installs 64x64 cracked pillars as walls (they stop shots and block movement) when the roar starts; an overlapping player or boss is moved to the nearest open point. Force breaks a pillar and frees its wall.
+- `pillar_debris` (top level) `{radius,stun_ticks}`: a pillar broken within `radius` of the boss cancels its action and staggers (`stun_ticks`, damage multiplier from `stagger`). Needs a `stagger` block.
+- Validator: `BOSS_POOL_RANGE` (bad `max_range`/`min_range`), `BOSS_WARDEN_PARAM` (missing or non-numeric keys of `melee`, `spear_line`, `grave_rise`, `pillar_debris`, `shockwave`, `timed_summon`, `burst_delay_ticks` rules).
+- Renderer: hazard `boss_ring` draws the shockwave ring (width `ring_width`, radius grows `ring_per_tick`); intent `telegraph_shape` `none` draws nothing.
+
 ### `transition` (phase 2 and later)
 `{"roar_ticks":90,"arena_change":{"clear_hazards":true,"water":[{"kind":"shallow","rect":[x,y,w,h]}]}}`. 90 ticks = 1.5 s at 60 Hz. On the threshold the boss cancels its windup, clears the combo queue and phase hazards, becomes invulnerable (`damage_scale` 0) for `roar_ticks`, applies the arena change (clear boss-owned hazards and flood; add shallow water with the `boss_arena` tag), then starts the new phase's hazards. Crossing several thresholds at once plays one roar for the highest phase. `BOSS_TRANSITION_PARAM` for roar_ticks < 1 or non-shallow water.
 **Deferred roar:** if the boss is in `moving`, `submerged` or the emerge windup, the roar waits until that move ends. A threshold crossed in the stagger or an ordinary windup starts the roar at once.
@@ -57,7 +70,7 @@ The boss has a private `RandomNumberGenerator` seeded lazily from `session.seed*
 - A submerged boss is not drawn; the emerge telegraph still shows where it will appear.
 
 ## Validator codes
-`BOSS_POOL_TOO_SMALL`, `BOSS_POOL_WEIGHT`, `BOSS_POOL_COMBO`, `BOSS_MOVE_MODE`, `BOSS_MOVE_PARAM`, `BOSS_MOVE_ANCHORS`, `BOSS_HAZARD_TYPE`, `BOSS_HAZARD_PARAM`, `BOSS_HAZARD_DEEP_WATER`, `BOSS_TRANSITION_PARAM`, `BOSS_STAGGER_PARAM`. The test also validates the live `run_v2.json` `boss` and `bosses` plus `combat_tuning_v1.json` `mini_bosses`: no issues.
+`BOSS_POOL_TOO_SMALL`, `BOSS_POOL_WEIGHT`, `BOSS_POOL_COMBO`, `BOSS_MOVE_MODE`, `BOSS_MOVE_PARAM`, `BOSS_MOVE_ANCHORS`, `BOSS_HAZARD_TYPE`, `BOSS_HAZARD_PARAM`, `BOSS_HAZARD_DEEP_WATER`, `BOSS_TRANSITION_PARAM`, `BOSS_STAGGER_PARAM`, `BOSS_POOL_RANGE`, `BOSS_WARDEN_PARAM`. The test also validates the live `run_v2.json` `boss` and `bosses` plus `combat_tuning_v1.json` `mini_bosses`: no issues.
 
 ## Example
 ```json
@@ -77,5 +90,22 @@ The boss has a private `RandomNumberGenerator` seeded lazily from `session.seed*
 ## Goldens
 None updated. The framework is opt-in and no live boss data changed, so every golden (`tests/fixtures/*_traces_v1.json`, `m2_baseline_v1.json`, `balance_frozen/`) is unchanged and still passes; a failing golden would be a back-compat regression.
 
+## Undead Warden v2 (AD-199)
+Live data: `world/data/run_v2.json` `bosses.ruins_warden` (HP unchanged at 1800). Tests: `tests/test_ad_warden_v2.gd`. Bench: `tests/bench/warden_bench.gd` (`godot --headless --path . --script res://tests/bench/warden_bench.gd`), screenshots: `tests/capture_ad_warden_v2.gd`.
+
+**Bot bench (INFO only, not a pass/fail gate).** 8 seeds (1423, 2718, 3141, 4242, 5150, 6174, 7331, 8086) x builds 0 and 2, scripted bot (perfect aim, always attacking). Every fight was a win through all 3 phases.
+
+| build | fights | median seconds | median dashes | seconds range |
+|---|---|---|---|---|
+| 0 | 8 | 23.5 | 11.5 | 19.2-31.6 |
+| 2 | 8 | 27.4 | 12.0 | 21.3-56.5 |
+
+The human target is 60-120 s. The bot is well under it because it never misses and never stops damaging the boss, so the number is a lower bound, not a human estimate. No HP was raised and the numbers were not tuned to force the band. Per-fight `max_stationary_ticks` was at most 44 (limit 120, from the test).
+
+**Shots (1280x720, live data, real `ruins_boss` room)** — the capture narrows the phase pool and sets HP/player position to reach each beat:
+[phase1_combo_arc](warden_v2/phase1_combo_arc.png), [phase1_overhead_slam](warden_v2/phase1_overhead_slam.png), [phase1_spear_line](warden_v2/phase1_spear_line.png), [phase1_grave_rise](warden_v2/phase1_grave_rise.png), [phase2_leap_telegraph](warden_v2/phase2_leap_telegraph.png), [phase2_shockwave_ring](warden_v2/phase2_shockwave_ring.png), [phase2_pillars](warden_v2/phase2_pillars.png), [phase2_debris_stun](warden_v2/phase2_debris_stun.png), [phase3_enrage](warden_v2/phase3_enrage.png). In the pillar shots the two north pillars are partly behind the room's intro text panel.
+
+**Art not wired in.** The approved art (AD-210, AD-211/r2, AD-217, AD-221/r2) is not wired in by this task. Pillars currently reuse the `cracked_wall` frames.
+
 ## Not done
-The live bosses (`ruins_warden`, `cistern_boss`, mini-bosses) still use the old data. Applying pools, movement, hazards, roars and stagger to them is follow-up content work.
+`cistern_boss` is the other framework user; the mini-bosses still use the old data. `ruins_warden` now uses the framework (AD-199, above).
