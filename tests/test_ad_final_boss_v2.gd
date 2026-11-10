@@ -1,5 +1,5 @@
 extends RefCounted
-## AD-201 Drowned Archivist v2 step 1: pool dive (ripple-telegraphed pool-to-pool emerge, splash ring, Wet on emerge, freeze-stun). All settings are synthetic.
+## AD-201 Drowned Archivist v2 steps 1-3: pool dive, pages/shield/storm conduction, tide wave (ripple-telegraphed pool-to-pool emerge, splash ring, Wet on emerge, freeze-stun). All settings are synthetic.
 const Session = preload("res://combat/combat_session.gd")
 const BossCombat = preload("res://combat/boss_combat.gd")
 const Difficulty = preload("res://game/core/difficulty.gd")
@@ -40,6 +40,12 @@ func run(t) -> void:
 	_thralls_die_with_boss(t)
 	_storm_conduct(t)
 	_validate_step2(t)
+	_tide_warning(t)
+	_tide_gap_safe(t)
+	_tide_body_hit_once(t)
+	_tide_dash_iframes(t)
+	_tide_validate(t)
+	_tide_determinism(t)
 
 func _move(extra: Dictionary = {}) -> Dictionary:
 	return {"mode":"submerge","exit":"pool","telegraph_ticks":40,"submerged_ticks":60,"emerge_telegraph_ticks":40,"radius":110,"damage":MOVE_DAMAGE}.merged(extra,true)
@@ -662,3 +668,110 @@ func _validate_step2(t) -> void:
 	for value in [0,-1,"x"]:
 		var phases: Array = [_patterns(["page_throw"],{"page_speed_scale":value})]
 		t.check(bad.call({"phases":phases}),"AD-201 page_speed_scale %s is rejected" % str(value))
+
+# --- step 3: tide wave with a dash gap ---
+
+const WAVE := {"type":"tide_wave","first_ticks":5,"every_ticks":5000,"warn_ticks":40,"speed":300,"thickness":64,"gap_width":96,"damage":10,"status":"wet"}
+
+func _wave_cfg(extra: Dictionary = {}) -> Dictionary:
+	return _pcfg([_patterns(["radial"],{"hazards":[WAVE.merged(extra,true)]})],{"recovery_ticks":4000})
+
+func _wave(s) -> Dictionary:
+	for hazard in s.hazards:
+		if hazard["kind"] == "boss_tide_wave":
+			return hazard
+	return {}
+
+## Runs a wave to its end. `where` is "gap" or "body" (player parked at y=500, x relative to the locked gap), else parked at (700,800); `dash_at` > 0 dashes on that step.
+func _wave_run(seed: int, where: String, extra: Dictionary = {}, dash_at: int = 0, steps: int = 260) -> Dictionary:
+	var s = Session.new(seed,"empty",0)
+	s.defer_clear = true
+	s.spawn_boss(_wave_cfg(extra),A)
+	s.sim.actor.position = Vector2(700,700)
+	var out := {"session":s,"gap_x":-1.0,"hits":[],"telegraph":0,"trace":[],"damage_in_warning":0.0,"wet":false,"ended":-1}
+	var hp := _hp(s)
+	for i in range(1,steps+1):
+		if dash_at > 0 and i >= dash_at:
+			var away := 1.0 if float(out["gap_x"]) < 660.0 else -1.0
+			s.player.process_command({"dash":i == dash_at,"move":Vector2(away,0)})
+		s.step()
+		var wave := _wave(s)
+		if not wave.is_empty() and float(out["gap_x"]) < 0.0:
+			out["gap_x"] = float(wave["gap_x"])
+			var gx: float = out["gap_x"]
+			s.sim.actor.position = Vector2(gx if where == "gap" else (gx+250.0 if gx < 660.0 else gx-250.0),500) if where != "none" else Vector2(700,800)
+		if not wave.is_empty() and bool(wave["telegraph"]):
+			out["telegraph"] += 1
+			out["damage_in_warning"] += hp-_hp(s)
+		if _hp(s) < hp:
+			out["hits"].append(i)
+		hp = _hp(s)
+		out["trace"].append([float(wave.get("y",-1.0)),hp,s.sim.actor.position])
+		if wave.is_empty() and float(out["gap_x"]) >= 0.0 and int(out["ended"]) < 0:
+			out["ended"] = i
+	out["wet"] = s.sim.actor.status.has("wet",s.sim.clock.tick)
+	return out
+
+func _tide_warning(t) -> void:
+	var run := _wave_run(7,"body")
+	t.equal(run["telegraph"],40,"AD-201 the tide wave telegraphs for exactly warn_ticks")
+	t.equal(run["damage_in_warning"],0.0,"AD-201 no tide damage during the warning")
+	var wave := _wave_run(7,"gap",{"warn_ticks":10},0,60)
+	t.check(wave["telegraph"] >= 36,"AD-201 the tide warning is floored by min_telegraph_ticks (%d)" % wave["telegraph"])
+	var fresh = Session.new(7,"empty",0)
+	fresh.defer_clear = true
+	var boss = fresh.spawn_boss(_wave_cfg(),A)
+	for i in 6:
+		fresh.step()
+	var live := _wave(fresh)
+	t.check(live["kind"] == "boss_tide_wave" and live["telegraph"] == true and live["y"] == fresh.world.bounds.position.y and live["thickness"] == 64.0
+		and live["gap_width"] == 96.0 and live["bounds"] == fresh.world.bounds and live["source_id"] == boss.target.id and live["status"] == "",
+		"AD-201 the telegraph hazard carries y, thickness, gap, bounds at the top edge")
+	var gap_x: float = live["gap_x"]
+	t.check(gap_x >= 48.0 and gap_x <= fresh.world.bounds.end.x-48.0,"AD-201 the gap lies inside the arena with half a gap of margin")
+
+func _tide_gap_safe(t) -> void:
+	var run := _wave_run(7,"gap")
+	t.equal(run["hits"],[],"AD-201 a player standing in the gap is never hit")
+	t.check(not run["wet"] and int(run["ended"]) > 0,"AD-201 the wave passes and ends (tick %d)" % int(run["ended"]))
+	t.check(_wave(run["session"]).is_empty(),"AD-201 the wave hazard is removed once the band leaves the arena")
+
+func _tide_body_hit_once(t) -> void:
+	var run := _wave_run(7,"body")
+	t.equal(run["hits"].size(),1,"AD-201 a player in the body path is hit exactly once (%s)" % str(run["hits"]))
+	t.check(run["wet"],"AD-201 the tide wave applies Wet")
+	t.equal(_hp(run["session"]),run["trace"][0][1]-Difficulty.scale_f(10.0,"enemy_damage"),"AD-201 the tide damage is Difficulty-scaled")
+	var plain := _wave_run(7,"body",{"status":""})
+	t.check(not plain["wet"] and plain["hits"].size() == 1,"AD-201 a tide wave without status leaves no status")
+
+func _tide_dash_iframes(t) -> void:
+	var control := _wave_run(7,"body")
+	var h: int = control["hits"][0]
+	var dash := _wave_run(7,"body",{},h-2)
+	t.equal(dash["hits"],[],"AD-201 a player dashing into the band takes no damage")
+	t.check(not dash["wet"] and dash["session"].player.dashes == 1,"AD-201 the dash absorbed the hit, so no Wet either")
+
+func _tide_validate(t) -> void:
+	var good := _wave_cfg()
+	t.equal(BossCombat.validate(good),[],"AD-201 a good tide_wave config has no issues")
+	var bad := func(extra: Dictionary, key: String) -> bool:
+		return BossCombat.validate(_wave_cfg(extra)).any(func(i): return i["code"] == "BOSS_HAZARD_PARAM" and str(i["path"]).ends_with("."+key))
+	t.check(bad.call({"thickness":90},"thickness") and not bad.call({"thickness":80},"thickness"),"AD-201 thickness over 80 fails validation")
+	t.check(bad.call({"gap_width":30},"gap_width") and bad.call({"gap_width":34},"gap_width") and bad.call({"gap_width":0},"gap_width") and not bad.call({"gap_width":96},"gap_width"),"AD-201 a gap not wider than the player fails validation")
+	t.check(bad.call({"speed":0},"speed") and bad.call({"speed":-5},"speed"),"AD-201 speed <= 0 fails validation")
+	for key in ["speed","thickness","gap_width","damage","warn_ticks","first_ticks","every_ticks"]:
+		var missing := _wave_cfg()
+		missing["phases"][0]["hazards"][0].erase(key)
+		t.check(BossCombat.validate(missing).any(func(i): return i["code"] == "BOSS_HAZARD_PARAM" and str(i["path"]).ends_with("."+key)),"AD-201 tide_wave without %s fails validation" % key)
+	t.check(bad.call({"status":5},"status"),"AD-201 a non-string tide status fails validation")
+
+func _tide_determinism(t) -> void:
+	var a := _wave_run(5,"body")
+	var b := _wave_run(5,"body")
+	t.check(a["gap_x"] == b["gap_x"] and a["trace"] == b["trace"],"AD-201 the same seed gives the same gap and per-tick trace")
+	var gaps: Array = []
+	for seed in [5,6,7,8,9]:
+		gaps.append(_wave_run(seed,"none",{},0,10)["gap_x"])
+	t.check(gaps.any(func(g): return g != gaps[0]),"AD-201 different seeds roll different gaps (%s)" % str(gaps))
+	var fresh = Session.new(5,"empty",0)
+	t.equal(a["session"].sim.clock.random_int(1,1000000),fresh.sim.clock.random_int(1,1000000),"AD-201 a tide wave boss leaves the sim RNG untouched")

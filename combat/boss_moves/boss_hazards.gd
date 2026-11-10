@@ -1,11 +1,16 @@
 extends RefCounted
 ## AD-198: per-phase boss arena hazards (zone, debris, rising_water), all data. One controller per boss, driven by boss_combat.gd.
 ## Warnings and active zones are published through session.add_hazard for rendering only (status "" so _step_hazards ignores them);
-## damage is applied here through session.damage_player so dash i-frames work as usual. Only debris touches the boss RNG.
+## damage is applied here through session.damage_player so dash i-frames work as usual. Only debris and tide_wave touch the boss RNG.
+## AD-201 tide_wave: a band sweeping +y across the arena with one locked gap (the dash target). The gap x is rolled from the boss's
+## private RNG when the hazard starts (second RNG-rolling hazard besides debris). Walls do not block the wave; it ends once the band passes bounds.end.y.
 const WATER_TAG := "boss_rising_water"
-const KINDS := ["boss_warning","boss_water_warning","boss_zone"]
+const KINDS := ["boss_warning","boss_water_warning","boss_zone","boss_tide_wave"]
 const TYPES := {"zone":["radius","active_ticks","damage","damage_interval_ticks"],"debris":["count","scatter","radius","damage"],
-	"rising_water":["duration_ticks","sets"]}
+	"rising_water":["duration_ticks","sets"],"tide_wave":["speed","thickness","gap_width","damage"]}
+## A dash (i-frames 9 ticks x 640 u/s = 96 u) must be able to pass through the wave body; the player circle is 34 u across.
+const WAVE_MAX_THICKNESS := 80.0
+const PLAYER_DIAMETER := 34.0
 var _specs: Array = []
 var _age := 0
 var _next: Array = []
@@ -83,6 +88,20 @@ func _start(index: int, boss, session) -> void:
 			for entry in rects:
 				var rect := Rect2(float(entry["rect"][0]),float(entry["rect"][1]),float(entry["rect"][2]),float(entry["rect"][3]))
 				_publish("boss_water_warning",boss,rect.get_center(),rect.size.length()*0.5,warn+1,session,{"rect":rect})
+		"tide_wave":
+			var rng: RandomNumberGenerator = boss.rng(session)
+			var bounds: Rect2 = session.world.bounds
+			var half := float(spec["gap_width"])*0.5
+			var low := bounds.position.x+half
+			var high := maxf(low,bounds.end.x-half)
+			inst["gap_x"] = low+rng.randf()*(high-low)
+			inst["y"] = bounds.position.y
+			inst["hit"] = false
+			var rate := float(session.sim.clock.tick_rate)
+			var travel := ceili((bounds.size.y+float(spec["thickness"]))/(float(spec["speed"])/rate))
+			inst["hazard"] = session.add_hazard({"kind":"boss_tide_wave","status":"","position":Vector2(inst["gap_x"],inst["y"]),"radius":0.0,
+				"duration_ticks":warn+travel+2,"interval_ticks":1,"source_id":boss.target.id,"y":inst["y"],"thickness":float(spec["thickness"]),
+				"gap_x":inst["gap_x"],"gap_width":float(spec["gap_width"]),"bounds":bounds,"telegraph":true})
 	if inst.has("points"):
 		for point in inst["points"]:
 			_publish("boss_warning",boss,point,float(inst["radius"]),warn+1,session)
@@ -121,6 +140,39 @@ func _step(inst: Dictionary, boss, session) -> bool:
 			if active > int(spec["duration_ticks"]):
 				session.water.remove_tag(WATER_TAG)
 				return false
+		"tide_wave":
+			return _step_wave(inst,spec,active,boss,session)
+	return true
+
+## Moves the band (active 1 = top edge, then speed/tick_rate per tick) and hits the player at most once per wave:
+## the first overlap tick spends the wave's hit even when dash i-frames absorb it. Walls do not block the wave.
+func _step_wave(inst: Dictionary, spec: Dictionary, active: int, boss, session) -> bool:
+	var bounds: Rect2 = session.world.bounds
+	var previous: float = inst["y"]
+	if active > 1:
+		inst["y"] = previous+float(spec["speed"])/float(session.sim.clock.tick_rate)
+	var y: float = inst["y"]
+	if y >= bounds.end.y:
+		session.remove_hazards_from(boss.target.id,["boss_tide_wave"])
+		return false
+	for hazard in session.hazards:
+		if int(hazard["id"]) == int(inst["hazard"]):
+			hazard["y"] = y
+			hazard["telegraph"] = false
+			hazard["position"] = Vector2(float(inst["gap_x"]),y)
+	var player = session.sim.actor
+	if bool(inst["hit"]) or not player.alive():
+		return true
+	var radius: float = player.radius
+	var in_band: bool = player.position.y+radius >= previous and player.position.y-radius <= y+float(spec["thickness"])
+	var in_gap: bool = absf(player.position.x-float(inst["gap_x"])) <= float(spec["gap_width"])*0.5-radius
+	if in_band and not in_gap:
+		inst["hit"] = true
+		var result: Dictionary = session.damage_player(boss.target.id,float(spec["damage"]),str(spec.get("channel","water")))
+		var status := str(spec.get("status",""))
+		var statuses: Dictionary = session.sim.settings["statuses"]
+		if bool(result.get("accepted",false)) and status != "" and statuses.has(status):
+			player.status.apply(status,session.sim.clock.tick,statuses[status],{"source_id":boss.target.id})
 	return true
 
 func _hit(at: Vector2, inst: Dictionary, spec: Dictionary, boss, session) -> void:
@@ -180,6 +232,14 @@ static func validate(settings: Dictionary) -> Array:
 							issues.append(_param(path,"points","points must be a non-empty array of [x,y]"))
 				"rising_water":
 					_validate_sets(spec.get("sets"),path,issues)
+				"tide_wave":
+					if _num(spec.get("thickness")) and float(spec["thickness"]) > WAVE_MAX_THICKNESS:
+						issues.append(_param(path,"thickness","thickness must be <= %d so a dash can pass through the wave" % int(WAVE_MAX_THICKNESS)))
+					if _num(spec.get("gap_width")) and float(spec["gap_width"]) <= PLAYER_DIAMETER:
+						issues.append(_param(path,"gap_width","gap_width must be wider than the player (%d)" % int(PLAYER_DIAMETER)))
+					for key in ["status","channel"]:
+						if spec.has(key) and typeof(spec[key]) != TYPE_STRING:
+							issues.append(_param(path,key,"%s must be a string" % key))
 	return issues
 
 static func _validate_sets(sets, path: String, issues: Array) -> void:
