@@ -9,6 +9,8 @@ const B := Vector2(1000,200)
 const C := Vector2(700,750)
 const ANCHORS := [[400,200],[1000,200],[700,750]]
 const PLAYER := Vector2(150,450)
+const WaterTiles = preload("res://world/water_tiles.gd")
+const POOL := [{"kind":"shallow","rect":[0,0,128,64]},{"kind":"shallow","rect":[500,0,64,64]},{"kind":"deep","rect":[128,0,64,64]}]
 const BLINK := {"move":{"mode":"blink","blink_ticks":30,"radius":60}}
 
 func run(t) -> void:
@@ -27,6 +29,8 @@ func run(t) -> void:
 	_decoy_not_copied(t)
 	_decoy_dies_to_one_hit(t)
 	_minions_vanish_with_boss(t)
+	_water_states(t)
+	_water_shock(t)
 
 func _cfg(phases: Array, extra: Dictionary = {}) -> Dictionary:
 	var cfg := {"kind":"test_adept","hp":260,"radius":30,"recovery_ticks":10,"min_telegraph_ticks":36,"shot_speed":300,"shot_spread":0,
@@ -384,3 +388,100 @@ func _minions_vanish_with_boss(t) -> void:
 	t.equal(s.alive_enemies(),0,"AD-200 alive_enemies reaches 0 when the boss dies")
 	t.check(s.pending_spawns.is_empty() and _minions(s,"homing_skull").size() >= 2 and s.enemies.filter(func(e): return e is Minion).all(func(m): return m.state == "dead"),"AD-200 minions are dead and queued ones dropped when the boss dies")
 	t.check(s.enemies.filter(func(e): return e is Minion).all(func(m): return s._death_ids.has(m.target.id)),"AD-200 every minion death is reported once")
+
+func _water_states(t) -> void:
+	var w = WaterTiles.new(POOL)
+	var left := Vector2(16,16)
+	var far := Vector2(520,16)
+	t.check(not w.is_electrified(left) and w.state_view().is_empty(),"AD-200 a fresh water set has no cell states")
+	w.electrify_body(w.body_of(far),10)
+	t.check(w.is_electrified(far) and not w.is_electrified(left),"AD-200 electrify_body only touches that body")
+	w.advance(9)
+	t.check(w.is_electrified(far),"AD-200 an electrified cell is still live the tick before it expires")
+	w.advance(10)
+	t.check(not w.is_electrified(far) and w.state_view().is_empty(),"AD-200 an electrified cell expires on its exact tick")
+	w.electrify_all(50)
+	t.check(w.is_electrified(left) and w.is_electrified(far) and not w.is_electrified(Vector2(300,16)),"AD-200 electrify_all covers every water rect only")
+	var body: int = w.body_of(left)
+	w.freeze_circle(left,10,50)
+	t.check(w.is_frozen(left) and not w.in_water(left) and w.body_of(left) == -1,"AD-200 a frozen cell is not water and has no body")
+	t.check(w.in_water(Vector2(80,16)) and w.body_of(Vector2(80,16)) == body,"AD-200 the rest of the rect is still water")
+	t.check(not w.is_electrified(left),"AD-200 a frozen cell is not electrified")
+	w.electrify_all(60)
+	t.check(not w.is_electrified(left) and w.is_electrified(Vector2(80,16)),"AD-200 a frozen cell cannot be electrified")
+	w.freeze_circle(Vector2(160,16),80,50)
+	t.check(w.in_water(Vector2(160,16)) and not w.is_frozen(Vector2(160,16)),"AD-200 deep cells are not frozen")
+	var line = WaterTiles.new(POOL)
+	line.freeze_segment(Vector2(40,48),Vector2(120,48),5,50)
+	t.check(line.is_frozen(Vector2(72,48)) and not line.is_frozen(Vector2(72,8)),"AD-200 freeze_segment freezes cells along the line")
+	var view: Array = w.state_view()
+	var keys: Array = view.map(func(v): return Vector2i(v["cell_rect"].position)/32)
+	var sorted := true
+	for i in range(1,keys.size()):
+		if keys[i].y < keys[i-1].y or (keys[i].y == keys[i-1].y and keys[i].x < keys[i-1].x):
+			sorted = false
+	t.check(sorted and view == w.state_view() and view[0].has("state"),"AD-200 state_view is stable and sorted")
+	w.advance(50)
+	t.check(not w.is_frozen(left) and w.in_water(left),"AD-200 a frozen cell thaws on its exact tick")
+	w.electrify_all(99)
+	w.remove_tag("none")
+	w.clear_states()
+	t.check(w.state_view().is_empty(),"AD-200 clear_states drops everything")
+	var tagged = WaterTiles.new([{"kind":"shallow","rect":[0,0,64,64],"tag":"x"},{"kind":"shallow","rect":[500,0,64,64]}])
+	tagged.electrify_all(99)
+	tagged.remove_tag("x")
+	t.check(not tagged.is_electrified(Vector2(16,16)) and tagged.is_electrified(Vector2(520,16)),"AD-200 a state on a removed rect is dropped")
+
+func _shock_session(player_at: Vector2) -> Array:
+	var pair := _fresh(_cfg([_patterns(["fan"])],{"recovery_ticks":4000}),Vector2(1000,700),player_at)
+	pair[0].set_water(POOL)
+	pair[0].water_shock = {"source_id":pair[1].target.id,"damage":5,"interval_ticks":10,"channel":"hazard"}
+	return pair
+
+func _water_shock(t) -> void:
+	var pair := _shock_session(Vector2(16,16))
+	var s = pair[0]
+	s.water.electrify_all(1000)
+	var hp := _hp(s)
+	for i in 9:
+		s.step()
+	t.check(_hp(s) == hp,"AD-200 no shock damage before the interval")
+	_step_until(s,2,func(): return _hp(s) < hp)
+	t.check(is_equal_approx(_hp(s),hp-5.0),"AD-200 electrified water damages on the interval tick")
+	var after := _hp(s)
+	for i in 5:
+		s.step()
+	t.check(_hp(s) == after,"AD-200 no shock damage between intervals")
+	var dry := _shock_session(Vector2(300,300))
+	dry[0].water.electrify_all(1000)
+	var dry_hp := _hp(dry[0])
+	for i in 25:
+		dry[0].step()
+	t.check(_hp(dry[0]) == dry_hp,"AD-200 standing outside water takes no shock")
+	var dash := _shock_session(Vector2(16,16))
+	dash[0].water.electrify_all(1000)
+	dash[0].player.invulnerable_left = 1000
+	var dash_hp := _hp(dash[0])
+	for i in 25:
+		dash[0].step()
+	t.check(_hp(dash[0]) == dash_hp,"AD-200 a dashing player takes no shock")
+	var cold := _shock_session(Vector2(16,16))
+	cold[0].water.electrify_all(1000)
+	cold[0].water.freeze_circle(Vector2(16,16),20,1000)
+	var cold_hp := _hp(cold[0])
+	for i in 25:
+		cold[0].step()
+	t.check(_hp(cold[0]) == cold_hp,"AD-200 freezing a cell removes its shock")
+	var clear := _shock_session(Vector2(16,16))
+	clear[0].water.electrify_all(1000)
+	clear[0].clear_water_shock()
+	t.check(clear[0].water_shock.is_empty() and clear[0].water.state_view().is_empty(),"AD-200 clear_water_shock empties the shock and the states")
+	var plain := _fresh(_cfg([_patterns(["fan"])],{"recovery_ticks":4000}),Vector2(1000,700),Vector2(16,16))
+	plain[0].set_water(POOL)
+	var twin := _fresh(_cfg([_patterns(["fan"])],{"recovery_ticks":4000}),Vector2(1000,700),Vector2(16,16))
+	twin[0].set_water(POOL)
+	twin[0].water_shock = {}
+	for i in 60:
+		plain[0].step()
+		twin[0].step()
+	t.check(_hp(plain[0]) == _hp(twin[0]) and plain[0].water.state_view().is_empty(),"AD-200 water without states behaves exactly as before")

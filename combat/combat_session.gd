@@ -31,6 +31,8 @@ var hazards: Array = []
 var _next_hazard_id := 1
 ## AD-138 [PROPOSED FOR PROTOTYPE]: WaterTiles or null. Water Wets anyone standing in it every data.water.wet_interval_ticks; deep water blocks walking.
 var water = null
+## AD-200: set by the caller as {source_id,damage,interval_ticks,channel}; empty = no electrified-water damage.
+var water_shock := {}
 ## AD-150 [PROPOSED FOR PROTOTYPE]: world/env_props.gd instance or null. Null leaves every rule unchanged.
 var env_props = null
 var feedback: Array = []
@@ -213,6 +215,9 @@ func _step_water() -> void:
 	if water == null:
 		return
 	var tick: int = sim.clock.tick
+	water.advance(tick)
+	if not water_shock.is_empty() and tick % maxi(1,int(water_shock["interval_ticks"])) == 0 and water.is_electrified(sim.actor.position):
+		damage_player(int(water_shock["source_id"]),float(water_shock["damage"]),str(water_shock["channel"]))
 	var interval: int = maxi(1,int(data["water"]["wet_interval_ticks"]))
 	if tick % interval != 0 or not sim.settings["statuses"].has("wet"):
 		return
@@ -223,6 +228,11 @@ func _step_water() -> void:
 	for victim in victims:
 		if victim.alive() and water.in_water(victim.position,victim.radius):
 			victim.status.apply("wet",tick,wet,{"source_id":0})
+
+func clear_water_shock() -> void:
+	water_shock = {}
+	if water != null:
+		water.clear_states()
 
 ## Read-only hazard view for rendering: position, radius, remaining ticks.
 func hazard_view() -> Array:
