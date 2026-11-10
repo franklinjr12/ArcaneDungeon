@@ -32,7 +32,7 @@ Screenshot sheet of all layouts: [cistern_layouts.png](cistern_layouts.png) (poo
 
 # AD-202 Ruins v2 layouts
 
-Rules: [ROOM_RULES.md](ROOM_RULES.md). Before / after sheets: [ruins_rooms_before.png](ruins_rooms_before.png), [ruins_rooms_after.png](ruins_rooms_after.png). The 8 combat rooms and the treasure room in `world/data/run_v2.json` (`ruins_c01`..`ruins_c08`, `ruins_treasure`) each use a different shape. Regenerate the after sheet (headless): `godot --headless --path . --script res://tools/room_layout_sheet.gd -- --stage=ruins docs/rooms/ruins_rooms_after.png` (see the script header for the exact arguments).
+Rules: [ROOM_RULES.md](ROOM_RULES.md). Before / after sheets: [ruins_rooms_before.png](ruins_rooms_before.png), [ruins_rooms_after.png](ruins_rooms_after.png). The 8 combat rooms and the treasure room in `world/data/run_v2.json` (`ruins_c01`..`ruins_c08`, `ruins_treasure`) each use a different shape. Regenerate the after sheet (headless): `godot --headless --path . --script res://tools/room_layout_sheet.gd -- res://world/data/run_v2.json docs/rooms/ruins_rooms_after.png --stage=ruins`.
 
 | Room | Shape | Obstacles (walls / pits / solid props) | Interactions |
 |---|---|---|---|
