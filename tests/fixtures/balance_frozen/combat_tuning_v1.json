@@ -112,7 +112,7 @@
       "color": "#8cbaea",
       "channel_resistances": {"lightning": 0.0},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "keep_distance", "approach_margin": 45, "retreat_margin": 60, "approach_without_sight": true}, {"id": "ranged_attack"}]
+      "behaviours": [{"id": "keep_distance", "approach_margin": 45, "retreat_margin": 60, "approach_without_sight": true}, {"id": "ranged_attack", "burst_shots": 1, "burst_interval_ticks": 0}]
     },
     "grave_hound": {
       "display_name": "Grave hound",
@@ -133,7 +133,7 @@
       "color": "#bf9dde",
       "channel_resistances": {"fire": 0.0},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "keep_distance", "approach_margin": 35, "retreat_margin": 50, "approach_weight": 0.75, "retreat_weight": 0.75}, {"id": "ranged_attack"}]
+      "behaviours": [{"id": "keep_distance", "approach_margin": 35, "retreat_margin": 50, "approach_weight": 0.75, "retreat_weight": 0.75}, {"id": "ranged_attack", "burst_shots": 1, "burst_interval_ticks": 0}]
     },
     "ossuary_shieldbearer": {
       "_note": "AD-137 PROPOSED numbers (not approved design). Counters: flank (turn rate 2.5 deg/tick) or Force knockback (break_impulse_speed).",
@@ -174,7 +174,7 @@
       "color": "#8fe3d6",
       "channel_resistances": {"fire": -0.5, "neutral": 0.0},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "keep_distance", "approach_margin": 50, "retreat_margin": 70, "approach_without_sight": true}, {"id": "ranged_attack"}, {"id": "phase_walls", "ignore_sight": false}, {"id": "intangible_cycle", "period_ticks": 180, "warn_ticks": 30, "intangible_ticks": 45, "intangible_damage_scale": 0.0}]
+      "behaviours": [{"id": "keep_distance", "approach_margin": 50, "retreat_margin": 70, "approach_without_sight": true}, {"id": "ranged_attack", "burst_shots": 1, "burst_interval_ticks": 0}, {"id": "phase_walls", "ignore_sight": false}, {"id": "intangible_cycle", "period_ticks": 180, "warn_ticks": 30, "intangible_ticks": 45, "intangible_damage_scale": 0.0}]
     },
     "corpse_bloat": {
       "_note": "AD-137 PROPOSED numbers. Counter: kill it at range (> explode_radius); the Wet puddle it leaves is a Lightning setup.",

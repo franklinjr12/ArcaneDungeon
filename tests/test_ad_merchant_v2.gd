@@ -137,6 +137,9 @@ func _dash_charges(t) -> void:
 				if player.dash_left == 0 and player.recovery_left == 0:
 					break
 				session.step()
+			# AD-196: the 40-tick cooldown now ends (and refills the bonus charge) during the second recovery; re-create "consumed, cooldown running"
+			player.dash_cooldown = maxi(player.dash_cooldown,5)
+			player.bonus_dashes_left = 0
 			session.issue({"dash":true})
 			t.equal(player.dashes,2,"AD-144 third dash refused while cooldown runs")
 			for i in 600:

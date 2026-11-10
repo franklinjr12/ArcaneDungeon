@@ -66,7 +66,7 @@
     "dash_speed": 640,
     "dash_duration_ticks": 11,
     "dash_invulnerable_ticks": 9,
-    "dash_cooldown_ticks": 53,
+    "dash_cooldown_ticks": 40,
     "dash_recovery_ticks": 9,
     "hit_flash_ticks": 8,
     "max_burst_distance": 345
@@ -106,13 +106,13 @@
       "recovery_ticks": 30,
       "cooldown_ticks": 17,
       "damage": 11,
-      "projectile_speed": 310,
+      "projectile_speed": 400,
       "spread_degrees": 0,
       "attack_kind": "ranged",
       "color": "#8cbaea",
       "channel_resistances": {"lightning": -0.5},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "keep_distance", "approach_margin": 45, "retreat_margin": 60, "approach_without_sight": true}, {"id": "ranged_attack"}]
+      "behaviours": [{"id": "keep_distance", "approach_margin": 45, "retreat_margin": 60, "approach_without_sight": true}, {"id": "ranged_attack", "burst_shots": 3, "burst_interval_ticks": 12}]
     },
     "grave_hound": {
       "display_name": "Grave hound",
@@ -126,14 +126,14 @@
       "recovery_ticks": 26,
       "cooldown_ticks": 18,
       "damage": 9,
-      "projectile_speed": 340,
+      "projectile_speed": 420,
       "spread_degrees": 0,
       "attack_kind": "ranged",
       "strafe_factor": 0.8,
       "color": "#bf9dde",
       "channel_resistances": {"fire": -0.5},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "keep_distance", "approach_margin": 35, "retreat_margin": 50, "approach_weight": 0.75, "retreat_weight": 0.75}, {"id": "ranged_attack"}]
+      "behaviours": [{"id": "keep_distance", "approach_margin": 35, "retreat_margin": 50, "approach_weight": 0.75, "retreat_weight": 0.75}, {"id": "ranged_attack", "burst_shots": 2, "burst_interval_ticks": 10}]
     },
     "ossuary_shieldbearer": {
       "_note": "AD-137 PROPOSED numbers (not approved design). Counters: flank (turn rate 2.5 deg/tick) or Force knockback (break_impulse_speed).",
@@ -168,13 +168,13 @@
       "recovery_ticks": 30,
       "cooldown_ticks": 40,
       "damage": 9,
-      "projectile_speed": 260,
+      "projectile_speed": 330,
       "spread_degrees": 0,
       "attack_kind": "ranged",
       "color": "#8fe3d6",
       "channel_resistances": {"fire": -0.5, "neutral": 0.5},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
-      "behaviours": [{"id": "keep_distance", "approach_margin": 50, "retreat_margin": 70, "approach_without_sight": true}, {"id": "ranged_attack"}, {"id": "phase_walls", "ignore_sight": false}, {"id": "intangible_cycle", "period_ticks": 180, "warn_ticks": 30, "intangible_ticks": 45, "intangible_damage_scale": 0.0}]
+      "behaviours": [{"id": "keep_distance", "approach_margin": 50, "retreat_margin": 70, "approach_without_sight": true}, {"id": "ranged_attack", "burst_shots": 1, "burst_interval_ticks": 0}, {"id": "phase_walls", "ignore_sight": false}, {"id": "intangible_cycle", "period_ticks": 180, "warn_ticks": 30, "intangible_ticks": 45, "intangible_damage_scale": 0.0}]
     },
     "corpse_bloat": {
       "_note": "AD-137 PROPOSED numbers. Counter: kill it at range (> explode_radius); the Wet puddle it leaves is a Lightning setup.",
@@ -406,7 +406,7 @@
       "radius": 30, "hp": 260, "patterns": ["targeted","fan"],
       "windup_ticks": 48, "second_phase_windup_ticks": 40, "min_telegraph_ticks": 36,
       "recovery_ticks": 40, "phase_threshold": 0.5,
-      "shot_damage": 11, "shot_speed": 310, "shot_spread": 0,
+      "shot_damage": 11, "shot_speed": 400, "shot_spread": 0,
       "fan_shots": 5, "fan_arc_degrees": 50,
       "radial_shots": 8, "radial_damage": 8, "telegraph_radius": 190, "color": "#b49cf0"
     },
@@ -417,7 +417,7 @@
       "pulse_radius": 150, "pulse_damage": 12,
       "windup_ticks": 50, "second_phase_windup_ticks": 40, "min_telegraph_ticks": 36,
       "recovery_ticks": 40, "phase_threshold": 0.5,
-      "radial_shots": 8, "radial_damage": 8, "shot_damage": 10, "shot_speed": 280, "shot_spread": 0,
+      "radial_shots": 8, "radial_damage": 8, "shot_damage": 10, "shot_speed": 350, "shot_spread": 0,
       "telegraph_radius": 150, "color": "#7fe0ff"
     }
   }

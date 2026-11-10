@@ -6,6 +6,7 @@ func run(t) -> void:
 	_walking_is_not_enough(t)
 	_wall_stop(t)
 	_no_lunge_instant(t)
+	run_bursts(t)
 
 func _spawn(kind: String, offset: Vector2, overrides: Dictionary = {}) -> Array:
 	var s = Session.new(136,"empty",0)
@@ -77,3 +78,87 @@ func _no_lunge_instant(t) -> void:
 		s.step()
 		attacked = attacked or pair[1].state == "attack"
 	t.check(not attacked and s.damage_events.size() == 1,"AD-196 melee_attack without lunge params stays instant")
+
+const BEFORE_SPEEDS := {"fallen_adept":310.0,"grave_hound":340.0,"wailing_spirit":260.0}
+
+func run_bursts(t) -> void:
+	var s0 = Session.new(136,"empty",0)
+	t.check(int(s0.data["player"]["dash_cooldown_ticks"]) == 40,"AD-196 dash cooldown is 40 ticks")
+	for kind in BEFORE_SPEEDS:
+		var ratio := float(s0.data["enemies"][kind]["projectile_speed"])/float(BEFORE_SPEEDS[kind])
+		t.check(ratio >= 1.2 and ratio <= 1.35,"AD-196 %s projectile speed x%.2f in 1.20..1.35" % [kind,ratio])
+	for pair in [["ruins_adept_elite",310.0],["cistern_crystal_elite",280.0]]:
+		var ratio := float(s0.data["mini_bosses"][pair[0]]["shot_speed"])/float(pair[1])
+		t.check(ratio >= 1.2 and ratio <= 1.35,"AD-196 %s shot speed x%.2f in 1.20..1.35" % [pair[0],ratio])
+	for spec in [["fallen_adept",3,12],["grave_hound",2,10]]:
+		var times := _shot_ticks(spec[0],Vector2(200,0),Vector2.ZERO,0)
+		t.check(times.size() == spec[1],"AD-196 %s fires a %d-shot burst (%s)" % [spec[0],spec[1],str(times)])
+		for i in range(1,times.size()):
+			t.check(times[i]-times[i-1] == spec[2],"AD-196 %s burst spacing %d" % [spec[0],spec[2]])
+	# re-aim: the player moves between shots, so the second shot direction differs from the first
+	var dirs := _shot_dirs("fallen_adept",Vector2(200,0),Vector2.UP)
+	t.check(dirs.size() >= 2 and dirs[0].distance_to(dirs[1]) > 0.01,"AD-196 second burst shot re-aims at the moved player")
+	var single := _spawn("fallen_adept",Vector2(200,0),{"behaviours":[{"id":"ranged_attack","burst_shots":1,"burst_interval_ticks":0}]})
+	var attacked := false
+	for i in 120:
+		single[0].step()
+		attacked = attacked or single[1].state == "attack"
+	t.check(not attacked,"AD-196 burst_shots 1 never enters the attack state")
+	# dying mid-burst stops the burst
+	var dying := _spawn("fallen_adept",Vector2(200,0))
+	var count := 0
+	var counted := {}
+	var killed := false
+	for i in 200:
+		if not killed and dying[1].state == "attack" and dying[1].state_tick >= 2:
+			dying[1].target.health.current = 0.0
+			killed = true
+		dying[0].step()
+		for shot in dying[0].enemy_shots:
+			counted[shot["id"]] = true
+		count = counted.size()
+	t.check(killed and count <= 1,"AD-196 a dead shooter stops its burst (%d)" % count)
+	# loses sight mid-burst: a wall appears between shooter and player
+	var blind := _spawn("fallen_adept",Vector2(200,0))
+	var seen := {}
+	var walled := false
+	for i in 200:
+		if not walled and blind[1].state == "attack" and blind[1].state_tick >= 2:
+			blind[0].world.walls.append(Rect2(blind[0].sim.actor.position+Vector2(80,-300),Vector2(20,600)))
+			blind[0].world.clear_sight(Vector2.ZERO,Vector2.ONE)
+			walled = true
+		blind[0].step()
+		for shot in blind[0].enemy_shots:
+			seen[shot["id"]] = true
+	t.check(walled and seen.size() <= 1,"AD-196 a burst stops when the shooter loses sight (%d)" % seen.size())
+	var issues: Array = preload("res://combat/enemy_behaviours/ranged_attack.gd").validate({"burst_shots":0,"burst_interval_ticks":0})
+	t.check(not issues.is_empty(),"AD-196 validate rejects burst_shots 0")
+	var bad: Array = preload("res://combat/enemy_behaviours/ranged_attack.gd").validate({"burst_shots":2,"burst_interval_ticks":0})
+	t.check(not bad.is_empty(),"AD-196 validate rejects a burst without an interval")
+
+## Ticks (step index) on which enemy shots appear while the player stands still in sight.
+func _shot_ticks(kind: String, offset: Vector2, _move: Vector2, _unused: int) -> Array:
+	var pair := _spawn(kind,offset,{"move_speed":0})
+	var times: Array = []
+	var seen := {}
+	for i in 100:
+		pair[0].step()
+		for shot in pair[0].enemy_shots:
+			if not seen.has(shot["id"]):
+				seen[shot["id"]] = true
+				times.append(i)
+	return times
+
+func _shot_dirs(kind: String, offset: Vector2, player_move: Vector2) -> Array:
+	var pair := _spawn(kind,offset,{"move_speed":0})
+	var dirs: Array = []
+	var seen := {}
+	for i in 200:
+		if pair[1].state == "attack":
+			pair[0].issue({"move":player_move,"aim":Vector2.RIGHT})
+		pair[0].step()
+		for shot in pair[0].enemy_shots:
+			if not seen.has(shot["id"]):
+				seen[shot["id"]] = true
+				dirs.append(shot["direction"])
+	return dirs
