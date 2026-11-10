@@ -12,7 +12,7 @@ func _init(tuning: Dictionary, excluded_ids: Array = [], excluded_artifact_ids: 
 	excluded = excluded_ids.duplicate()
 	excluded_artifacts = excluded_artifact_ids.duplicate()
 
-func choices(run, room_id: String, force_artifact: bool = false) -> Array:
+func choices(run, room_id: String, force_artifact: bool = false, resonant: bool = false) -> Array:
 	var possible: Array = []
 	for id in config.get("reward_pool", []):
 		if id not in run.unlocked and id not in excluded and id not in possible:
@@ -27,16 +27,49 @@ func choices(run, room_id: String, force_artifact: bool = false) -> Array:
 	var options: Array = []
 	var completers := reaction_completers(possible,loadout_essences(run))
 	for id in pick_biased(possible,wanted,random,config,completers,float(config.get("reaction_bias_weight",0.0))):
-		var card: Dictionary = config.get("reward_cards", {}).get(id, {})
-		options.append({"kind":"rune","id":id,"name_key":str(card.get("name_key","rune."+id+".name")),
-			"behaviour_key":str(card.get("behaviour_key","rune."+id+".desc")),"rarity":rarity_of(id,config)})
+		options.append(rune_card(id))
 	if options.size() < wanted:
 		options.append({"kind":"currency","amount":Difficulty.scale_i(int(config["room_reward_currency"]),"coin_rate",0)})
 	# AD-143: artifact card appended last, own RNG so the rune picks above never shift.
 	var artifact_card := artifact_choice(run,hash_value,force_artifact,excluded_artifacts)
 	if not artifact_card.is_empty():
 		options.append(artifact_card)
+	if resonant and config.has("resonant_clear"):
+		_apply_resonant(options,possible,hash_value)
 	return options
+
+func rune_card(id: String) -> Dictionary:
+	var card: Dictionary = config.get("reward_cards", {}).get(id, {})
+	return {"kind":"rune","id":id,"name_key":str(card.get("name_key","rune."+id+".name")),
+		"behaviour_key":str(card.get("behaviour_key","rune."+id+".desc")),"rarity":rarity_of(id,config)}
+
+## Resonant clear: rune cards step up one rarity (or carry bonus coins), currency grows, artifacts carry bonus coins.
+func _apply_resonant(options: Array, possible: Array, hash_value: int) -> void:
+	var cfg: Dictionary = config["resonant_clear"]
+	var coins := Difficulty.scale_i(int(cfg["bonus_coins"]),"coin_rate",0)
+	var order: Array = cfg["rarity_order"]
+	var random := RandomNumberGenerator.new()
+	random.seed = (hash_value ^ int(cfg["seed_salt"])) & 0x7fffffff
+	for i in options.size():
+		var card: Dictionary = options[i]
+		if card["kind"] == "currency":
+			card["amount"] = int(card["amount"])+coins
+		elif card["kind"] == "artifact":
+			card["bonus_coins"] = coins
+		else:
+			var tier := order.find(str(card["rarity"]))
+			var candidates: Array = []
+			if tier >= 0 and tier+1 < order.size():
+				var offered: Array = options.filter(func(o): return o["kind"] == "rune").map(func(o): return o["id"])
+				candidates = possible.filter(func(id): return id not in offered and rarity_of(id,config) == order[tier+1] and weight_of(id,config) > 0.0)
+			if candidates.is_empty():
+				card["bonus_coins"] = coins
+			else:
+				options[i] = rune_card(str(pick_weighted(candidates,1,random,config)[0]))
+
+## Combination reactions (not mono-Cold chill_freeze stacking).
+static func combo_reaction_ids() -> Array:
+	return balance().get("reactions",{}).get("resonance",{}).get("mana_refund",{}).keys()
 
 static func artifact_choice(run, hash_value: int, force_artifact: bool, excluded_ids: Array = []) -> Dictionary:
 	var settings: Dictionary = Artifacts.config()

@@ -54,6 +54,8 @@ var run_log = RunLog.new()
 var logs: Array = []
 var experiment = ExperimentLog.new()
 var _prior_reactions := 0
+var room_reactions := 0
+var resonant_clear := false
 ## AD-145: meta locks (opt-in, default empty) and per-run discovery tracking.
 var meta_locked_runes: Array = []
 var meta_locked_artifacts: Array = []
@@ -329,6 +331,8 @@ func _enter_current() -> Dictionary:
 		encounter.initialize(room,session,int(config["max_active_enemies"]))
 		state = "fighting"
 	_prior_reactions = 0
+	room_reactions = 0
+	resonant_clear = false
 	_cue("amb.workshop" if mode == "workshop" else "amb.ruins")
 	_cue("music." + music_context_for_room())
 	experiment.record("room_enter",{"room_index":run.sequence_index})
@@ -401,6 +405,7 @@ func step(command: Dictionary = {}) -> Dictionary:
 		if _slot_has_spell(session.sim,cast_slot):
 			if bool(issued.get("accepted",false)):
 				spells_used += 1
+				run_log.add_elements(Reward.essences_of(session.sim.loadout.slots[cast_slot]["formula"]))
 			experiment.record("dungeon_cast",{"room_index":run.sequence_index,"slot":cast_slot,
 				"cast_accepted":bool(issued.get("accepted",false))},session.sim.loadout.slots[cast_slot]["formula"])
 	var wet_ids: Array = []
@@ -430,6 +435,9 @@ func step(command: Dictionary = {}) -> Dictionary:
 		var reason := str(reaction_records[i].get("reason",""))
 		if reason != "":
 			_seen_reactions[reason] = true
+			if reason in Reward.combo_reaction_ids():
+				room_reactions += 1
+				run_log.add_reaction(reason)
 	if reactions_now > _prior_reactions:
 		experiment.record("reaction",{"room_index":run.sequence_index,"reaction_count":reactions_now-_prior_reactions})
 	_prior_reactions = reactions_now
@@ -459,6 +467,10 @@ func _finish_combat() -> void:
 	# Old projectiles remain only in this room and are discarded on transition.
 	state = "cleared"
 	rooms_cleared += 1
+	var resonant_cfg: Dictionary = config.get("resonant_clear",{})
+	resonant_clear = not resonant_cfg.is_empty() and room_reactions >= int(resonant_cfg["min_reactions"])
+	if resonant_clear:
+		run_log.mark_resonant()
 	_cue("sfx.room.cleared",session.sim.actor.position)
 	run.hp = session.sim.actor.health.current
 	run.mana = session.sim.mana
@@ -478,10 +490,12 @@ func _finish_combat() -> void:
 		reward_options.clear()
 	elif room.values["type"] == "boss":
 		run.currency += Difficulty.scale_i(int(config["boss_currency"]),"coin_rate",0)
+		if resonant_clear:
+			run.currency += Difficulty.scale_i(int(resonant_cfg["bonus_coins"]),"coin_rate",0)
 		_cue("sfx.pickup.currency",session.sim.actor.position)
 		reward_collected = true
 	else:
-		reward_options = rewards.choices(run,str(room.values["id"]))
+		reward_options = rewards.choices(run,str(room.values["id"]),false,resonant_clear)
 	experiment.record("room_clear",{"room_index":run.sequence_index})
 	logs.append({"kind":"combat_clear","id":room.values["id"]})
 
@@ -500,7 +514,8 @@ func _death_cause() -> Dictionary:
 func summary() -> Dictionary:
 	return {"outcome":outcome,"seed":run.seed,"rooms_cleared":rooms_cleared,"kills":kills,
 		"ticks":ticks_elapsed,"seconds":float(ticks_elapsed)/float(session.sim.clock.tick_rate),
-		"spells_used":spells_used}
+		"spells_used":spells_used,"reactions_triggered":run_log.reactions_triggered,
+		"elements_used":run_log.elements_used.size(),"spells_crafted":run_log.spells_crafted.size()}
 
 func retry_same_seed() -> void:
 	start_new(run.seed)
@@ -534,6 +549,10 @@ func choose_reward(index: int) -> Dictionary:
 	else:
 		run.currency += int(option["amount"])
 		outcome = {"ok":true,"kind":"currency","currency":int(option["amount"])}
+	var bonus := int(option.get("bonus_coins",0))
+	if bonus > 0:
+		run.currency += bonus
+		outcome["bonus_coins"] = bonus
 	run.collected.append(id)
 	reward_collected = true
 	session.sim.loadout.unlocked = run.unlocked.duplicate(true)
