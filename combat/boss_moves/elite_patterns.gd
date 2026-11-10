@@ -111,12 +111,15 @@ static func fire(boss, session, attack: String, origin: Vector2, mult: float = 1
 		at = origin
 	session.pending_spawns.append({"minion":"homing_skull","position":at,"summoner_id":boss.target.id,"heading":aim,"settings":settings})
 
-## The water lights up for duration_ticks: standing in it hurts every interval (session.water_shock); no water, no effect.
 static func _electrify(boss, session) -> void:
 	session.remove_hazards_from(boss.target.id,["boss_water_warning"])
+	electrify_water(boss,session,boss.tuning["electrify"])
+
+## The water lights up for spec.duration_ticks: standing in it hurts every interval (session.water_shock); no water, no effect.
+## Shared by `electrify` and the Archivist's `storm_conduct`.
+static func electrify_water(boss, session, spec: Dictionary) -> void:
 	if session.water == null:
 		return
-	var spec: Dictionary = boss.tuning["electrify"]
 	session.water.electrify_all(session.sim.clock.tick+int(spec["duration_ticks"]))
 	session.water_shock = {"source_id":boss.target.id,"damage":float(spec["damage"]),"interval_ticks":int(spec["interval_ticks"]),"channel":"lightning"}
 

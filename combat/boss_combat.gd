@@ -57,6 +57,8 @@ var _env_event_index := 0
 var _waypoint := -1
 var _beam: Dictionary = {}
 var _beam_dir := 1.0
+## AD-201: sim + presentation flag, true while a `wisp_shield` boss owns a live wisp (target.damage_scale is then the shield multiplier).
+var shielded := false
 
 ## Pool, movement, hazard, transition and stagger issues for a boss settings dictionary (empty = valid).
 static func validate(settings: Dictionary) -> Array:
@@ -132,6 +134,9 @@ func _init_phases(elite_damage: float, floor_ticks: int) -> void:
 	for key in ["beam_sweep","electrify"]:
 		if tuning.has(key):
 			tuning[key]["damage"] = Difficulty.scale_f(float(tuning[key]["damage"])*elite_damage,"enemy_damage")
+	for key in ["book_pages","storm_conduct"]:
+		if tuning.has(key):
+			tuning[key]["damage"] = Difficulty.scale_f(float(tuning[key]["damage"])*elite_damage,"enemy_damage")
 	if tuning.has("homing_skull"):
 		tuning["homing_skull"]["damage"] = Difficulty.scale_f(float(tuning["homing_skull"]["damage"])*elite_damage,"enemy_damage")
 	var warden_attacks: Array = tuning.get("melee",{}).values()
@@ -171,7 +176,8 @@ func advance(session) -> void:
 	if not target.alive():
 		submerged = false
 		target.untargetable = false
-		if staggered or state == "roar" or _pending_roar:
+		if staggered or state == "roar" or _pending_roar or shielded:
+			shielded = false
 			staggered = false
 			_pending_roar = false
 			target.damage_scale = 1.0
@@ -192,9 +198,9 @@ func advance(session) -> void:
 		_state("dead",session.sim.clock.tick)
 		if not death_announced:
 			death_announced = true
-			if tuning.has("electrify"):
+			if tuning.has("electrify") or tuning.has("storm_conduct"):
 				session.clear_water_shock()
-			if tuning.has("grave_rise") or tuning.has("homing_skull") or tuning.has("decoy") or tuning.has("small_crystals"):
+			if tuning.has("grave_rise") or tuning.has("homing_skull") or tuning.has("decoy") or tuning.has("small_crystals") or tuning.has("book_pages") or tuning.has("wisp_shield"):
 				_dismiss_thralls(session)
 			session.on_enemy_death(self)
 		return
@@ -245,6 +251,20 @@ func advance(session) -> void:
 			var wait := _combo_gap if not _combo_queue.is_empty() else int(tuning["recovery_ticks"])
 			if state_tick >= wait:
 				_start_windup(session)
+	if tuning.has("wisp_shield"):
+		_refresh_shield(session)
+
+## AD-201: once per advance, after the state logic. The shield beats stagger (and the plain 1.0 a finished stagger writes); the roar's 0 stays.
+## When the last wisp dies the multiplier returns to the stagger one if staggered, else 1.0.
+func _refresh_shield(session) -> void:
+	if state == "roar":
+		return
+	if Archivist.live_wisps(self,session) > 0:
+		shielded = true
+		target.damage_scale = float(tuning["wisp_shield"]["damage_taken_multiplier"])
+	elif shielded:
+		shielded = false
+		target.damage_scale = float(tuning["stagger"]["damage_taken_multiplier"]) if staggered and tuning.has("stagger") else 1.0
 
 ## Continuous phase movement; only called from acquire/recover so a telegraph never moves.
 func _walk(session) -> void:
@@ -454,6 +474,9 @@ func _start_windup(session) -> void:
 	if Elite.handles(tuning,attack):
 		_open_windup(session,attack,Elite.windup_fields(self,session,attack))
 		return
+	if Archivist.handles(tuning,attack):
+		_open_windup(session,attack,Archivist.windup_fields(self,session,attack))
+		return
 	var ticks := int(tuning["phases"][phase-1]["windup_ticks"]) if tuning.has("phases") else (int(tuning["second_phase_windup_ticks"]) if phase == 2 else int(tuning["windup_ticks"]))
 	var fields := {"kind":attack,"origin":target.position,"telegraph_ticks":ticks,"range":float(tuning[_range_key(attack)])}
 	if attack == "wet_zone":
@@ -582,6 +605,8 @@ func _fire(session) -> void:
 		Warden.fire(self,session,attack)
 	elif Elite.handles(tuning,attack):
 		Elite.fire(self,session,attack,target.position)
+	elif Archivist.handles(tuning,attack):
+		Archivist.fire(self,session)
 	elif attack == "pulse":
 		if session.sim.actor.position.distance_to(target.position) <= float(tuning["pulse_radius"]):
 			session.damage_player(target.id,float(tuning["pulse_damage"]),"lightning")
@@ -688,6 +713,8 @@ func _dismiss_thralls(session) -> void:
 			enemy.target.receive_damage(enemy.target.health.current+1.0,"neutral",session.sim.actor.team,1.0)
 
 func _fire_storm_pulse(session) -> void:
+	if tuning.has("storm_conduct"):
+		Elite.electrify_water(self,session,tuning["storm_conduct"])
 	var actor = session.sim.actor
 	if target.position.distance_to(actor.position) > float(tuning["storm_pulse_radius"])+actor.radius:
 		return

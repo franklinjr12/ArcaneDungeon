@@ -1,7 +1,10 @@
 extends RefCounted
 ## AD-200: lightweight session.enemies entry for elite mini-boss helpers: `homing_skull` (slow, destroyable) and `decoy` (stands still, copies casts).
+## AD-201: `book_page` flies like a skull and also dies at once when it is Burning.
 ## Both are ordinary sim targets (spells hit them), so the fields other code reads (target, kind, tuning, state, ...) mirror the enemy entries. No RNG.
 const AttackIntent = preload("res://combat/attack_intent.gd")
+const FLYERS := ["homing_skull","book_page"]
+const BURNING := "burning"
 var target
 var kind := ""
 var tuning: Dictionary
@@ -29,7 +32,7 @@ static func build(session, spec: Dictionary):
 	var entry = new(body,minion_kind,settings)
 	entry.summoner_id = int(spec["summoner_id"])
 	entry.heading = spec.get("heading",Vector2.RIGHT)
-	if minion_kind == "homing_skull":
+	if FLYERS.has(minion_kind):
 		entry.state = "fly"
 	return entry
 
@@ -74,12 +77,15 @@ func advance(session) -> void:
 	if session.state != "playing":
 		return
 	state_tick += 1
-	if mode == "homing_skull":
+	if FLYERS.has(mode):
 		_fly(session)
 	elif state == "windup" and state_tick > int(tuning["telegraph_ticks"])+2:
 		end_windup() # safety net: the boss normally closes the copy when it fires
 
 func _fly(session) -> void:
+	if kind == "book_page" and target.status.has(BURNING,session.sim.clock.tick):
+		kill(session)
+		return
 	var player = session.sim.actor
 	var offset: Vector2 = player.position-target.position
 	if player.alive() and not offset.is_zero_approx():
