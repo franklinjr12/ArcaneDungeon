@@ -1,11 +1,13 @@
 extends RefCounted
 ## AD-202 step 1: Ruins cover kinds, layout.pits (walking blockers) and layout.arena_walls (shared-wall opt-out).
 ## AD-202 step 2: Room.rule_report (docs/rooms/ROOM_RULES.md) on synthetic rooms.
+## AD-202 step 3: the nine Ruins rooms obey the rules and every enemy can walk to the entrance, room centre and exit.
 const Session = preload("res://combat/combat_session.gd")
 const EnvProps = preload("res://world/env_props.gd")
 const Geometry = preload("res://world/arena_geometry.gd")
 const Room = preload("res://world/room_template.gd")
 const Flow = preload("res://world/run_flow.gd")
+const CachedGeometry = preload("res://combat/cached_geometry.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
 const POOLS := ["res://world/data/rooms_ruins_v1.json","res://world/data/rooms_cistern_v1.json"]
 const COVER_KINDS := ["pillar","cracked_pillar","rubble","sarcophagus","broken_wall","column"]
@@ -23,6 +25,7 @@ func run(t) -> void:
 	_templates_still_valid(t)
 	_placeholder_frames(t)
 	_rule_report(t)
+	_ruins_rooms(t)
 
 func _tuning() -> Dictionary:
 	return JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))
@@ -292,3 +295,110 @@ func _rule_report(t) -> void:
 func _expect(t, room: Dictionary, code: String, label: String) -> void:
 	var report := _report(room)
 	t.check(not bool(report["ok"]) and _rule_codes(report).has(code),"AD-202 rules: %s -> %s (%s)" % [label,code,str(_rule_codes(report))])
+
+# --- AD-202 step 3: the Ruins pool. Nav bodies walk like enemies: radius 20, 3 px per tick, visibility-graph steering.
+const NAV_RADIUS := 20.0
+const NAV_SPEED := 3.0
+const NAV_TICKS := 900
+const NAV_ARRIVE := 40.0
+
+func _run_v2() -> Dictionary:
+	return JSON.parse_string(FileAccess.get_file_as_string("res://world/data/run_v2.json"))
+
+func _ruins_ids(doc: Dictionary) -> Array:
+	var stage: Dictionary = doc["stages"][0]
+	var ids: Array = (stage["pool"] as Array).duplicate()
+	ids.append(stage["optional_room"])
+	return ids
+
+func _ruins_rooms(t) -> void:
+	var doc := _run_v2()
+	var tuning := _tuning()
+	var env_data := EnvProps.load_data()
+	var rules: Dictionary = doc["room_rules"]
+	t.equal(str(doc["stages"][0]["id"]),"ruins","AD-202 ruins: stage 0 is the Ruins")
+	var ids := _ruins_ids(doc)
+	t.equal(ids.size(),9,"AD-202 ruins: 8 pool rooms plus the optional treasure room")
+	var shapes: Dictionary = {}
+	for id in ids:
+		var room: Dictionary = doc["room_templates"][id]
+		var report := Room.rule_report(room,tuning["arena"],env_data,rules)
+		t.check(bool(report["ok"]),"AD-202 ruins: %s passes rule_report (%s)" % [id,str(report["issues"])])
+		var verdict := Room.new().initialize(room,tuning["arena"],tuning["enemies"].keys())
+		t.check(bool(verdict["ok"]),"AD-202 ruins: %s validates in initialize (%s)" % [id,str(verdict["issues"])])
+		t.check(int(report["interactions"]) >= 1 and int(report["obstacles"]) >= 2,"AD-202 ruins: %s has cover and an interaction" % id)
+		shapes[str(room.get("shape",""))] = id
+	t.equal(shapes.size(),9,"AD-202 ruins: the nine rooms use nine different shapes")
+	for shape in rules["owner_shapes"]:
+		t.check(shapes.has(shape),"AD-202 ruins: owner shape %s is used" % shape)
+	_ruins_kinds_vary(t,doc,ids)
+	for id in ids:
+		_navigation(t,id,doc["room_templates"][id],tuning,env_data)
+
+## The interaction families (burnable, brazier, breakable, puddle) must all appear in the pool, not one kind everywhere.
+func _ruins_kinds_vary(t, doc: Dictionary, ids: Array) -> void:
+	var seen: Dictionary = {}
+	for id in ids:
+		for prop in doc["room_templates"][id]["layout"].get("env_props",[]):
+			seen[str(prop["kind"])] = true
+	for kind in ["crate","cobweb","brazier","urn","puddle"]:
+		t.check(seen.has(kind),"AD-202 ruins: pool uses a %s" % kind)
+	t.check(seen.has("cracked_pillar") or seen.has("broken_wall") or seen.has("cracked_wall"),"AD-202 ruins: pool has Force-breakable cover")
+
+## Geometry the way run_flow builds it: shared walls unless arena_walls is false, layout walls, pits as ground blockers,
+## solid env-prop rects (every breakable piece intact, the worst case).
+func _room_geometry(room: Dictionary, tuning: Dictionary, env_data: Dictionary):
+	var merged: Dictionary = (tuning["arena"] as Dictionary).duplicate(true)
+	var layout: Dictionary = room.get("layout",{})
+	if layout.get("arena_walls",true) == false:
+		merged["walls"] = []
+	for dims in layout.get("walls",[]):
+		merged["walls"].append(dims)
+	var world = CachedGeometry.new(merged)
+	var pits: Array = []
+	for dims in layout.get("pits",[]):
+		pits.append(Rect2(float(dims[0]),float(dims[1]),float(dims[2]),float(dims[3])))
+	world.add_ground_blockers(pits)
+	if layout.has("env_props"):
+		for prop in EnvProps.new(layout["env_props"],env_data).props:
+			if bool(prop["rule"].get("solid_walk",false)):
+				world.walls.append(prop["rect"])
+	return world
+
+## The room centre, or the closest grid point that also fits the player (radius 22) when a pit or cover sits on it.
+func _centre(world, tuning: Dictionary) -> Vector2:
+	var middle := Vector2(float(tuning["arena"]["width"])*0.5,float(tuning["arena"]["height"])*0.5)
+	var best := middle
+	var best_distance := INF
+	for gx in range(0,67):
+		for gy in range(0,46):
+			var point := Vector2(gx,gy)*20.0
+			if world.valid_position(point,22.0) and point.distance_to(middle) < best_distance:
+				best = point
+				best_distance = point.distance_to(middle)
+	return best
+
+func _walk(world, from: Vector2, to: Vector2) -> float:
+	var position := from
+	for tick in NAV_TICKS:
+		if position.distance_to(to) <= NAV_ARRIVE:
+			break
+		position = world.move_body(position,world.navigate_direction(position,to,NAV_RADIUS)*NAV_SPEED,NAV_RADIUS)
+	return position.distance_to(to)
+
+func _navigation(t, id: String, room: Dictionary, tuning: Dictionary, env_data: Dictionary) -> void:
+	var world = _room_geometry(room,tuning,env_data)
+	var entrance := Vector2(float(room["entrance"][0]),float(room["entrance"][1]))
+	var targets := {"entrance":entrance,"centre":_centre(world,tuning),"exit":Vector2(float(room["exit"][0]),float(room["exit"][1]))}
+	var spawns: Array = []
+	for wave in room["waves"]:
+		for entry in wave["enemies"]:
+			spawns.append(Vector2(float(entry[1]),float(entry[2])))
+	for spawn in spawns:
+		t.check(world.valid_position(spawn,NAV_RADIUS),"AD-202 nav: %s spawn %s is not inside cover" % [id,str(spawn)])
+		t.check(Room.reachable(world,entrance,spawn,22.0,20.0),"AD-202 nav: %s entrance reaches spawn %s" % [id,str(spawn)])
+		for name in targets:
+			var gap := _walk(world,spawn,targets[name])
+			t.check(gap <= NAV_ARRIVE,"AD-202 nav: %s enemy at %s walks to the %s (%.0f px short)" % [id,str(spawn),name,gap])
+	for name in ["exit","centre"]:
+		t.check(Room.reachable(world,entrance,targets[name],22.0,20.0),"AD-202 nav: %s entrance reaches the %s" % [id,name])
