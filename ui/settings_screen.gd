@@ -10,6 +10,7 @@ const VisualTheme = preload("res://ui/pixel_theme.gd")
 const ExperimentLog = preload("res://debug/experiment_log.gd")
 const SkinA = preload("res://ui/skin_a.gd")
 const Settings = preload("res://game/core/settings.gd")
+const OsShell = preload("res://ui/os_shell.gd")
 const InputActions = preload("res://ui/input_actions.gd")
 const TITLE_ART := "res://assets/ui/title/ad_ui_title_illustration.png"
 const TITLE_ART_LIGHT := "res://assets/ui/title/ad_ui_title_illustration_light.png"
@@ -782,8 +783,7 @@ func _build_access(page: Control) -> void:
 	open_logs_button.disabled = _read_only
 	open_logs_button.pressed.connect(func():
 		DirAccess.make_dir_recursive_absolute(ExperimentLog.LOG_DIR)
-		if DisplayServer.get_name() != "headless":
-			OS.shell_open(ExperimentLog.log_dir_path()))
+		OsShell.open_folder(ExperimentLog.log_dir_path()))
 	_help_hook(open_logs_button, tab, "open_logs", "settings.open_logs")
 	for c in [flash_toggle, shake_toggle, telemetry_toggle, tips_toggle]:
 		c.disabled = _read_only
