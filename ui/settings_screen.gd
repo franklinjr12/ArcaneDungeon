@@ -75,6 +75,10 @@ class Paint extends RefCounted:
 				if d.size.x > 0.0 and d.size.y > 0.0 and q.size.x > 0.0 and q.size.y > 0.0:
 					ci.draw_texture_rect_region(SkinA.ATLAS, d, q)
 
+	## Focus ring shared by every skinned control; the default SkinButton kind paints it itself.
+	static func focus_ring(ci: CanvasItem, rect: Rect2, sc: float) -> void:
+		draw(ci, "ad_ui_btn_focus", rect.grow(4.0 * sc), sc)
+
 	static func blank(w: int, h: int) -> ImageTexture:
 		return ImageTexture.create_from_image(Image.create(maxi(w, 1), maxi(h, 1), false, Image.FORMAT_RGBA8))
 
@@ -129,14 +133,19 @@ class SkinButton extends Button:
 		queue_redraw()
 
 	func _notification(what: int) -> void:
-		if what == NOTIFICATION_DRAW and _layer != null:
+		if (what == NOTIFICATION_DRAW or what == NOTIFICATION_FOCUS_ENTER or what == NOTIFICATION_FOCUS_EXIT) and _layer != null:
 			_layer.queue_redraw()
+
+	func shows_focus_ring() -> bool:
+		return has_focus()
 
 	func _lit() -> bool:
 		return is_hovered() or has_focus()
 
 	func paint(ci: Control) -> void:
 		var rect := Rect2(Vector2.ZERO, size)
+		if kind != "button" and shows_focus_ring():
+			Paint.focus_ring(ci, rect, sc)
 		match kind:
 			"tab":
 				Paint.draw(ci, "ad_ui_tab_active" if active else ("ad_ui_tab_hover" if _lit() else "ad_ui_tab_inactive"), rect, sc)
@@ -155,8 +164,8 @@ class SkinButton extends Button:
 			_:
 				if disabled:
 					Paint.draw(ci, "ad_ui_btn_disabled", rect, sc)
-				elif has_focus():
-					Paint.draw(ci, "ad_ui_btn_focus", rect.grow(4.0 * sc), sc)
+				elif shows_focus_ring():
+					Paint.focus_ring(ci, rect, sc)
 				elif button_pressed or get_draw_mode() == DRAW_PRESSED:
 					Paint.draw(ci, "ad_ui_btn_pressed", rect, sc)
 				elif is_hovered():
@@ -186,8 +195,11 @@ class SkinOption extends OptionButton:
 		queue_redraw()
 
 	func _notification(what: int) -> void:
-		if what == NOTIFICATION_DRAW and _layer != null:
+		if (what == NOTIFICATION_DRAW or what == NOTIFICATION_FOCUS_ENTER or what == NOTIFICATION_FOCUS_EXIT) and _layer != null:
 			_layer.queue_redraw()
+
+	func shows_focus_ring() -> bool:
+		return has_focus()
 
 	func paint(ci: Control) -> void:
 		var name := "ad_ui_dropdown_normal"
@@ -198,6 +210,8 @@ class SkinOption extends OptionButton:
 		elif is_hovered() or has_focus():
 			name = "ad_ui_dropdown_hover"
 		Paint.draw(ci, name, Rect2(Vector2.ZERO, size), sc)
+		if shows_focus_ring():
+			Paint.focus_ring(ci, Rect2(Vector2.ZERO, size), sc)
 
 class SkinSlider extends HSlider:
 	var sc := 1.0
@@ -227,6 +241,11 @@ class SkinSlider extends HSlider:
 			Paint.draw(self, "ad_ui_slider_fill", Rect2(track.position, Vector2(maxf(cx, 8.0 * sc), track.size.y)), sc)
 		var look := "disabled" if not editable else ("pressed" if has_focus() and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) else ("hover" if _hover or has_focus() else "normal"))
 		Paint.draw(self, "ad_ui_slider_grab_" + look, Rect2(cx - gw * 0.5, mid - gh * 0.5, gw, gh), sc)
+		if shows_focus_ring():
+			Paint.focus_ring(self, Rect2(Vector2.ZERO, size), sc)
+
+	func shows_focus_ring() -> bool:
+		return has_focus()
 
 	func _gui_input(_event: InputEvent) -> void:
 		queue_redraw()
@@ -675,6 +694,7 @@ func _light_state() -> void:
 		_preview_light.visible = on
 	if lighting_option != null:
 		lighting_option.disabled = _read_only or not on
+	_link_page_focus()
 
 # ---------------------------------------------------------------- controls
 
@@ -832,6 +852,7 @@ func select_tab(id: String) -> void:
 		tab_buttons[t].active = t == id
 		tab_buttons[t].queue_redraw()
 	_relayout()
+	_link_page_focus(id)
 	if FIRST_HELP.has(id):
 		_show_help(id, FIRST_HELP[id][0], FIRST_HELP[id][1])
 	var owner := get_viewport().gui_get_focus_owner() if is_inside_tree() else null
@@ -841,6 +862,52 @@ func select_tab(id: String) -> void:
 func _step_tab(delta: int) -> void:
 	select_tab(TABS[(TABS.find(current_tab) + delta + TABS.size()) % TABS.size()])
 	tab_buttons[current_tab].grab_focus()
+
+## Explicit vertical focus chain for the current page: tab, page controls top to bottom, Back, Defaults, Apply (wrapping).
+func _link_page_focus(tab: String = "") -> void:
+	if tab == "":
+		tab = current_tab
+	if tab != current_tab or not tab_pages.has(tab):
+		return
+	var page: Node = tab_pages[tab]
+	var rows: Array = []
+	for it in _items:
+		var c: Control = it["c"]
+		if not (c is Button or c is OptionButton or c is HSlider) or c.focus_mode == Control.FOCUS_NONE or not page.is_ancestor_of(c):
+			continue
+		if not c.visible or (c is HSlider and not c.editable) or (not c is HSlider and c.disabled):
+			continue
+		rows.append({"c": c, "y": float(it["w"]["y"]), "x": float(it["w"]["x"])})
+	rows.sort_custom(func(a, b): return a["y"] < b["y"] or (a["y"] == b["y"] and a["x"] < b["x"]))
+	var chain: Array = [tab_buttons[tab]]
+	for r in rows:
+		chain.append(r["c"])
+	for b in [back_button, reset_button, apply_button]:
+		if b != null and not b.disabled:
+			chain.append(b)
+	for i in chain.size():
+		var c: Control = chain[i]
+		var nxt: NodePath = c.get_path_to(chain[(i + 1) % chain.size()])
+		var prv: NodePath = c.get_path_to(chain[(i + chain.size() - 1) % chain.size()])
+		c.focus_neighbor_bottom = nxt
+		c.focus_next = nxt
+		c.focus_neighbor_top = prv
+		c.focus_previous = prv
+
+func _popups() -> Array:
+	var out: Array = []
+	for o in [window_mode_option, lighting_option, frame_limit_option]:
+		if o != null:
+			out.append(o.get_popup())
+	return out
+
+## Hides an open dropdown popup; true when one was open (Esc then closes only the popup).
+func close_open_popup() -> bool:
+	for p in _popups():
+		if p.visible:
+			p.hide()
+			return true
+	return false
 
 func _tab_delta(event: InputEvent) -> int:
 	if event.is_action_pressed("ui_page_up"):
@@ -892,6 +959,7 @@ func reset_all() -> void:
 	for hook in _sync_hooks:
 		hook.call()
 	refresh_bindings()
+	_link_page_focus()
 
 # ---------------------------------------------------------------- rebinding
 
@@ -938,6 +1006,7 @@ func refresh_bindings() -> void:
 	_refresh_conflict_panel(eff)
 	if _listen_hint != null:
 		_listen_hint.visible = listening_action != ""
+	_link_page_focus()
 
 func _conflict_subject() -> String:
 	if _last_rebind.has("action") and conflicts.has(_last_rebind["action"]):
@@ -1028,8 +1097,21 @@ func reset_bindings() -> void:
 	refresh_bindings()
 
 func _input(event: InputEvent) -> void:
-	if listening_action == "":
+	if listening_action != "":
+		_listen_input(event)
 		return
+	if not is_visible_in_tree() or not _popups().all(func(p): return not p.visible):
+		return
+	var step := 0
+	if event.is_action_pressed("ui_focus_prev"):
+		step = -1
+	elif event.is_action_pressed("ui_focus_next"):
+		step = 1
+	if step != 0:
+		_step_tab(step)
+		get_viewport().set_input_as_handled()
+
+func _listen_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE:
 		get_viewport().set_input_as_handled()
 		listening_action = ""
@@ -1050,7 +1132,7 @@ func _input(event: InputEvent) -> void:
 	rebind_action(listening_action, ev, _listen_slot)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not visible:
+	if not is_visible_in_tree():
 		return
 	if event.is_action_pressed("ui_cancel"):
 		back_requested.emit()

@@ -123,6 +123,24 @@ func run(t) -> void:
 	_key(vp, KEY_ESCAPE)
 	t.check(not scene.is_paused(), "AD-205 Esc on bare pause panel resumes")
 
+	_pause(scene)
+	_click(vp, pm.settings_button)
+	_keyboard(t, vp, pm.settings_screen, "run", func():
+		# An open embedded popup swallows pushed key events in this harness, so hand Esc to the run scene like its _input sees it.
+		var esc := InputEventKey.new()
+		esc.keycode = KEY_ESCAPE
+		esc.physical_keycode = KEY_ESCAPE
+		esc.pressed = true
+		scene._input(esc))
+	t.check(pm.is_settings_open() and scene.is_paused(), "AD-205 run: popup Esc leaves Settings open and paused")
+	_key(vp, KEY_ESCAPE)
+	t.check(not pm.is_settings_open() and scene.is_paused(), "AD-205 run: next Esc closes Settings only")
+	_key(vp, KEY_ESCAPE)
+	scene.queue_free()
+	vp.queue_free()
+	_title_keyboard(t)
+	vp = _viewport()
+
 	_new_settings(t, root, save)
 
 	save.set_base_dir("user://")
@@ -133,6 +151,88 @@ func run(t) -> void:
 		DirAccess.remove_absolute(DIR)
 	IA.reset_to_defaults()
 	vp.queue_free()
+
+func _title_keyboard(t) -> void:
+	var vp := _viewport()
+	var menu: Node = load("res://scenes/main.tscn").instantiate()
+	menu.show_debug_entries = false
+	vp.add_child(menu)
+	_click(vp, menu.find_child("SettingsButton", true, false))
+	t.check(menu.settings_screen != null and menu.settings_screen.visible, "AD-205 title: click Settings opens it")
+	_keyboard(t, vp, menu.settings_screen, "title", func(): t.check(menu.settings_screen.close_open_popup(), "AD-205 title: close_open_popup closes the open dropdown"))
+	t.check(menu.settings_screen.visible, "AD-205 title: popup cancel leaves Settings open")
+	vp.queue_free()
+
+## Keyboard-only walk of an open Settings screen: initial focus, focus ring, vertical chains, Tab/Q/E, slider, dropdown popup.
+func _keyboard(t, vp: SubViewport, screen, label: String, cancel: Callable) -> void:
+	var tag := "AD-205 %s: " % label
+	var f := _focus(vp)
+	t.check(f != null and f.is_visible_in_tree(), tag + "Settings opens with a visible focus owner")
+	t.check(f == screen.volume_sliders["Master"], tag + "focus lands on the Master slider")
+	for tab in ["audio", "video", "controls", "access"]:
+		screen.select_tab(tab)
+		var start: Control = screen.tab_buttons[tab]
+		start.grab_focus()
+		var expected := []
+		for c in screen.tab_pages[tab].find_children("*", "Control", true, false):
+			if (c is Button or c is OptionButton or c is HSlider) and c.focus_mode != Control.FOCUS_NONE and c.is_visible_in_tree():
+				if not ((c is HSlider and not c.editable) or (not c is HSlider and c.disabled)):
+					expected.append(c)
+		for b in [screen.back_button, screen.reset_button, screen.apply_button]:
+			expected.append(b)
+		var seen := []
+		var steps := 0
+		var ring_ok := true
+		var never_null := true
+		while steps < 60:
+			_action(vp, "ui_down")
+			steps += 1
+			f = _focus(vp)
+			if f == null:
+				never_null = false
+				break
+			if f == start:
+				break
+			seen.append(f)
+			if f.has_method("shows_focus_ring") and not f.shows_focus_ring():
+				ring_ok = false
+		t.check(never_null and f == start, tag + "%s ui_down wraps back to the tab button" % tab)
+		t.check(ring_ok, tag + "%s focused controls show the focus ring" % tab)
+		var missing := expected.filter(func(c): return not c in seen)
+		t.equal(missing.size(), 0, tag + "%s ui_down visits every enabled control" % tab)
+	screen.select_tab("audio")
+	screen.tab_buttons["audio"].grab_focus()
+	for step in [[KEY_TAB, false, "video"], [KEY_TAB, false, "controls"], [KEY_TAB, false, "access"], [KEY_TAB, false, "audio"], [KEY_TAB, true, "access"]]:
+		_key_mod(vp, step[0], step[1])
+		t.equal(screen.current_tab, step[2], tag + "Tab step to " + step[2])
+	_key(vp, KEY_Q)
+	t.equal(screen.current_tab, "controls", tag + "Q still steps back")
+	_key(vp, KEY_E)
+	t.equal(screen.current_tab, "access", tag + "E still steps forward")
+	screen.select_tab("audio")
+	var master: HSlider = screen.volume_sliders["Master"]
+	master.grab_focus()
+	master.value = 0.5
+	_action(vp, "ui_right")
+	t.check(master.value > 0.5, tag + "ui_right raises a focused slider")
+	t.check(is_equal_approx(screen._settings.volumes["Master"], master.value), tag + "slider change persisted to settings")
+	screen.select_tab("video")
+	var dd: OptionButton = screen.window_mode_option
+	dd.grab_focus()
+	_action(vp, "ui_accept")
+	t.check(dd.get_popup().visible, tag + "ui_accept opens the dropdown popup")
+	cancel.call()
+	t.check(not dd.get_popup().visible, tag + "cancel closes the popup")
+	t.check(screen.visible, tag + "Settings stays open after closing the popup")
+
+func _key_mod(vp: SubViewport, keycode: Key, shift: bool) -> void:
+	for pressed in [true, false]:
+		var ev := InputEventKey.new()
+		ev.keycode = keycode
+		ev.physical_keycode = keycode
+		ev.shift_pressed = shift
+		ev.pressed = pressed
+		vp.push_input(ev, true)
 
 func _new_settings(t, root: Node, save) -> void:
 	var Screen = preload("res://ui/settings_screen.gd")

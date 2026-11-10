@@ -468,7 +468,7 @@ settings.apply,Apply
 settings.test,Test
 settings.swap,Swap
 settings.cancel,Cancel
-settings.hint,Esc back    Q / E switch tab    Enter change
+settings.hint,Esc back    Tab / Q / E switch tab    Enter change
 settings.value.on,On
 settings.value.off,Off
 settings.value.unlimited,Unlimited

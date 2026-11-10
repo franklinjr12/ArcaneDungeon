@@ -273,6 +273,7 @@ func open_settings() -> void:
 		add_child(settings_screen)
 		settings_screen.back_requested.connect(close_settings)
 	_opened_from_controls = false
+	settings_screen.select_tab("audio")
 	settings_screen.visible = true
 	panel.visible = false
 
@@ -300,6 +301,8 @@ func is_controls_open() -> bool:
 
 func handle_cancel() -> void:
 	if is_settings_open():
+		if settings_screen.close_open_popup():
+			return
 		close_settings()
 	elif is_confirm_open():
 		cancel_confirm()
