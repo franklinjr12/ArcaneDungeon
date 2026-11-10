@@ -1,5 +1,6 @@
 extends RefCounted
 ## AD-202 step 1: Ruins cover kinds, layout.pits (walking blockers) and layout.arena_walls (shared-wall opt-out).
+## AD-202 step 2: Room.rule_report (docs/rooms/ROOM_RULES.md) on synthetic rooms.
 const Session = preload("res://combat/combat_session.gd")
 const EnvProps = preload("res://world/env_props.gd")
 const Geometry = preload("res://world/arena_geometry.gd")
@@ -21,6 +22,7 @@ func run(t) -> void:
 	_run_flow(t)
 	_templates_still_valid(t)
 	_placeholder_frames(t)
+	_rule_report(t)
 
 func _tuning() -> Dictionary:
 	return JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))
@@ -196,3 +198,97 @@ func _placeholder_frames(t) -> void:
 		for stage in [0,2]:
 			var fr := Art.env_prop_frame(kind,"intact",false,stage,0)
 			t.check(not fr.is_empty() and man.has(fr["stem"]) and man[fr["stem"]]["tags"].has(fr["tag"]),"AD-202 art: %s stage %d maps to an existing frame" % [kind,stage])
+
+# --- AD-202 step 2: rule_report. The good room has an open floor (arena_walls false), 3 cover pieces and a cobweb.
+func _rules() -> Dictionary:
+	return JSON.parse_string(FileAccess.get_file_as_string("res://world/data/run_v2.json"))["room_rules"]
+
+func _good_room() -> Dictionary:
+	var room := _room({"arena_walls":false,"walls":[[500,200,60,60]],
+		"env_props":[{"id":"p1","kind":"pillar","rect":[700,500,48,48]},{"id":"p2","kind":"column","position":[900,250]},
+			{"id":"w1","kind":"cobweb","rect":[400,600,48,48]}]})
+	room["shape"] = "open_hall"
+	room["waves"][0]["enemies"] = [["bone_thrall",800,700]]
+	return room
+
+func _report(room: Dictionary) -> Dictionary:
+	return Room.rule_report(room,_tuning()["arena"],EnvProps.load_data(),_rules())
+
+func _rule_codes(report: Dictionary) -> Array:
+	return _codes(report)
+
+func _rule_report(t) -> void:
+	var rules := _rules()
+	t.equal(int(rules["min_obstacles"]),2,"AD-202 rules: min_obstacles in run_v2 room_rules")
+	t.equal(int(rules["max_obstacles"]),5,"AD-202 rules: max_obstacles")
+	t.equal((rules["shapes"] as Array).size(),9,"AD-202 rules: nine shape ids")
+	t.equal((rules["owner_shapes"] as Array).size(),5,"AD-202 rules: five owner shapes")
+	for id in rules["owner_shapes"]:
+		t.check((rules["shapes"] as Array).has(id),"AD-202 rules: owner shape %s is allowed" % id)
+	for kind in rules["interaction_kinds"]:
+		t.check(EnvProps.KIND_IDS.has(kind),"AD-202 rules: interaction kind %s exists" % kind)
+	var good := _good_room()
+	var report := _report(good)
+	t.check(bool(report["ok"]) and report["issues"].is_empty(),"AD-202 rules: compliant room passes (%s)" % str(report["issues"]))
+	t.equal(int(report["obstacles"]),3,"AD-202 rules: layout wall + pillar + column count, no shared walls")
+	t.equal(int(report["interactions"]),1,"AD-202 rules: cobweb is the one interaction")
+	t.equal(str(report["shape"]),"open_hall","AD-202 rules: shape reported")
+	t.check(bool(_verdict(good)["ok"]),"AD-202 rules: compliant room also validates in initialize")
+	t.equal(_report(good),_report(_good_room()),"AD-202 rules: report is deterministic")
+	# Shared arena walls count as obstacles unless arena_walls is false: 3 shared + 1 layout wall = 4.
+	var shared := _good_room()
+	shared["layout"].erase("arena_walls")
+	shared["layout"]["env_props"] = [{"id":"w1","kind":"cobweb","rect":[400,600,48,48]}]
+	var shared_report := _report(shared)
+	t.equal(int(shared_report["obstacles"]),4,"AD-202 rules: shared arena walls are obstacles")
+	t.check(bool(shared_report["ok"]),"AD-202 rules: shared walls + 1 wall + cobweb passes (%s)" % str(shared_report["issues"]))
+	# One bad room per code; each must fire its code (and only that code).
+	var few := _good_room()
+	few["layout"]["walls"] = []
+	few["layout"]["env_props"].remove_at(0)
+	_expect(t,few,"RULE_OBSTACLES","too few obstacles")
+	var many := _good_room()
+	many["layout"]["walls"] = [[300,150,40,40],[400,150,40,40],[300,350,40,40],[400,350,40,40]]
+	_expect(t,many,"RULE_OBSTACLES","too many obstacles")
+	var plain := _good_room()
+	plain["layout"]["env_props"] = [{"id":"p1","kind":"pillar","rect":[700,500,48,48]},{"id":"p2","kind":"column","position":[900,250]}]
+	_expect(t,plain,"RULE_INTERACTION","no interaction prop")
+	var rubble := _good_room()
+	rubble["layout"]["env_props"].append({"id":"r1","kind":"rubble","rect":[200,700,64,40]})
+	rubble["layout"]["env_props"].remove_at(2)
+	_expect(t,rubble,"RULE_INTERACTION","solid cover is not an interaction")
+	var shapeless := _good_room()
+	shapeless.erase("shape")
+	_expect(t,shapeless,"RULE_SHAPE","missing shape")
+	var odd := _good_room()
+	odd["shape"] = "blob"
+	_expect(t,odd,"RULE_SHAPE","unknown shape")
+	var near := _good_room()
+	near["waves"][0]["enemies"] = [["bone_thrall",800,700],["bone_thrall",300,450]]
+	_expect(t,near,"RULE_SPAWN_NEAR_ENTRANCE","spawn 115 from the entrance")
+	var exact := _good_room()
+	exact["waves"][0]["enemies"] = [["bone_thrall",345,450]]
+	t.check(not _rule_codes(_report(exact)).has("RULE_SPAWN_NEAR_ENTRANCE"),"AD-202 rules: spawn exactly 160 away is allowed")
+	# Dead corner: a wall at x 80-120 leaves the top-left cell (40,40) with the arena edge on two sides and the wall on a third.
+	var corner := _good_room()
+	corner["layout"]["walls"] = [[80,0,40,100]]
+	var corner_report := _report(corner)
+	t.check(_rule_codes(corner_report).has("RULE_DEAD_CORNER"),"AD-202 rules: dead corner flagged (%s)" % str(corner_report["issues"]))
+	t.check(bool(_verdict(corner)["ok"]),"AD-202 rules: the dead-corner room still validates in initialize")
+	# Pocket: a pit ring closes off a free patch of floor that initialize() never visits (no spawn inside).
+	var pocket := _good_room()
+	pocket["layout"]["pits"] = [[1000,500,200,40],[1000,700,200,40],[1000,500,40,240],[1160,500,40,240]]
+	var pocket_report := _report(pocket)
+	t.check(_rule_codes(pocket_report).has("RULE_POCKET_UNREACHABLE"),"AD-202 rules: sealed pocket flagged (%s)" % str(pocket_report["issues"]))
+	t.check(bool(_verdict(pocket)["ok"]),"AD-202 rules: the pocket room still validates in initialize")
+	# Cells near the entrance side are not mistaken for pockets in the good room.
+	t.check(not _rule_codes(report).has("RULE_POCKET_UNREACHABLE") and not _rule_codes(report).has("RULE_DEAD_CORNER"),"AD-202 rules: good room has neither pockets nor dead corners")
+	# Treasure room: no waves, so the spawn rule is vacuous.
+	var treasure := _good_room()
+	treasure["type"] = "treasure"
+	treasure["waves"] = []
+	t.check(bool(_report(treasure)["ok"]),"AD-202 rules: wave-less treasure room passes")
+
+func _expect(t, room: Dictionary, code: String, label: String) -> void:
+	var report := _report(room)
+	t.check(not bool(report["ok"]) and _rule_codes(report).has(code),"AD-202 rules: %s -> %s (%s)" % [label,code,str(_rule_codes(report))])

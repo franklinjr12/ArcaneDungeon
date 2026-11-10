@@ -1,5 +1,7 @@
 # Ruins room pool (AD-128)
 
+Room design rules (obstacles, interactions, shapes, spawns, dead corners; AD-202): [ROOM_RULES.md](ROOM_RULES.md).
+
 Data: `world/data/rooms_ruins_v1.json` (stage `ruins`). Validator: `world/room_template.gd`. Tests: `tests/test_ad_rooms.gd`.
 Screenshot sheet of all layouts: [ruins_layouts.png](ruins_layouts.png) (schematic render of the JSON: blue = entrance and 160 px spawn ring, yellow = reward, green = exit, circles = props, dots = enemies — white thrall, purple adept, orange hound; red outline = on-clear wave; pink diamonds = pedestals).
 
