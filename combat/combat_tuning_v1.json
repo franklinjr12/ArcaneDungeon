@@ -447,7 +447,30 @@
       "recovery_ticks": 40, "phase_threshold": 0.5,
       "shot_damage": 11, "shot_speed": 400, "shot_spread": 0,
       "fan_shots": 5, "fan_arc_degrees": 50,
-      "radial_shots": 8, "radial_damage": 8, "telegraph_radius": 190, "color": "#b49cf0"
+      "radial_shots": 8, "radial_damage": 8, "telegraph_radius": 190, "color": "#b49cf0",
+      "anchors": [[1030,450],[760,230],[760,680]],
+      "homing_skull": {"hp": 20, "radius": 14, "speed": 120, "turn_deg_per_tick": 2.5, "lifetime_ticks": 420, "damage": 12, "cap": 2},
+      "decoy": {"hp": 1, "radius": 26, "damage_multiplier": 0.6, "copies": ["fan","targeted","homing_skull"]},
+      "stagger": {"ticks": 60, "damage_taken_multiplier": 1.5},
+      "phases": [
+        {"threshold": 1.0, "windup_ticks": 48,
+         "movement": {"mode": "strafe", "speed": 90, "preferred_range": 320, "margin": 50},
+         "pool": [
+           {"pattern": "fan"}, {"pattern": "targeted"},
+           {"combo": ["targeted","targeted","fan"], "gap_ticks": 14},
+           {"pattern": "homing_skull"},
+           {"move": {"mode": "blink", "blink_ticks": 30, "radius": 60, "anchor_pick": "farthest"}}
+         ]},
+        {"threshold": 0.5, "windup_ticks": 40,
+         "transition": {"roar_ticks": 60, "arena_change": {"clear_hazards": true}}, "spawn_decoy": true,
+         "movement": {"mode": "strafe", "speed": 120, "preferred_range": 260, "margin": 40},
+         "pool": [
+           {"pattern": "fan"}, {"pattern": "targeted"},
+           {"combo": ["targeted","targeted","fan"], "gap_ticks": 14},
+           {"pattern": "homing_skull"},
+           {"move": {"mode": "blink", "blink_ticks": 30, "radius": 60, "anchor_pick": "nearest"}}
+         ]}
+      ]
     },
     "cistern_crystal_elite": {
       "_note": "AD-141 PROPOSED numbers (Demo Plan Q1 default pending Franklin)",
@@ -457,7 +480,30 @@
       "windup_ticks": 50, "second_phase_windup_ticks": 40, "min_telegraph_ticks": 36,
       "recovery_ticks": 40, "phase_threshold": 0.5,
       "radial_shots": 8, "radial_damage": 8, "shot_damage": 10, "shot_speed": 350, "shot_spread": 0,
-      "telegraph_radius": 150, "color": "#7fe0ff"
+      "telegraph_radius": 150, "color": "#7fe0ff",
+      "anchors": [[480,130],[1030,130],[1030,770],[480,770]],
+      "beam_sweep": {"windup_ticks": 45, "sweep_degrees": 270, "deg_per_tick": 1.8, "length": 760, "width": 26, "damage": 12, "hit_interval_ticks": 30},
+      "electrify": {"duration_ticks": 240, "damage": 6, "interval_ticks": 30},
+      "water_freeze": {"radius": 48, "ice_ticks": 360},
+      "small_crystals": {"kind": "storm_crystal", "offsets": [[-90,0],[90,0]], "cap": 2, "hp": 35, "radius": 16},
+      "stagger": {"ticks": 60, "damage_taken_multiplier": 1.5},
+      "phases": [
+        {"threshold": 1.0, "windup_ticks": 50,
+         "movement": {"mode": "float_path", "speed": 40, "waypoints": [[480,130],[1030,130],[1030,770],[480,770]], "prefer": "away"},
+         "pool": [
+           {"pattern": "pulse"}, {"pattern": "radial"}, {"pattern": "electrify"},
+           {"pattern": "beam_sweep", "big": true},
+           {"move": {"mode": "leap", "target": "anchor", "telegraph_ticks": 50, "flight_ticks": 24, "radius": 110, "damage": 8}}
+         ]},
+        {"threshold": 0.5, "windup_ticks": 40,
+         "transition": {"roar_ticks": 60, "arena_change": {"clear_hazards": true}}, "small_crystals": true, "beam_speed_scale": 1.5,
+         "movement": {"mode": "float_path", "speed": 55, "waypoints": [[480,130],[1030,130],[1030,770],[480,770]], "prefer": "toward"},
+         "pool": [
+           {"pattern": "pulse"}, {"pattern": "radial"}, {"pattern": "electrify"},
+           {"pattern": "beam_sweep", "big": true},
+           {"move": {"mode": "leap", "target": "player", "telegraph_ticks": 50, "flight_ticks": 24, "radius": 110, "damage": 8}}
+         ]}
+      ]
     }
   }
 }

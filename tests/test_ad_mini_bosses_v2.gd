@@ -14,6 +14,15 @@ const Movement = preload("res://combat/boss_moves/boss_movement.gd")
 const Enemy = preload("res://combat/enemy_combat.gd")
 const POOL := [{"kind":"shallow","rect":[0,0,128,64]},{"kind":"shallow","rect":[500,0,64,64]},{"kind":"deep","rect":[128,0,64,64]}]
 const BLINK := {"move":{"mode":"blink","blink_ticks":30,"radius":60}}
+const Driver = preload("res://tests/m3_run_driver.gd")
+const LIVE_TUNING := "res://combat/combat_tuning_v1.json"
+const LIVE_ROOMS := {"ruins_adept_elite":["res://world/data/rooms_ruins_v1.json","ruins_challenge_v1"],"cistern_crystal_elite":["res://world/data/rooms_cistern_v1.json","cistern_challenge_v1"]}
+const LIVE_HP := {"ruins_adept_elite":260.0,"cistern_crystal_elite":450.0}
+const LIVE_BENCH_SEEDS := [1423,2718,3141]
+const LIVE_BENCH_BUILDS := [0,2]
+const LIVE_BENCH_TICKS := 12000
+const LIVE_STILL_LIMIT := 120
+const ROUTE_TOLERANCE := 4.0
 
 func run(t) -> void:
 	_blink_telegraph(t)
@@ -43,6 +52,12 @@ func run(t) -> void:
 	_small_crystals(t)
 	_crystal_validate(t)
 	_crystal_rng(t)
+	_live_data(t)
+	_live_telegraphs(t)
+	_live_moves(t)
+	_live_adept_anchors(t)
+	_live_crystal_route(t)
+	_live_bench_all(t)
 
 func _cfg(phases: Array, extra: Dictionary = {}) -> Dictionary:
 	var cfg := {"kind":"test_adept","hp":260,"radius":30,"recovery_ticks":10,"min_telegraph_ticks":36,"shot_speed":300,"shot_spread":0,
@@ -876,3 +891,184 @@ func _crystal_rng(t) -> void:
 		pair[0].step()
 	t.equal(pair[1]._rng,null,"AD-200 the crystal kit never creates the boss RNG")
 	t.equal(pair[0].sim.clock._rng.state,fresh.sim.clock._rng.state,"AD-200 the crystal kit leaves the shared sim RNG unchanged")
+
+# --- live data (combat_tuning_v1.json mini_bosses; AD-200 step 4) ---
+
+func _live(id: String) -> Dictionary:
+	return JSON.parse_string(FileAccess.get_file_as_string(LIVE_TUNING))["mini_bosses"][id]
+
+func _live_room(id: String) -> Dictionary:
+	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(LIVE_ROOMS[id][0]))
+	return doc["room_templates"][LIVE_ROOMS[id][1]]
+
+## A session with the room's layout walls and water installed like world/run_flow.gd _build_room.
+func _live_session(id: String, run_seed: int = 1981, build: int = 0):
+	var s = Session.new(run_seed,"empty",build)
+	s.defer_clear = true
+	var layout: Dictionary = _live_room(id).get("layout",{})
+	for dims in layout.get("walls",[]):
+		var wall := Rect2(float(dims[0]),float(dims[1]),float(dims[2]),float(dims[3]))
+		s.world.walls.append(wall)
+		s.sim.collision_walls.append(wall)
+	if layout.has("water"):
+		s.set_water(layout["water"])
+	return s
+
+func _live_data(t) -> void:
+	for id in LIVE_ROOMS:
+		var cfg := _live(id)
+		t.equal(float(cfg["hp"]),LIVE_HP[id],"AD-200 %s hp is exactly %d (never raised to lengthen the fight)" % [id,int(LIVE_HP[id])])
+		t.equal(BossCombat.validate(cfg),[],"AD-200 live %s validates with no issues" % id)
+		var phases: Array = cfg["phases"]
+		t.check(phases.size() == 2 and float(phases[1]["threshold"]) == 0.5,"AD-200 %s has 2 phases, the second at 50%%" % id)
+		for p in phases.size():
+			var names := {}
+			for entry in phases[p]["pool"]:
+				if entry.has("pattern"):
+					names[entry["pattern"]] = true
+				elif entry.has("combo"):
+					names[entry["combo"][0]] = true
+			t.check(names.size() >= 3,"AD-200 %s phase %d pool has at least 3 distinct attack patterns (%s)" % [id,p+1,str(names.keys())])
+		var s = Session.new(1981,"empty",0)
+		t.equal(s.spawn_mini_boss(id,Vector2(1030,450)).target.health.maximum,LIVE_HP[id],"AD-200 %s spawns with its data hp at elite x1" % id)
+
+func _live_telegraphs(t) -> void:
+	var blink := _live("ruins_adept_elite")
+	t.equal(blink["phases"][0]["pool"][4]["move"]["blink_ticks"],30,"AD-200 live adept blink telegraph is 30 ticks")
+	var pair := _live_adept_to_blink()
+	var snap: Dictionary = pair[1].intent.snapshot()
+	var ticks := 0
+	while pair[1].state == "windup" and ticks < 200:
+		pair[0].step()
+		ticks += 1
+	t.check(snap["kind"] == "blink" and int(snap["telegraph_ticks"]) == 30 and ticks == 30,"AD-200 the live adept blink windup really lasts 30 ticks (%d/%d)" % [int(snap["telegraph_ticks"]),ticks])
+	var cfg := _live("cistern_crystal_elite")
+	t.equal(cfg["beam_sweep"]["windup_ticks"],45,"AD-200 live crystal beam telegraph is 45 ticks")
+	var s = _live_session("cistern_crystal_elite")
+	var boss = s.spawn_mini_boss("cistern_crystal_elite",Vector2(1030,450))
+	boss.tuning["phases"][0]["pool"] = [{"pattern":"beam_sweep"}]
+	s.sim.actor.position = Vector2(700,450)
+	_step_until(s,10,func(): return boss.state == "windup")
+	var beam_ticks := int(boss.intent.snapshot()["telegraph_ticks"])
+	ticks = 0
+	while boss.state == "windup" and ticks < 200:
+		s.step()
+		ticks += 1
+	t.check(boss.intent.snapshot()["kind"] == "beam_sweep" and beam_ticks == 45 and ticks == 45 and boss.state == "casting","AD-200 the live crystal beam windup really lasts 45 ticks (%d/%d)" % [beam_ticks,ticks])
+
+## A live adept whose pool is only the blink move, stepped to the start of its windup.
+func _live_adept_to_blink() -> Array:
+	var s = _live_session("ruins_adept_elite")
+	var boss = s.spawn_mini_boss("ruins_adept_elite",Vector2(1030,450))
+	boss.tuning["phases"][0]["pool"] = [_live("ruins_adept_elite")["phases"][0]["pool"][4]]
+	s.sim.actor.position = Vector2(700,450)
+	_step_until(s,10,func(): return boss.state == "windup")
+	return [s,boss]
+
+func _live_moves(t) -> void:
+	for id in LIVE_ROOMS:
+		var phases: Array = _live(id)["phases"]
+		for p in phases.size():
+			var moves: Array = phases[p]["pool"].filter(func(e): return e.has("move"))
+			t.check(phases[p].has("movement") and moves.size() >= 1,"AD-200 %s phase %d has a continuous movement and a discrete move" % [id,p+1])
+		t.check(phases[0]["movement"] != phases[1]["movement"],"AD-200 %s phase 2 moves differently from phase 1" % id)
+	var adept: Array = _live("ruins_adept_elite")["phases"]
+	var one: Dictionary = adept[0]["movement"]
+	var two: Dictionary = adept[1]["movement"]
+	t.check(one["mode"] == "strafe" and two["mode"] == "strafe" and float(one["margin"]) > 0.0 and float(two["margin"]) > 0.0,"AD-200 the adept chases beyond and kites inside its preferred range (strafe margins) in both phases")
+	t.check(float(two["speed"]) > float(one["speed"]) and float(two["preferred_range"]) < float(one["preferred_range"]),"AD-200 adept phase 2 is faster and closer than phase 1")
+	t.check(adept[0]["pool"][4]["move"]["anchor_pick"] == "farthest" and adept[1]["pool"][4]["move"]["anchor_pick"] == "nearest" and adept[1]["spawn_decoy"] == true,"AD-200 the adept phase 2 blink picks the nearest anchor and splits a decoy")
+	var crystal: Array = _live("cistern_crystal_elite")["phases"]
+	t.check(crystal[0]["movement"]["mode"] == "float_path" and crystal[0]["movement"]["prefer"] == "away" and crystal[1]["movement"]["prefer"] == "toward" and float(crystal[1]["movement"]["speed"]) > float(crystal[0]["movement"]["speed"]),"AD-200 the crystal floats away in phase 1 and faster toward the player in phase 2")
+	t.check(crystal[0]["pool"][4]["move"]["target"] == "anchor" and crystal[1]["pool"][4]["move"]["target"] == "player","AD-200 the crystal leaps to an anchor in phase 1 and onto the player in phase 2")
+	t.check(float(crystal[1]["beam_speed_scale"]) == 1.5 and crystal[1]["small_crystals"] == true and not crystal[0].has("small_crystals"),"AD-200 crystal phase 2 speeds the beam up and spawns small crystals")
+
+func _live_adept_anchors(t) -> void:
+	var s = _live_session("ruins_adept_elite")
+	var anchors: Array = _live("ruins_adept_elite")["anchors"]
+	t.equal(anchors.size(),3,"AD-200 the adept has 3 blink anchors")
+	for anchor in anchors:
+		t.check(s.world.valid_position(Vector2(float(anchor[0]),float(anchor[1])),30.0),"AD-200 adept anchor %s fits radius 30 in ruins_challenge_v1" % str(anchor))
+
+func _route_distance(point: Vector2, route: Array) -> float:
+	var best := INF
+	for i in route.size()-1:
+		var closest := Geometry2D.get_closest_point_to_segment(point,Vector2(route[i][0],route[i][1]),Vector2(route[i+1][0],route[i+1][1]))
+		best = minf(best,closest.distance_to(point))
+	return best
+
+func _live_crystal_route(t) -> void:
+	var id := "cistern_crystal_elite"
+	var s = _live_session(id)
+	var cfg := _live(id)
+	var route: Array = cfg["phases"][0]["movement"]["waypoints"]
+	for point in route:
+		t.check(s.world.valid_position(Vector2(float(point[0]),float(point[1])),30.0),"AD-200 crystal waypoint %s is valid for radius 30 in the real room" % str(point))
+	for point in cfg["anchors"]:
+		t.check(route.has(point),"AD-200 crystal anchor %s is on the route" % str(point))
+	var shallow := 0
+	for entry in _live_room(id)["layout"]["water"]:
+		if entry["kind"] == "shallow" and Rect2(entry["rect"][0],entry["rect"][1],entry["rect"][2],entry["rect"][3]).has_point(Vector2(1030,450)):
+			shallow += 1
+	t.equal(shallow,1,"AD-200 the route's east leg runs through a shallow channel")
+	var boss = s.spawn_mini_boss(id,Vector2(1030,450))
+	s.sim.actor.health.maximum = 100000.0
+	s.sim.actor.health.current = 100000.0
+	var worst := 0.0
+	var moved := 0.0
+	var last: Vector2 = boss.target.position
+	for i in 3000:
+		s.sim.actor.position = Vector2(700,450)
+		s.step()
+		if ["acquire","recover"].has(boss.state):
+			worst = maxf(worst,_route_distance(boss.target.position,route))
+			moved += boss.target.position.distance_to(last)
+		last = boss.target.position
+	t.check(boss.phase == 1 and worst <= ROUTE_TOLERANCE,"AD-200 the crystal stays on the route while floating (worst %.1f px)" % worst)
+	t.check(moved > 300.0,"AD-200 the crystal really floats along the channels (%.0f px)" % moved)
+
+class BenchHarness:
+	var session
+	var boss
+	var state := "fighting"
+	func step(command: Dictionary) -> void:
+		session.issue(command)
+		session.step()
+		if session.state != "playing" or not boss.target.alive():
+			state = "done"
+
+## Longest run of ticks the boss stood still while acquiring, recovering or moving (windup, casting, stagger, roar and submerged reset it).
+func _live_bench(id: String, run_seed: int, build: int) -> Dictionary:
+	var s = _live_session(id,run_seed,build)
+	var slot: Dictionary = _live_room(id)["mini_boss_slot"]
+	var boss = s.spawn_mini_boss(id,Vector2(float(slot["position"][0]),float(slot["position"][1])),_live_room(id)["elite"])
+	var h := BenchHarness.new()
+	h.session = s
+	h.boss = boss
+	var track := {"still":0,"max":0,"last":boss.target.position,"phases":[1],"phase_tick":0}
+	var on_tick := func(_flow):
+		var position: Vector2 = boss.target.position
+		if ["acquire","recover","moving"].has(boss.state):
+			track["still"] = int(track["still"])+1 if position == track["last"] else 0
+			track["max"] = maxi(int(track["max"]),int(track["still"]))
+		else:
+			track["still"] = 0
+		track["last"] = position
+		if not (track["phases"] as Array).has(boss.phase):
+			(track["phases"] as Array).append(boss.phase)
+			track["phase_tick"] = 0
+		track["phase_tick"] = int(track["phase_tick"])+1
+		# A bot that stalls in phase 1 is pushed to phase 2 so both phases are exercised.
+		if boss.target.alive() and boss.phase == 1 and int(track["phase_tick"]) > 1800:
+			boss.target.health.current = minf(boss.target.health.current,boss.target.health.maximum*0.49)
+	Driver.fight(h,LIVE_BENCH_TICKS,on_tick)
+	return {"max_still":int(track["max"]),"phases":track["phases"],"dead":not boss.target.alive(),"seconds":float(s.sim.clock.tick)/60.0}
+
+func _live_bench_all(t) -> void:
+	for id in LIVE_ROOMS:
+		for run_seed in LIVE_BENCH_SEEDS:
+			for build in LIVE_BENCH_BUILDS:
+				var r := _live_bench(id,run_seed,build)
+				var label := "%s seed %d build %d" % [id,run_seed,build]
+				print("INFO MINI_BOSS_BENCH %s fight_seconds=%.1f max_still_ticks=%d phases=%s dead=%s" % [label,r["seconds"],r["max_still"],str(r["phases"]),str(r["dead"])])
+				t.check(int(r["max_still"]) <= LIVE_STILL_LIMIT,"AD-200 the live mini-boss never stands still more than 2 s while acquiring, recovering or moving (%s, %d ticks)" % [label,r["max_still"]])
