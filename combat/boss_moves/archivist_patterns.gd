@@ -11,8 +11,8 @@ const Elite = preload("res://combat/boss_moves/elite_patterns.gd")
 const PAGE := "book_page"
 const PAGE_KEYS := ["hp","radius","speed","turn_deg_per_tick","lifetime_ticks","damage","cap","count","spread_degrees"]
 const CONDUCT_KEYS := ["duration_ticks","damage","interval_ticks"]
-## Pools within this many px of the boss count as the one it dove from.
-const SAME_POOL := 8.0
+## Pools within this many px of the boss count as the one it dove from (a gliding boss drifts off the pool centre; live pools are >= 265 px apart).
+const SAME_POOL := 120.0
 const FREEZE_STUN_KEYS := ["ticks","radius"]
 
 static func _num(value) -> bool:

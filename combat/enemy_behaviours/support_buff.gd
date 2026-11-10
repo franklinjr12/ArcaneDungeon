@@ -14,6 +14,8 @@ func tick(enemy, session, _ctx: Dictionary) -> void:
 	for other in session.enemies:
 		if other == enemy or not other.target.alive() or "boss" in other.target.tags:
 			continue
+		if not ("buff_damage_scale" in other): # EliteMinion (AD-201 book pages, skulls) is not an EnemyCombat and takes no buffs
+			continue
 		if enemy.target.position.distance_to(other.target.position) <= radius:
 			other.buff_damage_scale *= damage_scale
 			other.speed_scale *= speed_scale

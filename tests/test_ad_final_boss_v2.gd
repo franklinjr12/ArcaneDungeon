@@ -10,6 +10,12 @@ const POOLS := [[400,200],[1000,200],[700,750]]
 const SHOCK := {"speed":300,"width":40,"max_radius":260,"damage":12}
 const NEAR_B := Vector2(950,250)
 const MOVE_DAMAGE := 10.0
+const Driver = preload("res://tests/m3_run_driver.gd")
+const LIVE_FILE := "res://world/data/run_v2.json"
+const LIVE_BENCH_SEEDS := [1423,2718]
+const LIVE_BENCH_BUILDS := [0,2]
+const LIVE_BENCH_TICKS := 12000
+const LIVE_STILL_LIMIT := 120
 const Minion = preload("res://combat/boss_moves/elite_minion.gd")
 const PAGES := {"hp":6,"radius":14,"speed":150,"turn_deg_per_tick":2,"lifetime_ticks":300,"damage":7,"cap":5,"count":3,"spread_degrees":40}
 const CONDUCT := {"duration_ticks":200,"damage":6,"interval_ticks":10}
@@ -46,6 +52,13 @@ func run(t) -> void:
 	_tide_dash_iframes(t)
 	_tide_validate(t)
 	_tide_determinism(t)
+	_live_data(t)
+	_live_pools_fit(t)
+	_live_dive(t)
+	_live_freeze_stun(t)
+	_live_shield(t)
+	_live_tide(t)
+	_live_movement_bench(t)
 
 func _move(extra: Dictionary = {}) -> Dictionary:
 	return {"mode":"submerge","exit":"pool","telegraph_ticks":40,"submerged_ticks":60,"emerge_telegraph_ticks":40,"radius":110,"damage":MOVE_DAMAGE}.merged(extra,true)
@@ -775,3 +788,187 @@ func _tide_determinism(t) -> void:
 	t.check(gaps.any(func(g): return g != gaps[0]),"AD-201 different seeds roll different gaps (%s)" % str(gaps))
 	var fresh = Session.new(5,"empty",0)
 	t.equal(a["session"].sim.clock.random_int(1,1000000),fresh.sim.clock.random_int(1,1000000),"AD-201 a tide wave boss leaves the sim RNG untouched")
+
+# ---- Live cistern_boss data (AD-201 step 4) ----
+
+func _live_doc() -> Dictionary:
+	return JSON.parse_string(FileAccess.get_file_as_string(LIVE_FILE))
+
+func _live() -> Dictionary:
+	return _live_doc()["bosses"]["cistern_boss"]
+
+func _live_water() -> Array:
+	return _live_doc()["room_templates"]["cistern_boss"]["layout"]["water"]
+
+## Live data with one phase's pool replaced and its hazards removed, so a test can pick the move.
+func _live_with_pool(phase_index: int, pool: Array, keep_hazards: bool = false) -> Dictionary:
+	var cfg := _live()
+	cfg["phases"][phase_index]["pool"] = pool
+	if not keep_hazards:
+		cfg["phases"][phase_index].erase("hazards")
+	return cfg
+
+## Live submerge move of a phase.
+func _live_dive_move(phase_index: int) -> Dictionary:
+	for entry in _live()["phases"][phase_index]["pool"]:
+		if entry.has("move") and entry["move"]["mode"] == "submerge":
+			return entry
+	return {}
+
+## Session in the live room water with the live boss at its live position; the player stands at `player_at`.
+func _live_fresh(cfg: Dictionary, player_at: Vector2) -> Array:
+	var s = Session.new(1981,"empty",0)
+	s.defer_clear = true
+	s.set_water(_live_water())
+	var boss = s.spawn_boss(cfg,Vector2(float(cfg["position"][0]),float(cfg["position"][1])))
+	s.sim.actor.position = player_at
+	return [s,boss]
+
+func _live_data(t) -> void:
+	var cfg := _live()
+	t.equal(int(cfg["hp"]),2400,"AD-201 live cistern_boss keeps 2400 hp")
+	t.equal(BossCombat.validate(cfg),[],"AD-201 live cistern_boss validates")
+	t.equal(cfg["phases"].map(func(p): return float(p["threshold"])),[1.0,0.66,0.33],"AD-201 live phase thresholds are 100/66/33 percent")
+	t.check(cfg["pools"].size() == 3 and cfg["freeze_stun"]["ticks"] == 120 and cfg["stagger"]["ticks"] == 120,"AD-201 live data has 3 pools and a 2 s freeze-stun")
+	t.check(cfg["phases"].all(func(p): return p["pool"].filter(func(e): return e.has("pattern")).size() >= 3),"AD-201 every live pool keeps 3+ distinct patterns")
+	t.check(not bool(_live_dive_move(1).get("big",false)),"AD-201 the phase 2 dive is not a big move (the freeze is its stagger window)")
+
+func _live_pools_fit(t) -> void:
+	var cfg := _live()
+	var shallow: Array = _live_water().filter(func(w): return w["kind"] == "shallow").map(func(w): return Rect2(float(w["rect"][0]),float(w["rect"][1]),float(w["rect"][2]),float(w["rect"][3])))
+	var s = Session.new(1981,"empty",0)
+	s.set_water(_live_water())
+	for pool in cfg["pools"]:
+		var at := Vector2(float(pool[0]),float(pool[1]))
+		t.check(shallow.any(func(r): return r.has_point(at)),"AD-201 live pool %s lies inside a shallow rect of the room water" % str(pool))
+		t.check(s.world.valid_position(at,float(cfg["radius"])),"AD-201 live pool %s is a valid boss position" % str(pool))
+	t.check(cfg["anchors"].all(func(a): return s.world.valid_position(Vector2(float(a[0]),float(a[1])),float(cfg["radius"]))),"AD-201 every live anchor is a valid boss position")
+	t.check(cfg["phases"].all(func(p): return p["movement"]["waypoints"].all(func(w): return s.world.valid_position(Vector2(float(w[0]),float(w[1])),float(cfg["radius"])))),"AD-201 every live float_path waypoint is a valid boss position")
+
+func _live_dive(t) -> void:
+	var entry := _live_dive_move(0).duplicate(true)
+	entry.erase("weight")
+	var pair := _live_fresh(_live_with_pool(0,[entry]),Vector2(150,450))
+	var s = pair[0]
+	var boss = pair[1]
+	var first := _dive(s,boss)
+	t.check(first["to"] != first["from"] and _live()["pools"].any(func(p): return Vector2(p[0],p[1]) == first["to"]),"AD-201 the live P1 dive emerges at a pool away from where it dove")
+	t.equal(first["telegraph"],40,"AD-201 the live emerge ripple telegraph is 40 ticks")
+	t.check(first["ripple"] == true and first["ticks"] == 40 and first["landing"] == first["to"],"AD-201 the live emerge windup carries the ripple at the exit pool")
+	var second := _dive(s,boss)
+	t.check(second["to"] != second["from"],"AD-201 the live boss surfaces at a different pool on its next dive (%s -> %s)" % [str(second["from"]),str(second["to"])])
+
+func _live_freeze_stun(t) -> void:
+	var entry := _live_dive_move(1).duplicate(true)
+	entry.erase("weight")
+	var cfg := _live_with_pool(1,[entry])
+	var pair := _live_fresh(cfg,Vector2(150,450))
+	var s = pair[0]
+	var boss = pair[1]
+	boss.target.health.current = boss.target.health.maximum*0.6
+	for i in 200:
+		boss.advance(s)
+		if boss.phase == 2 and boss.state != "roar":
+			break
+	var exit_pool := Vector2(775,450)
+	s.water.freeze_circle(exit_pool,70.0,100000)
+	var hp := _hp(s)
+	var out := _dive(s,boss)
+	t.equal(out["to"],exit_pool,"AD-201 the live phase 2 dive surfaces at the frozen pool")
+	t.check(boss.state == "stagger" and boss.staggered and boss.target.damage_scale == 1.5,"AD-201 the live boss is stunned and takes 1.5x on a frozen emerge")
+	t.equal(_hp(s),hp,"AD-201 a frozen emerge deals no splash damage")
+	var ticks := 1
+	while ticks < 400:
+		boss.advance(s)
+		if boss.state != "stagger":
+			break
+		ticks += 1
+	t.equal(ticks,120,"AD-201 the live freeze-stun lasts 120 ticks (2 s)")
+
+func _live_shield(t) -> void:
+	var pair := _live_fresh(_live(),Vector2(400,700))
+	var s = pair[0]
+	var boss = pair[1]
+	var full := _hit(boss)
+	boss.fire_summon(s,"lantern_wisp",_live()["wisp_offsets"],int(_live()["wisp_cap"]))
+	s._flush_pending_spawns()
+	boss.advance(s)
+	var wisps := _wisps(s,boss)
+	t.equal(wisps.size(),int(_live()["wisp_cap"]),"AD-201 the live wisp summon makes wisp_cap wisps")
+	t.check(boss.shielded and _hit(boss) == 0.0,"AD-201 with live wisps alive the boss takes no damage")
+	for w in wisps:
+		w.target.receive_damage(10000.0,"neutral",1,1.0)
+	boss.advance(s)
+	t.check(not boss.shielded and is_equal_approx(_hit(boss),full),"AD-201 killing the live wisps restores full damage")
+
+func _live_tide(t) -> void:
+	var cfg := _live()
+	var spec: Dictionary = cfg["phases"][1]["hazards"][0]
+	t.check(spec["type"] == "tide_wave" and int(spec["gap_width"]) == 96 and float(spec["thickness"]) <= 80.0 and int(spec["warn_ticks"]) >= 40,"AD-201 live tide wave: gap 96, thickness <= 80, warning >= 40 ticks")
+	var pair := _live_fresh(_live_with_pool(1,[{"pattern":"water_bolt"}],true),Vector2(300,800))
+	var s = pair[0]
+	var boss = pair[1]
+	pair[1].target.health.current = pair[1].target.health.maximum*0.6
+	var seen := {}
+	for i in 1200:
+		s.sim.actor.health.current = s.sim.actor.health.maximum
+		boss.advance(s)
+		var wave := _wave(s)
+		if not wave.is_empty():
+			seen = wave
+			break
+	t.check(not seen.is_empty() and float(seen["gap_width"]) == 96.0 and float(seen["thickness"]) == float(spec["thickness"]),"AD-201 the live phase 2 starts a tide wave with the data gap and thickness")
+	t.check(boss.phase == 2 and not _wave(pair[0]).is_empty() and bool(_wave(pair[0])["telegraph"]),"AD-201 the live tide wave shows its warning first")
+
+class BenchHarness:
+	var session
+	var boss
+	var state := "fighting"
+	func _nearest_wisp():
+		var best = null
+		for e in session.enemies:
+			if e.kind == "lantern_wisp" and e.target.alive() and (best == null or e.target.position.distance_to(session.sim.actor.position) < best.target.position.distance_to(session.sim.actor.position)):
+				best = e
+		return best
+	func step(command: Dictionary) -> void:
+		var wisp = _nearest_wisp()
+		if boss.shielded and wisp != null: # the shield only drops when the wisps die
+			command = command.duplicate()
+			command["aim"] = (wisp.target.position-session.sim.actor.position).normalized()
+			command["cursor"] = wisp.target.position
+		session.issue(command)
+		session.step()
+		if session.state != "playing" or not boss.target.alive():
+			state = "done"
+
+## Longest run of ticks where the boss stood still while acquiring, recovering or moving (windup, casting, stagger, roar and submerged reset it).
+func _live_bench(run_seed: int, build: int) -> Dictionary:
+	var doc := _live_doc()
+	var cfg: Dictionary = doc["bosses"]["cistern_boss"]
+	var s = Session.new(run_seed,"empty",build)
+	s.defer_clear = true
+	s.set_water(doc["room_templates"]["cistern_boss"]["layout"]["water"])
+	var boss = s.spawn_boss(cfg,Vector2(float(cfg["position"][0]),float(cfg["position"][1])))
+	var h := BenchHarness.new()
+	h.session = s
+	h.boss = boss
+	var track := {"still":0,"max":0,"last":boss.target.position,"phases":[1]}
+	var on_tick := func(_flow):
+		if ["acquire","recover","moving"].has(boss.state):
+			track["still"] = int(track["still"])+1 if boss.target.position == track["last"] else 0
+			track["max"] = maxi(int(track["max"]),int(track["still"]))
+		else:
+			track["still"] = 0
+		track["last"] = boss.target.position
+		if not (track["phases"] as Array).has(boss.phase):
+			(track["phases"] as Array).append(boss.phase)
+	Driver.fight(h,LIVE_BENCH_TICKS,on_tick)
+	return {"max_still":int(track["max"]),"phases":track["phases"],"dead":not boss.target.alive(),"seconds":float(s.sim.clock.tick)/60.0}
+
+func _live_movement_bench(t) -> void:
+	for run_seed in LIVE_BENCH_SEEDS:
+		for build in LIVE_BENCH_BUILDS:
+			var r := _live_bench(run_seed,build)
+			var label := "seed %d build %d" % [run_seed,build]
+			print("INFO ARCHIVIST_BENCH %s fight_seconds=%.1f max_still_ticks=%d phases=%s dead=%s" % [label,r["seconds"],r["max_still"],str(r["phases"]),str(r["dead"])])
+			t.check(int(r["max_still"]) <= LIVE_STILL_LIMIT,"AD-201 the live Archivist never stands still more than 2 s while acquiring, recovering or moving (%s, %d ticks)" % [label,r["max_still"]])
