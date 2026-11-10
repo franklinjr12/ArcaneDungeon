@@ -441,7 +441,7 @@
   "mini_bosses": {
     "ruins_adept_elite": {
       "_note": "AD-141 PROPOSED numbers (Demo Plan Q1 default pending Franklin)",
-      "kind": "fallen_adept", "base_enemy": "fallen_adept", "display_name": "Elite fallen adept",
+      "kind": "fallen_adept", "base_enemy": "fallen_adept", "art_kind": "mini_fallen_adept", "display_name": "Elite fallen adept",
       "radius": 30, "hp": 260, "patterns": ["targeted","fan"],
       "windup_ticks": 48, "second_phase_windup_ticks": 40, "min_telegraph_ticks": 36,
       "recovery_ticks": 40, "phase_threshold": 0.5,
@@ -449,8 +449,8 @@
       "fan_shots": 5, "fan_arc_degrees": 50,
       "radial_shots": 8, "radial_damage": 8, "telegraph_radius": 190, "color": "#b49cf0",
       "anchors": [[1030,450],[760,230],[760,680]],
-      "homing_skull": {"hp": 20, "radius": 14, "speed": 120, "turn_deg_per_tick": 2.5, "lifetime_ticks": 420, "damage": 12, "cap": 2},
-      "decoy": {"hp": 1, "radius": 26, "damage_multiplier": 0.6, "copies": ["fan","targeted","homing_skull"]},
+      "homing_skull": {"hp": 20, "radius": 14, "speed": 120, "turn_deg_per_tick": 2.5, "lifetime_ticks": 420, "damage": 12, "cap": 2, "art_kind": "homing_skull"},
+      "decoy": {"hp": 1, "radius": 26, "damage_multiplier": 0.6, "copies": ["fan","targeted","homing_skull"], "art_kind": "mini_fallen_adept_decoy"},
       "stagger": {"ticks": 60, "damage_taken_multiplier": 1.5},
       "phases": [
         {"threshold": 1.0, "windup_ticks": 48,
@@ -474,7 +474,7 @@
     },
     "cistern_crystal_elite": {
       "_note": "AD-141 PROPOSED numbers (Demo Plan Q1 default pending Franklin)",
-      "kind": "storm_crystal", "base_enemy": "storm_crystal", "display_name": "Elite storm crystal",
+      "kind": "storm_crystal", "base_enemy": "storm_crystal", "art_kind": "storm_crystal_elite", "display_name": "Elite storm crystal",
       "radius": 30, "hp": 450, "patterns": ["pulse","radial"],
       "pulse_radius": 150, "pulse_damage": 12,
       "windup_ticks": 50, "second_phase_windup_ticks": 40, "min_telegraph_ticks": 36,
@@ -485,7 +485,7 @@
       "beam_sweep": {"windup_ticks": 45, "sweep_degrees": 270, "deg_per_tick": 1.8, "length": 760, "width": 26, "damage": 12, "hit_interval_ticks": 30},
       "electrify": {"duration_ticks": 240, "damage": 6, "interval_ticks": 30},
       "water_freeze": {"radius": 48, "ice_ticks": 360},
-      "small_crystals": {"kind": "storm_crystal", "offsets": [[-90,0],[90,0]], "cap": 2, "hp": 35, "radius": 16},
+      "small_crystals": {"kind": "storm_crystal", "offsets": [[-90,0],[90,0]], "cap": 2, "hp": 35, "radius": 16, "art_kind": "storm_crystal_small"},
       "stagger": {"ticks": 60, "damage_taken_multiplier": 1.5},
       "phases": [
         {"threshold": 1.0, "windup_ticks": 50,

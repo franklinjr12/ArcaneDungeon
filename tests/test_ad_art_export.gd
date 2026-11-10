@@ -88,6 +88,7 @@ func run(t) -> void:
 	_actors(t)
 	_renderer(t)
 	_env_props(t)
+	_elites_art(t)
 
 ## AD-154: Cistern tileset, arena, AD-120 props and AD-122 chest/altar are in the manifest.
 func _cistern(t, m: Dictionary, assets: Dictionary) -> void:
@@ -425,3 +426,107 @@ func _env_props(t) -> void:
 	t.equal(ART.env_prop_frame("brazier", "intact", false, 2, 0)["tag"], "unlit", "AD-154 unlit brazier")
 	t.equal(ART.env_prop_frame("crate", "burning", false, 0, 7)["tag"], "burning", "AD-154 burning crate")
 	t.check(ART.env_prop_frame("crate", "destroyed", false, 0, 0).is_empty(), "AD-154 destroyed crate skipped")
+
+const AD200_ART_KINDS := ["mini_fallen_adept", "mini_fallen_adept_decoy", "homing_skull", "storm_crystal_elite", "storm_crystal_small"]
+
+## AD-200: elite art wiring. Tuning art_kind names imported actors, the beam placement follows the layout, electrified cells are stable.
+func _elites_art(t) -> void:
+	var man = JSON.parse_string(FileAccess.get_file_as_string(ACTORS_MANIFEST))
+	var actors: Dictionary = man["actors"]
+	var tuning = JSON.parse_string(FileAccess.get_file_as_string(TUNING))
+	var named: Array = []
+	for id in tuning["mini_bosses"]:
+		var mb: Dictionary = tuning["mini_bosses"][id]
+		named.append(str(mb["art_kind"]))
+		for key in ["homing_skull", "decoy", "small_crystals"]:
+			if mb.has(key):
+				named.append(str(mb[key]["art_kind"]))
+				t.equal(ART.summon_art_kind(mb, str(mb[key].get("kind", key))), str(mb[key]["art_kind"]), "AD-200 summon art kind: %s/%s" % [id, key])
+		t.equal(ART.summon_art_kind(mb, "bone_thrall"), "bone_thrall", "AD-200 other kinds keep their own art: " + id)
+	named.sort()
+	var want_kinds := AD200_ART_KINDS.duplicate()
+	want_kinds.sort()
+	t.equal(named, want_kinds, "AD-200 tuning art_kind names exactly the five elite art kinds")
+	for kind in AD200_ART_KINDS:
+		t.check(actors.has(kind), "AD-200 actor imported: " + kind)
+		for n in ENEMY_TAGS:
+			t.check(actors.has(kind) and actors[kind]["tags"].has(n), "AD-200 required tag %s/%s" % [kind, n])
+	t.check(actors.has("blink_anchor_sigil") and actors["blink_anchor_sigil"]["tags"].has("telegraph"), "AD-200 blink sigil telegraph tag")
+	t.equal(ART.actor_tag_frames("mini_fallen_adept", "telegraph_blink_side"), 3, "AD-200 adept blink telegraph tag")
+	t.check(ART.actor_has_tag("storm_crystal_elite", "beam_fire"), "AD-200 crystal beam_fire tag")
+
+	# 16-angle quantisation: a00 east, clockwise on screen (y down), wrap at 360 degrees.
+	for c in [[0.0, 0], [11.2, 0], [11.3, 1], [22.5, 1], [45.0, 2], [90.0, 4], [180.0, 8], [270.0, 12], [348.7, 15], [348.8, 0], [359.9, 0],
+			[360.0, 0], [371.2, 0], [382.5, 1], [720.0 + 45.0, 2], [-22.5, 15], [-11.2, 0], [-90.0, 12], [-180.0, 8]]:
+		t.equal(ART.beam_angle_index(deg_to_rad(c[0])), c[1], "AD-200 beam angle %s deg -> a%02d" % [c[0], c[1]])
+	t.equal(ART.beam_angle_index(Vector2(0, 1).angle()), 4, "AD-200 beam pointing down on screen is a04")
+	var seen := {}
+	for i in 720:
+		var idx := ART.beam_angle_index(deg_to_rad(i * 0.5))
+		t.check(idx >= 0 and idx < 16, "AD-200 beam index in range at %.1f" % (i * 0.5))
+		seen[idx] = true
+	t.equal(seen.size(), 16, "AD-200 all 16 beam angles reachable")
+
+	var sheets: Dictionary = man["sheets"]
+	t.check(sheets.has("storm_beam") and sheets.has("water_states"), "AD-200 beam and water sheets in the manifest")
+	for name in sheets:
+		var sh: Dictionary = sheets[name]
+		var j = JSON.parse_string(FileAccess.get_file_as_string(sh["json"]))
+		var tex = load(sh["png"])
+		t.check(j is Dictionary and tex is Texture2D, "AD-200 sheet loads: " + name)
+		if not (j is Dictionary and tex is Texture2D):
+			continue
+		var tags := {}
+		for x in j["meta"]["frameTags"]:
+			tags[x["name"]] = x
+		t.equal(sh["tags"].keys().size(), tags.size(), "AD-200 sheet tag count equals json: " + name)
+		for n in sh["tags"]:
+			var tg: Dictionary = sh["tags"][n]
+			t.check(tags.has(n) and int(tags[n]["from"]) == int(tg["from"]) and int(tags[n]["to"]) == int(tg["to"]) and int(tg["frames"]) == int(tg["to"]) - int(tg["from"]) + 1, "AD-200 sheet tag matches json: %s/%s" % [name, n])
+		if sh["glow_png"] != null:
+			var g = load(sh["glow_png"])
+			t.check(g is Texture2D and g.get_width() == tex.get_width() and g.get_height() == tex.get_height(), "AD-200 glow shares the base layout: " + name)
+	var layout = JSON.parse_string(FileAccess.get_file_as_string(sheets["storm_beam"]["layout"]))
+	t.equal(layout["angles"].size(), 16, "AD-200 beam layout has 16 angles")
+	for i in 16:
+		var ang: Dictionary = layout["angles"][i]
+		var step := ART.beam_step(i)
+		t.equal(Vector2(float(ang["step"][0]), float(ang["step"][1])), step, "AD-200 beam step a%02d" % i)
+		t.check(absf(step.length() - float(ang["step_len_art_px"])) < 0.05, "AD-200 beam step length a%02d" % i)
+		for tag in ang["beam_tags"] + ang["tele_tags"]:
+			t.check(sheets["storm_beam"]["tags"].has(tag), "AD-200 beam tag exists: " + tag)
+	t.equal(ART.beam_tile_count(760.0, Vector2(16, 0)), 24, "AD-200 beam a00 tile count (760 units = 380 art px)")
+	t.equal(ART.beam_tile_count(760.0, Vector2(17, 7)), 21, "AD-200 beam a01 tile count rounds up")
+	var parts := ART.beam_parts(3, 2, false)
+	t.equal(parts.map(func(p): return p["tag"]), ["beam_a03_seg", "beam_a03_seg", "beam_a03_end", "beam_a03_start"], "AD-200 beam draw order segs, end, start")
+	t.equal(parts.map(func(p): return p["k"]), [0, 1, 2, 0], "AD-200 beam tiles sit at k*step, end cap at n*step, start cap at O")
+	t.equal(ART.beam_parts(15, 2, true).map(func(p): return p["tag"]), ["tele_a15_seg", "tele_a15_seg", "tele_a15_end"], "AD-200 telegraph beam uses tele tags")
+	t.check(not ART.extra_sheet_frame("storm_beam", "beam_a05_seg", 1).is_empty(), "AD-200 beam frame lookup")
+	t.check(ART.extra_sheet_frame("storm_beam", "no_such_tag", 0).is_empty() and ART.extra_sheet_frame("no_sheet", "x", 0).is_empty(), "AD-200 missing sheet or tag gives no frame")
+
+	# electrified cells: deterministic per cell, 20/40/20/20, never the legacy tags.
+	var counts := [0, 0, 0, 0]
+	t.equal(ART.elec_choice(Vector2i(12, 20)), ART.elec_choice(Vector2i(12, 20)), "AD-200 elec choice is stable per cell")
+	for cy in 40:
+		for cx in 40:
+			var a := ART.elec_choice(Vector2i(cx, cy))
+			if a != ART.elec_choice(Vector2i(cx, cy)):
+				t.check(false, "AD-200 elec choice stable at %d,%d" % [cx, cy])
+			counts[int(a["variant"]) - 1] += 1
+			if int(a["variant"]) < 1 or int(a["variant"]) > 4 or int(a["offset"]) < 0 or int(a["offset"]) > 3:
+				t.check(false, "AD-200 elec choice range at %d,%d" % [cx, cy])
+	for i in 4:
+		var want: float = [0.2, 0.4, 0.2, 0.2][i]
+		t.check(absf(float(counts[i]) / 1600.0 - want) < 0.05, "AD-200 elec variant %d weight near %.0f%%" % [i + 1, want * 100.0])
+	t.check(ART.elec_choice(Vector2i(-5, -9)) == ART.elec_choice(Vector2i(-5, -9)) and int(ART.elec_choice(Vector2i(-5, -9))["offset"]) >= 0, "AD-200 elec choice handles negative cells")
+	for tick in [0, 7, 30, 59]:
+		for state in ["electrified", "frozen"]:
+			var cell := Vector2i(12, 20)
+			var pick := ART.water_state_tag(state, false, cell, tick, false)
+			t.check(sheets["water_states"]["tags"].has(pick["tag"]), "AD-200 water tag exists: %s t%d" % [state, tick])
+			t.check(str(pick["tag"]) not in ["elec_shallow", "elec_deep"], "AD-200 never the legacy electrified tags")
+	t.check(ART.water_state_tag("electrified", true, Vector2i(3, 4), 5, false)["tag"].begins_with("elec_deep_v"), "AD-200 deep electrified uses elec_deep_v*")
+	t.check(ART.water_state_tag("electrified", false, Vector2i(3, 4), 5, false)["tag"].begins_with("elec_shallow_v"), "AD-200 shallow electrified uses elec_shallow_v*")
+	t.equal(ART.water_state_tag("frozen", false, Vector2i(3, 4), 5, false)["tag"], "frozen_shallow", "AD-200 frozen shallow tag")
+	for tick in [0, 11, 45, 100]:
+		t.equal(int(ART.water_state_tag("electrified", false, Vector2i(9, 2), tick, true)["index"]), 0, "AD-200 reduce_flashes holds frame 0 at tick %d" % tick)
