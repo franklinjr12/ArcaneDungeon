@@ -112,3 +112,8 @@ Command: `bash tools/ui_matrix.sh --godot /usr/local/bin/godot --states title` (
 
 New `combat_resonance` state: the combat HUD plus two reaction popups (`FREEZE +12`, `SHATTER +12`) right of the MP value text, fade-only.
 Command: `bash tools/ui_matrix.sh --godot /usr/local/bin/godot --states "combat_resonance"` (2026-11-10). Result: `SUMMARY: 13 shots, 0 failed`. At 1280x720 the popup is readable and overlaps nothing.
+
+## AD-195
+
+New `reward_resonant` state (reward cards with the Resonant clear banner and a `+25 COINS` tag on a max-rarity card). The `summary` and `summary_win` shots now carry a centred combo line (`REACTIONS: 7   ELEMENTS: 3   SPELLS CRAFTED: 0`) in the free band under the loadout row.
+Command: `bash tools/ui_matrix.sh --godot /usr/local/bin/godot --states "summary summary_win reward_resonant"` (2026-11-10). Result: `SUMMARY: 39 shots, 0 failed`. At 1280x720 the combo line is readable and overlaps nothing; the `RESONANT CLEAR: +1 RARITY` banner sits under the title and the tag fits its tooltip.

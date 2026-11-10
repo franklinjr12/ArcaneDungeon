@@ -580,3 +580,7 @@ credits.section.made_by,Made by
 credits.section.tools,Tools
 credits.section.third_party,Third-party
 credits.unavailable,Credits unavailable
+run.notice.resonant_clear,Resonant clear! Reward rarity raised
+run.reward.resonant_banner,RESONANT CLEAR: +1 RARITY
+run.reward.bonus_coins,+%d COINS
+run.summary.combo_stats,Reactions: %d   Elements: %d   Spells crafted: %d

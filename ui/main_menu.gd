@@ -267,7 +267,7 @@ func _close_credits() -> void:
 	panel.get_node("CreditsButton").grab_focus()
 
 ## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.
-const SHOT_RUN_STATES := ["combat","combat_resonance","reward","loadout","workshop_editor","merchant","pause","summary","summary_win","sigil_desk"]
+const SHOT_RUN_STATES := ["combat","combat_resonance","reward","reward_resonant","loadout","workshop_editor","merchant","pause","summary","summary_win","sigil_desk"]
 
 func apply_debug_shot_state(state: String) -> bool:
 	if not OS.is_debug_build() or not state in ["title","settings","compendium","compendium_runes","compendium_reactions","compendium_enemies","compendium_enemies_known","compendium_artifacts","credits","settings_audio","settings_video","settings_controls","settings_access"]:

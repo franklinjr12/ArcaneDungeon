@@ -5,7 +5,7 @@ set -euo pipefail
 
 GODOT=/usr/local/bin/godot
 OUT=docs/ui/matrix
-STATES="title settings credits combat combat_resonance reward workshop_editor merchant pause summary summary_win sigil_desk loadout compendium compendium_reactions compendium_enemies compendium_artifacts tip_room1 tip_telegraph tip_wet_try_lightning tip_first_reward tip_first_workshop tip_workshop_empty_slot tip_test_on_dummy tip_spells_are_runes pause_controls pause_settings pause_settings_audio pause_settings_video pause_settings_access pause_confirm_abandon settings_access compendium_runes settings_audio settings_video settings_controls"
+STATES="title settings credits combat combat_resonance reward reward_resonant workshop_editor merchant pause summary summary_win sigil_desk loadout compendium compendium_reactions compendium_enemies compendium_artifacts tip_room1 tip_telegraph tip_wet_try_lightning tip_first_reward tip_first_workshop tip_workshop_empty_slot tip_test_on_dummy tip_spells_are_runes pause_controls pause_settings pause_settings_audio pause_settings_video pause_settings_access pause_confirm_abandon settings_access compendium_runes settings_audio settings_video settings_controls"
 SIZES="1280x720 1366x768 1600x900 1920x1080 2560x1440 3840x2160 1280x800 1920x1200 2560x1080 3440x1440 1024x768"
 
 while [[ $# -gt 0 ]]; do
