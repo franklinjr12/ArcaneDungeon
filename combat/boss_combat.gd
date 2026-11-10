@@ -6,10 +6,13 @@ const Pool = preload("res://combat/boss_moves/boss_pattern_pool.gd")
 const Movement = preload("res://combat/boss_moves/boss_movement.gd")
 const Hazards = preload("res://combat/boss_moves/boss_hazards.gd")
 const Warden = preload("res://combat/boss_moves/warden_patterns.gd")
+const Elite = preload("res://combat/boss_moves/elite_patterns.gd")
 const Lurk = preload("res://combat/enemy_behaviours/water_lurk.gd")
 const EnvProps = preload("res://world/env_props.gd")
 const FLOOD_TAG := "archivist_flood"
 const ARENA_TAG := "boss_arena"
+## AD-200: a blink never lands on an anchor within this many px of the boss, so it always really moves.
+const BLINK_MIN_MOVE := 8.0
 var target
 var kind := "undead_warden"
 var tuning: Dictionary
@@ -52,7 +55,7 @@ var _env_event_index := 0
 
 ## Pool, movement, hazard, transition and stagger issues for a boss settings dictionary (empty = valid).
 static func validate(settings: Dictionary) -> Array:
-	return Pool.validate(settings)+Movement.validate(settings)+Hazards.validate(settings)+_validate_beats(settings)+Warden.validate(settings)
+	return Pool.validate(settings)+Movement.validate(settings)+Hazards.validate(settings)+_validate_beats(settings)+Warden.validate(settings)+Elite.validate(settings)
 
 static func _number_from(value, minimum: float) -> bool:
 	return (typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT) and float(value) >= minimum
@@ -121,6 +124,8 @@ func _init_phases(elite_damage: float, floor_ticks: int) -> void:
 	for key in ["water_bolt_damage","storm_pulse_damage"]:
 		if tuning.has(key):
 			tuning[key] = Difficulty.scale_f(float(tuning[key])*elite_damage,"enemy_damage")
+	if tuning.has("homing_skull"):
+		tuning["homing_skull"]["damage"] = Difficulty.scale_f(float(tuning["homing_skull"]["damage"])*elite_damage,"enemy_damage")
 	var warden_attacks: Array = tuning.get("melee",{}).values()
 	if tuning.has("spear_line"):
 		warden_attacks.append(tuning["spear_line"])
@@ -177,7 +182,7 @@ func advance(session) -> void:
 		_state("dead",session.sim.clock.tick)
 		if not death_announced:
 			death_announced = true
-			if tuning.has("grave_rise"):
+			if tuning.has("grave_rise") or tuning.has("homing_skull") or tuning.has("decoy"):
 				_dismiss_thralls(session)
 			session.on_enemy_death(self)
 		return
@@ -309,6 +314,7 @@ func _begin_roar(session, lead: int) -> void:
 	state = "roar"
 	state_tick = -lead
 	_apply_arena_change(session,transition.get("arena_change",{}))
+	Elite.queue_decoy(self,session)
 	session._notify("! BOSS ROAR",target.position)
 	if phase != 2:
 		session._event_cue("phase:"+kind,target.position,"sfx.boss.phase")
@@ -422,6 +428,9 @@ func _start_windup(session) -> void:
 	if Warden.handles(tuning,attack):
 		_open_windup(session,attack,Warden.windup_fields(self,session,attack))
 		return
+	if Elite.handles(tuning,attack):
+		_open_windup(session,attack,Elite.windup_fields(self,session,attack))
+		return
 	var ticks := int(tuning["phases"][phase-1]["windup_ticks"]) if tuning.has("phases") else (int(tuning["second_phase_windup_ticks"]) if phase == 2 else int(tuning["windup_ticks"]))
 	var fields := {"kind":attack,"origin":target.position,"telegraph_ticks":ticks,"range":float(tuning[_range_key(attack)])}
 	if attack == "wet_zone":
@@ -435,6 +444,8 @@ func _open_windup(session, attack: String, fields: Dictionary) -> void:
 	tuning["telegraph_ticks"] = intent.snapshot()["telegraph_ticks"]
 	tuning["attack_range"] = float(fields["range"])
 	_state("windup",session.sim.clock.tick)
+	if tuning.has("decoy"):
+		Elite.mirror_windup(self,session,attack,fields)
 	session._notify("! BOSS "+attack.to_upper(),target.position)
 
 ## AD-198: a discrete move counts as one no-repeat step. Reposition has no telegraph; leap and submerge reuse a slam windup.
@@ -456,6 +467,13 @@ func _start_move(session, spec: Dictionary) -> void:
 			_open_move_windup(session,"leap",float(spec["radius"]),int(spec["telegraph_ticks"]),landing)
 		"submerge":
 			_open_move_windup(session,"submerge",float(spec["radius"]),int(spec["telegraph_ticks"]),target.position)
+		"blink":
+			var away: Array = tuning.get("anchors",[]).filter(func(anchor): return _anchor_vector(anchor).distance_to(target.position) > BLINK_MIN_MOVE)
+			var landing: Vector2 = session.world.pick_anchor(away,session.sim.actor.position,target.radius,str(spec.get("anchor_pick","farthest")) == "farthest",target.position)
+			_open_move_windup(session,"blink",float(spec["radius"]),int(spec["blink_ticks"]),landing)
+
+static func _anchor_vector(anchor) -> Vector2:
+	return anchor if anchor is Vector2 else Vector2(float(anchor[0]),float(anchor[1]))
 
 ## Anchor relative to the player (farthest = retreat, nearest = ambush); the boss's own spot when no anchor fits.
 func _pick_anchor(session, spec: Dictionary, fallback: Vector2) -> Vector2:
@@ -474,6 +492,9 @@ func _finish_windup(session) -> void:
 			submerged = true
 			target.untargetable = true
 			_state("submerged",session.sim.clock.tick)
+		"blink":
+			target.position = _move_to
+			_end_move(session)
 		"emerge":
 			target.position = _move_to
 			submerged = false
@@ -532,23 +553,13 @@ func _fire(session) -> void:
 	var attack := _windup_attack
 	if Warden.handles(tuning,attack):
 		Warden.fire(self,session,attack)
+	elif Elite.handles(tuning,attack):
+		Elite.fire(self,session,target.position)
 	elif attack == "pulse":
 		if session.sim.actor.position.distance_to(target.position) <= float(tuning["pulse_radius"]):
 			session.damage_player(target.id,float(tuning["pulse_damage"]),"lightning")
-	elif attack == "fan" or attack == "water_bolt":
-		var prefix := "water_bolt_" if attack == "water_bolt" else "fan_"
-		var number := int(tuning.get(prefix+"shots",5))
-		var arc := deg_to_rad(float(tuning.get(prefix+"arc_degrees",50)))
-		var damage := float(tuning["water_bolt_damage"]) if attack == "water_bolt" else float(tuning["shot_damage"])
-		var centre: Vector2 = (session.sim.actor.position-target.position).normalized()
-		for index in number:
-			var offset := 0.0 if number <= 1 else arc*(float(index)/float(number-1)-0.5)
-			session.spawn_enemy_projectile(target.id,target.position,centre.rotated(offset),damage,float(tuning["shot_speed"]))
-	elif attack == "radial":
-		var number := int(tuning["radial_shots"])
-		for index in number:
-			var heading := Vector2.RIGHT.rotated(TAU*float(index)/float(number))
-			session.spawn_enemy_projectile(target.id,target.position,heading,float(tuning["radial_damage"]),float(tuning["shot_speed"]))
+	elif attack == "fan" or attack == "water_bolt" or attack == "radial":
+		_fire_shots(session,attack,target.position,target.id,1.0)
 	elif attack == "wet_zone":
 		session.add_hazard({"kind":"puddle","status":"wet","position":intent.snapshot()["target"],
 			"radius":float(tuning["wet_zone_radius"]),"duration_ticks":int(tuning["wet_zone_duration_ticks"]),
@@ -560,14 +571,48 @@ func _fire(session) -> void:
 	elif attack == "storm_pulse":
 		_fire_storm_pulse(session)
 	else:
-		var aim: Vector2 = (session.sim.actor.position-target.position).normalized()
-		session.spawn_enemy_projectile(target.id,target.position,aim,float(tuning["shot_damage"]),float(tuning["shot_speed"]),float(tuning["shot_spread"]))
+		_fire_shots(session,attack,target.position,target.id,1.0)
+	if tuning.has("decoy"):
+		_decoy_cast(session,attack)
 	if _reset_cycle_after_fire:
 		_reset_cycle_after_fire = false
 		cycle = 0
 	else:
 		_last_key = attack
 		cycle += 1
+
+## Fan / water bolt / radial / targeted shots from `origin`, owned by `source_id` (the boss, or a decoy copying the cast with `mult` damage).
+func _fire_shots(session, attack: String, origin: Vector2, source_id: int, mult: float) -> void:
+	var speed := float(tuning["shot_speed"])
+	if attack == "fan" or attack == "water_bolt":
+		var prefix := "water_bolt_" if attack == "water_bolt" else "fan_"
+		var number := int(tuning.get(prefix+"shots",5))
+		var arc := deg_to_rad(float(tuning.get(prefix+"arc_degrees",50)))
+		var damage := (float(tuning["water_bolt_damage"]) if attack == "water_bolt" else float(tuning["shot_damage"]))*mult
+		var centre: Vector2 = (session.sim.actor.position-origin).normalized()
+		for index in number:
+			var offset := 0.0 if number <= 1 else arc*(float(index)/float(number-1)-0.5)
+			session.spawn_enemy_projectile(source_id,origin,centre.rotated(offset),damage,speed)
+	elif attack == "radial":
+		var number := int(tuning["radial_shots"])
+		for index in number:
+			var heading := Vector2.RIGHT.rotated(TAU*float(index)/float(number))
+			session.spawn_enemy_projectile(source_id,origin,heading,float(tuning["radial_damage"])*mult,speed)
+	else:
+		var aim: Vector2 = (session.sim.actor.position-origin).normalized()
+		session.spawn_enemy_projectile(source_id,origin,aim,float(tuning["shot_damage"])*mult,speed,float(tuning["shot_spread"]))
+
+## AD-200: a live decoy listing `attack` in decoy.copies casts it from its own position; only shot patterns and skulls can be copied.
+func _decoy_cast(session, attack: String) -> void:
+	var decoy = Elite.copies(self,session,attack)
+	if decoy == null:
+		return
+	decoy.end_windup()
+	var mult := float(tuning["decoy"]["damage_multiplier"])
+	if Elite.handles(tuning,attack):
+		Elite.fire(self,session,decoy.target.position,mult)
+	elif ["fan","radial","targeted"].has(attack):
+		_fire_shots(session,attack,decoy.target.position,decoy.target.id,mult)
 
 func _fire_flood(session) -> void:
 	if flood_age >= 0:

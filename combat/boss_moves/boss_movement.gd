@@ -1,9 +1,9 @@
 extends RefCounted
 ## AD-198: boss movement helpers. Continuous modes (walk_to_player, strafe) run only while the boss is not winding up;
-## discrete modes (reposition, leap, submerge) are pool entries driven by boss_combat.gd. All settings are data.
+## discrete modes (reposition, leap, submerge, blink) are pool entries driven by boss_combat.gd. All settings are data.
 const CONTINUOUS := {"walk_to_player":["speed","stop_range"],"strafe":["speed","preferred_range","margin"]}
 const DISCRETE := {"reposition":["speed","max_ticks"],"leap":["telegraph_ticks","flight_ticks","radius","damage"],
-	"submerge":["telegraph_ticks","submerged_ticks","emerge_telegraph_ticks","radius","damage"]}
+	"submerge":["telegraph_ticks","submerged_ticks","emerge_telegraph_ticks","radius","damage"],"blink":["blink_ticks","radius"]}
 
 ## One tick of continuous movement; `boss` is the BossCombat, `spec` the phase's `movement` dictionary.
 static func continuous_step(boss, session, spec: Dictionary) -> void:

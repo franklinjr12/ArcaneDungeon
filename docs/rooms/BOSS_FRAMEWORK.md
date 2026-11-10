@@ -30,6 +30,8 @@ Runs only in `acquire` and `recover`, never during a windup.
 - `submerge`: `telegraph_ticks`, `submerged_ticks`, `emerge_telegraph_ticks`, `radius`, `damage`, optional `anchor_pick`. Telegraph, then vanishes (`submerged` flag, untargetable, still alive and counted), then a telegraphed emerge at the chosen anchor with a slam on reappearing.
 - Anchors are needed by every move except a `leap` that targets the player: `BOSS_MOVE_ANCHORS`. Missing keys: `BOSS_MOVE_PARAM`; unknown mode: `BOSS_MOVE_MODE`.
 
+- `blink` (AD-200): `blink_ticks`, `radius`, optional `anchor_pick` (default `farthest` from the player). Telegraphed slam circle at the landing anchor, then the boss appears there. Anchors within 8 px of the boss are skipped so it always moves. `blink_ticks` is not `telegraph_ticks`: it gets no difficulty scale and no `min_telegraph_ticks` floor.
+
 ### `hazards` (per phase list)
 Common keys: `type`, `first_ticks` (>= 0, first start after the phase starts), `every_ticks` (>= 1), `warn_ticks` (>= 1, raised to `min_telegraph_ticks`), `damage` (scaled like boss damage), `channel` (default `physical`). Hazard damage goes through `damage_player`, so dash i-frames apply.
 - `zone`: `at` (`player` locks on the player when the warning starts, or `points` `[[x,y],...]` used in turn), `radius`, `active_ticks`, `damage_interval_ticks`, optional `status`. Damages on its first active tick, then each interval.
@@ -106,6 +108,12 @@ The human target is 60-120 s. The bot is well under it because it never misses a
 [phase1_combo_arc](warden_v2/phase1_combo_arc.png), [phase1_overhead_slam](warden_v2/phase1_overhead_slam.png), [phase1_spear_line](warden_v2/phase1_spear_line.png), [phase1_grave_rise](warden_v2/phase1_grave_rise.png), [phase2_leap_telegraph](warden_v2/phase2_leap_telegraph.png), [phase2_shockwave_ring](warden_v2/phase2_shockwave_ring.png), [phase2_pillars](warden_v2/phase2_pillars.png), [phase2_debris_stun](warden_v2/phase2_debris_stun.png), [phase3_enrage](warden_v2/phase3_enrage.png). In the pillar shots the two north pillars are partly behind the room's intro text panel.
 
 **Art not wired in.** The approved art (AD-210, AD-211/r2, AD-217, AD-221/r2) is not wired in by this task. Pillars currently reuse the `cracked_wall` frames.
+
+## Elite mini-boss kit (AD-200 step 1)
+Code: `boss_moves/elite_patterns.gd`, `boss_moves/elite_minion.gd` (an `EliteMinion` entry in `session.enemies`, built from a `pending_spawns` spec with a `minion` key). Tests: `tests/test_ad_mini_bosses_v2.gd`; run one suite with `godot --headless --path . --script res://tests/run_suite.gd -- <file>`.
+- `homing_skull` (top level) `{hp,radius,speed,turn_deg_per_tick,lifetime_ticks,damage,cap}`: pattern `homing_skull` (slam telegraph, phase windup) queues a skull unless the boss owns `cap` live or queued skulls. The skull turns toward the player, dies on a wall or at `lifetime_ticks`, hits once (it keeps flying through dash i-frames) and can be shot down. `damage` is scaled like other boss damage; hp is not.
+- `decoy` (top level) `{hp,radius,damage_multiplier,copies:[patterns]}` + phase `spawn_decoy:true`: when that phase's roar begins one decoy appears at the anchor farthest from the boss (needs anchors). While it lives it shows the telegraph and casts the same fan/targeted/radial/skull from its own position at `damage_multiplier` x damage. hp is not difficulty scaled.
+- Skulls and the decoy die with the boss. Validator code `BOSS_ELITE_PARAM`.
 
 ## Not done
 `cistern_boss` is the other framework user; the mini-bosses still use the old data. `ruins_warden` now uses the framework (AD-199, above).

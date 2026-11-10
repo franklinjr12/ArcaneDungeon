@@ -7,6 +7,7 @@ const EnvProps = preload("res://world/env_props.gd")
 const Player = preload("res://combat/player_combat.gd")
 const Enemy = preload("res://combat/enemy_combat.gd")
 const Boss = preload("res://combat/boss_combat.gd")
+const Minion = preload("res://combat/boss_moves/elite_minion.gd")
 const DamageEvent = preload("res://combat/damage_event.gd")
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 const Difficulty = preload("res://game/core/difficulty.gd")
@@ -22,7 +23,7 @@ var world
 var player
 var enemies: Array = []
 var enemy_shots: Array = []
-## AD-136: spawn requests {kind, position, summoner_id} queued by components during the AI loop; flushed in order after it.
+## AD-136: spawn requests {kind, position, summoner_id} (AD-200: or {minion, position, summoner_id, settings} for an EliteMinion) queued by components during the AI loop; flushed in order after it.
 var pending_spawns: Array = []
 ## AD-137: session ground hazards (puddles) {id, kind, status, position, radius, duration_ticks, interval_ticks, age, source_id}.
 ## Read-only for rendering; advanced by _step_hazards in fixed id order.
@@ -144,6 +145,11 @@ func _flush_pending_spawns() -> void:
 	var queue: Array = pending_spawns
 	pending_spawns = []
 	for spec in queue:
+		if spec.has("minion"):
+			var minion = Minion.build(self,spec)
+			if minion != null:
+				enemies.append(minion)
+			continue
 		var spawned = spawn_enemy(str(spec["kind"]),spec["position"])
 		if spawned != null:
 			spawned.summoner_id = int(spec["summoner_id"])
