@@ -46,6 +46,8 @@ func run(t) -> void:
 	_beats_legacy(t)
 	_beats_fx(t)
 	_validate_beats(t)
+	_e2e(t)
+	_live_bosses(t)
 
 func _base(extra: Dictionary = {}) -> Dictionary:
 	var cfg := {"kind":"test_boss","hp":2000,"radius":49,"recovery_ticks":30,"min_telegraph_ticks":36,"shot_speed":280,"shot_spread":0,
@@ -820,3 +822,123 @@ func _validate_beats(t) -> void:
 	t.equal(codes.call(_roar_cfg({"transition":{"roar_ticks":90,"arena_change":{"water":[{"kind":"deep","rect":[0,0,10,10]}]}}})),["BOSS_TRANSITION_PARAM"],"AD-198 validate flags non-shallow arena water")
 	t.equal(codes.call(_roar_cfg({},[],{"stagger":{"ticks":0,"damage_taken_multiplier":1.5}})),["BOSS_STAGGER_PARAM"],"AD-198 validate flags stagger ticks < 1")
 	t.equal(codes.call(_roar_cfg({},[],{"stagger":{"ticks":90,"damage_taken_multiplier":1.0}})),["BOSS_STAGGER_PARAM"],"AD-198 validate flags a stagger multiplier <= 1")
+
+## AD-198 step 5: one synthetic 3-phase boss using every framework feature together.
+func _full_cfg() -> Dictionary:
+	var leap := {"mode":"leap","target":"anchor","anchor_pick":"farthest","telegraph_ticks":50,"flight_ticks":24,"radius":110,"damage":8}
+	var dive := {"mode":"submerge","telegraph_ticks":40,"submerged_ticks":60,"emerge_telegraph_ticks":50,"anchor_pick":"nearest","radius":110,"damage":8}
+	var hop := {"mode":"reposition","speed":260,"max_ticks":90,"anchor_pick":"farthest"}
+	var debris := {"type":"debris","count":3,"scatter":140,"radius":60,"damage":4,"channel":"physical","first_ticks":200,"every_ticks":400,"warn_ticks":40}
+	var phase1 := {"threshold":1.0,"windup_ticks":40,"movement":{"mode":"strafe","speed":80,"preferred_range":250,"margin":50},"pool":[
+		{"pattern":"radial","weight":3},{"pattern":"fan","weight":2},{"pattern":"targeted","weight":2},
+		{"combo":["fan","radial"],"gap_ticks":12,"weight":2},{"move":hop},{"move":leap,"big":true}]}
+	var phase2 := {"threshold":0.66,"windup_ticks":40,"movement":{"mode":"walk_to_player","speed":90,"stop_range":220},
+		"transition":{"roar_ticks":90,"arena_change":{"clear_hazards":true,"water":ROAR_WATER}},
+		"hazards":[{"type":"zone","at":"player","radius":80,"active_ticks":90,"damage":3,"damage_interval_ticks":30,"channel":"fire","first_ticks":150,"every_ticks":300,"warn_ticks":40},debris],
+		"pool":[{"pattern":"radial","big":true},{"pattern":"fan"},{"pattern":"targeted"},{"move":dive},{"move":hop},{"combo":["targeted","fan"]}]}
+	var phase3 := {"threshold":0.33,"windup_ticks":40,"transition":{"roar_ticks":90,"arena_change":{"clear_hazards":true}},
+		"hazards":[{"type":"rising_water","duration_ticks":120,"first_ticks":100,"every_ticks":300,"warn_ticks":40,"sets":[[{"kind":"shallow","rect":[600,300,200,100]}],[{"kind":"shallow","rect":[900,500,150,100]}]]},
+		{"type":"zone","at":"points","points":[[800,450],[600,300]],"radius":70,"active_ticks":60,"damage":3,"damage_interval_ticks":30,"first_ticks":60,"every_ticks":250,"warn_ticks":40},debris],
+		"pool":[{"pattern":"radial"},{"pattern":"fan","big":true},{"pattern":"targeted"},{"move":dive},{"move":leap},{"combo":["radial","targeted","fan"],"gap_ticks":8}]}
+	return _base({"hp":2000,"anchors":ANCHORS,"shot_damage":3,"radial_damage":3,"pulse_damage":3,"recovery_ticks":20,"stagger":{"ticks":90,"damage_taken_multiplier":1.5},
+		"phases":[phase1,phase2,phase3]})
+
+## Runs the boss `ticks` session steps, forcing hp down through both thresholds; returns the per-tick trace and the observed windups.
+func _e2e_run(seed: int, ticks: int) -> Dictionary:
+	var pair := _fresh(_full_cfg(),seed)
+	var s = pair[0]
+	var boss = pair[1]
+	s.sim.actor.health.maximum = 1000000.0
+	s.sim.actor.health.current = 1000000.0
+	var floor_ticks: int = int(boss.tuning["min_telegraph_ticks"])
+	var trace: Array = []
+	var keys: Array = []
+	var bad: Array = []
+	var warnings := {}
+	var windup_start := 0
+	var windup_kind := ""
+	var prev_state := "acquire"
+	var prev_phase := 1
+	var prev_transitions := 0
+	var seen := {}
+	var hits := 0
+	for i in ticks:
+		if i == 1500:
+			boss.target.health.current = minf(boss.target.health.current,boss.target.health.maximum*0.6)
+		elif i == 3500:
+			boss.target.health.current = minf(boss.target.health.current,boss.target.health.maximum*0.3)
+		var hp_before: float = s.sim.actor.health.current
+		s.step()
+		hits += 1 if s.sim.actor.health.current < hp_before else 0
+		var kind := str(boss.intent.snapshot()["kind"]) if boss.intent != null else ""
+		var hz: Array = s.hazards.map(func(h): return "%d:%s:%s:%s" % [h["id"],h["kind"],str(h["position"]),str(h["radius"])])
+		trace.append("%s|%s|%s|%s|%d|%s|%s|%s" % [boss.state,str(boss.target.position),kind,",".join(hz),int(s.sim.actor.health.current),boss.submerged,boss.target.damage_scale,boss.phase])
+		seen[boss.state] = true
+		if boss.phase != prev_phase:
+			keys.append("|phase")
+			prev_phase = boss.phase
+		# invariants outside the beat states
+		if boss.submerged and not (boss.state == "submerged" or (boss.state == "windup" and kind == "emerge")):
+			bad.append("submerged outside its states at %d (%s)" % [i,boss.state])
+		if boss.target.damage_scale != 1.0 and not (boss.state == "stagger" or boss.state == "roar"):
+			bad.append("damage_scale %s outside stagger/roar at %d (%s)" % [boss.target.damage_scale,i,boss.state])
+		if boss.state != prev_state:
+			if prev_state == "windup" and boss.state != "roar" and windup_kind != "":
+				if i-windup_start < floor_ticks:
+					bad.append("%s windup lasted %d ticks" % [windup_kind,i-windup_start])
+			if boss.state == "windup":
+				windup_start = i
+				windup_kind = kind
+				if kind != "emerge":
+					keys.append("move:"+kind if kind == "leap" or kind == "submerge" else kind)
+			elif boss.state == "moving" and kind != "leap":
+				keys.append("move:reposition")
+			prev_state = boss.state
+		# hazard warnings: each warning (kind+position) must be visible >= floor ticks unless a roar cleared it
+		var live := {}
+		for h in s.hazards:
+			if h["kind"] == "boss_warning" or h["kind"] == "boss_water_warning":
+				var key := "%s:%s" % [h["kind"],str(h["position"])]
+				live[key] = true
+				warnings[key] = int(warnings.get(key,0))+1
+		for key in warnings.keys():
+			if not live.has(key):
+				if boss.state != "roar" and boss.state != "dead" and int(warnings[key]) < floor_ticks:
+					bad.append("hazard warning %s lasted %d ticks" % [key,warnings[key]])
+				warnings.erase(key)
+	return {"trace":trace,"keys":keys,"bad":bad,"seen":seen,"boss":boss,"session":s,"hits":hits}
+
+func _e2e(t) -> void:
+	t.equal(BossCombat.validate(_full_cfg()),[],"AD-198 the combined 3-phase boss validates with no issues")
+	var a := _e2e_run(77,6000)
+	var b := _e2e_run(77,6000)
+	var c := _e2e_run(78,6000)
+	t.equal(a["trace"].size(),6000,"AD-198 e2e drives 6000 session ticks")
+	t.check(a["trace"] == b["trace"],"AD-198 e2e same seed gives an identical per-tick trace")
+	t.check(a["trace"] != c["trace"],"AD-198 e2e a different seed diverges")
+	var boss = a["boss"]
+	t.check(boss.phase == 3 and boss.target.alive(),"AD-198 e2e the boss crossed both thresholds and is still alive (phase %d)" % boss.phase)
+	var seen: Dictionary = a["seen"]
+	for state in ["windup","recover","moving","submerged","stagger","roar"]:
+		t.check(seen.has(state),"AD-198 e2e observed state %s" % state)
+	var repeats := 0
+	var keys: Array = a["keys"]
+	for i in range(1,keys.size()):
+		if keys[i] == keys[i-1] and keys[i] != "|phase":
+			repeats += 1
+	t.check(keys.size() > 60 and repeats == 0,"AD-198 e2e no immediate pattern repeat across %d picks (%d repeats)" % [keys.size(),repeats])
+	t.equal(a["bad"],[],"AD-198 e2e telegraphs honour min_telegraph_ticks and no state flag leaks")
+	t.check(not boss.submerged and boss.target.damage_scale in [1.0,0.0,1.5],"AD-198 e2e boss ends in a consistent state")
+	t.check(a["hits"] > 0,"AD-198 e2e hazards and attacks hurt the player")
+
+func _live_bosses(t) -> void:
+	var run = JSON.parse_string(FileAccess.get_file_as_string("res://world/data/run_v2.json"))
+	var tuning = JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))
+	var live: Dictionary = {"run_v2.boss":run["boss"]}
+	for key in run["bosses"]:
+		live["run_v2.bosses."+key] = run["bosses"][key]
+	for key in tuning["mini_bosses"]:
+		live["tuning.mini_bosses."+key] = tuning["mini_bosses"][key]
+	t.check(live.size() >= 5,"AD-198 live boss configs found (%d)" % live.size())
+	for key in live:
+		t.equal(BossCombat.validate(live[key]),[],"AD-198 live boss %s validates unchanged" % key)
