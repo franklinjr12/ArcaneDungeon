@@ -574,6 +574,258 @@
     "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
     "sourceSize": { "w": 96, "h": 96 },
     "duration": 150
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_submerge_00",
+    "frame": { "x": 0, "y": 768, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_submerge_01",
+    "frame": { "x": 96, "y": 768, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_submerge_02",
+    "frame": { "x": 192, "y": 768, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_submerge_03",
+    "frame": { "x": 288, "y": 768, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_submerge_04",
+    "frame": { "x": 384, "y": 768, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 150
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_emerge_00",
+    "frame": { "x": 480, "y": 768, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 90
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_emerge_01",
+    "frame": { "x": 576, "y": 768, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 90
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_emerge_02",
+    "frame": { "x": 672, "y": 768, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 90
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_emerge_03",
+    "frame": { "x": 0, "y": 864, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_emerge_04",
+    "frame": { "x": 96, "y": 864, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 140
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_page_throw_00",
+    "frame": { "x": 192, "y": 864, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_page_throw_01",
+    "frame": { "x": 288, "y": 864, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_page_throw_02",
+    "frame": { "x": 384, "y": 864, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 90
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_page_throw_03",
+    "frame": { "x": 480, "y": 864, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 130
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_ice_stun_00",
+    "frame": { "x": 576, "y": 864, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_ice_stun_01",
+    "frame": { "x": 672, "y": 864, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 110
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_ice_stun_02",
+    "frame": { "x": 0, "y": 960, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 200
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_ice_stun_03",
+    "frame": { "x": 96, "y": 960, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 200
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_shielded_00",
+    "frame": { "x": 192, "y": 960, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_shielded_01",
+    "frame": { "x": 288, "y": 960, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_shielded_02",
+    "frame": { "x": 384, "y": 960, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_shielded_03",
+    "frame": { "x": 480, "y": 960, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_move_glide_00",
+    "frame": { "x": 576, "y": 960, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_move_glide_01",
+    "frame": { "x": 672, "y": 960, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_move_glide_02",
+    "frame": { "x": 0, "y": 1056, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_move_glide_03",
+    "frame": { "x": 96, "y": 1056, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_move_glide_04",
+    "frame": { "x": 192, "y": 1056, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 100
+   },
+   {
+    "filename": "ad_bos_drowned_archivist_anim_move_glide_05",
+    "frame": { "x": 288, "y": 1056, "w": 96, "h": 96 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 96, "h": 96 },
+    "sourceSize": { "w": 96, "h": 96 },
+    "duration": 100
    }
  ],
  "meta": {
@@ -581,7 +833,7 @@
   "version": "1.3.18.6-dev",
   "image": "ad_bos_drowned_archivist_anim_glow.png",
   "format": "I8",
-  "size": { "w": 768, "h": 768 },
+  "size": { "w": 768, "h": 1152 },
   "scale": "1",
   "frameTags": [
    { "name": "idle", "from": 0, "to": 5, "direction": "forward", "color": "#000000ff" },
@@ -592,7 +844,13 @@
    { "name": "summon", "from": 36, "to": 41, "direction": "forward", "color": "#000000ff" },
    { "name": "phase", "from": 42, "to": 49, "direction": "forward", "color": "#000000ff" },
    { "name": "hit", "from": 50, "to": 51, "direction": "forward", "color": "#000000ff" },
-   { "name": "death", "from": 52, "to": 63, "direction": "forward", "color": "#000000ff" }
+   { "name": "death", "from": 52, "to": 63, "direction": "forward", "color": "#000000ff" },
+   { "name": "submerge", "from": 64, "to": 68, "direction": "forward", "color": "#000000ff" },
+   { "name": "emerge", "from": 69, "to": 73, "direction": "forward", "color": "#000000ff" },
+   { "name": "page_throw", "from": 74, "to": 77, "direction": "forward", "color": "#000000ff" },
+   { "name": "ice_stun", "from": 78, "to": 81, "direction": "forward", "color": "#000000ff" },
+   { "name": "shielded", "from": 82, "to": 85, "direction": "forward", "color": "#000000ff" },
+   { "name": "move_glide", "from": 86, "to": 91, "direction": "forward", "color": "#000000ff" }
   ]
  }
 }

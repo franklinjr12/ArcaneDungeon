@@ -479,6 +479,120 @@ static func _draw_water_states(canvas: CanvasItem, session, offset: Vector2, tic
 		if fr["glow"] != null:
 			_queue_glow({"tex": fr["glow"], "rect": dest, "region": fr["region"], "mirror": false, "at": Vector2.ZERO})
 
+## AD-201 Drowned Archivist FX (AD-213 r2 + AD-227 tide wave), all under actors_manifest "sheets". Drawing only; each drawer
+## returns false when its sheet is missing so the caller keeps the plain shape. Looping FX hold frame 0 when `reduced`.
+const POOL_RIPPLE := "pool_ripple"
+const SPLASH_RING := "splash_ring"
+const BOOK_PAGE := "book_page"
+const WISP_SHIELD := "wisp_shield"
+const TIDE_WAVE := "tide_wave"
+## The shield art is authored on the body canvas (96 px, hurtbox centre at 48,48) so it wraps the boss drawn at `at`.
+const BOSS_BODY_CENTER := Vector2(48, 48)
+const TIDE_NOMINAL_WARN := 60.0
+
+## Pure: frame of a one-shot after age_ticks (60 Hz); -1 once it has finished.
+static func shot_index(ms: Array, age_ticks: int) -> int:
+	var t := maxi(0, age_ticks) * 1000 / 60
+	var acc := 0
+	for i in ms.size():
+		acc += int(ms[i])
+		if t < acc:
+			return i
+	return -1
+
+static func _sheet_ms(name: String, tag: String) -> Array:
+	return extra_sheet(name).get("tags", {}).get(tag, {}).get("ms", [])
+
+## Draws frame `index` of an extra sheet tag with art-px `anchor` (default: the sheet's pivot slice) on `at`.
+## clip_x = (min, max) canvas x trims the frame horizontally (tide tiles at the arena edge); x == y means no clip.
+static func _draw_extra(canvas: CanvasItem, name: String, tag: String, index: int, at: Vector2, anchor: Vector2 = Vector2(-1, -1),
+		tint: Color = Color.WHITE, clip_x: Vector2 = Vector2.ZERO) -> bool:
+	var fr := extra_sheet_frame(name, tag, index)
+	if fr.is_empty():
+		return false
+	if anchor.x < 0.0:
+		var anc = extra_sheet(name).get("anchor")
+		anchor = Vector2(float(anc[0]), float(anc[1])) if anc is Array else Vector2.ZERO
+	var region: Rect2 = fr["region"]
+	var dest := Rect2(at + (fr["offset"] - anchor) * _actor_scale, region.size * _actor_scale)
+	if clip_x.x != clip_x.y:
+		var left := maxf(dest.position.x, clip_x.x)
+		var right := minf(dest.end.x, clip_x.y)
+		if right <= left:
+			return true
+		region = Rect2(region.position + Vector2((left - dest.position.x) / _actor_scale, 0.0), Vector2((right - left) / _actor_scale, region.size.y))
+		dest = Rect2(Vector2(left, dest.position.y), Vector2(right - left, dest.size.y))
+	canvas.draw_texture_rect_region(fr["tex"], dest, region, tint)
+	if fr["glow"] != null:
+		_queue_glow({"tex": fr["glow"], "rect": dest, "region": region, "mirror": false, "at": Vector2.ZERO})
+	return true
+
+## Emerge landing ripple (4 frames stretched over the emerge telegraph window), under the usual danger circle.
+static func draw_pool_ripple(canvas: CanvasItem, at: Vector2, state_tick: int, window_ticks: int) -> bool:
+	var n := int(extra_sheet(POOL_RIPPLE).get("tags", {}).get("telegraph", {}).get("frames", 0))
+	return n > 0 and _draw_extra(canvas, POOL_RIPPLE, "telegraph", stretched_index(state_tick, window_ticks, n), at)
+
+## Splash ring on an Archivist emerge boss_ring hazard (one shot from its first tick; the damage ring is drawn regardless).
+static func draw_splash_ring(canvas: CanvasItem, at: Vector2, age_ticks: int) -> bool:
+	var i := shot_index(_sheet_ms(SPLASH_RING, "splash"), age_ticks)
+	return i >= 0 and _draw_extra(canvas, SPLASH_RING, "splash", i, at)
+
+## Pure: {tag, index} of a book page: torn one-shot once dead (index -1 = finished, skip), burn while Burning, else flutter.
+static func page_pick(tick: int, burning: bool, dead_age: int, reduced: bool) -> Dictionary:
+	if dead_age >= 0:
+		return {"tag": "torn", "index": shot_index(_sheet_ms(BOOK_PAGE, "torn"), dead_age)}
+	var tag := "burn" if burning else "flutter"
+	var ms := _sheet_ms(BOOK_PAGE, tag)
+	return {"tag": tag, "index": 0 if reduced or ms.is_empty() else loop_index(ms, tick)}
+
+static func draw_page(canvas: CanvasItem, at: Vector2, tick: int, burning: bool, dead_age: int, reduced: bool) -> bool:
+	var pick := page_pick(tick, burning, dead_age, reduced)
+	return int(pick["index"]) >= 0 and _draw_extra(canvas, BOOK_PAGE, str(pick["tag"]), int(pick["index"]), at)
+
+## Wisp shield bubble around the boss at `at` (loop), or its break one-shot when `break_age` >= 0.
+static func draw_wisp_shield(canvas: CanvasItem, at: Vector2, tick: int, break_age: int, reduced: bool) -> bool:
+	if break_age >= 0:
+		var i := shot_index(_sheet_ms(WISP_SHIELD, "break"), break_age)
+		return i >= 0 and _draw_extra(canvas, WISP_SHIELD, "break", i, at, BOSS_BODY_CENTER)
+	var ms := _sheet_ms(WISP_SHIELD, "loop")
+	return not ms.is_empty() and _draw_extra(canvas, WISP_SHIELD, "loop", 0 if reduced else loop_index(ms, tick), at, BOSS_BODY_CENTER)
+
+## Pure: x of each tide tile's art origin (tiles are `tile_w` wide); one tile is centred on gap_x (it takes the gap frame),
+## the rest tile left and right until bounds are covered. Returns [{x, gap}] sorted by x.
+static func tide_tiles(gap_x: float, tile_w: float, left: float, right: float) -> Array:
+	var tiles: Array = []
+	var x0 := gap_x - tile_w * 0.5
+	var k := -ceili((x0 - left) / tile_w)
+	while x0 + k * tile_w < right:
+		tiles.append({"x": x0 + k * tile_w, "gap": k == 0})
+		k += 1
+	return tiles
+
+## boss_tide_wave from the AD-227 sheet: wave frames tiled across the arena, a gap frame centred on gap_x. The hit band is the
+## sheet's 'hit' slice (top of the band at the hazard y). While warning (hazard.telegraph) it is frame 0 tinted with the
+## danger ramp (telegraph.circle colours); false when the sheet is missing (caller falls back to a plain band).
+static func draw_tide_wave(canvas: CanvasItem, hazard: Dictionary, offset: Vector2, reduced: bool) -> bool:
+	var sh := extra_sheet(TIDE_WAVE)
+	if sh.is_empty() or extra_sheet_frame(TIDE_WAVE, "wave", 0).is_empty() or extra_sheet_frame(TIDE_WAVE, "gap", 0).is_empty():
+		return false
+	var tele := bool(hazard.get("telegraph", false))
+	var tint := Color.WHITE
+	if tele:
+		tint = telegraph_colors("telegraph.circle", float(hazard.get("age", 0)) / TIDE_NOMINAL_WARN)["outline"]
+	var bounds: Rect2 = hazard["bounds"]
+	var gap_x := float(hazard["gap_x"]) - offset.x
+	var tick := int(hazard.get("age", 0))
+	var wi := 0 if tele or reduced else loop_index(_sheet_ms(TIDE_WAVE, "wave"), tick)
+	var gi := 0 if tele or reduced else loop_index(_sheet_ms(TIDE_WAVE, "gap"), tick)
+	var top := float(hazard["y"]) - offset.y
+	var tile_w := float(sh["canvas"][0]) * _actor_scale
+	var clip := Vector2(bounds.position.x - offset.x, bounds.end.x - offset.x)
+	for tile in tide_tiles(gap_x, tile_w, clip.x, clip.y):
+		# the 'hit' slice starts 13 art px below the frame top; the anchor puts it on the hazard y
+		var at := Vector2(float(tile["x"]) + tile_w * 0.5, top)
+		_draw_extra(canvas, TIDE_WAVE, "gap" if tile["gap"] else "wave", gi if tile["gap"] else wi, at, Vector2(32, 13), tint, clip)
+	return true
+
 const CISTERN_TILES := "ad_til_flooded_cistern"
 
 static func _cistern_ready() -> bool:
@@ -1386,6 +1500,13 @@ static func draw_env_props(canvas: CanvasItem, session, offset: Vector2, stage: 
 					Vector2(mid.x+3,mid.y+2),Vector2(mid.x-2,rect.end.y)]),crack,1.5)
 				canvas.draw_line(Vector2(mid.x+3,mid.y+2),Vector2(rect.end.x,mid.y+8),crack,1.0)
 
+## AD-201: true when the hazard's source boss has the tuning key (the Archivist's pools mark its emerge ring; the warden's leap ring has none).
+static func _hazard_source_has(session, hazard: Dictionary, key: String) -> bool:
+	for enemy in session.enemies:
+		if enemy.target.id == int(hazard.get("source_id", -1)):
+			return enemy.tuning.has(key)
+	return false
+
 static func draw_hazards(canvas: CanvasItem, session, offset: Vector2, reduced: bool = false) -> void:
 	for hazard in session.hazards:
 		var kind := str(hazard["kind"])
@@ -1394,12 +1515,25 @@ static func draw_hazards(canvas: CanvasItem, session, offset: Vector2, reduced: 
 		if kind == "boss_beam":
 			draw_beam(canvas,hazard,hazard["position"]-offset,session.sim.clock.tick,reduced)
 			continue
+		if kind == "boss_tide_wave":
+			if not draw_tide_wave(canvas,hazard,offset,reduced):
+				var bounds: Rect2 = hazard["bounds"]
+				var band := Color(1.0,0.45,0.45,0.35) if bool(hazard.get("telegraph",false)) else Color(0.45,0.7,1.0,0.6)
+				var gap_x := float(hazard["gap_x"])
+				var half := float(hazard["gap_width"])*0.5
+				var top := float(hazard["y"])-offset.y
+				var thick := float(hazard["thickness"])
+				canvas.draw_rect(Rect2(bounds.position.x-offset.x,top,gap_x-half-bounds.position.x,thick),band)
+				canvas.draw_rect(Rect2(gap_x+half-offset.x,top,bounds.end.x-gap_x-half,thick),band)
+			continue
 		if kind == "boss_water_warning":
 			var rect: Rect2 = hazard["rect"]
 			canvas.draw_rect(Rect2(rect.position-offset,rect.size),Color(0.45,0.7,1.0,0.7),false,2.0)
 			continue
 		var at: Vector2 = hazard["position"]-offset
 		if kind == "boss_ring":
+			if _hazard_source_has(session,hazard,"pools"):
+				draw_splash_ring(canvas,at,int(hazard["age"]))
 			# AD-199: expanding danger ring at a constant colour (no per-tick alpha change, reduce-flash safe).
 			var ring_radius := float(hazard["ring_per_tick"])*float(hazard["age"])
 			if ring_radius > 0.0:

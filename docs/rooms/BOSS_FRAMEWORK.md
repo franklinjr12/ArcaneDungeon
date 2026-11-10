@@ -35,8 +35,9 @@ Runs only in `acquire` and `recover`, never during a windup.
 ### `hazards` (per phase list)
 Common keys: `type`, `first_ticks` (>= 0, first start after the phase starts), `every_ticks` (>= 1), `warn_ticks` (>= 1, raised to `min_telegraph_ticks`), `damage` (scaled like boss damage), `channel` (default `physical`). Hazard damage goes through `damage_player`, so dash i-frames apply.
 - `zone`: `at` (`player` locks on the player when the warning starts, or `points` `[[x,y],...]` used in turn), `radius`, `active_ticks`, `damage_interval_ticks`, optional `status`. Damages on its first active tick, then each interval.
-- `debris`: `count`, `scatter`, `radius`, `damage`. Impacts land within `scatter` of the player (clamped to the arena), positions locked for the warning, one hit at the end. The only hazard that rolls RNG.
+- `debris`: `count`, `scatter`, `radius`, `damage`. Impacts land within `scatter` of the player (clamped to the arena), positions locked for the warning, one hit at the end. Rolls the boss RNG (with `tide_wave`).
 - `rising_water`: `duration_ticks`, `sets` (array of entry arrays used in turn, each entry `{"kind":"shallow","rect":[x,y,w,h]}`). Shallow only: `BOSS_HAZARD_DEEP_WATER`. Uses its own water tag and recedes after `duration_ticks`; other water is untouched.
+- `tide_wave` (AD-201): `speed` (u/s), `thickness` (<= 80 so a dash passes through the body; live 64), `gap_width` (> 34, the player diameter; live 96), `damage`, optional `channel` (default `water`) and `status` (e.g. `wet`). On start the gap centre x is rolled from the boss RNG inside the arena with `gap_width`/2 margin (second RNG-rolling hazard after debris). During `warn_ticks` a `boss_tide_wave` session hazard (`y`, `thickness`, `gap_x`, `gap_width`, `bounds`, `telegraph` true) sits at the top edge, no damage. Then the band `[y, y+thickness]` sweeps +y at `speed`/tick rate until it passes `bounds.end.y` (walls do not block it). The player is hit at most once per wave (the first overlap tick spends the hit, even if dash i-frames absorb it) unless their whole circle fits inside the gap; an accepted hit applies `status`.
 - Errors: `BOSS_HAZARD_TYPE`, `BOSS_HAZARD_PARAM`.
 
 ### Undead Warden keys (AD-199)
@@ -72,7 +73,7 @@ The boss has a private `RandomNumberGenerator` seeded lazily from `session.seed*
 - A submerged boss is not drawn; the emerge telegraph still shows where it will appear.
 
 ## Validator codes
-`BOSS_POOL_TOO_SMALL`, `BOSS_POOL_WEIGHT`, `BOSS_POOL_COMBO`, `BOSS_MOVE_MODE`, `BOSS_MOVE_PARAM`, `BOSS_MOVE_ANCHORS`, `BOSS_HAZARD_TYPE`, `BOSS_HAZARD_PARAM`, `BOSS_HAZARD_DEEP_WATER`, `BOSS_TRANSITION_PARAM`, `BOSS_STAGGER_PARAM`, `BOSS_POOL_RANGE`, `BOSS_WARDEN_PARAM`. The test also validates the live `run_v2.json` `boss` and `bosses` plus `combat_tuning_v1.json` `mini_bosses`: no issues.
+`BOSS_POOL_TOO_SMALL`, `BOSS_POOL_WEIGHT`, `BOSS_POOL_COMBO`, `BOSS_MOVE_MODE`, `BOSS_MOVE_PARAM`, `BOSS_MOVE_ANCHORS`, `BOSS_HAZARD_TYPE`, `BOSS_HAZARD_PARAM`, `BOSS_HAZARD_DEEP_WATER`, `BOSS_TRANSITION_PARAM`, `BOSS_STAGGER_PARAM`, `BOSS_POOL_RANGE`, `BOSS_WARDEN_PARAM`, `BOSS_ELITE_PARAM`, `BOSS_ARCHIVIST_PARAM`. The test also validates the live `run_v2.json` `boss` and `bosses` plus `combat_tuning_v1.json` `mini_bosses`: no issues.
 
 ## Example
 ```json
@@ -95,6 +96,15 @@ None updated. The framework is opt-in and no live boss data changed, so every go
 ## Undead Warden v2 (AD-199)
 Live data: `world/data/run_v2.json` `bosses.ruins_warden` (HP unchanged at 1800). Tests: `tests/test_ad_warden_v2.gd`. Bench: `tests/bench/warden_bench.gd` (`godot --headless --path . --script res://tests/bench/warden_bench.gd`), screenshots: `tests/capture_ad_warden_v2.gd`.
 
+**Screenshots** (`docs/rooms/archivist_v2/`, 1280x720, real `cistern_boss` room on live data; regenerate with `xvfb-run -a /usr/local/bin/godot --path . --script res://tests/capture_ad_final_boss_v2.gd -- docs/rooms/archivist_v2`). The room intro text panel ("Something in the Uncatalogued Ruins...") overlaps the top-left pool in the shots where the boss is there (ripple, splash, freeze-stun); the effect is still readable.
+- [phase1_pool_ripple.png](archivist_v2/phase1_pool_ripple.png): the 40-tick emerge ripple at the exit pool (top-left, partly under the intro panel).
+- [phase1_emerge_splash.png](archivist_v2/phase1_emerge_splash.png): the splash ring just after the boss surfaces.
+- [phase1_book_pages.png](archivist_v2/phase1_book_pages.png): pages in flight, one set Burning (Fire hit) beside the boss.
+- [phase2_tide_wave_gap.png](archivist_v2/phase2_tide_wave_gap.png): the tide wave moving after its warning, with the gap marked by chevrons.
+- [phase2_freeze_stun.png](archivist_v2/phase2_freeze_stun.png): frozen pools; the boss surfaces on ice and is stunned (gold ring, no splash).
+- [phase3_electrified_water.png](archivist_v2/phase3_electrified_water.png): storm pulse conducting through every pool (lightning arcs on the water).
+- [phase3_wisp_shield.png](archivist_v2/phase3_wisp_shield.png): shield bubble on the boss with the 2 lantern wisps.
+
 **Bot bench (INFO only, not a pass/fail gate).** 8 seeds (1423, 2718, 3141, 4242, 5150, 6174, 7331, 8086) x builds 0 and 2, scripted bot (perfect aim, always attacking). Every fight was a win through all 3 phases.
 
 | build | fights | median seconds | median dashes | seconds range |
@@ -115,5 +125,33 @@ Code: `boss_moves/elite_patterns.gd`, `boss_moves/elite_minion.gd` (an `EliteMin
 - `decoy` (top level) `{hp,radius,damage_multiplier,copies:[patterns]}` + phase `spawn_decoy:true`: when that phase's roar begins one decoy appears at the anchor farthest from the boss (needs anchors). While it lives it shows the telegraph and casts the same fan/targeted/radial/skull from its own position at `damage_multiplier` x damage. hp is not difficulty scaled.
 - Skulls and the decoy die with the boss. Validator code `BOSS_ELITE_PARAM`.
 
+## Drowned Archivist kit (AD-201 steps 1-2)
+Code: `boss_moves/archivist_patterns.gd`. Tests: `tests/test_ad_final_boss_v2.gd`. Validator code `BOSS_ARCHIVIST_PARAM` (bad `pools`, `emerge_status`, `freeze_stun`, a pool exit with fewer than 2 pools, missing/non-positive `book_pages` or `storm_conduct` keys, a bad `wisp_shield` multiplier, `page_throw` without `book_pages`, a bad `page_speed_scale`).
+- `pools` (top level) `[[x,y],...]`: pool centres. A `submerge` move with `"exit":"pool"` surfaces at one of them, never one within 120 px of the boss (the pool it dove from; the boss may have drifted off its centre), chosen with the move's `anchor_pick` (default `farthest` from the player) via `pick_anchor`. A pool exit needs `pools` (>= 2), not `anchors`. Without `exit` the move is unchanged.
+- Ripple: that emerge windup's intent gains `"pool_ripple":true` (the `slam` shape stays at the landing point). Its length is the move's `emerge_telegraph_ticks` (difficulty scale + `min_telegraph_ticks` floor, as before).
+- Splash ring: a `shockwave` {speed,width,max_radius,damage} on the submerge move starts the Warden leap ring (`boss_ring`, hits once, walls block it) at the emerge point. Damage gets the usual difficulty scaling.
+- `emerge_status` (top level, e.g. `"wet"`): applied to the boss when it emerges, from `settings.statuses`, so Lightning reacts on it.
+- `freeze_stun` `{ticks,radius}` (needs `water_freeze` and `stagger`): if `water.frozen_near(emerge point, radius)` when the emerge finishes, the boss appears untargetable-free and stunned via `stun()` for `ticks` (stagger damage multiplier, `STAGGERED`), with no slam, ring or emerge status. A pending phase roar still wins over the stun. `WaterTiles.frozen_near(center, radius)` is true if any frozen cell centre lies within `radius`.
+- `book_pages` (top level) `{hp,radius,speed,turn_deg_per_tick,lifetime_ticks,damage,cap,count,spread_degrees}` + pattern `page_throw` (slam telegraph at the boss with the phase windup, like `homing_skull`): queues `count` `book_page` minions fanned over `spread_degrees` around the aim at the player, never beyond `cap` live + queued. Phase key `page_speed_scale` (> 0, default 1) multiplies speed of pages queued in that phase. A page flies like a skull (slow homing, dies on wall/lifetime, hits once, can be shot down) and dies at once when Burning. `damage` gets the usual difficulty scaling, `hp` never. Pages die with the boss.
+- `wisp_shield` (top level) `{damage_taken_multiplier}` (>= 0, < 1; 0 = immune): while the boss owns a live `wisp_kind` (default `lantern_wisp`) enemy (queued ones do not count) `boss.shielded` is true and `target.damage_scale` is the multiplier. It beats stagger while it lasts; the roar stays at 0; when the last wisp dies the scale returns to the stagger multiplier if staggered, else 1.0. Recomputed once per `advance`. Wisps die with the boss.
+- `storm_conduct` (top level) `{duration_ticks,damage,interval_ticks}`: the `storm_pulse` also electrifies the water (`Elite.electrify_water`, same as `electrify`; sets `session.water_shock`, frozen cells stay dark) even when the player is outside the pulse radius. `damage` is difficulty-scaled; the boss's death clears the shock.
+
+## Drowned Archivist v2 (AD-201)
+Live data: `world/data/run_v2.json` `bosses.cistern_boss` (HP unchanged at 2400; the frozen fixture `tests/fixtures/balance_frozen/run_v2.json` mirrors it). Tests: `tests/test_ad_final_boss.gd` (frozen balance: pool patterns, flood, wisps, storm pulse, scripted kills) and `tests/test_ad_final_boss_v2.gd` (live data: pools fit the room, dive/ripple, freeze-stun, shield, tide wave, movement). Bench: `tests/bench/boss_pacing_bench.gd` (`godot --headless --path . --script res://tests/bench/boss_pacing_bench.gd`). All numbers below are [PROPOSED FOR PROTOTYPE].
+- **Phase 1 (100%):** float_path glide (speed 50, `prefer` toward, waypoints routed through the wall gaps), pool: water_bolt, page_throw, wet_zone, a submerge dive (telegraph 40, submerged 45, emerge ripple 40, splash ring, Wet on emerge).
+- **Phase 2 (66%):** roar, a tide wave every 900 ticks (first at 420; warning 60; gap 96; thickness 64), pool: flood, wet_zone, water_bolt and the dive (not `big`: the freeze is its stagger window). Freezing the exit pool with Cold stuns the boss for 120 ticks (1.5x damage) with no splash or Wet.
+- **Phase 3 (33%):** roar, pool: summon_wisps (2 wisps shield the boss at 0 damage), storm_pulse (conducts through the water: 120 ticks, 5 every 20 ticks), faster page_throw (`page_speed_scale` 1.5), water_bolt, the dive.
+- **Pool exclusion:** a dive never surfaces within 120 px of the boss (`SAME_POOL`), because the glide moves it off the pool centre.
+- **Frozen-fixture tests keep the player alive** (the frozen player has little mana and the weak dash) and pop a wisp after 90 shielded ticks; they check the boss dies through all 3 phases. Survival is the live bench.
+
+**Bot bench (INFO only, not a gate).** 8 seeds (1423, 2718, 3141, 4242, 5150, 6174, 7331, 8086) x builds 0 and 2, scripted bot (perfect aim, aims at the wisps while the boss is shielded, no reaction play such as freezing pools or Wet + Lightning, dodges only windups and shots). Target for a human is 90-150 s.
+
+| build | fights | wins | median seconds | median dashes | seconds range |
+|---|---|---|---|---|---|
+| 0 | 8 | 8 | 58.0 | 34.0 | 53.4-91.8 |
+| 2 | 8 | 7 (1 loss at 80.6 s) | 57.7 | 31.0 | 48.5-80.6 |
+
+The bot is a lower bound: it never uses the reactions (Cold freeze-stun, Wet + Lightning) that are the fast way to win, and it never misses. The bot is below the human band; no HP was raised and nothing was tuned to force the band. Damage numbers (splash ring 6, slam 10, bolt 8, tide 10, conduct 5) were lowered from first guesses so the bot is not killed by the ring and the conducted water. `max_stationary_ticks` was at most 32 (limit 120, from the test).
+
 ## Not done
-`cistern_boss` is the other framework user; the mini-bosses still use the old data. `ruins_warden` now uses the framework (AD-199, above).
+The mini-bosses still use the old data. `ruins_warden` (AD-199) and `cistern_boss` (AD-201) use the framework.
