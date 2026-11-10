@@ -1,6 +1,8 @@
 extends RefCounted
 ## AD-224: run v2 is 3 combat rooms, the optional room, a Sigil Desk visit, then the boss, per stage.
 const Flow = preload("res://world/run_flow.gd")
+const Reward = preload("res://world/reward_generator.gd")
+const Artifacts = preload("res://world/artifacts.gd")
 const SEED := 20261022
 
 func _kill_all(flow, limit: int = 3000) -> void:
@@ -70,3 +72,43 @@ func run(t) -> void:
 			t.equal(v["hp"],float(cfg["workshop_restore_hp"]),"AD-224 %s desk restores hp" % label)
 			t.check(v["next_is_boss"],"AD-224 %s desk leads to the boss" % label)
 	t.equal(Flow.new(SEED).rooms.size(),6,"AD-224 v1 config keeps 6 rooms")
+
+	_reward_guarantee(t,cfg)
+
+func _kinds(cards: Array) -> Array:
+	var kinds: Array = []
+	for c in cards:
+		kinds.append(str(c["kind"]))
+	return kinds
+
+func _reward_guarantee(t, cfg: Dictionary) -> void:
+	t.equal(int(cfg["room_reward_currency"]),40,"AD-224 room currency is 40")
+	var empty_cfg: Dictionary = cfg.duplicate(true)
+	empty_cfg["reward_pool"] = []
+	var flow = Flow.new(SEED,Flow.CONFIG_V2)
+	var cards: Array = Reward.new(empty_cfg).choices(flow.run,"x",false)
+	t.check("artifact" in _kinds(cards),"AD-224 empty pool still offers an artifact")
+	var coins := 0
+	for c in cards:
+		if str(c["kind"]) == "currency":
+			coins += 1
+			t.equal(int(c["amount"]),int(cfg["room_reward_currency"]),"AD-224 currency card amount")
+	t.equal(coins,1,"AD-224 one currency card")
+	var off_cfg: Dictionary = empty_cfg.duplicate(true)
+	off_cfg["reward_guarantee_item"] = false
+	var off: Array = Reward.new(off_cfg).choices(flow.run,"x",false)
+	t.check(_kinds(off).size() <= _kinds(cards).size(),"AD-224 flag off never offers more cards")
+	var full = Flow.new(SEED,Flow.CONFIG_V2)
+	full.run.artifacts.clear()
+	for id in Artifacts.definitions().keys():
+		if full.run.artifacts.size() < Artifacts.max_held():
+			full.run.artifacts.append(str(id))
+	t.equal(full.run.artifacts.size(),Artifacts.max_held(),"AD-224 artifacts filled to the limit")
+	var capped: Array = Reward.new(empty_cfg).choices(full.run,"x",false)
+	t.check("artifact" not in _kinds(capped),"AD-224 no artifact card at the held limit")
+	for run_seed in range(1,21):
+		var f = Flow.new(run_seed,Flow.CONFIG_V2)
+		for r in Flow.build_sequence(cfg,run_seed):
+			if str(r["type"]) == "combat":
+				var k := _kinds(Reward.new(cfg).choices(f.run,str(r["id"]),false))
+				t.check("rune" in k or "artifact" in k,"AD-224 seed %d %s offers an item" % [run_seed,str(r["id"])])

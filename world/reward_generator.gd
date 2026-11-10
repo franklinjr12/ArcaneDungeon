@@ -31,7 +31,9 @@ func choices(run, room_id: String, force_artifact: bool = false, resonant: bool 
 	if options.size() < wanted:
 		options.append({"kind":"currency","amount":Difficulty.scale_i(int(config["room_reward_currency"]),"coin_rate",0)})
 	# AD-143: artifact card appended last, own RNG so the rune picks above never shift.
-	var artifact_card := artifact_choice(run,hash_value,force_artifact,excluded_artifacts)
+	var no_rune: bool = options.filter(func(o): return o["kind"] == "rune").is_empty()
+	var guaranteed: bool = bool(config.get("reward_guarantee_item",false)) and no_rune
+	var artifact_card := artifact_choice(run,hash_value,force_artifact or guaranteed,excluded_artifacts)
 	if not artifact_card.is_empty():
 		options.append(artifact_card)
 	if resonant and config.has("resonant_clear"):
