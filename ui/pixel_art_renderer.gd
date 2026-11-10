@@ -986,6 +986,8 @@ static func _collect_feedback(session, tick: int, memo: Dictionary, out: Array) 
 		var item := {"at": target.position, "age": int(enemy.state_tick), "rotation": to_mage.angle(), "length": 0.0, "slot": 0,
 			"window": int(enemy.tuning["telegraph_ticks"])}
 		var shape := str(intent.get("telegraph_shape", ""))
+		if shape == "none":
+			continue
 		if shape == "arc":
 			item["event"] = "telegraph.arc"
 			item["at"] = intent["arc_center"]

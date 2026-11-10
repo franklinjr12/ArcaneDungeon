@@ -1,6 +1,6 @@
 extends RefCounted
 ## AD-198: opt-in weighted attack pool for a boss phase. Pure data + one RNG roll per pick; no scene or session access.
-## Entries: {"pattern":p}, {"combo":[a,b,...],"gap_ticks":n} or (later steps) {"move":{"mode":m,...}}; each may carry "weight" (int >= 1) and "big".
+## Entries: {"pattern":p}, {"combo":[a,b,...],"gap_ticks":n} or (later steps) {"move":{"mode":m,...}}; each may carry "weight" (int >= 1) and "big"; AD-199 adds "min_range"/"max_range" (entry blocked when the player is farther/closer).
 const MIN_DISTINCT := 3
 
 ## First pattern of a pattern/combo entry, or "move:<mode>" for a move entry.
@@ -65,6 +65,9 @@ static func validate(settings: Dictionary) -> Array:
 				var path := "%s[%d]" % [base,e]
 				if entry.has("weight") and not (_is_whole(entry["weight"]) and int(entry["weight"]) >= 1):
 					issues.append({"code":"BOSS_POOL_WEIGHT","path":path+".weight","message":"weight must be an integer >= 1"})
+				for key in ["min_range","max_range"]:
+					if entry.has(key) and not ((typeof(entry[key]) == TYPE_INT or typeof(entry[key]) == TYPE_FLOAT) and float(entry[key]) >= 0.0):
+						issues.append({"code":"BOSS_POOL_RANGE","path":"%s.%s" % [path,key],"message":"%s must be a number >= 0" % key})
 				if entry.has("combo"):
 					var combo = entry["combo"]
 					if typeof(combo) != TYPE_ARRAY or combo.size() < 2:

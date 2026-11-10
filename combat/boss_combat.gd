@@ -5,6 +5,7 @@ const AttackIntent = preload("res://combat/attack_intent.gd")
 const Pool = preload("res://combat/boss_moves/boss_pattern_pool.gd")
 const Movement = preload("res://combat/boss_moves/boss_movement.gd")
 const Hazards = preload("res://combat/boss_moves/boss_hazards.gd")
+const Warden = preload("res://combat/boss_moves/warden_patterns.gd")
 const Lurk = preload("res://combat/enemy_behaviours/water_lurk.gd")
 const FLOOD_TAG := "archivist_flood"
 const ARENA_TAG := "boss_arena"
@@ -44,7 +45,7 @@ var _arena_water := false
 
 ## Pool, movement, hazard, transition and stagger issues for a boss settings dictionary (empty = valid).
 static func validate(settings: Dictionary) -> Array:
-	return Pool.validate(settings)+Movement.validate(settings)+Hazards.validate(settings)+_validate_beats(settings)
+	return Pool.validate(settings)+Movement.validate(settings)+Hazards.validate(settings)+_validate_beats(settings)+Warden.validate(settings)
 
 static func _number_from(value, minimum: float) -> bool:
 	return (typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT) and float(value) >= minimum
@@ -111,6 +112,11 @@ func _init_phases(elite_damage: float, floor_ticks: int) -> void:
 	for key in ["water_bolt_damage","storm_pulse_damage"]:
 		if tuning.has(key):
 			tuning[key] = Difficulty.scale_f(float(tuning[key])*elite_damage,"enemy_damage")
+	var warden_attacks: Array = tuning.get("melee",{}).values()
+	if tuning.has("spear_line"):
+		warden_attacks.append(tuning["spear_line"])
+	for attack in warden_attacks:
+		attack["damage"] = Difficulty.scale_f(float(attack["damage"])*elite_damage,"enemy_damage")
 	for entry in tuning["phases"]:
 		entry["windup_ticks"] = maxi(Difficulty.scale_i(int(entry["windup_ticks"]),"telegraph_length"),floor_ticks)
 		for pooled in entry.get("pool",[]):
@@ -152,9 +158,13 @@ func advance(session) -> void:
 		_drain_flood(session)
 		if _hazards != null:
 			_hazards.clear(self,session)
+		if tuning.has("spear_line"):
+			Warden.cancel_warnings(self,session)
 		_state("dead",session.sim.clock.tick)
 		if not death_announced:
 			death_announced = true
+			if tuning.has("grave_rise"):
+				_dismiss_thralls(session)
 			session.on_enemy_death(self)
 		return
 	if session.state != "playing":
@@ -277,6 +287,8 @@ func _begin_roar(session, lead: int) -> void:
 	target.damage_scale = 0.0
 	if _hazards != null:
 		_hazards.clear(self,session)
+	if tuning.has("spear_line"):
+		Warden.cancel_warnings(self,session)
 	transitions.append({"from":"phase%d" % phase,"to":"roar","tick":session.sim.clock.tick,"enemy_id":target.id})
 	state = "roar"
 	state_tick = -lead
@@ -334,7 +346,13 @@ func _range_key(attack: String) -> String:
 func _pool_attack(session) -> String:
 	if not _combo_queue.is_empty():
 		return str(_combo_queue.pop_front())
-	_current_entry = Pool.pick(tuning["phases"][phase-1]["pool"],_last_key,["flood"] if flood_age >= 0 else [],rng(session))
+	var pool: Array = tuning["phases"][phase-1]["pool"]
+	var blocked: Array = ["flood"] if flood_age >= 0 else []
+	var distance: float = session.sim.actor.position.distance_to(target.position)
+	for entry in pool:
+		if (entry.has("max_range") and distance > float(entry["max_range"])) or (entry.has("min_range") and distance < float(entry["min_range"])):
+			blocked.append(Pool.entry_key(entry))
+	_current_entry = Pool.pick(pool,_last_key,blocked,rng(session))
 	if _current_entry.has("move"):
 		return Pool.entry_key(_current_entry)
 	if not _current_entry.has("combo"):
@@ -358,6 +376,9 @@ func _start_windup(session) -> void:
 		_start_move(session,_current_entry["move"])
 		return
 	_windup_attack = attack
+	if Warden.handles(tuning,attack):
+		_open_windup(session,attack,Warden.windup_fields(self,session,attack))
+		return
 	var ticks := int(tuning["phases"][phase-1]["windup_ticks"]) if tuning.has("phases") else (int(tuning["second_phase_windup_ticks"]) if phase == 2 else int(tuning["windup_ticks"]))
 	var fields := {"kind":attack,"origin":target.position,"telegraph_ticks":ticks,"range":float(tuning[_range_key(attack)])}
 	if attack == "wet_zone":
@@ -464,7 +485,9 @@ func _fire(session) -> void:
 	if not target.alive() or not session.sim.actor.alive():
 		return
 	var attack := _windup_attack
-	if attack == "pulse":
+	if Warden.handles(tuning,attack):
+		Warden.fire(self,session,attack)
+	elif attack == "pulse":
 		if session.sim.actor.position.distance_to(target.position) <= float(tuning["pulse_radius"]):
 			session.damage_player(target.id,float(tuning["pulse_damage"]),"lightning")
 	elif attack == "fan" or attack == "water_bolt":
@@ -488,7 +511,7 @@ func _fire(session) -> void:
 	elif attack == "flood":
 		_fire_flood(session)
 	elif attack == "summon_wisps":
-		_fire_summon(session)
+		fire_summon(session,str(tuning.get("wisp_kind","lantern_wisp")),tuning["wisp_offsets"],int(tuning["wisp_cap"]))
 	elif attack == "storm_pulse":
 		_fire_storm_pulse(session)
 	else:
@@ -513,15 +536,23 @@ func _fire_flood(session) -> void:
 	session.water.add_entries(entries)
 	flood_age = 0
 
-func _fire_summon(session) -> void:
-	var kind := str(tuning.get("wisp_kind","lantern_wisp"))
+## Queues `kind` summons at `offsets` from the boss while live + queued summons stay under `cap`.
+func fire_summon(session, kind: String, offsets: Array, cap: int) -> void:
 	var radius := float(session.data["enemies"][kind]["radius"])
-	for offset in tuning["wisp_offsets"]:
-		if session.summons_owned_by(target.id) >= int(tuning["wisp_cap"]):
+	for offset in offsets:
+		if session.summons_owned_by(target.id) >= cap:
 			break
 		var at: Vector2 = target.position+Vector2(float(offset[0]),float(offset[1]))
 		if session.world.valid_position(at,radius):
 			session.pending_spawns.append({"kind":kind,"position":at,"summoner_id":target.id})
+
+## The boss's thralls fall with it so the room can clear; queued ones are dropped.
+func _dismiss_thralls(session) -> void:
+	session.pending_spawns = session.pending_spawns.filter(func(spec): return int(spec["summoner_id"]) != target.id)
+	for enemy in session.enemies:
+		var owner_id = enemy.get("summoner_id")
+		if owner_id != null and int(owner_id) == target.id and enemy.target.alive():
+			enemy.target.receive_damage(enemy.target.health.current+1.0,"neutral",session.sim.actor.team,1.0)
 
 func _fire_storm_pulse(session) -> void:
 	var actor = session.sim.actor
