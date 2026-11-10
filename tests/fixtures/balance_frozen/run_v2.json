@@ -978,6 +978,17 @@
       "workshop_after": false
     }
   ],
+  "room_rules": {
+    "min_obstacles": 2,
+    "max_obstacles": 5,
+    "min_interactions": 1,
+    "interaction_kinds": ["crate", "cobweb", "brazier", "urn", "cracked_wall", "cracked_pillar", "broken_wall", "puddle"],
+    "shapes": ["open_hall", "pillared_hall", "corridor_chamber", "ring_pit", "split_bridges", "cross_hall", "l_bend", "colonnade", "dais_island"],
+    "owner_shapes": ["open_hall", "pillared_hall", "corridor_chamber", "ring_pit", "split_bridges"],
+    "min_spawn_distance": 160,
+    "dead_corner_step": 40,
+    "player_radius": 22
+  },
   "room_template_files": [
     "res://world/data/rooms_cistern_v1.json"
   ],
@@ -987,6 +998,7 @@
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "open_hall",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -1012,13 +1024,68 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "env_props": [
+          {
+            "id": "c01_sarcophagus",
+            "kind": "sarcophagus",
+            "rect": [
+              500,
+              570,
+              96,
+              48
+            ]
+          },
+          {
+            "id": "c01_rubble",
+            "kind": "rubble",
+            "rect": [
+              820,
+              290,
+              64,
+              40
+            ]
+          },
+          {
+            "id": "c01_crate",
+            "kind": "crate",
+            "rect": [
+              640,
+              250,
+              40,
+              40
+            ]
+          },
+          {
+            "id": "c01_brazier",
+            "kind": "brazier",
+            "position": [
+              900,
+              700
+            ]
+          },
+          {
+            "id": "c01_cobweb",
+            "kind": "cobweb",
+            "rect": [
+              1200,
+              60,
+              48,
+              48
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_c02": {
       "id": "ruins_c02",
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "pillared_hall",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -1049,13 +1116,86 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "env_props": [
+          {
+            "id": "c02_p1",
+            "kind": "pillar",
+            "rect": [
+              516,
+              266,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "c02_p2",
+            "kind": "pillar",
+            "rect": [
+              516,
+              586,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "c02_p3",
+            "kind": "pillar",
+            "rect": [
+              836,
+              266,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "c02_p4",
+            "kind": "pillar",
+            "rect": [
+              836,
+              586,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "c02_crack",
+            "kind": "cracked_pillar",
+            "rect": [
+              676,
+              146,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "c02_urn1",
+            "kind": "urn",
+            "position": [
+              330,
+              790
+            ]
+          },
+          {
+            "id": "c02_urn2",
+            "kind": "urn",
+            "position": [
+              1010,
+              120
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_c03": {
       "id": "ruins_c03",
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "ring_pit",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -1081,13 +1221,76 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "pits": [
+          [
+            520,
+            300,
+            360,
+            300
+          ]
+        ],
+        "env_props": [
+          {
+            "id": "c03_rubble",
+            "kind": "rubble",
+            "rect": [
+              300,
+              170,
+              64,
+              40
+            ]
+          },
+          {
+            "id": "c03_sarcophagus",
+            "kind": "sarcophagus",
+            "rect": [
+              940,
+              700,
+              96,
+              48
+            ]
+          },
+          {
+            "id": "c03_column",
+            "kind": "column",
+            "position": [
+              960,
+              200
+            ]
+          },
+          {
+            "id": "c03_puddle1",
+            "kind": "puddle",
+            "rect": [
+              640,
+              160,
+              120,
+              60
+            ]
+          },
+          {
+            "id": "c03_puddle2",
+            "kind": "puddle",
+            "rect": [
+              580,
+              720,
+              120,
+              60
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_c04": {
       "id": "ruins_c04",
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "corridor_chamber",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -1118,13 +1321,70 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "walls": [
+          [
+            0,
+            0,
+            340,
+            340
+          ],
+          [
+            0,
+            560,
+            340,
+            340
+          ]
+        ],
+        "env_props": [
+          {
+            "id": "c04_sarcophagus",
+            "kind": "sarcophagus",
+            "rect": [
+              760,
+              380,
+              96,
+              48
+            ]
+          },
+          {
+            "id": "c04_broken",
+            "kind": "broken_wall",
+            "rect": [
+              880,
+              640,
+              96,
+              32
+            ]
+          },
+          {
+            "id": "c04_brazier1",
+            "kind": "brazier",
+            "position": [
+              385,
+              330
+            ]
+          },
+          {
+            "id": "c04_brazier2",
+            "kind": "brazier",
+            "position": [
+              385,
+              570
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_c05": {
       "id": "ruins_c05",
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "cross_hall",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -1155,13 +1415,74 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "walls": [
+          [
+            0,
+            0,
+            340,
+            230
+          ],
+          [
+            1010,
+            0,
+            310,
+            200
+          ],
+          [
+            1010,
+            700,
+            310,
+            200
+          ],
+          [
+            0,
+            670,
+            340,
+            230
+          ]
+        ],
+        "env_props": [
+          {
+            "id": "c05_crate",
+            "kind": "crate",
+            "rect": [
+              680,
+              790,
+              40,
+              40
+            ]
+          },
+          {
+            "id": "c05_cobweb",
+            "kind": "cobweb",
+            "rect": [
+              676,
+              20,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "c05_urn",
+            "kind": "urn",
+            "position": [
+              700,
+              330
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_c06": {
       "id": "ruins_c06",
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "split_bridges",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -1203,13 +1524,84 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "pits": [
+          [
+            660,
+            0,
+            100,
+            220
+          ],
+          [
+            660,
+            340,
+            100,
+            220
+          ],
+          [
+            660,
+            680,
+            100,
+            220
+          ]
+        ],
+        "env_props": [
+          {
+            "id": "c06_rubble",
+            "kind": "rubble",
+            "rect": [
+              450,
+              420,
+              64,
+              40
+            ]
+          },
+          {
+            "id": "c06_sarcophagus",
+            "kind": "sarcophagus",
+            "rect": [
+              900,
+              380,
+              96,
+              48
+            ]
+          },
+          {
+            "id": "c06_column",
+            "kind": "column",
+            "position": [
+              480,
+              230
+            ]
+          },
+          {
+            "id": "c06_brazier",
+            "kind": "brazier",
+            "position": [
+              560,
+              300
+            ]
+          },
+          {
+            "id": "c06_urn",
+            "kind": "urn",
+            "position": [
+              710,
+              620
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_c07": {
       "id": "ruins_c07",
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "l_bend",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -1251,13 +1643,70 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "walls": [
+          [
+            420,
+            0,
+            90,
+            620
+          ],
+          [
+            420,
+            530,
+            420,
+            90
+          ]
+        ],
+        "env_props": [
+          {
+            "id": "c07_column",
+            "kind": "column",
+            "position": [
+              900,
+              250
+            ]
+          },
+          {
+            "id": "c07_rubble",
+            "kind": "rubble",
+            "rect": [
+              960,
+              430,
+              64,
+              40
+            ]
+          },
+          {
+            "id": "c07_cobweb",
+            "kind": "cobweb",
+            "rect": [
+              560,
+              40,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "c07_urn",
+            "kind": "urn",
+            "position": [
+              180,
+              760
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_c08": {
       "id": "ruins_c08",
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "colonnade",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -1293,13 +1742,78 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "env_props": [
+          {
+            "id": "c08_col1",
+            "kind": "column",
+            "position": [
+              480,
+              450
+            ]
+          },
+          {
+            "id": "c08_col2",
+            "kind": "column",
+            "position": [
+              620,
+              450
+            ]
+          },
+          {
+            "id": "c08_col3",
+            "kind": "column",
+            "position": [
+              760,
+              450
+            ]
+          },
+          {
+            "id": "c08_col4",
+            "kind": "column",
+            "position": [
+              900,
+              450
+            ]
+          },
+          {
+            "id": "c08_brazier1",
+            "kind": "brazier",
+            "position": [
+              550,
+              330
+            ]
+          },
+          {
+            "id": "c08_brazier2",
+            "kind": "brazier",
+            "position": [
+              830,
+              570
+            ]
+          },
+          {
+            "id": "c08_cobweb",
+            "kind": "cobweb",
+            "rect": [
+              300,
+              60,
+              48,
+              48
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_treasure": {
       "id": "ruins_treasure",
       "stage": 0,
       "room": 0,
       "type": "treasure",
+      "shape": "dais_island",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -1313,7 +1827,74 @@
         1150,
         450
       ],
-      "waves": []
+      "waves": [],
+      "layout": {
+        "arena_walls": false,
+        "env_props": [
+          {
+            "id": "tr_dais",
+            "kind": "sarcophagus",
+            "rect": [
+              612,
+              426,
+              96,
+              48
+            ]
+          },
+          {
+            "id": "tr_crack1",
+            "kind": "cracked_pillar",
+            "rect": [
+              536,
+              306,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "tr_crack2",
+            "kind": "cracked_pillar",
+            "rect": [
+              736,
+              546,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "tr_brazier1",
+            "kind": "brazier",
+            "position": [
+              600,
+              380
+            ]
+          },
+          {
+            "id": "tr_brazier2",
+            "kind": "brazier",
+            "position": [
+              720,
+              520
+            ]
+          },
+          {
+            "id": "tr_brazier3",
+            "kind": "brazier",
+            "position": [
+              600,
+              520
+            ]
+          },
+          {
+            "id": "tr_brazier4",
+            "kind": "brazier",
+            "position": [
+              720,
+              380
+            ]
+          }
+        ]
+      }
     },
     "ruins_boss": {
       "id": "ruins_boss",
@@ -1358,10 +1939,42 @@
       "boss": "cistern_boss",
       "layout": {
         "water": [
-          {"kind": "shallow", "rect": [380, 130, 260, 170]},
-          {"kind": "shallow", "rect": [380, 600, 260, 170]},
-          {"kind": "shallow", "rect": [700, 360, 150, 180]},
-          {"kind": "deep", "rect": [520, 20, 120, 80]}
+          {
+            "kind": "shallow",
+            "rect": [
+              380,
+              130,
+              260,
+              170
+            ]
+          },
+          {
+            "kind": "shallow",
+            "rect": [
+              380,
+              600,
+              260,
+              170
+            ]
+          },
+          {
+            "kind": "shallow",
+            "rect": [
+              700,
+              360,
+              150,
+              180
+            ]
+          },
+          {
+            "kind": "deep",
+            "rect": [
+              520,
+              20,
+              120,
+              80
+            ]
+          }
         ]
       }
     },

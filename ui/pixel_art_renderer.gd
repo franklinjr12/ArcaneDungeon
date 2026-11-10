@@ -687,6 +687,12 @@ static func walls(canvas: CanvasItem, wall_rects: Array, offset: Vector2) -> voi
 		canvas.draw_rect(Rect2(wall.position-offset,wall.size),Color("#bf8a47"),false,2)
 		canvas.draw_line(wall.position-offset+Vector2(3,4),wall.position-offset+Vector2(wall.size.x-3,4),Color("#dcb773",0.7),1)
 
+## AD-202: pits block walking only; very dark placeholder fill until pit art exists. Drawn after the floor, before walls.
+static func pits(canvas: CanvasItem, rects: Array, offset: Vector2) -> void:
+	for rect in rects:
+		canvas.draw_rect(Rect2(rect.position-offset,rect.size),Color("#05070b"))
+		canvas.draw_rect(Rect2(rect.position-offset,rect.size),Color("#161d28"),false,2)
+
 static func _tile_floor_export(canvas: CanvasItem, view: Rect2, offset: Vector2, stage: int) -> void:
 	_export_data()
 	var fl: Dictionary = _map["floor"]
@@ -1411,9 +1417,14 @@ static func _draw_water_cells(canvas: CanvasItem, rect: Rect2, tag: String, tick
 static func env_prop_frame(kind: String, state: String, lit: bool, stage: int, tick: int) -> Dictionary:
 	_export_data()
 	var base := {"crate": "burnable_crate", "urn": "breakable_urn", "puddle": "puddle", "cobweb": "cobweb",
-		"brazier": "brazier", "cracked_wall": "cracked_wall", "boss_pillar": "cracked_wall"}.get(kind, "") as String
+		"brazier": "brazier", "cracked_wall": "cracked_wall", "boss_pillar": "cracked_wall",
+		"pillar": "cracked_wall", "cracked_pillar": "cracked_wall", "broken_wall": "cracked_wall", "column": "cracked_wall",
+		"rubble": "rubble_set", "sarcophagus": "rubble_set"}.get(kind, "") as String
 	if base == "" or state == "destroyed":
 		return {}
+	# AD-202 placeholders: the rubble set has one stage-less stem with a single "static" tag.
+	if base == "rubble_set":
+		return {"stem": "ad_prp_rubble_set", "tag": "static", "index": loop_index(_manifest["ad_prp_rubble_set"]["tags"]["static"]["ms"], tick)} if _manifest.has("ad_prp_rubble_set") else {}
 	var stem := "ad_prp_" + base + ("_cistern" if stage == 2 else ("" if kind == "urn" else "_ruins"))
 	var tag := "idle"
 	if kind == "puddle" and state == "frozen":

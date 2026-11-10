@@ -118,6 +118,7 @@ func _draw() -> void:
 		hit_flash.set_entries([])
 		return
 	_draw_frame(Rect2(arena.position-offset,arena.size))
+	Art.pits(self,session.pits,offset)
 	Art.walls(self,session.world.walls,offset)
 	Art.decorations(self,offset,environment_id)
 	draw_rect(Rect2(arena.position-offset,arena.size),Color("#b48b52",0.55),false,2)

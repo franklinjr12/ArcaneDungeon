@@ -21,6 +21,9 @@ func initialize(room: Dictionary, arena: Dictionary, known_enemy_types: Array) -
 	var merged: Dictionary = arena.duplicate(true)
 	var layout = room.get("layout",{})
 	if typeof(layout) == TYPE_DICTIONARY:
+		# AD-202: layout.arena_walls = false drops the shared arena walls (default true).
+		if layout.get("arena_walls",true) == false:
+			merged["walls"] = []
 		for dims in layout.get("walls",[]):
 			if typeof(dims) != TYPE_ARRAY or dims.size() != 4:
 				issues.append({"code":"ROOM_LAYOUT_INVALID","path":"layout.walls","message":"Wall requires x,y,w,h"})
@@ -35,6 +38,20 @@ func initialize(room: Dictionary, arena: Dictionary, known_enemy_types: Array) -
 			issues.append(issue)
 		if water_issues.is_empty():
 			world.add_ground_blockers(WaterTiles.new(layout["water"]).deep_rects())
+	# AD-202: optional layout.pits = [x,y,w,h] rects that block walking only, like deep water.
+	if typeof(layout) == TYPE_DICTIONARY and layout.has("pits"):
+		var pit_rects: Array = []
+		var pits_ok: bool = typeof(layout["pits"]) == TYPE_ARRAY
+		if pits_ok:
+			for dims in layout["pits"]:
+				if typeof(dims) != TYPE_ARRAY or not EnvProps._num_array(dims,4) or float(dims[2]) <= 0.0 or float(dims[3]) <= 0.0:
+					pits_ok = false
+					break
+				pit_rects.append(Rect2(float(dims[0]),float(dims[1]),float(dims[2]),float(dims[3])))
+		if pits_ok:
+			world.add_ground_blockers(pit_rects)
+		else:
+			issues.append({"code":"ROOM_LAYOUT_INVALID","path":"layout.pits","message":"Pits require [x,y,w,h] numbers with w,h > 0"})
 	# AD-150: optional layout.env_props. Solid props join the walls before every marker/spawn/reachability check,
 	# so a prop can never block entrance->exit, the reward or a spawn (props are never required to win).
 	var env_rects: Array = []
@@ -132,3 +149,105 @@ static func reachable(world, from: Vector2, to: Vector2, radius: float, step: fl
 			seen[next] = true
 			queue.append(next)
 	return false
+
+## AD-202 [PROPOSED FOR PROTOTYPE]. Room design rules (docs/rooms/ROOM_RULES.md) as data-driven issues; `rules` is run_v2.json "room_rules".
+## Read-only and deterministic: it rebuilds the geometry exactly as initialize() does but never changes its verdicts.
+## Returns {ok, obstacles, interactions, shape, issues:[{code,message}]}.
+static func rule_report(room: Dictionary, arena: Dictionary, env_data: Dictionary, rules: Dictionary) -> Dictionary:
+	var issues: Array = []
+	var layout = room.get("layout",{})
+	if typeof(layout) != TYPE_DICTIONARY:
+		layout = {}
+	var merged: Dictionary = arena.duplicate(true)
+	var obstacles := 0
+	if layout.get("arena_walls",true) == false:
+		merged["walls"] = []
+	obstacles += (merged["walls"] as Array).size()
+	var layout_walls: Array = []
+	for dims in layout.get("walls",[]):
+		if typeof(dims) == TYPE_ARRAY and dims.size() == 4:
+			layout_walls.append(dims)
+	merged["walls"].append_array(layout_walls)
+	obstacles += layout_walls.size()
+	var world = Geometry.new(merged)
+	if layout.has("water") and WaterTiles.validate(layout["water"]).is_empty():
+		world.add_ground_blockers(WaterTiles.new(layout["water"]).deep_rects())
+	if typeof(layout.get("pits")) == TYPE_ARRAY:
+		var pit_rects: Array = []
+		for dims in layout["pits"]:
+			if typeof(dims) != TYPE_ARRAY or not EnvProps._num_array(dims,4) or float(dims[2]) <= 0.0 or float(dims[3]) <= 0.0:
+				pit_rects = []
+				break
+			pit_rects.append(Rect2(float(dims[0]),float(dims[1]),float(dims[2]),float(dims[3])))
+		world.add_ground_blockers(pit_rects)
+	var interaction_kinds: Array = rules.get("interaction_kinds",[])
+	var interactions := 0
+	if layout.has("env_props") and EnvProps.validate(layout["env_props"],env_data.get("kinds",{})).is_empty():
+		for prop in EnvProps.new(layout["env_props"],env_data).props:
+			if bool(prop["rule"].get("solid_walk",false)):
+				world.walls.append(prop["rect"])
+				obstacles += 1
+			if str(prop["kind"]) in interaction_kinds:
+				interactions += 1
+	var min_obstacles := int(rules.get("min_obstacles",2))
+	var max_obstacles := int(rules.get("max_obstacles",5))
+	if obstacles < min_obstacles or obstacles > max_obstacles:
+		issues.append({"code":"RULE_OBSTACLES","message":"%d obstacle/cover pieces, need %d-%d" % [obstacles,min_obstacles,max_obstacles]})
+	if interactions < int(rules.get("min_interactions",1)):
+		issues.append({"code":"RULE_INTERACTION","message":"%d environment interactions, need %d" % [interactions,int(rules.get("min_interactions",1))]})
+	var shape := str(room.get("shape",""))
+	if shape.is_empty() or shape not in rules.get("shapes",[]):
+		issues.append({"code":"RULE_SHAPE","message":"shape '%s' is not one of the allowed shape ids" % shape})
+	var entrance := Vector2(float(room["entrance"][0]),float(room["entrance"][1])) if typeof(room.get("entrance")) == TYPE_ARRAY and room["entrance"].size() == 2 else Vector2.ZERO
+	var min_spawn := float(rules.get("min_spawn_distance",160))
+	var near := 0
+	for wave in room.get("waves",[]):
+		if typeof(wave) != TYPE_DICTIONARY:
+			continue
+		for entry in wave.get("enemies",[]):
+			if typeof(entry) == TYPE_ARRAY and entry.size() == 3 and Vector2(float(entry[1]),float(entry[2])).distance_to(entrance) < min_spawn:
+				near += 1
+	if near > 0:
+		issues.append({"code":"RULE_SPAWN_NEAR_ENTRANCE","message":"%d spawn(s) closer than %d to the entrance" % [near,int(min_spawn)]})
+	# Grid pass: reachable cells from the entrance vs every walkable cell.
+	var step := float(rules.get("dead_corner_step",40))
+	var radius := float(rules.get("player_radius",22))
+	var cols := int(floor(world.bounds.size.x/step))
+	var rows := int(floor(world.bounds.size.y/step))
+	var walkable: Dictionary = {}
+	for gx in range(0,cols+1):
+		for gy in range(0,rows+1):
+			if world.valid_position(Vector2(gx,gy)*step,radius):
+				walkable[Vector2i(gx,gy)] = true
+	var start := Vector2i(roundi(entrance.x/step),roundi(entrance.y/step))
+	var seen: Dictionary = {start:true}
+	var queue: Array = [start]
+	var head := 0
+	while head < queue.size():
+		var cell: Vector2i = queue[head]
+		head += 1
+		for dir in [Vector2i(1,0),Vector2i(-1,0),Vector2i(0,1),Vector2i(0,-1)]:
+			var next: Vector2i = cell+dir
+			if not seen.has(next) and walkable.has(next):
+				seen[next] = true
+				queue.append(next)
+	var pockets := 0
+	var corners: Array = []
+	var cells: Array = walkable.keys()
+	cells.sort_custom(func(a, b): return a.x < b.x or (a.x == b.x and a.y < b.y))
+	for cell in cells:
+		if not seen.has(cell):
+			pockets += 1
+			continue
+		var blocked := 0
+		for dir in [Vector2i(1,0),Vector2i(-1,0),Vector2i(0,1),Vector2i(0,-1)]:
+			if not walkable.has(cell+dir):
+				blocked += 1
+		if blocked >= 3:
+			corners.append(cell)
+	if pockets > 0:
+		issues.append({"code":"RULE_POCKET_UNREACHABLE","message":"%d walkable cell(s) cannot be reached from the entrance" % pockets})
+	if not corners.is_empty():
+		var first: Vector2i = corners[0]
+		issues.append({"code":"RULE_DEAD_CORNER","message":"%d dead-corner cell(s), first at (%d,%d)" % [corners.size(),int(first.x*step),int(first.y*step)]})
+	return {"ok":issues.is_empty(),"obstacles":obstacles,"interactions":interactions,"shape":shape,"issues":issues}

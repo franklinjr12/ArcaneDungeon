@@ -713,7 +713,9 @@
   "env:puddle:thaw": "sfx.env.thaw",
   "env:urn:break": "sfx.env.break",
   "env:cracked_wall:break": "sfx.env.break",
-  "env:boss_pillar:break": "sfx.env.break"
+  "env:boss_pillar:break": "sfx.env.break",
+  "env:cracked_pillar:break": "sfx.env.break",
+  "env:broken_wall:break": "sfx.env.break"
  },
  "music": {
   "bus": "Music",

@@ -1,6 +1,7 @@
 extends SceneTree
 ## Headless schematic screenshot sheet of a room-template JSON (Image API only, no display needed).
-## Usage: godot --headless --path . --script res://tools/room_layout_sheet.gd -- <rooms_json_res_path> <out_png_path>
+## Usage: godot --headless --path . --script res://tools/room_layout_sheet.gd -- <rooms_json_res_path> <out_png_path> [--stage=<id>]
+## --stage=<id> (AD-202) reads a run_v2-style JSON: stages[id].pool + optional_room, templates merged with room_template_files.
 ## Exit codes: 0 ok, 1 load/usage/save error.
 const SCALE := 5
 const ARENA_W := 1320
@@ -22,6 +23,20 @@ const C_EXIT := Color(0.2, 0.85, 0.3)
 const C_PROP := Color(0.7, 0.55, 0.35)
 const C_ON_CLEAR := Color(0.95, 0.1, 0.1)
 const C_PEDESTAL := Color(1.0, 0.45, 0.75)
+const C_PIT := Color(0.005, 0.005, 0.01)
+const C_COVER := Color(0.45, 0.4, 0.34)
+const C_BURNABLE := Color(1.0, 0.5, 0.1)
+const C_PUDDLE := Color(0.2, 0.9, 0.95)
+const C_BRAZIER := Color(0.95, 0.15, 0.1)
+const C_BREAKABLE := Color(1.0, 0.8, 0.2)
+const C_MARK := Color(0.9, 0.9, 0.9)
+const SHAPE_COLORS := {
+	"open_hall": Color(0.9, 0.9, 0.9), "pillared_hall": Color(0.95, 0.6, 0.2), "corridor_chamber": Color(0.3, 0.8, 0.4),
+	"ring_pit": Color(0.6, 0.3, 0.9), "split_bridges": Color(0.3, 0.6, 1.0), "cross_hall": Color(1.0, 0.3, 0.5),
+	"l_bend": Color(0.9, 0.9, 0.2), "colonnade": Color(0.4, 0.9, 0.9), "dais_island": Color(0.7, 0.5, 0.3),
+}
+const BURNABLE_KINDS := ["crate", "cobweb"]
+const BREAKABLE_KINDS := ["urn", "cracked_wall", "cracked_pillar", "broken_wall"]
 const ENEMY_COLORS := {
 	"bone_thrall": Color(1, 1, 1),
 	"fallen_adept": Color(0.65, 0.3, 0.9),
@@ -48,20 +63,44 @@ func _load_json(path: String):
 
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
-	if args.size() < 2:
-		_fail("usage: -- <rooms_json_res_path> <out_png_path>")
+	var stage := ""
+	var positional: Array = []
+	for arg in args:
+		if arg.begins_with("--stage="):
+			stage = arg.substr(8)
+		else:
+			positional.append(arg)
+	if positional.size() < 2:
+		_fail("usage: -- <rooms_json_res_path> <out_png_path> [--stage=<id>]")
 		return
+	args = PackedStringArray(positional)
 	var data = _load_json(args[0])
 	var tuning = _load_json("res://combat/combat_tuning_v1.json")
 	if not (data is Dictionary) or not (tuning is Dictionary):
 		_fail("cannot load " + args[0] + " or combat tuning")
 		return
-	var templates: Dictionary = data.get("room_templates", {})
+	var templates: Dictionary = data.get("room_templates", {}).duplicate()
 	var ids: Array = []
-	ids.append_array(data.get("pool", []))
-	for key in ["treasure_room", "challenge_room"]:
-		if data.has(key):
-			ids.append(data[key])
+	if stage.is_empty():
+		ids.append_array(data.get("pool", []))
+		for key in ["treasure_room", "challenge_room"]:
+			if data.has(key):
+				ids.append(data[key])
+	else:
+		for path in data.get("room_template_files", []):
+			var doc = _load_json(path)
+			if doc is Dictionary:
+				templates.merge(doc.get("room_templates", {}))
+		var found := false
+		for entry in data.get("stages", []):
+			if entry.get("id", "") == stage:
+				found = true
+				ids.append_array(entry.get("pool", []))
+				if entry.has("optional_room"):
+					ids.append(entry["optional_room"])
+		if not found:
+			_fail("no stage " + stage + " in " + args[0])
+			return
 	var shared_walls: Array = tuning.get("arena", {}).get("walls", [])
 	var rows := int(ceil(float(ids.size()) / COLUMNS))
 	_img = Image.create(COLUMNS * TILE_W + (COLUMNS + 1) * GAP, maxi(rows, 1) * TILE_H + (rows + 1) * GAP, false, Image.FORMAT_RGBA8)
@@ -72,7 +111,9 @@ func _run() -> void:
 			return
 		_ox = GAP + (i % COLUMNS) * (TILE_W + GAP)
 		_oy = GAP + (i / COLUMNS) * (TILE_H + GAP)
-		_draw_template(templates[ids[i]], shared_walls)
+		var template: Dictionary = templates[ids[i]].duplicate()
+		template["_sheet_index"] = i
+		_draw_template(template, shared_walls)
 	var out: String = args[1]
 	if _img.save_png(out) != OK:
 		_fail("cannot save " + out)
@@ -129,10 +170,15 @@ func _draw_template(t: Dictionary, shared_walls: Array) -> void:
 	var layout: Dictionary = t.get("layout", {})
 	for w in layout.get("water", []):
 		_rect(w["rect"], C_DEEP if w.get("kind", "shallow") == "deep" else C_SHALLOW)
-	for w in shared_walls:
-		_rect(w, C_WALL)
+	if layout.get("arena_walls", true) != false:
+		for w in shared_walls:
+			_rect(w, C_WALL)
 	for w in layout.get("walls", []):
 		_rect(w, C_WALL)
+	for pit in layout.get("pits", []):
+		_rect(pit, C_PIT)
+	for prop in layout.get("env_props", []):
+		_draw_env_prop(prop)
 	_ring(t["entrance"], SPAWN_RING / SCALE, C_ENTRANCE)
 	for pr in layout.get("props", []):
 		_disc([pr[1], pr[2]], 3, C_PROP)
@@ -149,3 +195,48 @@ func _draw_template(t: Dictionary, shared_walls: Array) -> void:
 				_disc(pos, 5, C_ON_CLEAR)
 			_disc(pos, 3, ENEMY_COLORS.get(e[0], C_ENEMY_OTHER))
 	_frame(Rect2i(_ox, _oy, TILE_W, TILE_H), Color(0.3, 0.3, 0.35))
+	_draw_marker(t)
+
+## AD-202: solid cover = grey-brown, interactive kinds = small coloured rects/discs (circles for position-only entries).
+func _draw_env_prop(prop: Dictionary) -> void:
+	var kind := str(prop.get("kind", ""))
+	var colour := C_COVER
+	if kind in BURNABLE_KINDS:
+		colour = C_BURNABLE
+	elif kind == "puddle":
+		colour = C_PUDDLE
+	elif kind == "brazier":
+		colour = C_BRAZIER
+	elif kind in BREAKABLE_KINDS:
+		colour = C_BREAKABLE
+	var interactive := colour != C_COVER
+	if prop.has("rect"):
+		_rect(prop["rect"], colour)
+		if kind in ["cracked_pillar", "broken_wall"]:
+			_frame_world(prop["rect"], C_COVER) # solid cover that Force can break: gold fill, cover-coloured outline
+	elif prop.has("position"):
+		_disc(prop["position"], 2 if interactive else 4, colour)
+
+func _frame_world(r: Array, c: Color) -> void:
+	var x0 := int(r[0]) / SCALE
+	var y0 := int(r[1]) / SCALE
+	var x1 := int(ceil(float(int(r[0]) + int(r[2])) / SCALE))
+	var y1 := int(ceil(float(int(r[1]) + int(r[3])) / SCALE))
+	for x in range(x0, x1):
+		_px(x, y0, c)
+		_px(x, y1 - 1, c)
+	for y in range(y0, y1):
+		_px(x0, y, c)
+		_px(x1 - 1, y, c)
+
+## Shape marker without fonts: a coloured square (colour = shape id) top-left, plus one white tick per room index.
+func _draw_marker(t: Dictionary) -> void:
+	var shape := str(t.get("shape", ""))
+	var colour: Color = SHAPE_COLORS.get(shape, Color(0.3, 0.3, 0.3)) if not shape.is_empty() else Color(0.0, 0.0, 0.0)
+	_img.fill_rect(Rect2i(_ox + 2, _oy + 2, 8, 8), C_BG)
+	_img.fill_rect(Rect2i(_ox + 3, _oy + 3, 6, 6), colour)
+	if shape.is_empty():
+		_frame(Rect2i(_ox + 2, _oy + 2, 8, 8), Color(0.6, 0.1, 0.1))
+	var index := int(t.get("_sheet_index", 0))
+	for i in index + 1:
+		_img.fill_rect(Rect2i(_ox + 12 + i * 3, _oy + 3, 2, 6), C_MARK)
