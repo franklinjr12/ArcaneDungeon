@@ -96,6 +96,15 @@ None updated. The framework is opt-in and no live boss data changed, so every go
 ## Undead Warden v2 (AD-199)
 Live data: `world/data/run_v2.json` `bosses.ruins_warden` (HP unchanged at 1800). Tests: `tests/test_ad_warden_v2.gd`. Bench: `tests/bench/warden_bench.gd` (`godot --headless --path . --script res://tests/bench/warden_bench.gd`), screenshots: `tests/capture_ad_warden_v2.gd`.
 
+**Screenshots** (`docs/rooms/archivist_v2/`, 1280x720, real `cistern_boss` room on live data; regenerate with `xvfb-run -a /usr/local/bin/godot --path . --script res://tests/capture_ad_final_boss_v2.gd -- docs/rooms/archivist_v2`). The room intro text panel ("Something in the Uncatalogued Ruins...") overlaps the top-left pool in the shots where the boss is there (ripple, splash, freeze-stun); the effect is still readable.
+- [phase1_pool_ripple.png](archivist_v2/phase1_pool_ripple.png): the 40-tick emerge ripple at the exit pool (top-left, partly under the intro panel).
+- [phase1_emerge_splash.png](archivist_v2/phase1_emerge_splash.png): the splash ring just after the boss surfaces.
+- [phase1_book_pages.png](archivist_v2/phase1_book_pages.png): pages in flight, one set Burning (Fire hit) beside the boss.
+- [phase2_tide_wave_gap.png](archivist_v2/phase2_tide_wave_gap.png): the tide wave moving after its warning, with the gap marked by chevrons.
+- [phase2_freeze_stun.png](archivist_v2/phase2_freeze_stun.png): frozen pools; the boss surfaces on ice and is stunned (gold ring, no splash).
+- [phase3_electrified_water.png](archivist_v2/phase3_electrified_water.png): storm pulse conducting through every pool (lightning arcs on the water).
+- [phase3_wisp_shield.png](archivist_v2/phase3_wisp_shield.png): shield bubble on the boss with the 2 lantern wisps.
+
 **Bot bench (INFO only, not a pass/fail gate).** 8 seeds (1423, 2718, 3141, 4242, 5150, 6174, 7331, 8086) x builds 0 and 2, scripted bot (perfect aim, always attacking). Every fight was a win through all 3 phases.
 
 | build | fights | median seconds | median dashes | seconds range |
