@@ -160,6 +160,9 @@ func _draw() -> void:
 		var enemy_mod: Color = Art.placeholder_modulate(enemy.kind,Color(str(enemy.tuning.get("color","#ffffff"))),enemy.get("intangible") == true,enemy.get("intangible_warning") == true and tick%6<3)
 		var movement: Vector2 = target.position-last_enemy_at.get(target.id,target.position)
 		last_enemy_at[target.id] = target.position
+		if enemy.get("submerged") == true:
+			# AD-198: a submerged boss is hidden; its emerge telegraph still comes from collect_fx.
+			continue
 		var dissolved: int = int(_fx_memo.get("dead",{}).get(target.id,tick+1))
 		var enemy_anim := _enemy_anim(enemy,mage,tick,movement)
 		if Art.actor_has_tag(enemy.kind,"death_side"):

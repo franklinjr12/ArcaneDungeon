@@ -23,6 +23,31 @@ func valid_position(point: Vector2, radius: float) -> bool:
 			return false
 	return true
 
+## AD-198: anchors are [x,y] arrays or Vector2. Only anchors that fit `radius` count; ties go to the lowest index.
+func pick_anchor(anchors: Array, reference: Vector2, radius: float, farthest: bool, fallback: Vector2) -> Vector2:
+	var best := fallback
+	var best_distance := -INF if farthest else INF
+	var found := false
+	for anchor in anchors:
+		var point := _anchor_point(anchor)
+		if not valid_position(point,radius):
+			continue
+		var distance := point.distance_squared_to(reference)
+		if not found or (distance > best_distance if farthest else distance < best_distance):
+			best = point
+			best_distance = distance
+			found = true
+	return best
+
+## `point` if a body of `radius` fits there, else the nearest fitting anchor, else `fallback` (the caller's current position).
+func nearest_open_point(point: Vector2, anchors: Array, radius: float, fallback: Vector2) -> Vector2:
+	if valid_position(point,radius):
+		return point
+	return pick_anchor(anchors,point,radius,false,fallback)
+
+static func _anchor_point(anchor) -> Vector2:
+	return anchor if anchor is Vector2 else Vector2(float(anchor[0]),float(anchor[1]))
+
 func add_ground_blockers(rects: Array) -> void:
 	for rect in rects:
 		ground_blockers.append(rect)

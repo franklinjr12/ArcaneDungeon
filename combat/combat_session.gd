@@ -156,6 +156,14 @@ func add_hazard(spec: Dictionary) -> int:
 	hazards.append(hazard)
 	return int(hazard["id"])
 
+## AD-198: drops a source's hazards (optionally only the given kinds); the remaining hazards keep their id order.
+func remove_hazards_from(source_id: int, kinds: Array = []) -> void:
+	var kept: Array = []
+	for hazard in hazards:
+		if int(hazard["source_id"]) != source_id or (not kinds.is_empty() and not kinds.has(str(hazard["kind"]))):
+			kept.append(hazard)
+	hazards = kept
+
 ## Ages every hazard by one tick (hazards are stored in id order); applies its status on age 1 and every interval after.
 func _step_hazards() -> void:
 	if hazards.is_empty():

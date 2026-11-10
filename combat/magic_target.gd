@@ -7,6 +7,8 @@ var position := Vector2.ZERO
 var radius := 18.0
 var tags: Array = []
 var removed := false
+## AD-198 sim flag (submerged boss): ignored by every attack query, but alive() is unchanged so room-clear counts still see it.
+var untargetable := false
 var motion := Vector2.ZERO
 ## Sim state (AD-131): knockback velocity in px/s, decayed per tick by SpellRunner; part of the deterministic simulation.
 var impulse := Vector2.ZERO
@@ -28,7 +30,7 @@ func _init(stable_id: int, target_team: int, point: Vector2, hp: float = 100.0, 
 	status = Status.new()
 
 func eligible(attacker_team: int) -> bool:
-	return not removed and health.alive() and team != attacker_team
+	return not removed and not untargetable and health.alive() and team != attacker_team
 
 func alive() -> bool:
 	return not removed and health.alive()
