@@ -29,3 +29,23 @@ Screenshot sheet of all layouts: [cistern_layouts.png](cistern_layouts.png) (poo
 - **Validator:** deep rects count as ground blockers, so markers, spawns and pedestals in deep water fail with the existing codes, and so do exits or spawns cut off by a deep channel (`ROOM_EXIT_UNREACHABLE`, `ROOM_SPAWN_UNREACHABLE`). Rooms without water validate as before.
 - **Run wiring:** `run_flow.gd` appends `layout.walls` to the live session walls and collision walls and calls `set_water` when a room has water.
 - **Art:** water tiles, grates, pipes and pillars are placeholders until the art import row.
+
+# AD-202 Ruins v2 layouts
+
+Rules: [ROOM_RULES.md](ROOM_RULES.md). Before / after sheets: [ruins_rooms_before.png](ruins_rooms_before.png), [ruins_rooms_after.png](ruins_rooms_after.png). The 8 combat rooms and the treasure room in `world/data/run_v2.json` (`ruins_c01`..`ruins_c08`, `ruins_treasure`) each use a different shape. Regenerate the after sheet (headless): `godot --headless --path . --script res://tools/room_layout_sheet.gd -- --stage=ruins docs/rooms/ruins_rooms_after.png` (see the script header for the exact arguments).
+
+| Room | Shape | Obstacles (walls / pits / solid props) | Interactions |
+|---|---|---|---|
+| `ruins_c01` | open_hall | sarcophagus, rubble | crate, brazier, cobweb |
+| `ruins_c02` | pillared_hall | 4 pillars, cracked pillar | cracked pillar (Force), 2 urns |
+| `ruins_c03` | ring_pit | 1 pit, rubble, sarcophagus, column | 2 puddles |
+| `ruins_c04` | corridor_chamber | 2 walls, sarcophagus | broken wall (Force), 2 braziers |
+| `ruins_c05` | cross_hall | 4 walls | crate, cobweb, urn |
+| `ruins_c06` | split_bridges | 3 pits, rubble, sarcophagus, column | brazier, urn |
+| `ruins_c07` | l_bend | 2 walls, column, rubble | cobweb, urn |
+| `ruins_c08` | colonnade | 4 columns | 2 braziers, cobweb |
+| `ruins_treasure` | dais_island | sarcophagus, 2 cracked pillars | 4 braziers, cracked pillars (Force) |
+
+Results (2026-11-10): `demo_smoke.gd --seeds=20 --det-seeds=5` green, no failing seeds; `scripts/validate_godot.py --godot /usr/local/bin/godot` exit 0; `tests/test_ad_room_rules.gd` green. Bot bench numbers are INFO only.
+
+Perf probe digest: `tests/qa/demo_perf_probe.gd` `BASELINE_DIGESTS["ruins_c07"]` was **not** recomputed. `ruins_c07` is not in the default seed's room sequence (`--rooms=ruins_c07` gives "room not in sequence"), and the `cistern_boss` / `ruins_boss` digests already differ in `--verify-digests` runs, so the baselines need a separate refresh by the perf owner. The probe is measurement only and is not part of validate or smoke.

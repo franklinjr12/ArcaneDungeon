@@ -49,3 +49,13 @@ Layout sheet of a stage (pool order, then the optional room):
 Legend additions: near-black = pits; grey-brown = solid cover; orange = burnable (crate, cobweb); cyan = puddle; red = brazier; gold = breakable (urn, cracked wall/pillar, broken wall; Force-breakable cover keeps a cover-coloured outline); top-left square = shape (colour per shape id, black with red outline = no shape yet) followed by one tick per room position in the sheet.
 
 `ruins_rooms_before.png` is the Ruins pool before the AD-202 rework: all 8 combat rooms share one layout and the treasure room has no cover.
+
+## Art needs (for game-art)
+
+Placeholders today, to be replaced (list for the AD-202 PR):
+
+- Cover kinds `pillar`, `cracked_pillar`, `broken_wall`, `column` reuse the `cracked_wall` frames.
+- `rubble` and `sarcophagus` reuse the rubble set or flat placeholders.
+- Pits have no Ruins pit or pit-edge tiles.
+- Bridge edge tiles (ruins_c06 split_bridges) are missing.
+- The approved AD-217 Ruins cover art (intact/cracked pillar, rubble, sarcophagi, broken walls, with collision footprints) still needs wiring into `env_props_v1`. `art/arcane_dungeon/AD-217/` did not exist in this worktree, so it could not be checked or wired here.
