@@ -359,6 +359,11 @@
        "bone_thrall",
        450,
        700
+      ],
+      [
+       "riptide_leaper",
+       450,
+       200
       ]
      ]
     }
@@ -486,6 +491,11 @@
        "cistern_slime",
        420,
        500
+      ],
+      [
+       "riptide_leaper",
+       1050,
+       300
       ]
      ]
     }
@@ -1251,6 +1261,11 @@
        "lantern_wisp",
        820,
        680
+      ],
+      [
+       "riptide_leaper",
+       500,
+       200
       ]
      ]
     }

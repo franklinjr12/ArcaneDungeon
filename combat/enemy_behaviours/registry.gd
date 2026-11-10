@@ -20,6 +20,7 @@ const SCRIPTS := {
 	"lunge": preload("res://combat/enemy_behaviours/lunge.gd"),
 	"charged_pulse": preload("res://combat/enemy_behaviours/charged_pulse.gd"),
 	"conductor": preload("res://combat/enemy_behaviours/conductor.gd"),
+	"pounce": preload("res://combat/enemy_behaviours/pounce.gd"),
 }
 
 static func role(id: String) -> String:
