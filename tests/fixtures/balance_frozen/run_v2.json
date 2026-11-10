@@ -35,6 +35,7 @@
   "edit_policy": "workshop_only",
   "max_active_enemies": 8,
   "reward_choices": 3,
+  "reaction_bias_weight": 0.4,
   "reward_pool": [
     "essence.fire",
     "essence.water",
