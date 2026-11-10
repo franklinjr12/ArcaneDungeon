@@ -1,6 +1,7 @@
 extends RefCounted
 ## AD-197: pounce behaviour (Ghoul stalker swipe, Riptide leaper slam): data, telegraph/recovery timing, locked commit, hit regions, dodge-through.
 const Session = preload("res://combat/combat_session.gd")
+const Art = preload("res://ui/pixel_art_renderer.gd")
 const Registry = preload("res://combat/enemy_behaviours/registry.gd")
 
 const KINDS := {"ghoul_stalker":{"offset":Vector2(100,0),"telegraph":50,"recovery":45,"damage":14.0},
@@ -17,6 +18,7 @@ func run(t) -> void:
 	_leaper_locked(t)
 	_leaper_region(t)
 	_leaper_resumes(t)
+	_telegraph_items(t)
 
 func _spawn(kind: String, offset: Vector2) -> Array:
 	var s = Session.new(136,"empty",0)
@@ -175,3 +177,30 @@ func _dodge_through(t, kind: String) -> void:
 			break
 		s.step()
 	t.check(e.state == "recover" and s.damage_events.is_empty() and s.player.perfect_dodges == 1,"AD-197 %s: dashing through the strike is a perfect dodge (%d events, %d dodges)" % [kind,s.damage_events.size(),s.player.perfect_dodges])
+
+func _windup_items(kind: String, offset: Vector2) -> Array:
+	var pair := _spawn(kind,offset)
+	var s = pair[0]
+	var e = pair[1]
+	_until(s,e,"windup",1)
+	return [s,e,Art.collect_fx(s,s.sim.clock.tick,{}).filter(func(i): return str(i["event"]).begins_with("telegraph."))]
+
+## AD-197: ghoul wedge and leaper landing circle share the one danger tint and are drawn from the locked intent.
+func _telegraph_items(t) -> void:
+	var g := _windup_items("ghoul_stalker",Vector2(100,0))
+	var gi: Array = g[2]
+	var gs: Dictionary = _pounce(g[1])
+	var origin: Vector2 = g[1].target.position
+	t.check(gi.size() == 1 and gi[0]["event"] == "telegraph.arc","AD-197 ghoul windup yields one telegraph.arc item")
+	if gi.size() == 1:
+		t.check(gi[0]["at"].is_equal_approx(origin+Vector2.LEFT*float(gs["lunge_distance"])) or gi[0]["at"].is_equal_approx(origin+Vector2.RIGHT*float(gs["lunge_distance"])),"AD-197 ghoul arc is centred at the lunge end (%s)" % str(gi[0]["at"]))
+		t.check(is_equal_approx(float(gi[0]["uniform"]),120.0) and is_equal_approx(float(gi[0]["arc_degrees"]),120.0),"AD-197 ghoul arc is 120 wide and 120 degrees")
+	t.check(not Art.fx_fallbacks.has("telegraph.arc"),"AD-197 telegraph.arc is not an fx fallback")
+	var l := _windup_items("riptide_leaper",Vector2(200,0))
+	var li: Array = l[2]
+	var landing: Vector2 = l[0].sim.actor.position
+	t.check(li.size() == 1 and li[0]["event"] == "telegraph.circle" and li[0]["at"] == landing and is_equal_approx(float(li[0]["uniform"]),140.0),"AD-197 leaper windup yields a 140 circle on the player")
+	l[0].sim.actor.position = landing+Vector2(0,90)
+	var again: Array = Art.collect_fx(l[0],l[0].sim.clock.tick,{}).filter(func(i): return i["event"] == "telegraph.circle")
+	t.check(again.size() == 1 and again[0]["at"] == landing,"AD-197 leaper circle stays on the locked point after the player moves")
+	t.check(Art.telegraph_colors("telegraph.circle",0.5) == Art.telegraph_colors("telegraph.circle",0.5),"AD-197 both telegraphs use the telegraph.circle tint")

@@ -192,7 +192,7 @@ func _draw() -> void:
 	var fx_list: Array = Art.collect_fx(session,tick,_fx_memo)
 	for fx in fx_list:
 		var fp := ReduceMotion.fx_draw_params(reduced,fx["event"],fx["age"])
-		Art.draw_fx(self,fx["event"],fx["at"]-offset,fp["age"],fx["rotation"],fx["length"],fp["modulate"],fx["slot"],fx.get("uniform",0.0),int(fx.get("window",0)))
+		Art.draw_fx(self,fx["event"],fx["at"]-offset,fp["age"],fx["rotation"],fx["length"],fp["modulate"],fx["slot"],fx.get("uniform",0.0),int(fx.get("window",0)),float(fx.get("arc_degrees",0.0)))
 	_draw_floating_text(offset,tick)
 	_draw_death_banner()
 	if show_debug:
