@@ -1248,6 +1248,12 @@ static func draw_hazards(canvas: CanvasItem, session, offset: Vector2) -> void:
 			canvas.draw_rect(Rect2(rect.position-offset,rect.size),Color(0.45,0.7,1.0,0.7),false,2.0)
 			continue
 		var at: Vector2 = hazard["position"]-offset
+		if kind == "boss_ring":
+			# AD-199: expanding danger ring at a constant colour (no per-tick alpha change, reduce-flash safe).
+			var ring_radius := float(hazard["ring_per_tick"])*float(hazard["age"])
+			if ring_radius > 0.0:
+				canvas.draw_arc(at,ring_radius,0.0,TAU,64,telegraph_colors("telegraph.circle",1.0)["outline"],float(hazard["ring_width"]))
+			continue
 		if kind == "boss_zone":
 			# AD-198: solid warm tint, no per-tick alpha change (reduce-flash safe).
 			canvas.draw_circle(at,float(hazard["radius"]),Color(0.9,0.3,0.15,0.4))

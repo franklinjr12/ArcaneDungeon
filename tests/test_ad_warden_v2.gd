@@ -22,6 +22,14 @@ func run(t) -> void:
 	_range_gates(t)
 	_range_no_rng(t)
 	_validate(t)
+	_leap_stagger(t)
+	_ring_hit(t)
+	_ring_invulnerable(t)
+	_ring_range_and_cover(t)
+	_burst(t)
+	_timed_summon(t)
+	_aftermath_validate(t)
+	_aftermath_trace(t)
 
 func _melee() -> Dictionary:
 	return {"sweep_1":{"shape":"arc","windup_ticks":40,"reach":150,"arc_degrees":150,"damage":14},
@@ -281,3 +289,203 @@ func _validate(t) -> void:
 	var range_issues := BossCombat.validate(negative).filter(func(i): return i["code"] == "BOSS_POOL_RANGE")
 	t.equal(range_issues.map(func(i): return i["path"]),["phases[0].pool[0].max_range","phases[0].pool[1].min_range"],"AD-199 BOSS_POOL_RANGE flags negative and non-numeric ranges")
 	t.equal(Pool.validate(_cfg(pool)),[],"AD-199 valid ranges raise no pool issue")
+
+
+const SHOCK := {"speed":340,"width":36,"max_radius":420,"damage":14}
+## Player offsets from the landing point (the empty arena has walls east of x=890, so these lines are clear).
+const NEAR := Vector2(0,-200)
+const FAR := Vector2(-500,0)
+
+func _leap(extra: Dictionary = {}) -> Dictionary:
+	var move := {"mode":"leap","telegraph_ticks":30,"flight_ticks":10,"radius":60,"damage":0,"shockwave":SHOCK.duplicate(),"burst_delay_ticks":18}
+	var pool := [{"move":move.merged(extra,true),"big":true}]
+	return _cfg(pool,{"stagger":{"ticks":90,"damage_taken_multiplier":1.5},"phases":[{"threshold":1.0,"windup_ticks":40,"pool":pool}]})
+
+## Leap windup opens aimed at the player; the player then stands `offset` from the landing point. Returns [session, boss, landing].
+func _landed(cfg: Dictionary, offset: Vector2) -> Array:
+	var pair := _fresh(cfg)
+	_open(pair[0],pair[1])
+	var landing: Vector2 = pair[1].intent.snapshot()["landing"]
+	pair[0].sim.actor.position = landing+offset
+	for i in 100:
+		pair[1].advance(pair[0])
+		if pair[1].state == "stagger":
+			break
+	pair.append(landing)
+	return pair
+
+## First tick after landing at which a ring of `speed` px/s touches a player `distance` px away (mirrors the contact rule).
+func _contact_tick(session, distance: float) -> int:
+	var per_tick := float(SHOCK["speed"])/float(session.sim.clock.tick_rate)
+	for age in range(1,200):
+		if per_tick*age > float(SHOCK["max_radius"]):
+			return -1
+		if absf(distance-per_tick*age) <= float(SHOCK["width"])*0.5+session.sim.actor.radius:
+			return age
+	return -1
+
+func _leap_stagger(t) -> void:
+	var pair := _landed(_leap(),NEAR)
+	var boss = pair[1]
+	t.check(boss.state == "stagger" and boss.staggered and boss.target.damage_scale == 1.5,"AD-199 a leap with a shockwave still staggers the boss on landing")
+	t.equal(boss.target.position,pair[2],"AD-199 the boss lands on the telegraphed point")
+	t.equal(pair[0].hazards.filter(func(h): return h["kind"] == "boss_ring").size(),1,"AD-199 landing publishes one ring hazard")
+	var plain := _landed(_leap().merged({"phases":[{"threshold":1.0,"windup_ticks":40,"pool":[{"move":{"mode":"leap","telegraph_ticks":30,"flight_ticks":10,"radius":60,"damage":0},"big":true}]}]},true),NEAR)
+	t.check(plain[1]._aftermath.is_empty() and plain[0].hazards.filter(func(h): return h["kind"] == "boss_ring").is_empty(),"AD-199 a leap without shockwave starts no aftermath")
+
+func _ring_hit(t) -> void:
+	var pair := _landed(_leap(),NEAR)
+	var s = pair[0]
+	var expected := _contact_tick(s,NEAR.length())
+	var hits: Array = []
+	for age in range(1,81):
+		var before := _hp(s)
+		pair[1].advance(s)
+		s._step_hazards()
+		if _hp(s) < before:
+			hits.append([age,before-_hp(s)])
+	t.equal(hits,[[expected,Difficulty.scale_f(14.0,"enemy_damage")]],"AD-199 the ring hits a standing player once at the expected tick")
+	t.check(expected > 0 and pair[1].state == "stagger" or pair[1].state == "windup","AD-199 the ring contact happens during the stagger window")
+	t.check(pair[1]._aftermath.is_empty() and s.hazards.filter(func(h): return h["kind"] == "boss_ring").is_empty(),"AD-199 the ring and its hazard end at max radius")
+	var scaled = _fresh(_leap().merged({"elite_damage_multiplier":2.0},true))[1]
+	t.equal(scaled.tuning["phases"][0]["pool"][0]["move"]["shockwave"]["damage"],Difficulty.scale_f(28.0,"enemy_damage"),"AD-199 shockwave damage is scaled like move damage")
+
+func _ring_invulnerable(t) -> void:
+	var pair := _landed(_leap(),NEAR)
+	var s = pair[0]
+	var expected := _contact_tick(s,NEAR.length())
+	s.player.invulnerable_left = 30
+	var lost := 0.0
+	for age in range(1,81):
+		if age == expected+1:
+			s.player.invulnerable_left = 0
+		var before := _hp(s)
+		pair[1].advance(s)
+		lost += before-_hp(s)
+	t.equal(lost,0.0,"AD-199 dash i-frames at contact absorb the ring and it does not hit afterwards")
+
+func _ring_range_and_cover(t) -> void:
+	var far := _landed(_leap(),FAR)
+	var hp := _hp(far[0])
+	for i in 100:
+		far[1].advance(far[0])
+	t.equal(_hp(far[0]),hp,"AD-199 a player beyond max radius is untouched")
+	var cover := _landed(_leap(),NEAR)
+	var s = cover[0]
+	s.world.walls.append(Rect2(cover[2]+Vector2(-50,-100),Vector2(100,20)))
+	var hp_cover := _hp(s)
+	for i in 100:
+		cover[1].advance(s)
+	t.equal(_hp(s),hp_cover,"AD-199 a wall between the landing and the player blocks the ring")
+
+func _burst(t) -> void:
+	var pair := _landed(_leap(),FAR)
+	var s = pair[0]
+	var boss = pair[1]
+	var shots: Array = []
+	for age in range(1,40):
+		var before: int = s.enemy_shots.size()
+		boss.advance(s)
+		if s.enemy_shots.size() != before:
+			shots.append([age,s.enemy_shots.size()-before,boss.state])
+	t.equal(shots,[[18,4,"stagger"]],"AD-199 the burst spawns radial_shots shots burst_delay_ticks after landing, during stagger")
+	var headings: Array = s.enemy_shots.map(func(p): return p["direction"].snapped(Vector2(0.001,0.001)))
+	t.equal(headings,[Vector2(1,0),Vector2(0,1),Vector2(-1,0),Vector2(0,-1)],"AD-199 the burst is a radial ring from the boss")
+	var roar := _landed(_two_leap(),FAR)
+	roar[1].target.health.current = roar[1].target.health.maximum*0.4
+	var count := 0
+	for i in 40:
+		var before: int = roar[0].enemy_shots.size()
+		roar[1].advance(roar[0])
+		count += roar[0].enemy_shots.size()-before
+	t.check(roar[1].state == "roar" or roar[1].phase == 2,"AD-199 the second phase roar starts during the aftermath")
+	t.equal(count,4,"AD-199 a roar does not cancel the burst")
+
+func _two_leap() -> Dictionary:
+	var cfg := _leap()
+	var pool: Array = cfg["phases"][0]["pool"]
+	cfg["phases"] = [{"threshold":1.0,"windup_ticks":40,"pool":pool},{"threshold":0.5,"windup_ticks":40,"transition":{"roar_ticks":30},"pool":pool}]
+	return cfg
+
+func _summon_cfg(timed: Dictionary, second: bool = false) -> Dictionary:
+	var pool := [{"pattern":"radial"},{"pattern":"fan"},{"pattern":"targeted"}]
+	var phases := [{"threshold":1.0,"windup_ticks":40,"pool":pool}]
+	if second:
+		phases.append({"threshold":0.5,"windup_ticks":40,"transition":{"roar_ticks":30},"pool":pool,"timed_summon":timed})
+	else:
+		phases[0]["timed_summon"] = timed
+	return _cfg(pool,{"phases":phases,"recovery_ticks":10})
+
+func _timed_summon(t) -> void:
+	var pair := _fresh(_summon_cfg({"first_ticks":20,"every_ticks":50}),Vector2(-500,0))
+	var s = pair[0]
+	var boss = pair[1]
+	var owned := 0
+	var fired: Array = []
+	for n in range(1,300):
+		boss.advance(s)
+		var now: int = s.summons_owned_by(boss.target.id)
+		if now != owned:
+			fired.append([n,now])
+			owned = now
+	t.equal(fired,[[21,2],[71,3]],"AD-199 timed_summon fires at first_ticks and every_ticks later and respects the cap")
+	var plain := _fresh(_summon_cfg({"first_ticks":20,"every_ticks":50}).merged({"phases":[{"threshold":1.0,"windup_ticks":40,"pool":[{"pattern":"radial"},{"pattern":"fan"},{"pattern":"targeted"}]}]},true),Vector2(-500,0))
+	var with_timed := _fresh(_summon_cfg({"first_ticks":20,"every_ticks":50}),Vector2(-500,0))
+	var picks_a: Array = []
+	var picks_b: Array = []
+	for n in 400:
+		plain[1].advance(plain[0])
+		with_timed[1].advance(with_timed[0])
+		picks_a.append(plain[1]._windup_attack)
+		picks_b.append(with_timed[1]._windup_attack)
+	t.equal(picks_b,picks_a,"AD-199 timed_summon does not change the pattern picks")
+	t.equal(with_timed[1].rng(with_timed[0]).state,plain[1].rng(plain[0]).state,"AD-199 timed_summon leaves the boss rng state unchanged")
+	var late := _fresh(_summon_cfg({"first_ticks":0,"every_ticks":1000},true),Vector2(-500,0))
+	var during_roar := 0
+	var roar_seen := false
+	late[1].target.health.current = late[1].target.health.maximum*0.4
+	for n in 100:
+		late[1].advance(late[0])
+		if late[1].state == "roar":
+			roar_seen = true
+			during_roar += late[0].summons_owned_by(late[1].target.id)
+	t.check(roar_seen and during_roar == 0 and late[0].summons_owned_by(late[1].target.id) == 2,"AD-199 the summon timer does not count during the roar and restarts with the phase")
+
+## Validation wants 3 distinct patterns per pool; runtime tests keep the leap alone in the pool.
+func _padded(cfg: Dictionary) -> Dictionary:
+	cfg["phases"][0]["pool"] = cfg["phases"][0]["pool"]+[{"pattern":"radial"},{"pattern":"fan"},{"pattern":"targeted"}]
+	return cfg
+
+func _aftermath_validate(t) -> void:
+	t.equal(BossCombat.validate(_padded(_leap())),[],"AD-199 a leap with shockwave and burst is valid")
+	var no_speed := _padded(_leap())
+	no_speed["phases"][0]["pool"][0]["move"]["shockwave"].erase("speed")
+	var issues := BossCombat.validate(no_speed)
+	t.check(issues.any(func(i): return i["code"] == "BOSS_WARDEN_PARAM" and i["path"].ends_with("shockwave.speed")),"AD-199 a shockwave without speed is invalid")
+	var zero := _padded(_leap())
+	zero["phases"][0]["pool"][0]["move"]["shockwave"]["width"] = 0
+	t.contains_issue(BossCombat.validate(zero),"BOSS_WARDEN_PARAM","AD-199 a zero-width shockwave is invalid")
+	t.contains_issue(BossCombat.validate(_padded(_leap({"burst_delay_ticks":0}))),"BOSS_WARDEN_PARAM","AD-199 burst_delay_ticks must be >= 1")
+	var no_radial := _padded(_leap())
+	no_radial.erase("radial_shots")
+	t.contains_issue(BossCombat.validate(no_radial),"BOSS_WARDEN_PARAM","AD-199 the burst needs the radial settings")
+	t.equal(BossCombat.validate(_summon_cfg({"first_ticks":0,"every_ticks":1200})),[],"AD-199 a valid timed_summon passes")
+	t.contains_issue(BossCombat.validate(_summon_cfg({"first_ticks":0,"every_ticks":0})),"BOSS_WARDEN_PARAM","AD-199 timed_summon every_ticks must be >= 1")
+	t.contains_issue(BossCombat.validate(_summon_cfg({"first_ticks":-1,"every_ticks":10})),"BOSS_WARDEN_PARAM","AD-199 timed_summon first_ticks must be >= 0")
+	var no_grave := _summon_cfg({"first_ticks":0,"every_ticks":10})
+	no_grave.erase("grave_rise")
+	t.contains_issue(BossCombat.validate(no_grave),"BOSS_WARDEN_PARAM","AD-199 timed_summon needs a grave_rise block")
+
+func _trace(seed: int) -> Array:
+	var s = Session.new(seed,"empty",0)
+	s.defer_clear = true
+	var boss = s.spawn_boss(_leap(),AT)
+	s.sim.actor.position = AT+Vector2(-300,0)
+	var out: Array = []
+	for i in 400:
+		boss.advance(s)
+		out.append([boss.state,boss.target.position,_hp(s),s.enemy_shots.size(),s.hazards.size()])
+	return out
+
+func _aftermath_trace(t) -> void:
+	t.equal(_trace(1981),_trace(1981),"AD-199 identical seeds give an identical leap aftermath trace")

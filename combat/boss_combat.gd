@@ -42,6 +42,9 @@ var _hazards
 var staggered := false
 var _pending_roar := false
 var _arena_water := false
+## AD-199: leap shockwave/burst entries still running (empty unless a leap move has `shockwave`) and ticks since the phase began (timed summon).
+var _aftermath: Array = []
+var _summon_age := 0
 
 ## Pool, movement, hazard, transition and stagger issues for a boss settings dictionary (empty = valid).
 static func validate(settings: Dictionary) -> Array:
@@ -125,6 +128,8 @@ func _init_phases(elite_damage: float, floor_ticks: int) -> void:
 			var move: Dictionary = pooled["move"]
 			if move.has("damage"):
 				move["damage"] = Difficulty.scale_f(float(move["damage"])*elite_damage,"enemy_damage")
+			if move.has("shockwave"):
+				move["shockwave"]["damage"] = Difficulty.scale_f(float(move["shockwave"]["damage"])*elite_damage,"enemy_damage")
 			for key in ["telegraph_ticks","emerge_telegraph_ticks"]:
 				if move.has(key):
 					move[key] = maxi(Difficulty.scale_i(int(move[key]),"telegraph_length"),floor_ticks)
@@ -160,6 +165,9 @@ func advance(session) -> void:
 			_hazards.clear(self,session)
 		if tuning.has("spear_line"):
 			Warden.cancel_warnings(self,session)
+		if not _aftermath.is_empty():
+			_aftermath.clear()
+			session.remove_hazards_from(target.id,["boss_ring"])
 		_state("dead",session.sim.clock.tick)
 		if not death_announced:
 			death_announced = true
@@ -181,6 +189,7 @@ func advance(session) -> void:
 	state_tick += 1
 	if _hazards != null:
 		_hazards.advance(self,session)
+	Warden.advance(self,session)
 	match state:
 		"acquire":
 			_walk(session)
@@ -249,6 +258,7 @@ func _update_phase(hp_fraction: float, tick: int, session) -> void:
 		return
 	transitions.append({"from":"phase%d" % phase,"to":"phase%d" % reached,"tick":tick,"enemy_id":target.id})
 	phase = reached
+	_summon_age = 0
 	_combo_queue.clear()
 	_last_key = ""
 	_current_entry = {}
@@ -459,6 +469,8 @@ func _move_tick(session) -> void:
 		if state_tick >= flight:
 			target.position = _move_to
 			_slam_damage(session)
+			if _move.has("shockwave"):
+				Warden.start_aftermath(self,session,_move)
 			_end_move(session)
 		else:
 			target.position = Lurk.step_free(session,target.position,(_move_to-_move_from)/float(flight),target.radius)
