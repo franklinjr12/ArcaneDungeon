@@ -1685,7 +1685,7 @@ func _debug_shot_entry() -> void:
 	var path := OS.get_environment("AD_UI_SHOT_OUT")
 	if path == "":
 		return
-	if OS.get_environment("AD_UI_SHOT_FULLSCREEN") == "1":
+	if OS.get_environment("AD_UI_SHOT_FULLSCREEN") == "1" and OS.is_debug_build() and OS.get_environment("AD_UI_SHOT_STATE") != "":
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	var delay := OS.get_environment("AD_UI_SHOT_DELAY_MS")
 	await get_tree().create_timer((int(delay) if delay != "" else 800) / 1000.0).timeout
