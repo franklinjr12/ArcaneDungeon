@@ -1589,7 +1589,7 @@ func apply_debug_shot_state(state: String) -> bool:
 	if DEBUG_TIP_BASE.has(state):
 		_debug_pinned_tip = state.trim_prefix("tip_")
 		state = DEBUG_TIP_BASE[state]
-	if not state in ["combat","reward","loadout","workshop","workshop_editor","merchant","pause","pause_controls","summary","summary_win","sigil_desk"]:
+	if not state in ["combat","reward","loadout","workshop","workshop_editor","merchant","pause","pause_controls","pause_settings","pause_settings_audio","pause_settings_video","pause_settings_access","pause_confirm_abandon","summary","summary_win","sigil_desk"]:
 		return false
 	if state == "sigil_desk":
 		if not flow.prelude and not (flow.prelude_available() and flow.enter_prelude()["ok"]):
@@ -1636,6 +1636,14 @@ func apply_debug_shot_state(state: String) -> bool:
 	elif state == "pause_controls":
 		open_pause()
 		pause_menu.open_controls()
+	elif state.begins_with("pause_settings"):
+		open_pause()
+		pause_menu.open_settings()
+		if state != "pause_settings":
+			pause_menu.settings_screen.select_tab(state.trim_prefix("pause_settings_"))
+	elif state == "pause_confirm_abandon":
+		open_pause()
+		pause_menu.request_quit()
 	elif state == "loadout":
 		open_loadout_view()
 	return true

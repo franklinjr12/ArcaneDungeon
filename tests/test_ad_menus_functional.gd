@@ -79,6 +79,9 @@ func run(t) -> void:
 	t.check(_focus(vp) != null and _focus(vp) != pm.resume_button, "AD-205 ui_down moves focus off Resume")
 	_action(vp, "ui_up")
 	t.check(_focus(vp) == pm.resume_button, "AD-205 ui_up returns focus to Resume")
+	t.check(scene.apply_debug_shot_state("pause_settings_video") and pm.settings_screen.visible and pm.settings_screen.current_tab == "video", "AD-205 pause_settings_video debug state shows Settings on video tab")
+	pm.close_settings()
+	pm.resume_button.grab_focus()
 
 	_action(vp, "ui_accept")
 	t.check(not scene.is_paused(), "AD-205 ui_accept on Resume unpauses")
