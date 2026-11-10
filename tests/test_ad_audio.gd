@@ -37,6 +37,7 @@ func run(t) -> void:
 		d.register_stream(id, s)
 	t.check(d.play("sfx.tele.bone_thrall"), "AD-020 telegraph plays")
 	for i in 32:
+		d._process(0.2)
 		d.play("sfx.hit.generic")
 		d.play("sfx.cast.fire")
 		d.play("ui.hover")
@@ -44,11 +45,13 @@ func run(t) -> void:
 	var tele = d.voices.filter(func(v): return v["cue_id"] == "sfx.tele.bone_thrall")
 	t.equal(tele.size(), 1, "AD-020 telegraph survives 32-voice flood")
 	var hits = d.voices.filter(func(v): return v["cue_id"] == "sfx.hit.generic")
-	t.equal(hits.size(), 6, "AD-020 per-cue max voices")
+	t.equal(hits.size(), 2, "AD-020 per-cue max voices")
 	# Telegraphs fill their cap; a further telegraph is dropped, not stealing.
 	for i in 6:
+		d._process(0.2)
 		d.play("sfx.boss.tele_a")
-	t.equal(d.voices.filter(func(v): return v["cue_id"] == "sfx.boss.tele_a").size(), 4, "AD-020 telegraph cap")
+	t.equal(d.voices.filter(func(v): return v["cue_id"] == "sfx.boss.tele_a").size(), 2, "AD-020 telegraph cap")
+	d._process(0.2)
 	t.check(not d.play("sfx.boss.tele_a"), "AD-020 telegraph never stolen")
 	# Invalid table is a no-op.
 	d.load_table({})

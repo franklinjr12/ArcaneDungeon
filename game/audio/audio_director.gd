@@ -9,6 +9,7 @@ const CUES_FILE := "res://game/audio/audio_cues_v1.json"
 const DUCK_DB := -6.0
 const DUCK_BUSES := ["Ambience", "SFXBed", "Music"]
 const BED_BUS := "SFXBed"
+const ENEMY_BUS := "EnemySFX"
 const DUCK_MIN_SEC := 0.25
 
 signal cue_played(cue_id: String, pos, played: bool)
@@ -16,6 +17,9 @@ signal cue_played(cue_id: String, pos, played: bool)
 var table: Dictionary = {}
 var voices: Array = []
 var _warned: Dictionary = {}
+var _audio_time := 0.0
+var _last_played: Dictionary = {}
+var _rng := RandomNumberGenerator.new()
 var _overrides: Dictionary = {}
 var _serial := 0
 var _duck_left := 0.0
@@ -29,6 +33,7 @@ var _music_from_out := 0.0
 var _music_players: Dictionary = {}
 
 func _init() -> void:
+	_rng.randomize()
 	var f := FileAccess.open(CUES_FILE, FileAccess.READ)
 	if f == null:
 		return
@@ -40,6 +45,14 @@ func _ready() -> void:
 	var svc = get_node_or_null("/root/SaveService")
 	if svc != null and svc.get("settings") != null:
 		svc.settings.apply_audio()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		var svc = get_node_or_null("/root/SaveService")
+		if svc != null and svc.get("settings") != null and svc.settings.mute_unfocused:
+			AudioServer.set_bus_mute(0, true)
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
+		AudioServer.set_bus_mute(0, false)
 
 func load_table(data: Dictionary) -> void:
 	table = data if typeof(data.get("cues")) == TYPE_DICTIONARY else {}
@@ -125,6 +138,9 @@ func _play(cue_id: String, pos) -> bool:
 		stream = load(path) as AudioStream if path != "" else null
 	if stream == null:
 		return false
+	var limit := float(cue.get("rate_limit_ms", 0.0)) / 1000.0
+	if limit > 0.0 and _last_played.has(cue_id) and _audio_time - float(_last_played[cue_id]) < limit:
+		return false
 	var prio := int(cue.get("priority", 1))
 	var unstealable := int(table.get("unstealable_priority", 3))
 	var same: Array = voices.filter(func(v): return v["cue_id"] == cue_id)
@@ -135,11 +151,18 @@ func _play(cue_id: String, pos) -> bool:
 		if not _steal(voices, prio, unstealable):
 			return false
 	_serial += 1
-	var voice := {"cue_id": cue_id, "priority": prio, "serial": _serial, "player": null}
+	_last_played[cue_id] = _audio_time
+	var jitter := float(cue.get("pitch_jitter", 0.0))
+	var volume_db := float(cue.get("volume_db", 0.0))
+	var pitch_scale := 1.0 + _rng.randf_range(-jitter, jitter)
+	var voice := {"cue_id": cue_id, "priority": prio, "serial": _serial, "player": null,
+		"volume_db": volume_db, "pitch_scale": pitch_scale}
 	if is_inside_tree() and DisplayServer.get_name() != "headless":
 		var p: Node = AudioStreamPlayer2D.new() if pos is Vector2 else AudioStreamPlayer.new()
 		p.stream = stream
 		p.bus = route_bus(cue)
+		p.volume_db = volume_db
+		p.pitch_scale = pitch_scale
 		if pos is Vector2:
 			p.position = pos
 		p.finished.connect(release_voice.bind(_serial))
@@ -156,6 +179,8 @@ func is_telegraph(cue: Dictionary) -> bool:
 
 ## Non-telegraph SFX go through the SFXBed sub-bus (sends to SFX) so they can be ducked.
 func route_bus(cue: Dictionary) -> String:
+	if bool(cue.get("enemy", false)) and AudioServer.get_bus_index(ENEMY_BUS) >= 0:
+		return ENEMY_BUS
 	var bus := str(cue.get("bus", "SFX"))
 	if bus == "SFX" and not is_telegraph(cue) and AudioServer.get_bus_index(BED_BUS) >= 0:
 		return BED_BUS
@@ -246,6 +271,7 @@ func _music_player(slot: String, ctx: String, gain: float) -> void:
 	p.volume_db = linear_to_db(maxf(gain, 0.0001))
 
 func _process(delta: float) -> void:
+	_audio_time += delta
 	music_step(delta)
 	if _duck_left <= 0.0:
 		return

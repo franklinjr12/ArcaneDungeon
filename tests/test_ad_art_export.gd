@@ -368,6 +368,8 @@ func _actors(t) -> void:
 	var kinds: Array = tuning["enemies"].keys() if tuning is Dictionary else []
 	kinds.append("drowned_archivist")
 	for kind in kinds:
+		if ART.PLACEHOLDER_KIND.has(kind):
+			continue
 		t.check(actors.has(kind), "AD-154 actor exists: " + kind)
 		for n in ENEMY_TAGS:
 			t.check(actors.has(kind) and actors[kind]["tags"].has(n), "AD-154 required tag %s/%s" % [kind, n])
@@ -385,7 +387,7 @@ func _windup_ok(t, kind: String, ticks: int, label: String) -> void:
 func _renderer(t) -> void:
 	for k in REAL_KINDS:
 		t.equal(ART.resolve_kind(k), k, "AD-154 resolve_kind own entry: " + k)
-	t.check(ART.PLACEHOLDER_KIND.is_empty(), "AD-154 no placeholder kinds left")
+	t.equal(ART.PLACEHOLDER_KIND.keys(), ["ghoul_stalker", "riptide_leaper"], "AD-197 only the pounce enemies borrow sprites")
 	var spirit := ART.placeholder_modulate("wailing_spirit", Color.RED, true, false)
 	t.check(is_equal_approx(spirit.a, 0.4), "AD-154 intangible alpha kept")
 	t.check(spirit.r == 1.0 and spirit.g == 1.0 and spirit.b == 1.0, "AD-154 real art has no tint")

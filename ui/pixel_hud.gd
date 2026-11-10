@@ -15,6 +15,8 @@ const ANCHOR_LEFT := ["ico_hp","bar_hp","txt_hp","ico_mana","bar_mp","txt_mp","s
 const ANCHOR_TOP := ["boss_","bar_boss"]
 const ANCHOR_RIGHT := ["plate_stage","txt_stage","ico_coin","txt_coins","artifact_"]
 const SHADOW := Color("#0b1320")
+const FIRST_ENCOUNTER_TICKS := 240 # presentation only
+const EnemyAffinity = preload("res://ui/enemy_affinity.gd")
 var flow
 var session
 var canvas
@@ -154,7 +156,9 @@ func _draw() -> void:
 	var running = _run_flow()
 	if running != null and running.run != null:
 		_draw_run_info(running,sc)
+		_draw_first_encounters(running,sc)
 	_draw_slots(live,sc)
+	_draw_resonance(live,sc)
 
 # --- layout helpers: each group anchors to its own screen edge/corner ---
 func _widget(id: String) -> Dictionary:
@@ -274,6 +278,95 @@ func _draw_run_info(running, sc: float) -> void:
 	var held := artifact_ids()
 	for i in held.size():
 		_slot("artifact_%d" % i,"ready",Art.artifact_icon(str(held[i])),sc)
+
+## Newest-first reaction popups ("SHATTER +12") that are still live; alpha fades linearly to 0 at life_ticks.
+static func resonance_views(popups: Array, tick: int, life_ticks: int) -> Array:
+	var out: Array = []
+	for i in range(popups.size()-1,-1,-1):
+		var age: int = maxi(0,tick-int(popups[i]["tick"]))
+		if age >= life_ticks:
+			continue
+		out.append({"text":TranslationServer.translate("hud.resonance_popup") % [TranslationServer.translate("hud.resonance."+str(popups[i]["id"])),int(popups[i]["amount"])],
+			"alpha":1.0-float(age)/float(life_ticks)})
+		if out.size() >= 3:
+			break
+	return out
+
+## Render-only: fading lines stacked downward to the right of the MP bar.
+func _draw_resonance(live, sc: float) -> void:
+	var life: int = int(live.sim.settings["reactions"].get("resonance",{}).get("popup_ticks",60))
+	var views := resonance_views(live.sim.resonance_popups,live.sim.clock.tick,life)
+	var bar := _rect("bar_mp",sc)
+	var value_box := _rect("txt_mp",sc)
+	if views.is_empty() or bar.size == Vector2.ZERO:
+		return
+	var fs := _font_size(sc)
+	var font := ThemeDB.fallback_font
+	var line_h := font.get_height(fs)
+	var y := bar.position.y+(bar.size.y-line_h)*0.5+font.get_ascent(fs)
+	for v in views:
+		var base := Vector2(maxf(bar.end.x,value_box.end.x)+8.0*sc,y)
+		var shadow := SHADOW
+		shadow.a = float(v["alpha"])
+		var col := Color("#ffdf95")
+		col.a = float(v["alpha"])
+		draw_string(font,base+Vector2(1,1),str(v["text"]),HORIZONTAL_ALIGNMENT_LEFT,-1,fs,shadow)
+		draw_string(font,base,str(v["text"]),HORIZONTAL_ALIGNMENT_LEFT,-1,fs,col)
+		y += line_h
+
+## Newest-first first-sighting popups (name + weak/resist channels) still live; kinds without affinity data are skipped.
+static func first_encounter_views(entries: Array, now: int, life_ticks: int) -> Array:
+	var out: Array = []
+	for i in range(entries.size()-1,-1,-1):
+		var age: int = maxi(0,now-int(entries[i]["tick"]))
+		if age >= life_ticks:
+			continue
+		var kind := str(entries[i]["kind"])
+		var aff := EnemyAffinity.of(kind)
+		if aff["weak"].is_empty() and aff["resist"].is_empty():
+			continue
+		out.append({"name":TranslationServer.translate("compendium.enemy."+kind),"weak":aff["weak"],"resist":aff["resist"],
+			"alpha":1.0-float(age)/float(life_ticks)})
+		if out.size() >= 3:
+			break
+	return out
+
+## Render-only: centred rows under the boss bar: name, weak icons, resist icons.
+func _draw_first_encounters(running, sc: float) -> void:
+	var views := first_encounter_views(running.first_encounters,running.ticks_elapsed,FIRST_ENCOUNTER_TICKS)
+	if views.is_empty():
+		return
+	var fs := _font_size(sc)
+	var font := ThemeDB.fallback_font
+	var icon := 12.0*sc
+	var gap := 6.0*sc
+	var y := _rect("bar_boss",sc).end.y+8.0*sc
+	for v in views:
+		var parts: Array = [[str(v["name"]),[]]]
+		if not v["weak"].is_empty():
+			parts.append([TranslationServer.translate("compendium.weak"),v["weak"]])
+		if not v["resist"].is_empty():
+			parts.append([TranslationServer.translate("compendium.resist"),v["resist"]])
+		var width := 0.0
+		for part in parts:
+			width += font.get_string_size(part[0],HORIZONTAL_ALIGNMENT_LEFT,-1,fs).x+icon*part[1].size()+gap
+		width -= gap
+		var x := (size.x-width)*0.5
+		var base_y := y+(16.0*sc-font.get_height(fs))*0.5+font.get_ascent(fs)
+		var shadow := SHADOW
+		shadow.a = float(v["alpha"])
+		var col := Color("#ffdf95")
+		col.a = float(v["alpha"])
+		for part in parts:
+			var text: String = part[0]
+			draw_string(font,Vector2(x+1,base_y+1),text,HORIZONTAL_ALIGNMENT_LEFT,-1,fs,shadow)
+			draw_string(font,Vector2(x,base_y),text,HORIZONTAL_ALIGNMENT_LEFT,-1,fs,col)
+			x += font.get_string_size(text,HORIZONTAL_ALIGNMENT_LEFT,-1,fs).x
+			for channel in part[1]:
+				draw_texture_rect(EnemyAffinity.icon(str(channel)),Rect2(x,y+2.0*sc,icon,icon),false,Color(1,1,1,float(v["alpha"])))
+				x += icon
+			x += gap
+		y += 16.0*sc
 
 func _draw_slots(live, sc: float) -> void:
 	var white := SkinA.label_color("normal")

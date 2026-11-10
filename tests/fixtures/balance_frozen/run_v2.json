@@ -35,6 +35,8 @@
   "edit_policy": "workshop_only",
   "max_active_enemies": 8,
   "reward_choices": 3,
+  "reaction_bias_weight": 0.4,
+  "resonant_clear": {"min_reactions": 3, "rarity_order": ["common", "uncommon", "rare"], "bonus_coins": 25, "seed_salt": 61681},
   "reward_pool": [
     "essence.fire",
     "essence.water",

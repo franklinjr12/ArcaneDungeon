@@ -14,7 +14,7 @@ const ICONS = ["fire","water","lightning","projectile","burst","orb","homing","s
 	"health","mana","rune","coin","dodge","wet","burning","charged","damage","door","shop","book","staff","shield"]
 const EFFECT_ROWS = ["fire","water","lightning","orb","enemy","arc","impact","dodge"]
 ## AD-137 placeholder art: new Stage 1 kinds borrow an existing sprite until the art import row (tinted by tuning color).
-const PLACEHOLDER_KIND := {}
+const PLACEHOLDER_KIND := {"ghoul_stalker":"bone_thrall","riptide_leaper":"cistern_slime"}
 const F = {"mage":MAGE,"bone_thrall":PURSUER,"fallen_adept":RANGED,"grave_hound":FLANKER,"undead_warden":BOSS,"dummy":DUMMY}
 
 # AD-030: debug-only swap to art/export sprites (F6). Default stays assets/pixel.
@@ -609,7 +609,10 @@ static func telegraph_colors(event: String, progress: float) -> Dictionary:
 ## Draws region*scale around the pivot. uniform > 0 scales both axes to that world diameter (telegraph circle). length > 0 stretches only along x (lanes, lines, arcs).
 ## Status events also draw the AD-033 icon at the overlay's symbol slice (slot offsets stacked icons).
 static func draw_fx(canvas: CanvasItem, event: String, center: Vector2, age_ticks: int, rotation: float = 0.0,
-		length: float = 0.0, modulate: Color = Color.WHITE, slot: int = 0, uniform: float = 0.0, window: int = 0) -> void:
+		length: float = 0.0, modulate: Color = Color.WHITE, slot: int = 0, uniform: float = 0.0, window: int = 0, arc_degrees: float = 0.0) -> void:
+	if event == "telegraph.arc":
+		_draw_telegraph_arc(canvas, center, rotation, uniform / 2.0, arc_degrees, age_ticks, modulate, window)
+		return
 	var fr := fx_frame(event, age_ticks)
 	if fr.is_empty():
 		if not fx_fallbacks.has(event):
@@ -645,6 +648,23 @@ static func draw_fx(canvas: CanvasItem, event: String, center: Vector2, age_tick
 	if event.begins_with("status."):
 		_status_icon(canvas, event, fr, slot, modulate)
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+## AD-197: wedge telegraph (no art yet), same danger tint as telegraph.circle. center is the arc centre, radius the swipe radius.
+static func _draw_telegraph_arc(canvas: CanvasItem, center: Vector2, rotation: float, radius: float, arc_degrees: float,
+		age_ticks: int, modulate: Color, window: int) -> void:
+	var progress := float(age_ticks) / float(maxi(1, window)) if window > 0 else 0.0
+	var cols := telegraph_colors("telegraph.circle", progress)
+	var fill: Color = cols["fill"] * modulate
+	var line: Color = cols["outline"] * modulate
+	last_telegraph_draw = {"event": "telegraph.arc", "fill": fill, "outline": line, "progress": progress}
+	var half := deg_to_rad(arc_degrees) * 0.5
+	var pts := PackedVector2Array([center])
+	for i in 25:
+		pts.append(center + Vector2.from_angle(rotation - half + 2.0 * half * float(i) / 24.0) * radius)
+	canvas.draw_colored_polygon(pts, fill)
+	canvas.draw_arc(center, radius, rotation - half, rotation + half, 24, line, 2.0)
+	canvas.draw_line(center, center + Vector2.from_angle(rotation - half) * radius, line, 2.0)
+	canvas.draw_line(center, center + Vector2.from_angle(rotation + half) * radius, line, 2.0)
 
 ## AD-045: the icon's bottom-centre sits on the 1x1 'symbol' slice (overlay-local art px).
 static func _status_icon(canvas: CanvasItem, event: String, fr: Dictionary, slot: int, modulate: Color) -> void:
@@ -962,7 +982,18 @@ static func _collect_feedback(session, tick: int, memo: Dictionary, out: Array) 
 		var to_mage: Vector2 = mage - target.position
 		var item := {"at": target.position, "age": int(enemy.state_tick), "rotation": to_mage.angle(), "length": 0.0, "slot": 0,
 			"window": int(enemy.tuning["telegraph_ticks"])}
-		if enemy.kind == "undead_warden":
+		var shape := str(intent.get("telegraph_shape", ""))
+		if shape == "arc":
+			item["event"] = "telegraph.arc"
+			item["at"] = intent["arc_center"]
+			item["rotation"] = Vector2(intent["direction"]).angle()
+			item["uniform"] = 2.0 * float(intent["arc_radius"])
+			item["arc_degrees"] = float(intent["arc_degrees"])
+		elif shape == "slam":
+			item["event"] = "telegraph.circle"
+			item["at"] = intent["landing"]
+			item["uniform"] = 2.0 * float(intent["range"])
+		elif enemy.kind == "undead_warden":
 			if intent["kind"] == "radial":
 				item["event"] = "telegraph.circle"
 				item["uniform"] = 2.0 * float(intent["range"])
@@ -1031,8 +1062,8 @@ static func damage_glyph_width(symbol: String, text: String) -> float:
 	var last: Dictionary = layout[-1]
 	return (float(last["x"]) + (last["region"] as Rect2).size.x) * float(_map.get("scale", 2))
 
-## Draws the layout left to right, top-aligned at `at`, white constant, nearest. Returns the width in world units.
-static func draw_damage_number(canvas: CanvasItem, symbol: String, text: String, at: Vector2) -> float:
+## Draws the layout left to right, top-aligned at `at`, tinted by `color` (default white), nearest. Returns the width in world units.
+static func draw_damage_number(canvas: CanvasItem, symbol: String, text: String, at: Vector2, color: Color = Color.WHITE) -> float:
 	var layout := damage_glyph_layout(symbol, text)
 	if layout.is_empty():
 		return 0.0
@@ -1041,7 +1072,7 @@ static func draw_damage_number(canvas: CanvasItem, symbol: String, text: String,
 	var right := 0.0
 	for item in layout:
 		var r: Rect2 = item["region"]
-		canvas.draw_texture_rect_region(tex, Rect2(at + Vector2(float(item["x"]) * sc, 0.0), r.size * sc), r, Color.WHITE)
+		canvas.draw_texture_rect_region(tex, Rect2(at + Vector2(float(item["x"]) * sc, 0.0), r.size * sc), r, color)
 		right = maxf(right, (float(item["x"]) + r.size.x) * sc)
 	return right
 

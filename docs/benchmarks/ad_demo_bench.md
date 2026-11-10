@@ -977,3 +977,24 @@ Seeds 20261022-20261029 (indices 0..7), 3 builds (24 runs). No `AD_DEMO_BENCH_PA
 ### Suites
 
 `python3 scripts/validate_godot.py --godot /usr/local/bin/godot` (under the host lock): exit code 0. The negative failure probe prints `1 failed` by design and counts as PASS.
+
+## AD-193 mana pressure + resonance
+
+Cadence assumption: casting is press-driven, so the fastest sustained clicking is modelled as one cast attempt every 8 ticks (7.5 casts/s at 60 ticks/s). Basic Bolt (3 mana) costs 0.375/tick and sustains forever; Fire shot (7 mana) costs 0.875/tick against 0.6 regen.
+
+| file | key | old | new | reason |
+|---|---|---|---|---|
+| magic/data/magic_balance_v1.json | combat.regen_mana_per_tick | 1.8 | 0.6 | spam of one 2-rune spell runs dry in ~7 s |
+| magic/data/magic_balance_v1.json | combat.arc_damage_scale | 0.65 | 0.975 | conduct arc x1.5 |
+| magic/data/magic_balance_v1.json | reactions.rules[wet_cold_freeze].bonus_damage_scale | 0 | 0.5 | reactions beat their parts |
+| magic/data/magic_balance_v1.json | reactions.rules[fire_thaw_steam].bonus_damage_scale | 0 | 0.5 | same |
+| magic/data/magic_balance_v1.json | reactions.rules[frozen_force_shatter].bonus_damage_scale | 1.5 | 1.5 | already at x1.5 |
+| magic/data/magic_balance_v1.json | reactions.rules[water_extinguish] | (absent) | new rule, bonus 0.5 | Fire/Water extinguish is a reaction |
+| magic/data/magic_balance_v1.json | reactions.resonance | (absent) | popup_ticks 60, mana_refund 12 x5 | refund + HUD popup; chill_freeze deliberately absent |
+| tests/fixtures/balance_frozen/magic_balance_v1.json | reactions.resonance, water_extinguish | (absent) | inert (refund 0, channel "inert") | structure sync only; goldens unchanged |
+
+Measured (tests/test_ad_resonance.gd, 1800 ticks, 3 dummies, seed 193):
+
+- Fire spam: first INSUFFICIENT_MANA at tick 416 (6.9 s); steady accept rate 0.685.
+- Mono 30 s damage: fire 2364, water 1764, lightning 1617, force 1390, cold 1344.
+- Alternation cold+fire: 2868 (1.21x best mono, threshold 1.15x).

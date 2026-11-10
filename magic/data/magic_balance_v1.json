@@ -92,9 +92,10 @@
     "armor_scale": 100,
     "arc_radius": 220,
     "water_conduct_radius": 360,
-    "arc_damage_scale": 0.65,
-    "regen_mana_per_tick": 1.8,
+    "arc_damage_scale": 0.975,
+    "regen_mana_per_tick": 0.6,
     "player_max_mana": 120,
+    "perfect_dodge_mana_refund": 15,
     "base_target_hp": 120,
     "player_team": 1,
     "enemy_team": 2,
@@ -120,7 +121,7 @@
         "apply": [
           "frozen"
         ],
-        "bonus_damage_scale": 0,
+        "bonus_damage_scale": 0.5,
         "suppress_channel_apply": true
       },
       {
@@ -150,14 +151,37 @@
           "frozen"
         ],
         "apply": [],
-        "bonus_damage_scale": 0,
+        "bonus_damage_scale": 0.5,
         "suppress_channel_apply": true,
         "area_apply": {
           "status": "blinded",
           "radius": 120
         }
+      },
+      {
+        "id": "water_extinguish",
+        "channel": "water",
+        "requires_any": [
+          "burning"
+        ],
+        "remove": [
+          "burning"
+        ],
+        "apply": [],
+        "bonus_damage_scale": 0.5,
+        "suppress_channel_apply": false
       }
-    ]
+    ],
+    "resonance": {
+      "popup_ticks": 60,
+      "mana_refund": {
+        "wet_lightning_arc": 12,
+        "wet_cold_freeze": 12,
+        "frozen_force_shatter": 12,
+        "fire_thaw_steam": 12,
+        "water_extinguish": 12
+      }
+    }
   },
   "sandbox": {
     "width": 920,

@@ -5,6 +5,7 @@ const VisualTheme = preload("res://ui/pixel_theme.gd")
 const SkinA = preload("res://ui/skin_a.gd")
 const SettingsScreen = preload("res://ui/settings_screen.gd")
 const FeedbackSnapshot = preload("res://ui/feedback_snapshot.gd")
+const OsShell = preload("res://ui/os_shell.gd")
 const TEXT := {
 	"title": "pause.title",
 	"resume": "pause.resume",
@@ -197,8 +198,7 @@ func _link_focus() -> void:
 
 func open_reports_folder() -> void:
 	FeedbackSnapshot.ensure_reports_dir()
-	if DisplayServer.get_name() != "headless":
-		OS.shell_open(FeedbackSnapshot.reports_dir_path())
+	OsShell.open_folder(FeedbackSnapshot.reports_dir_path())
 
 func _button(parent: Control, node_name: String, text: String, director, action: Callable) -> Button:
 	var b := Button.new()
@@ -231,6 +231,10 @@ func request_save_quit() -> void:
 ## AD-146: Save & Quit is offered only where the run may be saved (the workshop).
 func set_save_available(on: bool) -> void:
 	save_quit_button.visible = on
+	_link_focus()
+
+func set_loadout_available(on: bool) -> void:
+	loadout_button.visible = on
 	_link_focus()
 
 func _ask(action: String, prompt: String) -> void:
@@ -269,6 +273,7 @@ func open_settings() -> void:
 		add_child(settings_screen)
 		settings_screen.back_requested.connect(close_settings)
 	_opened_from_controls = false
+	settings_screen.select_tab("audio")
 	settings_screen.visible = true
 	panel.visible = false
 
@@ -296,6 +301,8 @@ func is_controls_open() -> bool:
 
 func handle_cancel() -> void:
 	if is_settings_open():
+		if settings_screen.close_open_popup():
+			return
 		close_settings()
 	elif is_confirm_open():
 		cancel_confirm()

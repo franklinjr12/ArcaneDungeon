@@ -36,10 +36,10 @@ func run(t) -> void:
 			inside = inside and Rect2(Vector2.ZERO, vp).encloses(r)
 		t.equal(visible_cells, mini(layout_cells, cats[tab].size()), "AD-153 compendium %s visible cells" % tab)
 		t.check(inside, "AD-153 compendium %s cells inside the viewport" % tab)
-	t.equal(screen.page_count("enemies"), 2, "AD-153 compendium enemies page (14 cells, 15 entries)")
+	t.equal(screen.page_count("enemies"), 2, "AD-153 compendium enemies page (14 cells, 17 entries)")
 	screen.select_tab("enemies")
 	screen._page_step("enemies", 1)
-	t.equal(screen.entries("enemies").size(), 1, "AD-153 compendium enemies page 2 has the remainder")
+	t.equal(screen.entries("enemies").size(), 3, "AD-153 compendium enemies page 2 has the remainder")
 	screen._page_step("enemies", -1)
 	var ev := InputEventKey.new()
 	ev.pressed = true

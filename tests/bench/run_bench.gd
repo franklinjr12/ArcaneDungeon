@@ -558,6 +558,7 @@ func _fight(flow, rate: int, bot: Dictionary) -> Dictionary:
 	var slots: int = session.sim.loadout.slots.size()
 	var hp_start: float = session.sim.actor.health.current
 	var received_start: float = session.damage_received
+	var dashes_start: int = session.player.dashes
 	var cheapest: float = _cheapest(session, slots)
 	var cap: int = ROOM_CAP_SECONDS * rate
 	var ticks := 0
@@ -620,7 +621,7 @@ func _fight(flow, rate: int, bot: Dictionary) -> Dictionary:
 	var waves: int = flow.encounter.launched.size() if flow.encounter != null else 0
 	var denom: float = maxf(0.001, seconds)
 	# hits = (enemy, tick) pairs where an enemy lost HP; mana deltas are net per tick (cost and regen in one tick merge).
-	return {"outcome": label, "ticks": ticks, "sim_seconds": _r(seconds),
+	return {"outcome": label, "ticks": ticks, "sim_seconds": _r(seconds), "dashes": session.player.dashes - dashes_start,
 		"hp_lost": _r(hp_start - session.sim.actor.health.current), "mana_starved_ticks": starved, "casts": casts,
 		"fight_seconds": _r(seconds), "waves_spawned": waves, "enemies_spawned": obs["seen"].size(), "total_enemy_hp": _r(total_hp),
 		"damage_dealt": _r(obs["dealt"]), "player_dps": _r(obs["dealt"] / denom), "mana_spent": _r(obs["spent"]),
@@ -882,6 +883,8 @@ func _diag_sanity(runs: Array) -> Array:
 	var no_sight: Array = []
 	var casts := 0
 	var ticks := 0
+	var dashes := 0
+	var rooms_fought := 0
 	for r in runs:
 		var fought: Array = _fought([r])
 		var r_ticks := 0
@@ -894,6 +897,8 @@ func _diag_sanity(runs: Array) -> Array:
 			r_idle += rec["idle_ticks"]
 			r_sight += rec["no_sight_ticks"]
 			r_hits += rec["hits"]
+			dashes += int(rec.get("dashes", 0))
+			rooms_fought += 1
 			for key in rec["casts"]:
 				r_casts += int(rec["casts"][key])
 		hit.append(float(r_hits) / maxf(1.0, float(r_casts)))
@@ -905,9 +910,9 @@ func _diag_sanity(runs: Array) -> Array:
 	if not runs.is_empty() and not runs[0]["rooms"].is_empty():
 		rate = maxf(1.0, float(_tick_rate_of(runs[0])))
 	return ["Scripted player sanity (hits = enemy-lost-HP events per tick, so a pierce/burst can exceed 1 per cast):", "",
-		"| hit rate median | idle % median (foe alive, no cast, no dash, mana ok) | no-sight % median | casts per combat minute |", "|---|---|---|---|",
-		"| %s | %s | %s | %s |" % [_stats(hit)["median"], _stats(idle)["median"], _stats(no_sight)["median"],
-		_r(float(casts) / maxf(0.001, float(ticks) / rate / 60.0))], ""]
+		"| hit rate median | idle % median (foe alive, no cast, no dash, mana ok) | no-sight % median | casts per combat minute | dashes per fought room (mean) |", "|---|---|---|---|---|",
+		"| %s | %s | %s | %s | %s |" % [_stats(hit)["median"], _stats(idle)["median"], _stats(no_sight)["median"],
+		_r(float(casts) / maxf(0.001, float(ticks) / rate / 60.0)), _r(float(dashes) / maxf(1.0, float(rooms_fought)))], ""]
 
 func _tick_rate_of(run: Dictionary) -> int:
 	return int(run.get("tick_rate", 60))

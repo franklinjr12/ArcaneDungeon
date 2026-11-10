@@ -33,6 +33,9 @@ UNMAPPED_SUFFIXES = ('.wav', '.ogg', '.mp3', '.flac', '.m4a', '.opus', '.aiff')
 GROUP_ORDER = ('music', 'ambience', 'sfx')
 GROUP_TITLE = {'music': 'Music', 'ambience': 'Ambience', 'sfx': 'SFX'}
 MISSING = ('placeholder', 'silent')
+# Hand-written block kept across regeneration (AD-191 cue tuning notes).
+CUE_CHANGES_START = '<!-- cue-changes:start -->'
+CUE_CHANGES_END = '<!-- cue-changes:end -->'
 
 
 def rel(res):
@@ -491,9 +494,16 @@ def main(argv=None):
     for r, hint in unmapped:
         print('unmapped %s%s' % (r, ' (%s)' % hint if hint else ''))
 
+    text = render_report(entries, unmapped)
+    if output.exists():
+        old = output.read_text(encoding='utf-8')
+        i = old.find(CUE_CHANGES_START)
+        j = old.find(CUE_CHANGES_END, i) if i >= 0 else -1
+        if j >= 0:
+            text += '\n' + old[i:j + len(CUE_CHANGES_END)] + '\n'
     output.parent.mkdir(parents=True, exist_ok=True)
     with open(output, 'w', encoding='utf-8', newline='\n') as f:
-        f.write(render_report(entries, unmapped))
+        f.write(text)
     print('wrote %s' % output)
     return 1 if unmapped or any(failed(e) for e in entries) else 0
 

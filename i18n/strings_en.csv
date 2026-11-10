@@ -283,6 +283,12 @@ hud.key.space,SPACE
 hud.value,%d/%d
 hud.stage,STAGE %d   ROOM %d
 hud.dash_charges,X%d
+hud.resonance_popup,%s +%d
+hud.resonance.wet_lightning_arc,CONDUCT
+hud.resonance.wet_cold_freeze,FREEZE
+hud.resonance.frozen_force_shatter,SHATTER
+hud.resonance.fire_thaw_steam,STEAM
+hud.resonance.water_extinguish,EXTINGUISH
 sandbox.header,MAGIC SANDBOX  /  M1
 sandbox.hint,LMB/RMB cast • WASD debug move
 sandbox.select_formula,Select formula for highlighted slot
@@ -397,6 +403,8 @@ compendium.section.runes,Runes
 compendium.section.reactions,Reactions
 compendium.section.enemies,Enemies
 compendium.section.artifacts,Artifacts
+compendium.weak,WEAK
+compendium.resist,RESIST
 compendium.milestones,Milestones
 compendium.progress,%d/%d
 compendium.met,[done]
@@ -427,9 +435,11 @@ compendium.enemy.deep_eel,Deep Eel
 compendium.enemy.drowned_acolyte,Drowned Acolyte
 compendium.enemy.drowned_archivist,Drowned Archivist
 compendium.enemy.fallen_adept,Fallen Adept
+compendium.enemy.ghoul_stalker,Ghoul Stalker
 compendium.enemy.grave_hound,Grave Hound
 compendium.enemy.lantern_wisp,Lantern Wisp
 compendium.enemy.ossuary_shieldbearer,Ossuary Shieldbearer
+compendium.enemy.riptide_leaper,Riptide Leaper
 compendium.enemy.rust_golem,Rust Golem
 compendium.enemy.storm_crystal,Storm Crystal
 compendium.enemy.undead_warden,Undead Warden
@@ -468,13 +478,13 @@ settings.apply,Apply
 settings.test,Test
 settings.swap,Swap
 settings.cancel,Cancel
-settings.hint,Esc back    Q / E switch tab    Enter change
-settings.disabled_hint,Disabled: coming later
+settings.hint,Esc back    Tab / Q / E switch tab    Enter change
 settings.value.on,On
 settings.value.off,Off
+settings.value.unlimited,Unlimited
+settings.value.fps30,30 FPS
 settings.value.fps60,60 FPS
-settings.value.full,Full
-settings.value.large,Large
+settings.value.fps120,120 FPS
 settings.section.volume,Volume
 settings.section.options,Options
 settings.section.display,Display
@@ -482,28 +492,20 @@ settings.section.light,Lighting and effects
 settings.section.combat,Combat
 settings.section.system,System
 settings.section.vision,Vision and comfort
-settings.section.input,Input and sound
+settings.section.general,General
 settings.audio.master,Master
 settings.audio.music,Music
 settings.audio.sfx,Sound effects
 settings.audio.ui,Interface
 settings.audio.ambience,Ambience
+settings.audio.enemy_sfx,Enemy SFX
 settings.audio.mute_unfocused,Mute when unfocused
-settings.audio.priority,Spell sounds top priority
 settings.video.frame_limit,Frame limit
 settings.video.vsync,VSync
 settings.video.light_quality,Light quality
-settings.video.particles,Particles
-settings.video.glow,Glow
 settings.video.fps,Show FPS
 settings.lighting.hint,Off = low-end PCs
 settings.lighting.preview,Light preview
-settings.access.colourblind,Colour-blind mode
-settings.access.text_size,Text size
-settings.access.telegraphs,Strong telegraphs
-settings.access.hold_cast,Hold to cast
-settings.access.aim_assist,Aim assist
-settings.access.visual_cues,Visual sound cues
 settings.access.status_icons,Status icons
 settings.controls.primary,Primary
 settings.controls.alt,Alt
@@ -511,29 +513,21 @@ settings.controls.reset_keys,Reset keys
 settings.controls.listen_hint,"Listening: press a key, Esc cancels"
 settings.controls.conflict_panel,%s is already used by %s. Swap or cancel?
 settings.help.master,Overall loudness of the game.
-settings.help.music,Background music loudness. Disabled until the game has a music bus.
+settings.help.music,Background music loudness.
 settings.help.sfx,Spells; hits and footsteps.
 settings.help.ui,Menu clicks and interface cues.
 settings.help.ambience,Room hum; torches and water.
+settings.help.enemysfx,Enemy attack warning sounds.
 settings.help.mute_unfocused,Silences the game while its window is in the background.
-settings.help.priority,Keeps spell sounds audible when many sounds play at once.
 settings.help.window_mode,"Windowed, fullscreen or borderless. Applies at once."
-settings.help.ui_scale,Scales every menu and HUD element from 90% to 150%.
+settings.help.ui_scale,Scales in-run overlays that are not part of the menu skin. Menus and the HUD always fit the window.
 settings.help.frame_limit,Caps the frame rate.
 settings.help.vsync,Syncs frames to the monitor to avoid tearing.
 settings.help.lighting,"Dim rooms, torch and spell light. Turn off for low-end PCs: the game stays readable."
 settings.help.light_quality,High or low light detail. Only used while lighting is on.
-settings.help.particles,How many particles spells and impacts spawn.
-settings.help.glow,Bloom around bright spells and runes.
 settings.help.fps,Shows the frame rate in a corner.
 settings.help.reduce_flash,"Tones down hit-flash, white bursts and screen flicker."
 settings.help.reduce_shake,Turns off camera shake from hits and blasts.
-settings.help.colourblind,Alternative colour palette for elements and warnings.
-settings.help.text_size,Text size lives in the Video tab as UI scale.
-settings.help.telegraphs,Makes enemy attack warnings larger and brighter.
-settings.help.hold_cast,Hold the cast button instead of clicking repeatedly.
-settings.help.aim_assist,Nudges spells toward the nearest enemy.
-settings.help.visual_cues,Shows an icon on screen for important sounds.
 settings.help.telemetry,"When on, anonymous play stats and session/crash logs are saved locally to the log folder. Nothing is sent anywhere."
 settings.help.tips,Shows short one-time tips. Off hides them without using them up.
 run.reward.title,CHOOSE A REWARD
@@ -588,3 +582,7 @@ credits.section.made_by,Made by
 credits.section.tools,Tools
 credits.section.third_party,Third-party
 credits.unavailable,Credits unavailable
+run.notice.resonant_clear,Resonant clear! Reward rarity raised
+run.reward.resonant_banner,RESONANT CLEAR: +1 RARITY
+run.reward.bonus_coins,+%d COINS
+run.summary.combo_stats,Reactions: %d   Elements: %d   Spells crafted: %d

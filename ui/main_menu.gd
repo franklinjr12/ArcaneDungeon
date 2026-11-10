@@ -267,10 +267,10 @@ func _close_credits() -> void:
 	panel.get_node("CreditsButton").grab_focus()
 
 ## AD-090: debug-only UI shot-state hook (env AD_UI_SHOT_STATE / AD_UI_SHOT_OUT); inert in release builds.
-const SHOT_RUN_STATES := ["combat","reward","loadout","workshop_editor","merchant","pause","summary","summary_win","sigil_desk"]
+const SHOT_RUN_STATES := ["combat","combat_resonance","reward","reward_resonant","loadout","workshop_editor","merchant","pause","summary","summary_win","sigil_desk"]
 
 func apply_debug_shot_state(state: String) -> bool:
-	if not OS.is_debug_build() or not state in ["title","settings","compendium","compendium_runes","compendium_reactions","compendium_enemies","compendium_artifacts","credits","settings_audio","settings_video","settings_controls","settings_access"]:
+	if not OS.is_debug_build() or not state in ["title","settings","compendium","compendium_runes","compendium_reactions","compendium_enemies","compendium_enemies_known","compendium_artifacts","credits","settings_audio","settings_video","settings_controls","settings_access"]:
 		return false
 	if state.begins_with("settings"):
 		open_settings()
@@ -280,6 +280,12 @@ func apply_debug_shot_state(state: String) -> bool:
 		open_credits()
 	elif state == "compendium":
 		open_compendium()
+	elif state == "compendium_enemies_known": # AD-194 shot only; never writes the profile
+		open_compendium()
+		compendium_screen.select_tab("enemies")
+		compendium_screen._meta = compendium_screen._meta.duplicate(true)
+		compendium_screen._meta["discovered"]["enemies"] = compendium_screen._catalogs["enemies"].duplicate()
+		compendium_screen._fill_page("enemies")
 	elif state.begins_with("compendium_"):
 		open_compendium()
 		compendium_screen.select_tab(state.trim_prefix("compendium_"))
@@ -291,7 +297,7 @@ func _debug_shot_entry() -> void:
 	var state := OS.get_environment("AD_UI_SHOT_STATE")
 	if state == "":
 		return
-	if state in SHOT_RUN_STATES or state.begins_with("tip_") or state == "pause_controls":
+	if state in SHOT_RUN_STATES or state.begins_with("tip_") or state.begins_with("pause_"):
 		get_tree().change_scene_to_file.call_deferred("res://scenes/run.tscn")
 	elif apply_debug_shot_state(state):
 		await _debug_shot_capture()

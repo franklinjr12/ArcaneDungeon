@@ -90,6 +90,8 @@ func _ducking(t) -> void:
 					teles.append(id)
 			else:
 				want = "SFXBed"
+		if c.get("enemy", false):
+			want = "EnemySFX"
 		t.equal(d.route_bus(c), want, "AD-082 route_bus: " + id)
 	t.equal(teles.size(), 5, "AD-082 five telegraph cues")
 	d.play("sfx.hit.generic")
@@ -128,6 +130,7 @@ func _ducking(t) -> void:
 	for id in teles:
 		d.voices.clear()
 		for i in 10:
+			d._process(0.2)
 			d.play(id)
 		var n: int = d.voices.filter(func(v): return v["cue_id"] == id).size()
 		t.equal(n, int(cues[id]["max_voices"]), "AD-082 voice cap: " + id)

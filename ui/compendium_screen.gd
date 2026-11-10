@@ -3,16 +3,17 @@ extends Control
 ## Tabs: Runes, Reactions, Enemies, Artifacts, switched by click, Q/E, shoulder buttons or PageUp/PageDown. The owner listens to
 ## back_requested; this screen never frees itself and never writes the profile.
 ## Deviations from the mocks (owner/art follow-ups): no enemy sprite lookup exists for UI, so enemy cells show the name only
-## (undiscovered: "?" + undiscovered icon); no per-entry stats (found/used/encountered/weak-to/drops) because no such data is
-## tracked; artifacts use the generic upgrade glyph (as the HUD does) and no rarity card; milestones are not listed (only the
+## (undiscovered: "?" + undiscovered icon); enemy detail shows weak/resist icons (AD-194) but no other per-entry stats
+## (found/used/encountered/drops) because no such data is tracked; artifacts use the generic upgrade glyph (as the HUD does) and no rarity card; milestones are not listed (only the
 ## layout's static note); enemy/reaction detail prose is limited to the name and recipe. Entries beyond a layout's cells are
-## paged with the scroll arrows (the enemy layout has 14 cells for 15 enemies); cells beyond the catalog are hidden.
+## paged with the scroll arrows (the enemy layout has 14 cells for 17 enemies); cells beyond the catalog are hidden.
 const VisualTheme = preload("res://ui/pixel_theme.gd")
 const SkinA = preload("res://ui/skin_a.gd")
 const SettingsScreen = preload("res://ui/settings_screen.gd")
 const MetaProgress = preload("res://world/meta_progress.gd")
 const Artifacts = preload("res://world/artifacts.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
+const EnemyAffinity = preload("res://ui/enemy_affinity.gd")
 const RUN_PATH := "res://world/data/run_v2.json"
 const TABS := ["runes", "reactions", "enemies", "artifacts"]
 const CHROME_LAYOUT := "compendium_runes"
@@ -213,6 +214,14 @@ func _build_page(tab: String, page: Control) -> void:
 	var pic_rect := {"x": slot["x"] + (slot["w"] - 16) / 2, "y": slot["y"] + (slot["h"] - 16) / 2, "w": 16, "h": 16}
 	d["slot"] = _pic(page, null, pic_rect)
 	d["slot"].visible = slot.get("w", 0) > 0 # artifacts layout has no detail slot
+	if tab == "enemies":
+		d["weak_label"] = _text(page, tr("compendium.weak"), {"x": 340, "y": 212, "w": 52, "h": 7})
+		d["resist_label"] = _text(page, tr("compendium.resist"), {"x": 340, "y": 236, "w": 52, "h": 7})
+		d["weak_icons"] = []
+		d["resist_icons"] = []
+		for i in 6:
+			d["weak_icons"].append(_pic(page, null, {"x": 398 + 20 * i, "y": 206, "w": 16, "h": 16}))
+			d["resist_icons"].append(_pic(page, null, {"x": 398 + 20 * i, "y": 230, "w": 16, "h": 16}))
 	_detail[tab] = d
 	if layout_by_tab[tab].has("scroll_track"):
 		_box(page, "ad_ui_scroll_track_v", _w(tab, "scroll_track"))
@@ -376,6 +385,15 @@ func _select(tab: String, idx: int) -> void:
 			"reactions": tex = SkinA.icon_or_mvp(REACTION_ICONS.get(id, ["undiscovered", "", "undiscovered"])[2])
 			_: tex = null
 	d["slot"].texture = tex
+	if tab == "enemies":
+		var aff: Dictionary = EnemyAffinity.of(id) if known else {"weak": [], "resist": []}
+		for row in ["weak", "resist"]:
+			var channels: Array = aff[row]
+			d[row + "_label"].visible = not channels.is_empty()
+			for i in d[row + "_icons"].size():
+				var pic: TextureRect = d[row + "_icons"][i]
+				pic.visible = i < channels.size()
+				pic.texture = EnemyAffinity.icon(channels[i]) if i < channels.size() else null
 
 # ---------------------------------------------------------------- layout
 

@@ -413,6 +413,16 @@ func alive_enemies() -> int:
 	return count
 
 ## `allow_dead_source` lets on-death damage (explode_on_death) come from the enemy that just died.
+## AD-196 perfect dodge: a hit absorbed by dash i-frames refunds mana. [PROPOSED FOR PROTOTYPE] one refund per dash so a burst cannot refund 45.
+func _perfect_dodge() -> void:
+	var amount := float(sim.settings["combat"].get("perfect_dodge_mana_refund",0))
+	if amount <= 0.0 or player.perfect_dodge_spent:
+		return
+	player.perfect_dodge_spent = true
+	sim.mana = minf(float(sim.settings["combat"]["player_max_mana"]),sim.mana+amount)
+	player.perfect_dodges += 1
+	player.perfect_flash = int(data["player"].get("perfect_dodge_flash_ticks",0))
+
 func damage_player(source_id: int, amount: float, channel: String, attack_id: int = -1, allow_dead_source: bool = false) -> Dictionary:
 	if state != "playing" or not sim.actor.alive():
 		return {"accepted":false,"reason":"DEAD"}
@@ -427,6 +437,7 @@ func damage_player(source_id: int, amount: float, channel: String, attack_id: in
 	if player.invulnerable():
 		_cue("sfx.dash.iframe",sim.actor.position)
 		_notify("DASH_EVADE",sim.actor.position)
+		_perfect_dodge()
 		return {"accepted":false,"reason":"INVULNERABLE"}
 	if player.shield > 0:
 		player.shield -= 1

@@ -192,7 +192,7 @@ func _draw() -> void:
 	var fx_list: Array = Art.collect_fx(session,tick,_fx_memo)
 	for fx in fx_list:
 		var fp := ReduceMotion.fx_draw_params(reduced,fx["event"],fx["age"])
-		Art.draw_fx(self,fx["event"],fx["at"]-offset,fp["age"],fx["rotation"],fx["length"],fp["modulate"],fx["slot"],fx.get("uniform",0.0),int(fx.get("window",0)))
+		Art.draw_fx(self,fx["event"],fx["at"]-offset,fp["age"],fx["rotation"],fx["length"],fp["modulate"],fx["slot"],fx.get("uniform",0.0),int(fx.get("window",0)),float(fx.get("arc_degrees",0.0)))
 	_draw_floating_text(offset,tick)
 	_draw_death_banner()
 	if show_debug:
@@ -204,6 +204,7 @@ func _draw() -> void:
 ## AD-149: hit-flash overlay entry for the mage, or {} when there is nothing to flash (dead, expired or reduce-flash).
 func mage_flash_entry(reduced: bool, at: Vector2, tick: int, motion: Vector2, anim: Dictionary) -> Dictionary:
 	var strength := ReduceMotion.hit_flash_strength(reduced,session.player.hit_flash,int(session.player.tuning.get("hit_flash_ticks",1)))
+	strength = maxf(strength,ReduceMotion.hit_flash_strength(reduced,session.player.perfect_flash,int(session.player.tuning.get("perfect_dodge_flash_ticks",1))))
 	if not session.sim.actor.alive() or strength <= 0.0:
 		return {}
 	return {"kind":"mage","at":at,"tick":tick,"motion":motion,"anim":anim,"strength":strength}
@@ -343,7 +344,7 @@ func _draw_floating_text(offset: Vector2, tick: int) -> void:
 	for i in items.size():
 		var item: Dictionary = items[i]
 		if item["kind"] == "damage":
-			Art.draw_damage_number(self,item["popup"]["symbol"],item["popup"]["text"],rects[i].position)
+			Art.draw_damage_number(self,item["popup"]["symbol"],item["popup"]["text"],rects[i].position,item["popup"]["color"])
 		else:
 			_label(rects[i].position+Vector2(0,font.get_ascent(12)),item["text"],item["color"])
 
