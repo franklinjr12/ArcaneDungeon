@@ -47,7 +47,7 @@ func run(t) -> void:
 	d._process(0.05)
 	t.check(d.play("sfx.cast.fire"), "AD-191 cast at 100 ms accepted")
 	# (d) telegraph priority
-	t.equal(teles.size(), 17, "AD-191 17 telegraph cues")
+	t.equal(teles.size(), 19, "AD-191 19 telegraph cues")
 	for id in teles:
 		t.equal(int(cues[id]["priority"]), int(d.table["unstealable_priority"]), "AD-191 tele priority: " + id)
 		t.check(d.is_telegraph(cues[id]), "AD-191 is_telegraph: " + id)
