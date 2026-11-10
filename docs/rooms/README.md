@@ -49,3 +49,27 @@ Rules: [ROOM_RULES.md](ROOM_RULES.md). Before / after sheets: [ruins_rooms_befor
 Results (2026-11-10): `demo_smoke.gd --seeds=20 --det-seeds=5` green, no failing seeds; `scripts/validate_godot.py --godot /usr/local/bin/godot` exit 0; `tests/test_ad_room_rules.gd` green. Bot bench numbers are INFO only.
 
 Perf probe digest: `tests/qa/demo_perf_probe.gd` `BASELINE_DIGESTS["ruins_c07"]` was **not** recomputed. `ruins_c07` is not in the default seed's room sequence (`--rooms=ruins_c07` gives "room not in sequence"), and the `cistern_boss` / `ruins_boss` digests already differ in `--verify-digests` runs, so the baselines need a separate refresh by the perf owner. The probe is measurement only and is not part of validate or smoke.
+
+# AD-203 Cistern v2 layouts
+
+Rules: [ROOM_RULES.md](ROOM_RULES.md). Before / after sheets: [cistern_rooms_before.png](cistern_rooms_before.png), [cistern_rooms_after.png](cistern_rooms_after.png); the legacy per-template sheet [cistern_layouts.png](cistern_layouts.png) was regenerated too. The 10 combat rooms and the challenge room in `world/data/rooms_cistern_v1.json` each use a different shape. Regenerate the after sheet (headless): `godot --headless --path . --script res://tools/room_layout_sheet.gd -- res://world/data/run_v2.json docs/rooms/cistern_rooms_after.png --stage=cistern`.
+
+| Room | Shape | Obstacles (walls / pipes / deep channels / solid props) | Interactions |
+|---|---|---|---|
+| `cistern_p01` | open_hall | 2 walls, 4 pipes | crate, puddle (conducts), 3 shallow pools |
+| `cistern_p02` | pillared_hall | 4 walls, pillars | crate, cobweb, 2 shallow pools |
+| `cistern_p03` | split_bridges | 2 walls, pipes, 3 deep channel segments | crate, puddle; two bridges between the segments |
+| `cistern_p04` | corridor_chamber | 2 walls, pipes, 2 deep walls around the corridor | crate, puddle |
+| `cistern_p05` | ring_pit | 3 walls, pipes, central deep pool | urn, brazier, puddle; eel in the shallow rim |
+| `cistern_p06` | cross_hall | 2 walls, pipes, 4 deep arms | crate, urn; centre crossing |
+| `cistern_p07` | eel_lanes | 2 walls, pipes, 2 long deep lanes | crate, cobweb; eels in the shallow lanes |
+| `cistern_p08` | colonnade | 4 walls, pillars | puddle, cracked wall |
+| `cistern_p09` | dais_island | 2 walls, pillar, pipes, 6 deep rects around the crystal-platform island | crate, brazier |
+| `cistern_p10` | l_bend | 2 walls, pipes, one large deep block | puddle, crate |
+| `cistern_challenge_v1` | flooded_arena | 3 walls, pillar, pipes, deep pool | brazier, puddle, 4 shallow pools (cistern_boss pools) |
+
+Water vocabulary: **channels** are deep rects (block walking, not spells or sight); **bridges** are the floor gaps between deep rects, at least 80 u wide (board minimum 56 u); **grates** and **pipes** are `layout.props` cover; **puddles** are `env_props` that conduct lightning like shallow water; **eel lanes** are shallow strips between deep water (p05, p07) where eels stay; the **crystal-platform island** is the p09 centre; the challenge room reuses the `cistern_boss` pools for the mini-boss arena.
+
+Results (2026-11-10): `demo_smoke.gd --seeds=20 --det-seeds=5` green (20/20 smoke, 6/6 determinism, no failing seeds); `scripts/validate_godot.py --godot /usr/local/bin/godot` exit 0; `tests/test_ad_room_rules.gd` green. Bot bench numbers are INFO only; no HP or tuning changed.
+
+Perf probe: `tests/qa/demo_perf_probe.gd` baselines were **not** recomputed.

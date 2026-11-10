@@ -2,6 +2,7 @@ extends RefCounted
 ## AD-202 step 1: Ruins cover kinds, layout.pits (walking blockers) and layout.arena_walls (shared-wall opt-out).
 ## AD-202 step 2: Room.rule_report (docs/rooms/ROOM_RULES.md) on synthetic rooms.
 ## AD-202 step 3: the nine Ruins rooms obey the rules and every enemy can walk to the entrance, room centre and exit.
+## AD-203: the 11 Cistern rooms (pool + challenge) obey the same rules (deep water blocks walking).
 const Session = preload("res://combat/combat_session.gd")
 const EnvProps = preload("res://world/env_props.gd")
 const Geometry = preload("res://world/arena_geometry.gd")
@@ -9,6 +10,7 @@ const Room = preload("res://world/room_template.gd")
 const Flow = preload("res://world/run_flow.gd")
 const CachedGeometry = preload("res://combat/cached_geometry.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
+const WaterTiles = preload("res://world/water_tiles.gd")
 const POOLS := ["res://world/data/rooms_ruins_v1.json","res://world/data/rooms_cistern_v1.json"]
 const COVER_KINDS := ["pillar","cracked_pillar","rubble","sarcophagus","broken_wall","column"]
 
@@ -26,6 +28,7 @@ func run(t) -> void:
 	_placeholder_frames(t)
 	_rule_report(t)
 	_ruins_rooms(t)
+	_cistern_rooms(t)
 
 func _tuning() -> Dictionary:
 	return JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))
@@ -224,7 +227,7 @@ func _rule_report(t) -> void:
 	var rules := _rules()
 	t.equal(int(rules["min_obstacles"]),2,"AD-202 rules: min_obstacles in run_v2 room_rules")
 	t.equal(int(rules["max_obstacles"]),5,"AD-202 rules: max_obstacles")
-	t.equal((rules["shapes"] as Array).size(),9,"AD-202 rules: nine shape ids")
+	t.equal((rules["shapes"] as Array).size(),11,"AD-203 rules: eleven shape ids")
 	t.equal((rules["owner_shapes"] as Array).size(),5,"AD-202 rules: five owner shapes")
 	for id in rules["owner_shapes"]:
 		t.check((rules["shapes"] as Array).has(id),"AD-202 rules: owner shape %s is allowed" % id)
@@ -335,6 +338,71 @@ func _ruins_rooms(t) -> void:
 	for id in ids:
 		_navigation(t,id,doc["room_templates"][id],tuning,env_data)
 
+## AD-203: the Cistern stage pool plus its optional challenge room (11 ids); each needs the rules, a valid template, water and walkable routes.
+func _cistern_ids(stage: Dictionary) -> Array:
+	var ids: Array = (stage.get("pool",[]) as Array).duplicate()
+	ids.append(stage["optional_room"])
+	return ids
+
+func _cistern_rooms(t) -> void:
+	var doc := _run_v2()
+	var tuning := _tuning()
+	var env_data := EnvProps.load_data()
+	var rules: Dictionary = doc["room_rules"]
+	var stage: Dictionary = {}
+	for entry in doc["stages"]:
+		if str(entry["id"]) == "cistern":
+			stage = entry
+	t.check(not stage.is_empty(),"AD-203 cistern: stage found in run_v2")
+	var ids := _cistern_ids(stage)
+	t.equal(ids.size(),11,"AD-203 cistern: 10 pool rooms plus the optional challenge room")
+	var templates: Dictionary = Flow.merged_templates(doc) # run_v2 templates plus the Cistern pool file, pool rules copied in
+	var shapes: Dictionary = {}
+	for id in ids:
+		t.check(templates.has(id),"AD-203 cistern: %s is a template" % id)
+		var room: Dictionary = templates[id]
+		var report := Room.rule_report(room,tuning["arena"],env_data,rules)
+		t.check(bool(report["ok"]),"AD-203 cistern: %s passes rule_report (%s)" % [id,str(report["issues"])])
+		var verdict := Room.new().initialize(room,tuning["arena"],tuning["enemies"].keys())
+		t.check(bool(verdict["ok"]),"AD-203 cistern: %s validates in initialize (%s)" % [id,str(verdict["issues"])])
+		t.check(not room["layout"].get("water",[]).is_empty(),"AD-203 cistern: %s has water" % id)
+		shapes[str(room.get("shape",""))] = id
+		_navigation(t,id,room,tuning,env_data)
+	t.equal(shapes.size(),ids.size(),"AD-203 cistern: the eleven rooms use eleven different shapes")
+	for shape in rules["owner_shapes"]:
+		t.check(shapes.has(shape),"AD-203 cistern: owner shape %s is used" % shape)
+	for shape in ["cross_hall","eel_lanes","colonnade","dais_island","l_bend","flooded_arena"]:
+		t.check(shapes.has(shape),"AD-203 cistern: new shape %s is used" % shape)
+	_cistern_kinds_vary(t,templates,ids)
+	_cistern_challenge(t,templates["cistern_challenge_v1"],tuning,env_data)
+
+## Puddles, burnables and a deep-water bridge room must all appear in the stage; the eels stay on floor.
+func _cistern_kinds_vary(t, templates: Dictionary, ids: Array) -> void:
+	var seen: Dictionary = {}
+	for id in ids:
+		for prop in templates[id]["layout"].get("env_props",[]):
+			seen[str(prop["kind"])] = true
+	t.check(seen.has("puddle"),"AD-203 cistern: pool has a conducting puddle")
+	t.check(seen.has("crate") or seen.has("cobweb"),"AD-203 cistern: pool has a burnable crate or cobweb")
+	t.check(seen.has("cobweb") and seen.has("crate") and seen.has("urn") and seen.has("brazier"),"AD-203 cistern: pool varies its interaction kinds")
+	var bridge_rooms := 0
+	for id in ids:
+		bridge_rooms += 1 if str(templates[id].get("shape","")) == "split_bridges" else 0
+	t.check(bridge_rooms >= 1,"AD-203 cistern: at least one deep-water bridge room (split_bridges)")
+
+## The mini-boss arena keeps the cistern_boss water features and a slot on reachable floor, 160+ from the entrance.
+func _cistern_challenge(t, room: Dictionary, tuning: Dictionary, env_data: Dictionary) -> void:
+	var boss_water: Array = _run_v2()["room_templates"]["cistern_boss"]["layout"]["water"]
+	var water: Array = room["layout"]["water"]
+	for entry in boss_water:
+		t.check(water.has(entry),"AD-203 challenge: reuses cistern_boss water %s" % str(entry))
+	var world = _room_geometry(room,tuning,env_data)
+	var slot: Dictionary = room["mini_boss_slot"]
+	var at := Vector2(float(slot["position"][0]),float(slot["position"][1]))
+	var entrance := Vector2(float(room["entrance"][0]),float(room["entrance"][1]))
+	t.check(world.valid_position(at,22.0) and at.distance_to(entrance) >= 160.0,"AD-203 challenge: mini-boss slot is on floor, 160+ from the entrance")
+	t.check(Room.reachable(world,entrance,at,22.0,20.0),"AD-203 challenge: mini-boss slot is reachable")
+
 ## The interaction families (burnable, brazier, breakable, puddle) must all appear in the pool, not one kind everywhere.
 func _ruins_kinds_vary(t, doc: Dictionary, ids: Array) -> void:
 	var seen: Dictionary = {}
@@ -345,7 +413,7 @@ func _ruins_kinds_vary(t, doc: Dictionary, ids: Array) -> void:
 		t.check(seen.has(kind),"AD-202 ruins: pool uses a %s" % kind)
 	t.check(seen.has("cracked_pillar") or seen.has("broken_wall") or seen.has("cracked_wall"),"AD-202 ruins: pool has Force-breakable cover")
 
-## Geometry the way run_flow builds it: shared walls unless arena_walls is false, layout walls, pits as ground blockers,
+## Geometry the way run_flow builds it: shared walls unless arena_walls is false, layout walls, pits and deep water as ground blockers,
 ## solid env-prop rects (every breakable piece intact, the worst case).
 func _room_geometry(room: Dictionary, tuning: Dictionary, env_data: Dictionary):
 	var merged: Dictionary = (tuning["arena"] as Dictionary).duplicate(true)
@@ -359,6 +427,8 @@ func _room_geometry(room: Dictionary, tuning: Dictionary, env_data: Dictionary):
 	for dims in layout.get("pits",[]):
 		pits.append(Rect2(float(dims[0]),float(dims[1]),float(dims[2]),float(dims[3])))
 	world.add_ground_blockers(pits)
+	if layout.has("water"):
+		world.add_ground_blockers(WaterTiles.new(layout["water"]).deep_rects())
 	if layout.has("env_props"):
 		for prop in EnvProps.new(layout["env_props"],env_data).props:
 			if bool(prop["rule"].get("solid_walk",false)):
