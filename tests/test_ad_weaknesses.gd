@@ -2,6 +2,8 @@ extends RefCounted
 ## AD-194: every regular enemy has exactly one weakness channel (negative channel_resistances) in live data.
 const Session = preload("res://combat/combat_session.gd")
 const EnemyAffinity = preload("res://ui/enemy_affinity.gd")
+const Hud = preload("res://ui/pixel_hud.gd")
+const Flow = preload("res://world/run_flow.gd")
 const Screen = preload("res://ui/compendium_screen.gd")
 
 const WEAK := {
@@ -28,6 +30,7 @@ func run(t) -> void:
 	_colours(t)
 	_affinity(t, enemies)
 	_screen(t)
+	_popups(t)
 
 func _negatives(res: Dictionary) -> Array:
 	var out: Array = []
@@ -124,3 +127,33 @@ func _screen(t) -> void:
 	t.check(not any, "AD-194 undiscovered entry hides the rows")
 	screen.free()
 	root.size = old_size
+
+func _popups(t) -> void:
+	var v: Array = Hud.first_encounter_views([{"kind":"bone_thrall","tick":0}], 10, 240)
+	t.equal(v.size(), 1, "AD-194 popup view count")
+	if v.size() == 1:
+		t.equal(v[0]["weak"], ["force"], "AD-194 popup weak")
+		t.equal(v[0]["resist"], ["cold"], "AD-194 popup resist")
+	t.equal(Hud.first_encounter_views([{"kind":"bone_thrall","tick":0}], 240, 240).size(), 0, "AD-194 popup expires")
+	t.equal(Hud.first_encounter_views([{"kind":"undead_warden","tick":0}], 1, 240).size(), 0, "AD-194 popup skips no-data kind")
+	var many: Array = []
+	for i in 5:
+		many.append({"kind":"grave_hound","tick":i})
+	var capped: Array = Hud.first_encounter_views(many, 10, 240)
+	t.equal(capped.size(), 3, "AD-194 popup cap")
+	t.check(capped.size() == 3 and capped[0]["alpha"] > capped[1]["alpha"] and capped[1]["alpha"] > capped[2]["alpha"], "AD-194 popup newest first")
+	var flow = Flow.new(20261022, Flow.CONFIG_V2)
+	flow.step()
+	var kinds := {}
+	for e in flow.session.enemies:
+		kinds[str(e.kind)] = true
+	var seen: Array = []
+	for f in flow.first_encounters:
+		seen.append(f["kind"])
+	seen.sort()
+	var want: Array = kinds.keys()
+	want.sort()
+	t.equal(seen, want, "AD-194 first encounters once per spawned kind")
+	for i in 5:
+		flow.step()
+	t.equal(flow.first_encounters.size(), want.size(), "AD-194 first encounters do not grow")

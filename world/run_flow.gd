@@ -58,6 +58,8 @@ var _prior_reactions := 0
 var meta_locked_runes: Array = []
 var meta_locked_artifacts: Array = []
 var _seen_enemies: Dictionary = {}
+## AD-194: newest-8 first-sighting log [{kind,tick}] for the HUD popup. Presentation only, never saved or snapshotted.
+var first_encounters: Array = []
 var _seen_reactions: Dictionary = {}
 ## AD-084: read-only UI signals. arcs banks arcs from replaced sims; use arc_total() for the live count.
 var wet_kills := 0
@@ -174,10 +176,15 @@ func discoveries() -> Dictionary:
 func _track_enemies() -> void:
 	for enemy in session.enemies:
 		if str(enemy.kind) != "":
+			if not _seen_enemies.has(str(enemy.kind)):
+				first_encounters.append({"kind":str(enemy.kind),"tick":ticks_elapsed})
+				while first_encounters.size() > 8:
+					first_encounters.pop_front()
 			_seen_enemies[str(enemy.kind)] = true
 
 func start_new(run_seed: int) -> void:
 	_seen_enemies.clear()
+	first_encounters.clear()
 	_seen_reactions.clear()
 	run = State.new()
 	run.initialize(run_seed,config,formulas)
@@ -814,6 +821,7 @@ func resume(payload: Variant) -> Dictionary:
 	boss_defeated_events = int(counters["boss_defeated_events"])
 	transition_count = int(counters["transition_count"])
 	_seen_enemies.clear()
+	first_encounters.clear()
 	for id in payload["seen_enemies"]:
 		_seen_enemies[str(id)] = true
 	_seen_reactions.clear()
