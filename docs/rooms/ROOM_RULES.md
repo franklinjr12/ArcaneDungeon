@@ -16,7 +16,7 @@ Every **combat** room, and the **treasure** room (except the spawn rules, since 
 ## Shapes
 
 Owner list (5): `open_hall`, `pillared_hall`, `corridor_chamber`, `ring_pit`, `split_bridges`.
-[PROPOSED] extras, needed because the Ruins stage has 9 rooms that must each differ: `cross_hall`, `l_bend`, `colonnade`, `dais_island`.
+[PROPOSED] extras, needed because the Ruins stage has 9 rooms that must each differ: `cross_hall`, `l_bend`, `colonnade`, `dais_island`. AD-203 adds `eel_lanes` and `flooded_arena` because the Cistern needs 11 different shapes (10 pool rooms plus the challenge room).
 
 | id | Meaning |
 |---|---|
@@ -29,6 +29,8 @@ Owner list (5): `open_hall`, `pillared_hall`, `corridor_chamber`, `ring_pit`, `s
 | `l_bend` | L-shaped route with an inner corner |
 | `colonnade` | Rows of columns along the long axis |
 | `dais_island` | Raised central island ringed by cover |
+| `eel_lanes` | Parallel deep-water lanes beside the walking lanes; eels lurk in them (AD-203 Cistern) |
+| `flooded_arena` | Mini-boss arena that reuses the `cistern_boss` water features (AD-203 Cistern) |
 
 ## Obstacle schema
 

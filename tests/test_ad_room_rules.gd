@@ -2,6 +2,7 @@ extends RefCounted
 ## AD-202 step 1: Ruins cover kinds, layout.pits (walking blockers) and layout.arena_walls (shared-wall opt-out).
 ## AD-202 step 2: Room.rule_report (docs/rooms/ROOM_RULES.md) on synthetic rooms.
 ## AD-202 step 3: the nine Ruins rooms obey the rules and every enemy can walk to the entrance, room centre and exit.
+## AD-203: the Cistern rooms listed in CISTERN_DONE obey the same rules (deep water blocks walking).
 const Session = preload("res://combat/combat_session.gd")
 const EnvProps = preload("res://world/env_props.gd")
 const Geometry = preload("res://world/arena_geometry.gd")
@@ -9,6 +10,7 @@ const Room = preload("res://world/room_template.gd")
 const Flow = preload("res://world/run_flow.gd")
 const CachedGeometry = preload("res://combat/cached_geometry.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
+const WaterTiles = preload("res://world/water_tiles.gd")
 const POOLS := ["res://world/data/rooms_ruins_v1.json","res://world/data/rooms_cistern_v1.json"]
 const COVER_KINDS := ["pillar","cracked_pillar","rubble","sarcophagus","broken_wall","column"]
 
@@ -26,6 +28,7 @@ func run(t) -> void:
 	_placeholder_frames(t)
 	_rule_report(t)
 	_ruins_rooms(t)
+	_cistern_rooms(t)
 
 func _tuning() -> Dictionary:
 	return JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))
@@ -224,7 +227,7 @@ func _rule_report(t) -> void:
 	var rules := _rules()
 	t.equal(int(rules["min_obstacles"]),2,"AD-202 rules: min_obstacles in run_v2 room_rules")
 	t.equal(int(rules["max_obstacles"]),5,"AD-202 rules: max_obstacles")
-	t.equal((rules["shapes"] as Array).size(),9,"AD-202 rules: nine shape ids")
+	t.equal((rules["shapes"] as Array).size(),11,"AD-203 rules: eleven shape ids")
 	t.equal((rules["owner_shapes"] as Array).size(),5,"AD-202 rules: five owner shapes")
 	for id in rules["owner_shapes"]:
 		t.check((rules["shapes"] as Array).has(id),"AD-202 rules: owner shape %s is allowed" % id)
@@ -335,6 +338,33 @@ func _ruins_rooms(t) -> void:
 	for id in ids:
 		_navigation(t,id,doc["room_templates"][id],tuning,env_data)
 
+## AD-203: Cistern rooms done so far (grows with each step); each needs the rules, a valid template, water and walkable routes.
+const CISTERN_DONE := ["cistern_p01","cistern_p02","cistern_p03","cistern_p04","cistern_p05"]
+
+func _cistern_rooms(t) -> void:
+	var doc := _run_v2()
+	var tuning := _tuning()
+	var env_data := EnvProps.load_data()
+	var rules: Dictionary = doc["room_rules"]
+	var stage: Dictionary = {}
+	for entry in doc["stages"]:
+		if str(entry["id"]) == "cistern":
+			stage = entry
+	t.check(not stage.is_empty(),"AD-203 cistern: stage found in run_v2")
+	var templates: Dictionary = Flow.merged_templates(doc) # run_v2 templates plus the Cistern pool file, pool rules copied in
+	var shapes: Dictionary = {}
+	for id in CISTERN_DONE:
+		t.check(templates.has(id) and (stage.get("pool",[]) as Array).has(id),"AD-203 cistern: %s is a pool room" % id)
+		var room: Dictionary = templates[id]
+		var report := Room.rule_report(room,tuning["arena"],env_data,rules)
+		t.check(bool(report["ok"]),"AD-203 cistern: %s passes rule_report (%s)" % [id,str(report["issues"])])
+		var verdict := Room.new().initialize(room,tuning["arena"],tuning["enemies"].keys())
+		t.check(bool(verdict["ok"]),"AD-203 cistern: %s validates in initialize (%s)" % [id,str(verdict["issues"])])
+		t.check(not room["layout"].get("water",[]).is_empty(),"AD-203 cistern: %s has water" % id)
+		shapes[str(room.get("shape",""))] = id
+		_navigation(t,id,room,tuning,env_data)
+	t.equal(shapes.size(),CISTERN_DONE.size(),"AD-203 cistern: finished rooms use different shapes")
+
 ## The interaction families (burnable, brazier, breakable, puddle) must all appear in the pool, not one kind everywhere.
 func _ruins_kinds_vary(t, doc: Dictionary, ids: Array) -> void:
 	var seen: Dictionary = {}
@@ -345,7 +375,7 @@ func _ruins_kinds_vary(t, doc: Dictionary, ids: Array) -> void:
 		t.check(seen.has(kind),"AD-202 ruins: pool uses a %s" % kind)
 	t.check(seen.has("cracked_pillar") or seen.has("broken_wall") or seen.has("cracked_wall"),"AD-202 ruins: pool has Force-breakable cover")
 
-## Geometry the way run_flow builds it: shared walls unless arena_walls is false, layout walls, pits as ground blockers,
+## Geometry the way run_flow builds it: shared walls unless arena_walls is false, layout walls, pits and deep water as ground blockers,
 ## solid env-prop rects (every breakable piece intact, the worst case).
 func _room_geometry(room: Dictionary, tuning: Dictionary, env_data: Dictionary):
 	var merged: Dictionary = (tuning["arena"] as Dictionary).duplicate(true)
@@ -359,6 +389,8 @@ func _room_geometry(room: Dictionary, tuning: Dictionary, env_data: Dictionary):
 	for dims in layout.get("pits",[]):
 		pits.append(Rect2(float(dims[0]),float(dims[1]),float(dims[2]),float(dims[3])))
 	world.add_ground_blockers(pits)
+	if layout.has("water"):
+		world.add_ground_blockers(WaterTiles.new(layout["water"]).deep_rects())
 	if layout.has("env_props"):
 		for prop in EnvProps.new(layout["env_props"],env_data).props:
 			if bool(prop["rule"].get("solid_walk",false)):

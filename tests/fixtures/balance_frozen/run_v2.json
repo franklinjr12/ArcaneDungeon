@@ -983,7 +983,7 @@
     "max_obstacles": 5,
     "min_interactions": 1,
     "interaction_kinds": ["crate", "cobweb", "brazier", "urn", "cracked_wall", "cracked_pillar", "broken_wall", "puddle"],
-    "shapes": ["open_hall", "pillared_hall", "corridor_chamber", "ring_pit", "split_bridges", "cross_hall", "l_bend", "colonnade", "dais_island"],
+    "shapes": ["open_hall", "pillared_hall", "corridor_chamber", "ring_pit", "split_bridges", "cross_hall", "l_bend", "colonnade", "dais_island", "eel_lanes", "flooded_arena"],
     "owner_shapes": ["open_hall", "pillared_hall", "corridor_chamber", "ring_pit", "split_bridges"],
     "min_spawn_distance": 160,
     "dead_corner_step": 40,
