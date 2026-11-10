@@ -61,3 +61,9 @@ Placeholders today, to be replaced (list for the AD-202 PR):
 - Pits have no Ruins pit or pit-edge tiles.
 - Bridge edge tiles (ruins_c06 split_bridges) are missing.
 - The approved AD-217 Ruins cover art (intact/cracked pillar, rubble, sarcophagi, broken walls, with collision footprints) still needs wiring into `env_props_v1`. `art/arcane_dungeon/AD-217/` did not exist in this worktree, so it could not be checked or wired here.
+
+Still missing for the Cistern (AD-203):
+
+- The AD-219 r2 channel and bridge tiles and the AD-227 crystal platform and bridge decks (walkable 68x60 / 120x60 u; decks 56 u) are not wired. Today bridges are plain floor gaps and the island is plain floor.
+- The AD-218 Cistern cover (pipes, grates) is still placeholder.
+- The AD-099 r3 Cistern tiles.
