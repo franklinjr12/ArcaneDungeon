@@ -34,6 +34,7 @@ var settings: Dictionary = {}
 var bounds := Rect2(0.0,0.0,920.0,680.0)
 var collision_walls: Array = []
 var mana := 0.0
+var resonance_popups: Array = []
 var active: Array = []
 var visuals: Array = []
 var recent_damage: Array = []
@@ -95,6 +96,7 @@ func reset(run_seed: int = -1) -> void:
 	targets.add(actor)
 	bounds = Rect2(Vector2.ZERO,Vector2(float(settings["sandbox"]["width"]),float(settings["sandbox"]["height"])))
 	mana = float(settings["combat"]["player_max_mana"])
+	resonance_popups.clear()
 	active.clear()
 	visuals.clear()
 	recent_damage.clear()
@@ -457,6 +459,8 @@ func advance_one_tick() -> void:
 	clock.step_once()
 	loadout.cooldown_tick()
 	mana = minf(float(settings["combat"]["player_max_mana"]),mana+float(settings["combat"]["regen_mana_per_tick"]))
+	var popup_ticks := int(settings["reactions"].get("resonance",{}).get("popup_ticks",60))
+	resonance_popups = resonance_popups.filter(func(p): return clock.tick-int(p["tick"]) <= popup_ticks)
 	var dt := 1.0/float(clock.tick_rate)
 	targets.advance_movers(dt,bounds)
 	_advance_knockback()
@@ -600,6 +604,17 @@ func _process_event(event: Dictionary) -> void:
 	elif kind == "reaction":
 		_react(event,details)
 
+## AD-193: reactions refund mana and queue a short HUD popup (no trace records).
+func _resonance(reaction_id: String, team: int) -> void:
+	var amount := float(settings["reactions"].get("resonance",{}).get("mana_refund",{}).get(reaction_id,0))
+	if amount <= 0.0 or team != actor.team:
+		return
+	mana = minf(float(settings["combat"]["player_max_mana"]),mana+amount)
+	if not resonance_popups.is_empty() and resonance_popups[-1]["id"] == reaction_id and int(resonance_popups[-1]["tick"]) == clock.tick:
+		resonance_popups[-1]["amount"] = int(resonance_popups[-1]["amount"])+int(amount)
+	else:
+		resonance_popups.append({"id":reaction_id,"amount":int(amount),"tick":clock.tick})
+
 func _hit(event: Dictionary, detail: Dictionary) -> void:
 	if detail.is_empty():
 		return
@@ -644,6 +659,7 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 		trace.record("status",{"cast_id":ctx["cast_id"],"root_cast_id":ctx["root_cast_id"],"formula_id":ctx["formula_id"],
 			"target_id":target.id,"reason":state_change["state"]+":"+state_change["action"],"tick":clock.tick})
 	for entry in result["reactions"]:
+		_resonance(str(entry["id"]),int(ctx["team"]))
 		var bonus := float(entry["bonus_damage"])
 		if bonus > 0.0:
 			_track_damage(bonus)
@@ -663,6 +679,8 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 		var item_id: int = queue.push_id(react_ctx.merged({"type":"reaction"}))
 		if item_id >= 0:
 			_contexts[item_id] = {"arc":result["reaction"],"context":ctx.duplicate()}
+			if target.status.has("wet",clock.tick) or (resolver.water != null and resolver.water.body_of(target.position) >= 0):
+				_resonance("wet_lightning_arc",int(ctx["team"]))
 	if not bool(detail.get("chained",false)) and _has_modifier(effect_plan,"mod.chain"):
 		_chain_from(target,effect_plan,ctx,detail)
 	# Only depth-0 (root) contexts fire triggers, so payload Bursts can never recurse.

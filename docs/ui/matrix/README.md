@@ -107,3 +107,8 @@ Review: game-design and game-art review pending.
 
 Sigilwright wordmark (AD-162) imported into the main menu `logo` widget (`assets/ui/logo/`), with an additive `LogoGlow`.
 Command: `bash tools/ui_matrix.sh --godot /usr/local/bin/godot --states title` (2026-11-07). Result: 13 shots, 0 failed. The 1280x720 logo area (x320-960, y48-240) matches the AD-163 2x menu mock (letters, slab, sigil; no old-logo pixels). Menu mocks were replaced with the AD-163 FINAL re-renders.
+
+## AD-193
+
+New `combat_resonance` state: the combat HUD plus two reaction popups (`FREEZE +12`, `SHATTER +12`) right of the MP value text, fade-only.
+Command: `bash tools/ui_matrix.sh --godot /usr/local/bin/godot --states "combat_resonance"` (2026-11-10). Result: `SUMMARY: 13 shots, 0 failed`. At 1280x720 the popup is readable and overlaps nothing.

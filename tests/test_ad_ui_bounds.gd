@@ -9,7 +9,7 @@ const SIZES := [Vector2i(1280,720), Vector2i(1366,768), Vector2i(1600,900), Vect
 	Vector2i(3840,2160), Vector2i(1280,800), Vector2i(1920,1200), Vector2i(2560,1080), Vector2i(3440,1440), Vector2i(1024,768)]
 const MENU_STATES := ["title","settings","settings_video","settings_controls","settings_access","compendium","compendium_reactions","compendium_enemies","compendium_artifacts","credits"]
 const DEV_TEXTS := ["ARCANE DUNGEON / M4","Edit policy","Render FPS","Waves scheduled","telemetry","Toggle debug","Toggle edit policy"]
-const RUN_STATES := ["combat","reward","loadout","workshop_editor","merchant","pause","summary","summary_win","sigil_desk"]
+const RUN_STATES := ["combat","combat_resonance","reward","loadout","workshop_editor","merchant","pause","summary","summary_win","sigil_desk"]
 
 var issues := 0
 

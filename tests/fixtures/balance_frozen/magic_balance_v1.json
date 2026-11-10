@@ -156,8 +156,31 @@
           "status": "blinded",
           "radius": 120
         }
+      },
+      {
+        "id": "water_extinguish",
+        "channel": "inert",
+        "requires_any": [
+          "burning"
+        ],
+        "remove": [
+          "burning"
+        ],
+        "apply": [],
+        "bonus_damage_scale": 0,
+        "suppress_channel_apply": false
       }
-    ]
+    ],
+    "resonance": {
+      "popup_ticks": 60,
+      "mana_refund": {
+        "wet_lightning_arc": 0,
+        "wet_cold_freeze": 0,
+        "frozen_force_shatter": 0,
+        "fire_thaw_steam": 0,
+        "water_extinguish": 0
+      }
+    }
   },
   "sandbox": {
     "width": 920,

@@ -283,6 +283,12 @@ hud.key.space,SPACE
 hud.value,%d/%d
 hud.stage,STAGE %d   ROOM %d
 hud.dash_charges,X%d
+hud.resonance_popup,%s +%d
+hud.resonance.wet_lightning_arc,CONDUCT
+hud.resonance.wet_cold_freeze,FREEZE
+hud.resonance.frozen_force_shatter,SHATTER
+hud.resonance.fire_thaw_steam,STEAM
+hud.resonance.water_extinguish,EXTINGUISH
 sandbox.header,MAGIC SANDBOX  /  M1
 sandbox.hint,LMB/RMB cast • WASD debug move
 sandbox.select_formula,Select formula for highlighted slot
