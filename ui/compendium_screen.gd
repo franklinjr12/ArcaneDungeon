@@ -6,7 +6,7 @@ extends Control
 ## (undiscovered: "?" + undiscovered icon); enemy detail shows weak/resist icons (AD-194) but no other per-entry stats
 ## (found/used/encountered/drops) because no such data is tracked; artifacts use the generic upgrade glyph (as the HUD does) and no rarity card; milestones are not listed (only the
 ## layout's static note); enemy/reaction detail prose is limited to the name and recipe. Entries beyond a layout's cells are
-## paged with the scroll arrows (the enemy layout has 14 cells for 15 enemies); cells beyond the catalog are hidden.
+## paged with the scroll arrows (the enemy layout has 14 cells for 17 enemies); cells beyond the catalog are hidden.
 const VisualTheme = preload("res://ui/pixel_theme.gd")
 const SkinA = preload("res://ui/skin_a.gd")
 const SettingsScreen = preload("res://ui/settings_screen.gd")

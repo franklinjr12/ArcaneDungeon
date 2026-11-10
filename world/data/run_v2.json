@@ -634,6 +634,11 @@
               "fallen_adept",
               410,
               665
+            ],
+            [
+              "ghoul_stalker",
+              1080,
+              255
             ]
           ]
         }
@@ -697,6 +702,11 @@
               "bone_thrall",
               375,
               270
+            ],
+            [
+              "ghoul_stalker",
+              1120,
+              640
             ]
           ]
         }
@@ -760,6 +770,11 @@
               "bone_thrall",
               1120,
               640
+            ],
+            [
+              "ghoul_stalker",
+              1050,
+              500
             ]
           ]
         }

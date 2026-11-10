@@ -4,7 +4,7 @@
 	"categories": ["runes", "reactions", "enemies", "artifacts"],
 	"compendium": {
 		"reactions": ["wet_lightning_arc", "chill_freeze", "wet_cold_freeze", "frozen_force_shatter", "fire_thaw_steam"],
-		"enemies": ["bone_thrall", "cistern_slime", "cistern_slimelet", "corpse_bloat", "deep_eel", "drowned_acolyte", "drowned_archivist", "fallen_adept", "grave_hound", "lantern_wisp", "ossuary_shieldbearer", "rust_golem", "storm_crystal", "undead_warden", "wailing_spirit"]
+		"enemies": ["bone_thrall", "cistern_slime", "cistern_slimelet", "corpse_bloat", "deep_eel", "drowned_acolyte", "drowned_archivist", "fallen_adept", "ghoul_stalker", "grave_hound", "lantern_wisp", "ossuary_shieldbearer", "riptide_leaper", "rust_golem", "storm_crystal", "undead_warden", "wailing_spirit"]
 	},
 	"milestones": [
 		{"id": "runes_8", "category": "runes", "count": 8, "name_key": "META_MILESTONE_RUNES_8", "unlocks": {"runes": ["trigger.on_expire"], "artifacts": ["echo_chamber"]}},

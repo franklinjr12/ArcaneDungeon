@@ -3,6 +3,8 @@ extends RefCounted
 const Session = preload("res://combat/combat_session.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
 const Registry = preload("res://combat/enemy_behaviours/registry.gd")
+const Room = preload("res://world/room_template.gd")
+const EnemyAffinity = preload("res://ui/enemy_affinity.gd")
 
 const KINDS := {"ghoul_stalker":{"offset":Vector2(100,0),"telegraph":50,"recovery":45,"damage":14.0},
 	"riptide_leaper":{"offset":Vector2(200,0),"telegraph":55,"recovery":50,"damage":16.0}}
@@ -19,6 +21,7 @@ func run(t) -> void:
 	_leaper_region(t)
 	_leaper_resumes(t)
 	_telegraph_items(t)
+	_rooms_and_compendium(t)
 
 func _spawn(kind: String, offset: Vector2) -> Array:
 	var s = Session.new(136,"empty",0)
@@ -204,3 +207,44 @@ func _telegraph_items(t) -> void:
 	var again: Array = Art.collect_fx(l[0],l[0].sim.clock.tick,{}).filter(func(i): return i["event"] == "telegraph.circle")
 	t.check(again.size() == 1 and again[0]["at"] == landing,"AD-197 leaper circle stays on the locked point after the player moves")
 	t.check(Art.telegraph_colors("telegraph.circle",0.5) == Art.telegraph_colors("telegraph.circle",0.5),"AD-197 both telegraphs use the telegraph.circle tint")
+
+func _json(path: String) -> Dictionary:
+	return JSON.parse_string(FileAccess.get_file_as_string(path))
+
+func _rooms_with(templates: Dictionary, kind: String) -> Array:
+	var ids: Array = []
+	for id in templates:
+		for wave in templates[id]["waves"]:
+			for entry in wave["enemies"]:
+				if entry[0] == kind and not ids.has(id):
+					ids.append(id)
+	ids.sort()
+	return ids
+
+## AD-197: wave placement, room validity, Compendium entries, weakness icon and strings.
+func _rooms_and_compendium(t) -> void:
+	var ruins: Dictionary = _json("res://world/data/run_v2.json")["room_templates"]
+	var pool: Dictionary = _json("res://world/data/rooms_cistern_v1.json")
+	var tuning: Dictionary = _json("res://combat/combat_tuning_v1.json")
+	var cistern: Dictionary = pool["room_templates"]
+	t.check(_rooms_with(ruins,"ghoul_stalker") == ["ruins_c04","ruins_c05","ruins_c06"],"AD-197 ghoul stalker is in exactly ruins_c04/c05/c06")
+	t.check(_rooms_with(cistern,"riptide_leaper") == ["cistern_p03","cistern_p04","cistern_p10"],"AD-197 riptide leaper is in exactly cistern_p03/p04/p10")
+	var spots := {"ruins_c04":[1080,255],"ruins_c05":[1120,640],"ruins_c06":[1050,500]}
+	for id in spots:
+		var last: Array = ruins[id]["waves"][1]["enemies"].back()
+		t.check(last[0] == "ghoul_stalker" and int(last[1]) == spots[id][0] and int(last[2]) == spots[id][1],"AD-197 %s ends its on_clear wave with the ghoul at %s" % [id,str(spots[id])])
+	var rules: Dictionary = pool["rules"]
+	for id in ["cistern_p03","cistern_p04","cistern_p10"]:
+		var copy: Dictionary = cistern[id].duplicate(true)
+		copy["min_spawn_distance"] = rules["min_spawn_distance"]
+		copy["player_radius"] = rules["player_radius"]
+		copy["grid_step"] = rules["grid_step"]
+		var verdict: Dictionary = Room.new().initialize(copy,tuning["arena"],tuning["enemies"].keys())
+		t.check(verdict["ok"],"AD-197 %s still validates %s" % [id,str(verdict.get("issues",[]))])
+	var listed: Array = _json("res://world/data/meta_v1.json")["compendium"]["enemies"]
+	t.check(listed.has("ghoul_stalker") and listed.has("riptide_leaper"),"AD-197 compendium lists both enemies")
+	t.check(EnemyAffinity.of("ghoul_stalker")["weak"] == ["fire"],"AD-197 ghoul stalker is weak to fire")
+	t.check(EnemyAffinity.of("riptide_leaper")["weak"] == ["cold"],"AD-197 riptide leaper is weak to cold")
+	for kind in KINDS:
+		var key := "compendium.enemy.%s" % kind
+		t.check(TranslationServer.translate(key) != key,"AD-197 %s has a translated Compendium name" % kind)
