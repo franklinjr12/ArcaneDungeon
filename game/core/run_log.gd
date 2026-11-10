@@ -25,6 +25,9 @@ var death = null
 var rooms: Array = []
 var total_seconds := 0.0
 var spells_crafted: Array = []
+var reactions_triggered := 0
+var elements_used: Array = []
+var resonant_clears := 0
 var artifacts: Array = []
 var enemy_deaths: Dictionary = {}
 var written_path := ""
@@ -52,6 +55,9 @@ func begin(run_seed: int) -> void:
 	rooms = []
 	total_seconds = 0.0
 	spells_crafted = []
+	reactions_triggered = 0
+	elements_used = []
+	resonant_clears = 0
 	artifacts = []
 	enemy_deaths = {}
 	written_path = ""
@@ -65,7 +71,7 @@ func _close_room() -> void:
 
 func enter_room(index: int, id: String, type: String, total_ticks: int) -> void:
 	_close_room()
-	rooms.append({"index":index,"id":id,"type":type,"seconds":0.0,"wall_seconds":0.0,"damage_taken":0.0})
+	rooms.append({"index":index,"id":id,"type":type,"seconds":0.0,"wall_seconds":0.0,"damage_taken":0.0,"reactions":0,"resonant":false})
 	_room_start_tick = total_ticks
 	_room_wall_start = Time.get_ticks_msec()
 
@@ -82,10 +88,27 @@ func add_enemy_death(kind: String) -> void:
 func add_spell(formula_id: String, slot: int, room_index: int, formula: Dictionary) -> void:
 	spells_crafted.append({"formula_id":formula_id,"slot":slot,"room_index":room_index,"formula":formula.duplicate(true)})
 
+func add_reaction(_id: String) -> void:
+	reactions_triggered += 1
+	if not rooms.is_empty():
+		rooms.back()["reactions"] = int(rooms.back().get("reactions",0))+1
+
+func add_elements(ids: Array) -> void:
+	for id in ids:
+		if str(id) != "essence.neutral" and str(id) not in elements_used:
+			elements_used.append(str(id))
+	elements_used.sort()
+
+func mark_resonant() -> void:
+	resonant_clears += 1
+	if not rooms.is_empty():
+		rooms.back()["resonant"] = true
+
 func to_dict() -> Dictionary:
 	return {"schema_version":SCHEMA_VERSION,"build_version":build_version,"build":build,"seed":seed_value,
 		"resumed":resumed,"started_at":started_at,"ended_at":ended_at,"result":result,"death":death,
-		"rooms":rooms,"total_seconds":total_seconds,"spells_crafted":spells_crafted,
+		"rooms":rooms,"total_seconds":total_seconds,"spells_crafted":spells_crafted,"reactions_triggered":reactions_triggered,
+		"elements_used":elements_used,"resonant_clears":resonant_clears,
 		"artifacts":artifacts,"enemy_deaths":enemy_deaths}
 
 func snapshot() -> Dictionary:
@@ -104,6 +127,9 @@ func restore(data: Variant, run_seed: int) -> void:
 		rooms = data["rooms"]
 		total_seconds = float(data.get("total_seconds",0.0))
 		spells_crafted = data["spells_crafted"] if data.get("spells_crafted") is Array else []
+		reactions_triggered = int(data.get("reactions_triggered",0))
+		elements_used = data["elements_used"].duplicate() if data.get("elements_used") is Array else []
+		resonant_clears = int(data.get("resonant_clears",0))
 		artifacts = []
 		enemy_deaths = data["enemy_deaths"] if data.get("enemy_deaths") is Dictionary else {}
 		written_path = ""

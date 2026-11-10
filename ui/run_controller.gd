@@ -754,7 +754,9 @@ func _physics_process(_delta: float) -> void:
 	if refresh_counter%7 == 0:
 		var key: String = str(flow.run.sequence_index)+":"+flow.state+":"+str(flow.reward_collected)
 		if key != scene_key:
-			if flow.state == "cleared" and not flow.reward_collected and not flow.reward_options.is_empty():
+			if flow.state == "cleared" and flow.resonant_clear:
+				current_notice = tr("run.notice.resonant_clear")
+			elif flow.state == "cleared" and not flow.reward_collected and not flow.reward_options.is_empty():
 				current_notice = tr("run.notice.room_cleared") % flow.reward_options.size()
 			_redraw_panel()
 		else:
@@ -925,7 +927,10 @@ func _build_reward_panel() -> void:
 	o.picture("title_header",SkinA.region("ad_ui_header"),o.rect_of("title_header"))
 	o.text("title",tr("run.reward.title"),_band(o,"title_header","title"),"selected",HORIZONTAL_ALIGNMENT_CENTER)
 	var room_number := int(flow.room.values.get("room",flow.run.sequence_index))+1
-	o.text("subtitle",tr("run.reward.subtitle") % room_number,{"x":0.0,"y":o.rect_of("subtitle")["y"],"w":SkinA.CANVAS.x,"h":7.0},"normal",HORIZONTAL_ALIGNMENT_CENTER)
+	if flow.resonant_clear:
+		o.text("subtitle",tr("run.reward.resonant_banner"),{"x":0.0,"y":o.rect_of("subtitle")["y"],"w":SkinA.CANVAS.x,"h":7.0},"selected",HORIZONTAL_ALIGNMENT_CENTER)
+	else:
+		o.text("subtitle",tr("run.reward.subtitle") % room_number,{"x":0.0,"y":o.rect_of("subtitle")["y"],"w":SkinA.CANVAS.x,"h":7.0},"normal",HORIZONTAL_ALIGNMENT_CENTER)
 	o.picture("ico_coin",SkinA.icon_or_mvp("coin"),{"x":520.0,"y":11.0,"w":16.0,"h":16.0})
 	o.text("coins_txt",tr("run.reward.coins") % flow.run.currency,{"x":540.0,"y":o.rect_of("coins_txt")["y"],"w":76.0,"h":7.0},"selected",HORIZONTAL_ALIGNMENT_RIGHT)
 	var count: int = flow.reward_options.size()
@@ -959,7 +964,11 @@ func _build_reward_panel() -> void:
 		var inner_x: float = tip["x"]+8.0
 		var inner_w := tip_w-16.0
 		o.text("info_%d_title" % (i+1),card_name.to_upper(),{"x":inner_x,"y":o.rect_of("info_1_title")["y"],"w":inner_w,"h":7.0},"selected")
-		o.text("info_%d_tag" % (i+1),(tr(tag_key) % tr("run.rarity."+card_rarity(kind,rarity))).to_upper(),{"x":inner_x,"y":o.rect_of("info_1_tag")["y"],"w":inner_w,"h":7.0},"hover")
+		var tag_text: String = tr(tag_key) % tr("run.rarity."+card_rarity(kind,rarity))
+		var bonus := int(item.get("bonus_coins",0))
+		if bonus > 0:
+			tag_text += " "+tr("run.reward.bonus_coins") % bonus
+		o.text("info_%d_tag" % (i+1),tag_text.to_upper(),{"x":inner_x,"y":o.rect_of("info_1_tag")["y"],"w":inner_w,"h":7.0},"hover")
 		var rule: Dictionary = o.rect_of("divider_11")
 		o.rule("divider_%d" % (i+1),"ad_ui_divider_plain",{"x":inner_x,"y":rule["y"],"w":inner_w,"h":rule["h"]})
 		o.text("info_%d_desc" % (i+1),desc.to_upper(),{"x":inner_x,"y":o.rect_of("info_1_desc_0")["y"],"w":inner_w,"h":40.0},"normal",HORIZONTAL_ALIGNMENT_LEFT,4)
@@ -1338,6 +1347,7 @@ func _build_summary_panel() -> void:
 			break
 		o.text("st%d_l" % i,tr(rows[i][0]),o.rect_of("st%d_l" % i),"disabled")
 		o.text("st%d_v" % i,rows[i][1],o.rect_of("st%d_v" % i),"selected")
+	o.text("combo_stats",(tr("run.summary.combo_stats") % [int(stats["reactions_triggered"]),int(stats["elements_used"]),int(stats["spells_crafted"])]).to_upper(),{"x":column["x"],"y":o.rect_of("disc_1")["y"],"w":column["w"],"h":7.0},"normal",HORIZONTAL_ALIGNMENT_CENTER)
 	o.frame("hdr_loadout","ad_ui_header_small",o.rect_of("hdr_loadout"))
 	o.text("label_loadout",tr("run.summary.loadout"),_band(o,"hdr_loadout","label_21"),"selected",HORIZONTAL_ALIGNMENT_CENTER)
 	for i in 4:
@@ -1592,6 +1602,9 @@ func apply_debug_shot_state(state: String) -> bool:
 	var resonance_shot := state == "combat_resonance"
 	if resonance_shot:
 		state = "combat"
+	var resonant_reward_shot := state == "reward_resonant"
+	if resonant_reward_shot:
+		state = "reward"
 	if not state in ["combat","reward","loadout","workshop","workshop_editor","merchant","pause","pause_controls","pause_settings","pause_settings_audio","pause_settings_video","pause_settings_access","pause_confirm_abandon","summary","summary_win","sigil_desk"]:
 		return false
 	if state == "sigil_desk":
@@ -1626,6 +1639,12 @@ func apply_debug_shot_state(state: String) -> bool:
 	elif state == "summary":
 		flow.session.sim.actor.receive_damage(100000,"fire",2,100)
 		flow.step({"cast":0})
+	if resonant_reward_shot:
+		flow.resonant_clear = true
+		flow.reward_options = flow.rewards.choices(flow.run,str(flow.room.values["id"]),false,true)
+	if state == "summary" or state == "summary_win":
+		flow.run_log.reactions_triggered = 7
+		flow.run_log.elements_used = ["essence.cold","essence.fire","essence.water"]
 	_redraw_panel()
 	if state == "workshop_editor":
 		_set_shop_open(false)
