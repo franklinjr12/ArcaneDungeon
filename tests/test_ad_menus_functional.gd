@@ -306,6 +306,8 @@ func _coverage(t, root: Node, save) -> void:
 	_defaults(save)
 	_run_coverage(t, root, save)
 	_defaults(save)
+	_overlay_exits(t)
+	_defaults(save)
 	_pause_menu_standalone(t)
 	_defaults(save)
 	_restore_globals(root)
@@ -407,6 +409,64 @@ func _run_coverage(t, root: Node, save) -> void:
 		scene.close_pause()
 		t.check(not scene.flow.experiment.enabled, "AD-205 pause: telemetry off takes effect after close_pause")
 	scene.queue_free()
+	vp.queue_free()
+
+## AD-225: every overlay has an on-screen exit that a real mouse click reaches (the loadout used to swallow clicks in _input).
+func _clickable(t, vp: SubViewport, b: Button, tag: String) -> void:
+	t.check(b != null and b.is_visible_in_tree() and not b.disabled and b.mouse_filter == Control.MOUSE_FILTER_STOP \
+		and Rect2(Vector2.ZERO, Vector2(vp.size)).encloses(b.get_global_rect()), "AD-225 %s: exit button visible, enabled, clickable, on screen" % tag)
+
+func _overlay_exits(t) -> void:
+	var vp := _viewport()
+	var scene := _scene(vp)
+	t.check(scene.apply_debug_shot_state("loadout") and scene.can_view_loadout(), "AD-225 loadout: cleared room reached")
+	var close: Button = null
+	for how in ["button", "right_click", "loadout_key", "pause_key"]:
+		scene.open_loadout_view()
+		t.check(scene.is_loadout_view_open(), "AD-225 loadout opens (%s)" % how)
+		close = scene.loadout_view.find_child("LoadoutCloseButton", true, false)
+		if how == "button":
+			t.equal(close.text, "CLOSE", "AD-225 loadout: button reads CLOSE")
+			_clickable(t, vp, close, "loadout")
+			_click(vp, close)
+		elif how == "right_click":
+			_push_button(vp, MOUSE_BUTTON_RIGHT)
+		elif how == "loadout_key":
+			_action(vp, "loadout_view")
+		else:
+			_action(vp, "pause")
+		t.check(not scene.is_loadout_view_open(), "AD-225 loadout closes via %s" % how)
+	scene.open_loadout_view()
+	_click(vp, scene.loadout_view.find_child("LoadoutContinueButton", true, false))
+	t.check(not scene.is_loadout_view_open(), "AD-225 loadout: Continue click closes")
+	# Reward pick: exit is choosing a card (clickable cards); the room's reward overlay must be shown with offers.
+	t.check(scene.reward_overlay.visible, "AD-225 reward: overlay visible with clickable offers")
+	scene.queue_free()
+	vp.queue_free()
+	# Merchant and editor (workshop).
+	vp = _viewport()
+	scene = _scene(vp)
+	t.check(scene.apply_debug_shot_state("merchant"), "AD-225 merchant: state reached")
+	_clickable(t, vp, scene.shop_close_button, "merchant")
+	_click(vp, scene.shop_close_button)
+	t.check(not scene.shop_overlay.visible, "AD-225 merchant: Leave click closes")
+	t.check(scene.apply_debug_shot_state("workshop_editor") and scene.editor_open, "AD-225 editor: opened")
+	var cancel: Button = scene.find_child("EditorCancelButton", true, false)
+	_clickable(t, vp, cancel, "editor")
+	_click(vp, cancel)
+	t.check(not scene.editor_open, "AD-225 editor: Cancel click closes")
+	scene.queue_free()
+	vp.queue_free()
+	# Compendium from the title menu.
+	vp = _viewport()
+	var menu: Node = load("res://scenes/main.tscn").instantiate()
+	menu.show_debug_entries = false
+	vp.add_child(menu)
+	_click(vp, menu.panel.get_node("CompendiumButton"))
+	var comp = menu.compendium_screen
+	_clickable(t, vp, comp.back_button, "compendium")
+	_click(vp, comp.back_button)
+	t.check(not comp.visible and menu.panel.visible, "AD-225 compendium: Back click closes")
 	vp.queue_free()
 
 func _push_key(vp: SubViewport, keycode: Key) -> void:

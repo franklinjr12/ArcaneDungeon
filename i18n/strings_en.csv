@@ -456,7 +456,7 @@ loadout_view.locked, [LOCKED]
 loadout_view.artifacts,Artifacts
 loadout_view.no_artifacts,No artifacts yet
 loadout_view.read_only,Read-only. Spells can only be edited at the workshop.
-loadout_view.back,Back
+loadout_view.back,Close
 loadout_view.continue,Continue
 loadout_view.spells,Spells
 loadout_view.status,Status
@@ -569,6 +569,7 @@ menu.build_stamp,Build %s
 settings.open_logs,Open log folder
 settings.help.open_logs,"Opens the folder with your local session and crash logs. Send these files to Franklin. Nothing is uploaded."
 settings.action.report,Report feedback
+settings.action.toggle_fullscreen,Toggle fullscreen
 report.title,Send feedback
 report.prompt,"Add a one-line note (optional)"
 report.save,Save

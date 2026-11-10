@@ -1097,6 +1097,13 @@ func reset_bindings() -> void:
 	_last_rebind = {}
 	refresh_bindings()
 
+## Keeps the window-mode dropdown in step when F11 / Alt+Enter toggles fullscreen while this screen is open.
+func _process(_delta: float) -> void:
+	if window_mode_option != null and visible:
+		var idx := maxi(Settings.WINDOW_MODES.find(_settings.window_mode), 0)
+		if window_mode_option.selected != idx:
+			window_mode_option.select(idx)
+
 func _input(event: InputEvent) -> void:
 	if listening_action != "":
 		_listen_input(event)

@@ -11,6 +11,10 @@ static func cast_slot_for_event(event: InputEvent) -> int:
 static func slot_for_mouse_button(button: int) -> int:
 	return 0 if button == MOUSE_BUTTON_LEFT else 1
 
+## AD-225: right mouse button press (overlays use it as a close gesture).
+static func is_secondary_press(event: InputEvent) -> bool:
+	return event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT
+
 static func debug_keys_enabled() -> bool:
 	return OS.is_debug_build()
 
@@ -22,7 +26,7 @@ static func cast_slot_for_mouse_button(button: int) -> int:
 	return cast_slot_for_event(ev)
 
 const REBINDABLE := ["move_up","move_down","move_left","move_right","cast_slot_1","cast_slot_2",
-	"cast_slot_3","cast_slot_4","dash","interact","pause","report"]
+	"cast_slot_3","cast_slot_4","dash","interact","pause","report","toggle_fullscreen"]
 
 static func default_events(action: String) -> Array:
 	var out: Array = []
@@ -32,11 +36,16 @@ static func default_events(action: String) -> Array:
 			out.append(ev.duplicate())
 	return out
 
+static func _with_alt(d: Dictionary, ev: InputEventKey) -> Dictionary:
+	if ev.alt_pressed:
+		d["alt_pressed"] = true
+	return d
+
 static func event_to_dict(ev) -> Dictionary:
 	if ev is InputEventKey:
 		if ev.physical_keycode != 0:
-			return {"type":"key","physical_keycode":int(ev.physical_keycode)}
-		return {"type":"key","keycode":int(ev.keycode)}
+			return _with_alt({"type":"key","physical_keycode":int(ev.physical_keycode)}, ev)
+		return _with_alt({"type":"key","keycode":int(ev.keycode)}, ev)
 	if ev is InputEventMouseButton:
 		return {"type":"mouse","button_index":int(ev.button_index)}
 	if ev is InputEventJoypadButton:
@@ -60,6 +69,7 @@ static func dict_to_event(d) -> InputEvent:
 				ev.keycode = int(d["keycode"])
 			else:
 				return null
+			ev.alt_pressed = d.get("alt_pressed", false) == true
 			return ev
 		"mouse":
 			if not _num(d, "button_index") or int(d["button_index"]) <= 0:

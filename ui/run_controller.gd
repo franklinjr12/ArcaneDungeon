@@ -661,9 +661,12 @@ func _input(event: InputEvent) -> void:
 	if editor_open or not event.is_pressed() or event.is_echo():
 		return
 	if is_loadout_view_open():
-		if event.is_action_pressed("loadout_view") or event.is_action_pressed("pause"):
+		if event.is_action_pressed("loadout_view") or event.is_action_pressed("pause") \
+				or InputActions.is_secondary_press(event):
 			close_loadout_view()
-		get_viewport().set_input_as_handled()
+			get_viewport().set_input_as_handled()
+		elif not event is InputEventMouseButton:
+			get_viewport().set_input_as_handled() # swallow gameplay keys; clicks must reach the Close/Continue buttons
 		return
 	var fighting: bool = flow.state == "fighting"
 	var slot := InputActions.cast_slot_for_event(event)
@@ -1685,7 +1688,7 @@ func _debug_shot_entry() -> void:
 	var path := OS.get_environment("AD_UI_SHOT_OUT")
 	if path == "":
 		return
-	if OS.get_environment("AD_UI_SHOT_FULLSCREEN") == "1":
+	if OS.get_environment("AD_UI_SHOT_FULLSCREEN") == "1" and OS.is_debug_build() and OS.get_environment("AD_UI_SHOT_STATE") != "":
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	var delay := OS.get_environment("AD_UI_SHOT_DELAY_MS")
 	await get_tree().create_timer((int(delay) if delay != "" else 800) / 1000.0).timeout

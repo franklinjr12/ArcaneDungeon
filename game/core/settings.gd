@@ -134,29 +134,73 @@ func apply_audio() -> void:
 func apply_bindings() -> void:
 	InputActions.apply_bindings(bindings)
 
+## Test seam: when set, receives set_mode/set_borderless/set_size/set_position/get_mode/is_borderless/
+## screen_position/screen_size calls instead of the real DisplayServer (and is used even when headless).
+var display = null
+
+## Flips fullscreen <-> windowed ('borderless' goes to fullscreen).
+func toggle_fullscreen() -> void:
+	window_mode = "windowed" if window_mode == "fullscreen" else "fullscreen"
+
 ## Applies UI scale, frame limit, window mode and vsync. Never resizes a windowed window (keeps `--resolution WxH`
-## runs intact) except when leaving borderless, which restores the project window size.
+## runs intact) except when leaving borderless/fullscreen, which restores the project window size.
 func apply_display(window: Window) -> void:
 	if window != null:
 		window.content_scale_factor = snap_ui_scale(ui_scale)
 	Engine.max_fps = frame_limit
-	if DisplayServer.get_name() == "headless":
-		return
-	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED)
-	var current := DisplayServer.window_get_mode()
+	var backend = display
+	if backend == null:
+		if DisplayServer.get_name() == "headless":
+			return
+		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED)
+		backend = _RealDisplay.new(window)
+	var current: int = backend.get_mode()
 	var borderless := window_mode == "borderless"
-	var was_borderless := DisplayServer.window_get_flag(DisplayServer.WINDOW_FLAG_BORDERLESS)
-	var want := DisplayServer.WINDOW_MODE_FULLSCREEN if window_mode == "fullscreen" else DisplayServer.WINDOW_MODE_WINDOWED
+	var was_borderless: bool = backend.is_borderless()
+	var fullscreen := window_mode == "fullscreen"
+	var want := DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
+	var was_fullscreen := current == DisplayServer.WINDOW_MODE_FULLSCREEN
+	if fullscreen and was_borderless:
+		backend.set_borderless(false)
+		was_borderless = false
 	if current != want:
-		DisplayServer.window_set_mode(want)
+		backend.set_mode(want)
 	if was_borderless != borderless:
-		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, borderless)
-	var screen := DisplayServer.window_get_current_screen()
-	if borderless and want == DisplayServer.WINDOW_MODE_WINDOWED:
-		DisplayServer.window_set_position(DisplayServer.screen_get_position(screen))
-		DisplayServer.window_set_size(DisplayServer.screen_get_size(screen))
-	elif was_borderless and not borderless and want == DisplayServer.WINDOW_MODE_WINDOWED:
+		backend.set_borderless(borderless)
+	if want != DisplayServer.WINDOW_MODE_WINDOWED:
+		return
+	var spos: Vector2i = backend.screen_position()
+	var ssize: Vector2i = backend.screen_size()
+	if borderless:
+		backend.set_position(spos)
+		backend.set_size(ssize)
+	elif was_borderless or was_fullscreen:
 		var size := Vector2i(int(ProjectSettings.get_setting("display/window/size/viewport_width")),
 				int(ProjectSettings.get_setting("display/window/size/viewport_height")))
-		DisplayServer.window_set_size(size)
-		DisplayServer.window_set_position(DisplayServer.screen_get_position(screen) + (DisplayServer.screen_get_size(screen) - size) / 2)
+		backend.set_size(size)
+		backend.set_position(spos + (ssize - size) / 2)
+
+## Real window backend: prefers the root Window's mode so the Window node cannot revert a DisplayServer change.
+class _RealDisplay:
+	var win: Window
+	func _init(w: Window) -> void:
+		win = w
+	func get_mode() -> int:
+		return win.mode if win != null else DisplayServer.window_get_mode()
+	func is_borderless() -> bool:
+		return DisplayServer.window_get_flag(DisplayServer.WINDOW_FLAG_BORDERLESS)
+	func set_mode(m: int) -> void:
+		if win != null:
+			win.mode = Window.MODE_FULLSCREEN if m == DisplayServer.WINDOW_MODE_FULLSCREEN else Window.MODE_WINDOWED
+		else:
+			DisplayServer.window_set_mode(m)
+	func set_borderless(b: bool) -> void:
+		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_BORDERLESS, b)
+	func set_size(v: Vector2i) -> void:
+		DisplayServer.window_set_size(v)
+	func set_position(v: Vector2i) -> void:
+		DisplayServer.window_set_position(v)
+	func screen_position() -> Vector2i:
+		return DisplayServer.screen_get_position(DisplayServer.window_get_current_screen())
+	func screen_size() -> Vector2i:
+		return DisplayServer.screen_get_size(DisplayServer.window_get_current_screen())
