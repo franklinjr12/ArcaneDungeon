@@ -783,7 +783,7 @@ static func _pos(p: Variant) -> Vector2:
 static func collect_fx(session, tick: int, memo: Dictionary) -> Array:
 	var sim = session.sim
 	var out: Array = []
-	for key in ["born", "cursor", "prev", "since", "seen", "known", "dead", "phase", "eshots"]:
+	for key in ["born", "cursor", "prev", "since", "seen", "known", "dead", "phase", "roar", "eshots"]:
 		if not memo.has(key):
 			memo[key] = {}
 	if not memo.has("shots"):
@@ -976,6 +976,9 @@ static func _collect_feedback(session, tick: int, memo: Dictionary, out: Array) 
 			if enemy.phase == 2 and int(memo["phase"].get(id, 1)) != 2:
 				pending.append(["boss.phase", target.position])
 			memo["phase"][id] = enemy.phase
+		if enemy.get("state") == "roar" and int(memo["roar"].get(id, 0)) != int(enemy.phase):
+			memo["roar"][id] = int(enemy.phase)
+			pending.append(["boss.phase", target.position])
 		if enemy.state != "windup" or enemy.intent == null or not target.alive():
 			continue
 		var intent: Dictionary = enemy.intent.snapshot()
@@ -1102,6 +1105,8 @@ static func draw_enemy_markers(canvas: CanvasItem, enemy, at: Vector2, tick: int
 				var low: bool = target.health.current <= target.health.maximum*0.3
 				if enemy.state == "windup" or low:
 					canvas.draw_arc(at,float(behaviour["explode_radius"]),0.0,TAU,40,Color(0.8,0.9,0.3,0.45+0.25*float((tick/6)%2)),2.0)
+		if enemy.get("staggered") == true:
+			canvas.draw_arc(at,target.radius+10.0,0.0,TAU,32,Color(1.0,0.85,0.3,0.9),3.0)
 
 ## AD-138 placeholder water: translucent shallow, darker opaque deep. Visual only.
 static func draw_water(canvas: CanvasItem, session, offset: Vector2) -> void:

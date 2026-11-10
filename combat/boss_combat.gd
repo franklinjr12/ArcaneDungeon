@@ -7,6 +7,7 @@ const Movement = preload("res://combat/boss_moves/boss_movement.gd")
 const Hazards = preload("res://combat/boss_moves/boss_hazards.gd")
 const Lurk = preload("res://combat/enemy_behaviours/water_lurk.gd")
 const FLOOD_TAG := "archivist_flood"
+const ARENA_TAG := "boss_arena"
 var target
 var kind := "undead_warden"
 var tuning: Dictionary
@@ -36,10 +37,48 @@ var _move_from := Vector2.ZERO
 var _move_to := Vector2.ZERO
 ## AD-198 arena hazards: created only when a phase has `hazards`.
 var _hazards
+## AD-198 beats: `staggered` is a sim + presentation flag (+damage window); a roar deferred by a move in progress waits in `_pending_roar`.
+var staggered := false
+var _pending_roar := false
+var _arena_water := false
 
-## Pool and movement issues for a boss settings dictionary (empty = valid).
+## Pool, movement, hazard, transition and stagger issues for a boss settings dictionary (empty = valid).
 static func validate(settings: Dictionary) -> Array:
-	return Pool.validate(settings)+Movement.validate(settings)+Hazards.validate(settings)
+	return Pool.validate(settings)+Movement.validate(settings)+Hazards.validate(settings)+_validate_beats(settings)
+
+static func _number_from(value, minimum: float) -> bool:
+	return (typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT) and float(value) >= minimum
+
+## BOSS_TRANSITION_PARAM (roar_ticks >= 1, shallow arena water with [x,y,w,h]) and BOSS_STAGGER_PARAM (ticks >= 1, multiplier > 1).
+static func _validate_beats(settings: Dictionary) -> Array:
+	var issues: Array = []
+	var phases = settings.get("phases",[])
+	for p in (phases.size() if typeof(phases) == TYPE_ARRAY else 0):
+		if typeof(phases[p]) != TYPE_DICTIONARY or not phases[p].has("transition"):
+			continue
+		var path := "phases[%d].transition" % p
+		var transition = phases[p]["transition"]
+		if typeof(transition) != TYPE_DICTIONARY or not _number_from(transition.get("roar_ticks"),1.0):
+			issues.append({"code":"BOSS_TRANSITION_PARAM","path":path+".roar_ticks","message":"roar_ticks must be a number >= 1"})
+			continue
+		var change = transition.get("arena_change",{})
+		var water = change.get("water",[]) if typeof(change) == TYPE_DICTIONARY else null
+		if typeof(water) != TYPE_ARRAY:
+			issues.append({"code":"BOSS_TRANSITION_PARAM","path":path+".arena_change","message":"arena_change.water must be an array"})
+			continue
+		for w in water.size():
+			var entry = water[w]
+			var rect = entry.get("rect") if typeof(entry) == TYPE_DICTIONARY else null
+			var kind := str(entry.get("kind","")) if typeof(entry) == TYPE_DICTIONARY else ""
+			if kind != "shallow" or typeof(rect) != TYPE_ARRAY or rect.size() != 4 or not rect.all(func(v): return _number_from(v,-INF)):
+				issues.append({"code":"BOSS_TRANSITION_PARAM","path":"%s.arena_change.water[%d]" % [path,w],"message":"arena water must be shallow with rect [x,y,w,h]"})
+	if settings.has("stagger"):
+		var stagger = settings["stagger"]
+		if typeof(stagger) != TYPE_DICTIONARY or not _number_from(stagger.get("ticks"),1.0):
+			issues.append({"code":"BOSS_STAGGER_PARAM","path":"stagger.ticks","message":"ticks must be a number >= 1"})
+		elif not _number_from(stagger.get("damage_taken_multiplier"),0.0) or float(stagger["damage_taken_multiplier"]) <= 1.0:
+			issues.append({"code":"BOSS_STAGGER_PARAM","path":"stagger.damage_taken_multiplier","message":"damage_taken_multiplier must be a number > 1"})
+	return issues
 
 func _init(target_entity, settings: Dictionary) -> void:
 	target = target_entity
@@ -102,6 +141,14 @@ func advance(session) -> void:
 	if not target.alive():
 		submerged = false
 		target.untargetable = false
+		if staggered or state == "roar" or _pending_roar:
+			staggered = false
+			_pending_roar = false
+			target.damage_scale = 1.0
+		if _arena_water:
+			_arena_water = false
+			if session.water != null:
+				session.water.remove_tag(ARENA_TAG)
 		_drain_flood(session)
 		if _hazards != null:
 			_hazards.clear(self,session)
@@ -137,6 +184,14 @@ func advance(session) -> void:
 		"submerged":
 			if state_tick >= int(_move["submerged_ticks"]):
 				_open_move_windup(session,"emerge",float(_move["radius"]),int(_move["emerge_telegraph_ticks"]),_pick_anchor(session,_move,target.position))
+		"roar":
+			if state_tick >= int(tuning["phases"][phase-1]["transition"]["roar_ticks"]):
+				_end_roar(session)
+		"stagger":
+			if state_tick >= int(tuning["stagger"]["ticks"]):
+				staggered = false
+				target.damage_scale = 1.0
+				_start_windup(session)
 		"recover":
 			_walk(session)
 			var wait := _combo_gap if not _combo_queue.is_empty() else int(tuning["recovery_ticks"])
@@ -187,13 +242,83 @@ func _update_phase(hp_fraction: float, tick: int, session) -> void:
 	_combo_queue.clear()
 	_last_key = ""
 	_current_entry = {}
+	_pending_roar = false
 	if _hazards != null:
 		_hazards.clear(self,session)
-	_enter_hazards()
+	if phases[phase-1].has("transition"):
+		_roar_or_defer(session)
+		return
+	if state != "roar":
+		_enter_hazards()
 	if state == "windup":
 		_reset_cycle_after_fire = true
 	else:
 		cycle = 0
+
+## AD-198: the roar starts now unless the boss is mid-move (moving, submerged, or emerging); then it waits for the move to end.
+func _roar_or_defer(session) -> void:
+	var emerging: bool = state == "windup" and str(intent.snapshot()["kind"]) == "emerge"
+	if state == "moving" or state == "submerged" or emerging or state == "roar":
+		_pending_roar = true
+	else:
+		_begin_roar(session,1)
+
+## `lead` is the ticks of this advance that already counted: the roar spans exactly roar_ticks ticks after the one that began it.
+func _begin_roar(session, lead: int) -> void:
+	var transition: Dictionary = tuning["phases"][phase-1]["transition"]
+	intent = null
+	_combo_queue.clear()
+	_windup_attack = ""
+	_current_entry = {}
+	_reset_cycle_after_fire = false
+	_pending_roar = false
+	cycle = 0
+	staggered = false
+	target.damage_scale = 0.0
+	if _hazards != null:
+		_hazards.clear(self,session)
+	transitions.append({"from":"phase%d" % phase,"to":"roar","tick":session.sim.clock.tick,"enemy_id":target.id})
+	state = "roar"
+	state_tick = -lead
+	_apply_arena_change(session,transition.get("arena_change",{}))
+	session._notify("! BOSS ROAR",target.position)
+	if phase != 2:
+		session._event_cue("phase:"+kind,target.position,"sfx.boss.phase")
+
+func _apply_arena_change(session, change: Dictionary) -> void:
+	if bool(change.get("clear_hazards",false)):
+		session.remove_hazards_from(target.id)
+		_drain_flood(session)
+		if session.water != null:
+			session.water.remove_tag(ARENA_TAG)
+	var water: Array = change.get("water",[])
+	if water.is_empty():
+		return
+	if session.water == null:
+		session.set_water([])
+	session.water.remove_tag(ARENA_TAG)
+	session.water.add_entries(water.map(func(entry): return {"kind":str(entry["kind"]),"rect":entry["rect"].duplicate(),"tag":ARENA_TAG}))
+	_arena_water = true
+
+func _end_roar(session) -> void:
+	target.damage_scale = 1.0
+	if _pending_roar:
+		_begin_roar(session,0)
+		return
+	_enter_hazards()
+	_state("acquire",session.sim.clock.tick)
+
+## AD-198: after a finished `big` entry (last combo member, landed leap, finished emerge) the boss is staggered instead of recovering.
+func _after_move_or_attack(session) -> void:
+	if _pending_roar:
+		_begin_roar(session,0)
+	elif bool(_current_entry.get("big",false)) and _combo_queue.is_empty() and tuning.has("stagger"):
+		staggered = true
+		target.damage_scale = float(tuning["stagger"]["damage_taken_multiplier"])
+		_state("stagger",session.sim.clock.tick)
+		session._notify("STAGGERED",target.position)
+	else:
+		_state("recover",session.sim.clock.tick)
 
 func _range_key(attack: String) -> String:
 	match attack:
@@ -294,7 +419,7 @@ func _finish_windup(session) -> void:
 			_end_move(session)
 		_:
 			_fire(session)
-			_state("recover",session.sim.clock.tick)
+			_after_move_or_attack(session)
 
 func _slam_damage(session) -> void:
 	var player = session.sim.actor
@@ -305,7 +430,7 @@ func _end_move(session) -> void:
 	if _reset_cycle_after_fire:
 		_reset_cycle_after_fire = false
 		cycle = 0
-	_state("recover",session.sim.clock.tick)
+	_after_move_or_attack(session)
 
 func _move_tick(session) -> void:
 	if str(_move["mode"]) == "leap":

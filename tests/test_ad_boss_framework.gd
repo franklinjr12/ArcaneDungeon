@@ -35,6 +35,17 @@ func run(t) -> void:
 	_hazard_fx(t)
 	_hazard_legacy(t)
 	_validate_hazards(t)
+	_roar(t)
+	_roar_cancels_windup(t)
+	_roar_arena(t)
+	_roar_hazard_timers(t)
+	_roar_defer(t)
+	_roar_multi(t)
+	_stagger(t)
+	_beats_death(t)
+	_beats_legacy(t)
+	_beats_fx(t)
+	_validate_beats(t)
 
 func _base(extra: Dictionary = {}) -> Dictionary:
 	var cfg := {"kind":"test_boss","hp":2000,"radius":49,"recovery_ticks":30,"min_telegraph_ticks":36,"shot_speed":280,"shot_spread":0,
@@ -523,3 +534,289 @@ func _validate_hazards(t) -> void:
 	t.equal(codes.call(_hazard_cfg([broken])),["BOSS_HAZARD_PARAM","BOSS_HAZARD_PARAM"],"AD-198 validate flags missing or invalid hazard params")
 	var deep := {"type":"rising_water","duration_ticks":100,"first_ticks":5,"every_ticks":1000,"warn_ticks":40,"sets":[[{"kind":"deep","rect":[0,0,10,10]}]]}
 	t.equal(codes.call(_hazard_cfg([deep])),["BOSS_HAZARD_DEEP_WATER"],"AD-198 validate rejects deep rising water")
+
+## AD-198 step 4: phase-transition roar and stagger window. Shots deal no damage so only the test's own hits change boss or player hp.
+const ROAR_WATER := [{"kind":"shallow","rect":[700,100,100,100]}]
+
+func _plain_pool(extra: Array = []) -> Array:
+	return extra+[{"pattern":"radial"},{"pattern":"fan"},{"pattern":"targeted"}]
+
+func _roar_cfg(second: Dictionary = {}, pool: Array = [], extra: Dictionary = {}) -> Dictionary:
+	var phase2 := {"threshold":0.5,"windup_ticks":40,"pool":_plain_pool(pool),"transition":{"roar_ticks":90,"arena_change":{"clear_hazards":true,"water":ROAR_WATER}}}
+	return _base({"shot_damage":0,"radial_damage":0,"pulse_damage":0,"anchors":ANCHORS,
+		"phases":[{"threshold":1.0,"windup_ticks":40,"pool":_plain_pool(pool)},phase2.merged(second,true)]}).merged(extra,true)
+
+func _hit(boss, s, amount: float = 100.0) -> float:
+	var before: float = boss.target.health.current
+	boss.target.receive_damage(amount,"fire",s.sim.actor.team,float(s.sim.settings["combat"]["armor_scale"]))
+	return before-boss.target.health.current
+
+func _to_phase2(boss) -> void:
+	boss.target.health.current = boss.target.health.maximum*0.4
+
+func _step_until(s, boss, state: String, limit: int = 600) -> bool:
+	for i in limit:
+		if boss.state == state:
+			return true
+		s.step()
+	return boss.state == state
+
+func _roar(t) -> void:
+	var pair := _fresh(_roar_cfg())
+	var s = pair[0]
+	var boss = pair[1]
+	for i in 10:
+		s.step()
+	_to_phase2(boss)
+	var hp: float = boss.target.health.current
+	var roar_ticks := 0
+	var damage_taken := 0.0
+	var scale_ok := true
+	for i in 200:
+		s.step()
+		if boss.state != "roar":
+			break
+		roar_ticks += 1
+		damage_taken += _hit(boss,s)
+		scale_ok = scale_ok and boss.target.damage_scale == 0.0 and boss.target.alive() and boss.target.eligible(s.sim.actor.team)
+	t.equal(roar_ticks,90,"AD-198 the roar lasts exactly roar_ticks")
+	t.check(scale_ok and damage_taken == 0.0 and boss.target.health.current == hp,"AD-198 the boss takes no damage during the roar but stays targetable")
+	t.check(boss.target.damage_scale == 1.0 and boss.state == "acquire","AD-198 the roar ends with normal damage and an acquire")
+	t.check(boss.transitions.any(func(e): return e["from"] == "phase2" and e["to"] == "roar"),"AD-198 the roar is recorded in transitions")
+	t.check(_hit(boss,s) > 0.0,"AD-198 the boss is vulnerable again after the roar")
+
+func _roar_cancels_windup(t) -> void:
+	var pair := _fresh(_roar_cfg())
+	var s = pair[0]
+	var boss = pair[1]
+	t.check(_step_until(s,boss,"windup"),"AD-198 test boss reaches a windup")
+	for i in 20:
+		s.step()
+	_to_phase2(boss)
+	s.step()
+	t.check(boss.state == "roar" and boss.intent == null and boss._windup_attack == "" and boss._combo_queue.is_empty(),"AD-198 a windup in progress is cancelled by the roar")
+	var shots := 0
+	for i in 95:
+		s.step()
+		shots = maxi(shots,s.enemy_shots.size())
+	t.equal(shots,0,"AD-198 a cancelled windup never fires")
+	var combo := _fresh(_roar_cfg({},[{"combo":["radial","fan"],"gap_ticks":12,"weight":1000}]))
+	for i in 3:
+		combo[0].step()
+	_to_phase2(combo[1])
+	for i in 100:
+		combo[0].step()
+	t.check(combo[1].state != "roar" and combo[1]._combo_queue.size() <= 1,"AD-198 the roar clears the combo queue")
+
+func _roar_arena(t) -> void:
+	var spec := {"type":"zone","at":"player","radius":80,"active_ticks":500,"damage":6,"damage_interval_ticks":30,"channel":"fire","first_ticks":0,"every_ticks":1000,"warn_ticks":40}
+	var cfg := _roar_cfg()
+	cfg["phases"][0]["hazards"] = [spec]
+	var pair := _fresh(cfg)
+	var s = pair[0]
+	var boss = pair[1]
+	s.set_water([])
+	for i in 60:
+		s.step()
+	t.check(not _kinds(s,["boss_warning","boss_zone"]).is_empty(),"AD-198 phase 1 hazard is live before the roar")
+	_to_phase2(boss)
+	s.step()
+	t.check(boss.state == "roar" and _kinds(s,["boss_warning","boss_zone"]).is_empty(),"AD-198 clear_hazards removes the boss hazards at roar start")
+	t.check(s.water.in_water(Vector2(750,150)) and s.water.view().any(func(e): return e.get("tag","") == "boss_arena"),"AD-198 arena_change adds tagged shallow water")
+	for i in 120:
+		s.step()
+	t.check(s.water.in_water(Vector2(750,150)),"AD-198 the arena water outlasts the roar")
+	boss.target.health.current = 0.0
+	s.step()
+	t.check(boss.state == "dead" and not s.water.in_water(Vector2(750,150)),"AD-198 boss death removes the arena water")
+	var none := _fresh(_roar_cfg())
+	for i in 5:
+		none[0].step()
+	_to_phase2(none[1])
+	none[0].step()
+	t.check(none[0].water != null and none[0].water.in_water(Vector2(750,150)),"AD-198 arena_change creates the water set when the room has none")
+
+func _roar_hazard_timers(t) -> void:
+	var spec := {"type":"zone","at":"points","points":[[730,330]],"radius":80,"active_ticks":60,"damage":0,"damage_interval_ticks":30,"first_ticks":10,"every_ticks":1000,"warn_ticks":40}
+	var cfg := _roar_cfg({"hazards":[spec]})
+	var pair := _fresh(cfg)
+	var s = pair[0]
+	var boss = pair[1]
+	for i in 5:
+		s.step()
+	_to_phase2(boss)
+	var roar_ticks := 0
+	var warned_in_roar := false
+	var first_warn := -1
+	var after := 0
+	for i in 200:
+		s.step()
+		if boss.state == "roar":
+			roar_ticks += 1
+			warned_in_roar = warned_in_roar or not _kinds(s,["boss_warning"]).is_empty()
+		else:
+			after += 1
+			if first_warn < 0 and not _kinds(s,["boss_warning"]).is_empty():
+				first_warn = after
+	t.check(not warned_in_roar and roar_ticks == 90,"AD-198 no hazard starts during the roar")
+	t.check(first_warn >= 9 and first_warn <= 12,"AD-198 phase hazard timers start when the roar ends (first warning %d ticks after)" % first_warn)
+
+func _roar_defer(t) -> void:
+	var move := {"mode":"submerge","telegraph_ticks":40,"submerged_ticks":60,"emerge_telegraph_ticks":50,"anchor_pick":"farthest","radius":110,"damage":0}
+	var pair := _fresh(_roar_cfg({},[{"move":move,"weight":1000}]))
+	var s = pair[0]
+	var boss = pair[1]
+	t.check(_step_until(s,boss,"submerged"),"AD-198 test boss submerges")
+	_to_phase2(boss)
+	var roar_early := false
+	var emerge_seen := false
+	for i in 400:
+		s.step()
+		emerge_seen = emerge_seen or (boss.state == "windup" and str(boss.intent.snapshot()["kind"]) == "emerge")
+		if boss.state == "roar":
+			break
+		roar_early = roar_early or (not emerge_seen and boss.state != "submerged" and boss.state != "windup")
+	t.check(boss.state == "roar" and emerge_seen and not roar_early,"AD-198 a submerge in progress defers the roar until the boss has emerged")
+	t.check(not boss.submerged and not boss.target.untargetable and boss.target.position == Vector2(1100,200) and boss.target.damage_scale == 0.0,"AD-198 the deferred roar starts visible and invulnerable at the emerge point")
+	t.check(not boss._pending_roar,"AD-198 the pending roar flag is consumed")
+	var leap := {"mode":"leap","target":"anchor","anchor_pick":"farthest","telegraph_ticks":50,"flight_ticks":24,"radius":110,"damage":0}
+	var airborne := _fresh(_roar_cfg({},[{"move":leap,"weight":1000}]))
+	t.check(_step_until(airborne[0],airborne[1],"moving"),"AD-198 test boss leaps")
+	_to_phase2(airborne[1])
+	airborne[0].step()
+	t.check(airborne[1].state == "moving" and airborne[1]._pending_roar,"AD-198 a leap in flight defers the roar")
+	t.check(_step_until(airborne[0],airborne[1],"roar",100) and airborne[1].target.position.distance_to(Vector2(1100,200)) < 0.01,"AD-198 the roar starts after the leap has landed")
+	var wind := _fresh(_roar_cfg({},[{"move":move,"weight":1000}]))
+	t.check(_step_until(wind[0],wind[1],"windup") and str(wind[1].intent.snapshot()["kind"]) == "submerge","AD-198 test boss is in the submerge windup")
+	_to_phase2(wind[1])
+	wind[0].step()
+	t.check(wind[1].state == "roar" and not wind[1].submerged,"AD-198 a submerge windup is cancelled by the roar")
+
+func _roar_multi(t) -> void:
+	var cfg := _roar_cfg()
+	cfg["phases"].append({"threshold":0.2,"windup_ticks":40,"pool":_plain_pool(),"transition":{"roar_ticks":30}})
+	var pair := _fresh(cfg)
+	var s = pair[0]
+	var boss = pair[1]
+	for i in 5:
+		s.step()
+	boss.target.health.current = boss.target.health.maximum*0.1
+	s.step()
+	var roars: int = boss.transitions.filter(func(e): return e["to"] == "roar").size()
+	var ticks := 0
+	while boss.state == "roar" and ticks < 300:
+		s.step()
+		ticks += 1
+	t.check(boss.phase == 3 and roars == 1 and ticks == 30 and boss.state == "acquire","AD-198 crossing two thresholds at once plays one roar for the highest phase (%d roars, %d ticks)" % [roars,ticks])
+
+func _stagger_cfg(pool: Array) -> Dictionary:
+	return _base({"shot_damage":0,"radial_damage":0,"pulse_damage":0,"anchors":ANCHORS,"stagger":{"ticks":90,"damage_taken_multiplier":1.5},
+		"phases":[{"threshold":1.0,"windup_ticks":40,"pool":pool}]})
+
+func _stagger(t) -> void:
+	var pair := _fresh(_stagger_cfg([{"pattern":"radial","big":true,"weight":1000},{"pattern":"fan"},{"pattern":"targeted"}]))
+	var s = pair[0]
+	var boss = pair[1]
+	var normal := _hit(boss,s)
+	t.check(_step_until(s,boss,"stagger"),"AD-198 a finished big attack enters stagger")
+	var staggered_ok: bool = boss.staggered and boss.target.damage_scale == 1.5
+	var dealt := _hit(boss,s)
+	t.check(staggered_ok and absf(dealt/normal-1.5) < 0.001,"AD-198 damage during stagger is 1.5x the same hit outside it (%.2f vs %.2f)" % [dealt,normal])
+	var ticks := 0
+	var held := true
+	while boss.state == "stagger" and ticks < 300:
+		held = held and boss.staggered and boss.target.position == AT
+		s.step()
+		ticks += 1
+	t.check(ticks == 90 and held,"AD-198 stagger lasts exactly its ticks and the boss does not move")
+	t.check(not boss.staggered and boss.target.damage_scale == 1.0 and absf(_hit(boss,s)-normal) < 0.001,"AD-198 stagger restores normal damage")
+	t.check(boss.state == "windup","AD-198 the boss goes on to its next windup after stagger")
+	var plain := _fresh(_stagger_cfg(_plain_pool()))
+	var seen := false
+	for i in 900:
+		plain[0].step()
+		seen = seen or plain[1].state == "stagger" or plain[1].staggered
+	t.check(not seen,"AD-198 stagger follows only big entries")
+	var combo := _fresh(_stagger_cfg([{"combo":["radial","fan"],"gap_ticks":12,"big":true,"weight":1000},{"pattern":"fan"},{"pattern":"targeted"}]))
+	var early := false
+	var windups := 0
+	var prev := ""
+	for i in 600:
+		combo[0].step()
+		if combo[1].state == "windup" and prev != "windup":
+			windups += 1
+		prev = combo[1].state
+		if combo[1].state == "stagger":
+			break
+		early = early or combo[1].staggered
+	t.check(combo[1].state == "stagger" and windups == 2 and not early,"AD-198 a big combo staggers only after its last member")
+	var leap := {"mode":"leap","target":"anchor","anchor_pick":"farthest","telegraph_ticks":50,"flight_ticks":24,"radius":110,"damage":0}
+	var jump := _fresh(_stagger_cfg([{"move":leap,"big":true,"weight":1000},{"pattern":"radial"},{"pattern":"fan"},{"pattern":"targeted"}]))
+	t.check(_step_until(jump[0],jump[1],"stagger") and jump[1].target.position.distance_to(Vector2(1100,200)) < 0.01,"AD-198 a big leap staggers once it has landed")
+
+func _beats_death(t) -> void:
+	var pair := _fresh(_stagger_cfg([{"pattern":"radial","big":true,"weight":1000},{"pattern":"fan"},{"pattern":"targeted"}]))
+	_step_until(pair[0],pair[1],"stagger")
+	pair[1].target.health.current = 0.0
+	pair[0].step()
+	t.check(pair[1].state == "dead" and not pair[1].staggered and pair[1].target.damage_scale == 1.0,"AD-198 death during stagger leaves no flags")
+	var roaring := _fresh(_roar_cfg())
+	for i in 5:
+		roaring[0].step()
+	_to_phase2(roaring[1])
+	for i in 20:
+		roaring[0].step()
+	roaring[1].target.health.current = 0.0
+	roaring[0].step()
+	t.check(roaring[1].state == "dead" and not roaring[1]._pending_roar and roaring[1].target.damage_scale == 1.0,"AD-198 death during the roar leaves no flags")
+	var move := {"mode":"submerge","telegraph_ticks":40,"submerged_ticks":60,"emerge_telegraph_ticks":50,"radius":110,"damage":0}
+	var pending := _fresh(_roar_cfg({},[{"move":move,"weight":1000}]))
+	_step_until(pending[0],pending[1],"submerged")
+	_to_phase2(pending[1])
+	pending[0].step()
+	pending[1].target.health.current = 0.0
+	pending[0].step()
+	t.check(pending[1].state == "dead" and not pending[1]._pending_roar and not pending[1].submerged and not pending[1].target.untargetable,"AD-198 death with a deferred roar leaves no flags")
+
+func _beats_legacy(t) -> void:
+	var cfg := _base({"shot_damage":0,"radial_damage":0,"pulse_damage":0,"phases":[{"threshold":1.0,"windup_ticks":40,"pool":_plain_pool()},
+		{"threshold":0.5,"windup_ticks":40,"pool":_plain_pool()}]})
+	var pair := _fresh(cfg)
+	var s = pair[0]
+	var boss = pair[1]
+	var seen: Array = []
+	for i in 300:
+		if i == 100:
+			_to_phase2(boss)
+		s.step()
+		if not seen.has(boss.state):
+			seen.append(boss.state)
+		if boss.state == "roar" or boss.state == "stagger" or boss.staggered or boss.target.damage_scale != 1.0:
+			break
+	t.check(boss.phase == 2 and not seen.has("roar") and not seen.has("stagger") and boss.target.damage_scale == 1.0,"AD-198 a boss without transition/stagger has no roar or stagger (%s)" % str(seen))
+	t.check(not boss.transitions.any(func(e): return e["to"] == "roar"),"AD-198 a legacy phase change records no roar")
+
+func _beats_fx(t) -> void:
+	var pair := _fresh(_roar_cfg())
+	var s = pair[0]
+	var boss = pair[1]
+	var memo := {}
+	for i in 5:
+		s.step()
+	_to_phase2(boss)
+	var phases := 0
+	var live := false
+	for i in 100:
+		s.step()
+		var now := not Art.collect_fx(s,s.sim.clock.tick,memo).filter(func(e): return e["event"] == "boss.phase").is_empty()
+		phases += 1 if now and not live else 0
+		live = now
+	t.equal(phases,1,"AD-198 collect_fx emits one boss.phase per roar")
+
+func _validate_beats(t) -> void:
+	var codes := func(cfg): return BossCombat.validate(cfg).map(func(i): return i["code"])
+	t.equal(BossCombat.validate(_roar_cfg({},[],{"stagger":{"ticks":90,"damage_taken_multiplier":1.5}})),[],"AD-198 valid transition and stagger have no issues")
+	t.equal(codes.call(_roar_cfg({"transition":{"roar_ticks":0}})),["BOSS_TRANSITION_PARAM"],"AD-198 validate flags roar_ticks < 1")
+	t.equal(codes.call(_roar_cfg({"transition":{"roar_ticks":90,"arena_change":{"water":[{"kind":"deep","rect":[0,0,10,10]}]}}})),["BOSS_TRANSITION_PARAM"],"AD-198 validate flags non-shallow arena water")
+	t.equal(codes.call(_roar_cfg({},[],{"stagger":{"ticks":0,"damage_taken_multiplier":1.5}})),["BOSS_STAGGER_PARAM"],"AD-198 validate flags stagger ticks < 1")
+	t.equal(codes.call(_roar_cfg({},[],{"stagger":{"ticks":90,"damage_taken_multiplier":1.0}})),["BOSS_STAGGER_PARAM"],"AD-198 validate flags a stagger multiplier <= 1")
