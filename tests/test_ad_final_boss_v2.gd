@@ -17,6 +17,8 @@ const LIVE_BENCH_BUILDS := [0,2]
 const LIVE_BENCH_TICKS := 12000
 const LIVE_STILL_LIMIT := 120
 const Minion = preload("res://combat/boss_moves/elite_minion.gd")
+const ART = preload("res://ui/pixel_art_renderer.gd")
+const MANIFEST := "res://art/export/actors/actors_manifest.json"
 const PAGES := {"hp":6,"radius":14,"speed":150,"turn_deg_per_tick":2,"lifetime_ticks":300,"damage":7,"cap":5,"count":3,"spread_degrees":40}
 const CONDUCT := {"duration_ticks":200,"damage":6,"interval_ticks":10}
 
@@ -58,6 +60,7 @@ func run(t) -> void:
 	_live_freeze_stun(t)
 	_live_shield(t)
 	_live_tide(t)
+	_art(t)
 	_live_movement_bench(t)
 
 func _move(extra: Dictionary = {}) -> Dictionary:
@@ -972,3 +975,56 @@ func _live_movement_bench(t) -> void:
 			var label := "seed %d build %d" % [run_seed,build]
 			print("INFO ARCHIVIST_BENCH %s fight_seconds=%.1f max_still_ticks=%d phases=%s dead=%s" % [label,r["seconds"],r["max_still"],str(r["phases"]),str(r["dead"])])
 			t.check(int(r["max_still"]) <= LIVE_STILL_LIMIT,"AD-201 the live Archivist never stands still more than 2 s while acquiring, recovering or moving (%s, %d ticks)" % [label,r["max_still"]])
+
+## AD-201 step 5: approved Archivist art (AD-212 body, AD-213 r2 FX, AD-227 tide wave). Presentation only.
+const ART_SHEETS := {"pool_ripple":["telegraph"],"splash_ring":["splash"],"book_page":["flutter","burn","torn"],"wisp_shield":["loop","break"],"tide_wave":["wave","gap"]}
+const ART_BODY_TAGS := ["submerge","emerge","page_throw","ice_stun","shielded","move_glide","idle","attack_a","phase","hit","death"]
+
+func _art(t) -> void:
+	var man = JSON.parse_string(FileAccess.get_file_as_string(MANIFEST))
+	var body: Dictionary = man["actors"]["drowned_archivist"]
+	for tag in ART_BODY_TAGS:
+		t.check(ART.actor_has_tag("drowned_archivist",tag),"AD-201 archivist body has tag: "+tag)
+	t.equal(ART.actor_tag("drowned_archivist","move_side")["from"],ART.actor_tag("drowned_archivist","move_glide")["from"],"AD-201 moving maps to move_glide")
+	t.check(body["rows"].has("AD-212"),"AD-201 archivist manifest cites AD-212")
+	for name in ART_SHEETS:
+		t.check(man["sheets"].has(name),"AD-201 sheet in the manifest: "+name)
+		var sh := ART.extra_sheet(name)
+		t.check(not sh.is_empty() and ResourceLoader.exists(str(sh["png"])) and FileAccess.file_exists(str(sh["json"])),"AD-201 sheet files exist: "+name)
+		t.check(sh.get("glow_png") != null and ResourceLoader.exists(str(sh["glow_png"])),"AD-201 sheet has a glow layer: "+name)
+		for tag in ART_SHEETS[name]:
+			var fr := ART.extra_sheet_frame(name,tag,0)
+			t.check(not fr.is_empty(),"AD-201 sheet tag resolves: %s/%s" % [name,tag])
+			if fr.is_empty():
+				continue
+			var tex: Texture2D = fr["tex"]
+			var last := ART.extra_sheet_frame(name,tag,99)
+			for f in [fr,last]:
+				var region: Rect2 = f["region"]
+				t.check(Rect2(Vector2.ZERO,tex.get_size()).encloses(region) and region.size.x > 0.0,"AD-201 frame region inside the texture: %s/%s" % [name,tag])
+	t.equal(ART.extra_sheet_frame("tide_wave","wave",0)["region"].size,Vector2(64,48),"AD-201 tide wave frames are 64x48 (1 art px = 2 units)")
+	t.equal(ART.extra_sheet_frame("wisp_shield","loop",0)["region"].size,Vector2(96,96),"AD-201 wisp shield frames match the 96 px body canvas")
+	t.check(ART.extra_sheet_frame("pool_ripple","no_such_tag",0).is_empty() and ART.extra_sheet_frame("no_such_sheet","x",0).is_empty(),"AD-201 missing sheet or tag gives no frame (plain-shape fallback)")
+	# AD-212's own exit ripple is not imported: AD-213's pool ripple replaces it.
+	t.check(not man["sheets"].has("archivist_exit_ripple") and not man["actors"].has("archivist_exit_ripple"),"AD-201 the AD-212 exit ripple is not in the manifest")
+	var stray: Array = []
+	for dir in ["res://art/export/actors","res://art/export/vfx"]:
+		for f in DirAccess.get_files_at(dir):
+			if f.contains("archivist_exit_ripple"):
+				stray.append(f)
+	t.equal(stray,[],"AD-201 no ad_fx_archivist_exit_ripple file is imported")
+	# pure helpers
+	var ms := [60,60,60]
+	t.equal([ART.shot_index(ms,0),ART.shot_index(ms,3),ART.shot_index(ms,4),ART.shot_index(ms,10),ART.shot_index(ms,11)],[0,0,1,2,-1],"AD-201 one-shot frame index ends at -1")
+	t.equal(ART.page_pick(5,false,-1,false)["tag"],"flutter","AD-201 page flutters")
+	t.equal(ART.page_pick(5,true,-1,false)["tag"],"burn","AD-201 a Burning page burns")
+	t.equal(ART.page_pick(500,true,-1,true)["index"],0,"AD-201 reduce-flash holds the page loop at frame 0")
+	t.equal(ART.page_pick(5,true,0,false)["tag"],"torn","AD-201 a dead page is torn")
+	t.equal(ART.page_pick(5,false,10000,false)["index"],-1,"AD-201 a finished torn page is skipped")
+	var tiles := ART.tide_tiles(500.0,128.0,0.0,1000.0)
+	var gaps := tiles.filter(func(x): return x["gap"])
+	t.equal(gaps.size(),1,"AD-201 exactly one gap tile")
+	t.equal(float(gaps[0]["x"])+64.0,500.0,"AD-201 the gap tile is centred on gap_x")
+	t.check(float(tiles[0]["x"]) <= 0.0 and float(tiles[tiles.size()-1]["x"])+128.0 >= 1000.0,"AD-201 tide tiles cover the arena width")
+	for i in range(1,tiles.size()):
+		t.equal(float(tiles[i]["x"])-float(tiles[i-1]["x"]),128.0,"AD-201 tide tiles butt edge to edge (%d)" % i)

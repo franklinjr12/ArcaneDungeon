@@ -1,0 +1,92 @@
+{ "frames": [
+   {
+    "filename": "ad_fx_tide_wave_wave_00",
+    "frame": { "x": 0, "y": 0, "w": 64, "h": 48 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 48 },
+    "sourceSize": { "w": 64, "h": 48 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_fx_tide_wave_wave_01",
+    "frame": { "x": 64, "y": 0, "w": 64, "h": 48 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 48 },
+    "sourceSize": { "w": 64, "h": 48 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_fx_tide_wave_wave_02",
+    "frame": { "x": 128, "y": 0, "w": 64, "h": 48 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 48 },
+    "sourceSize": { "w": 64, "h": 48 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_fx_tide_wave_wave_03",
+    "frame": { "x": 192, "y": 0, "w": 64, "h": 48 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 48 },
+    "sourceSize": { "w": 64, "h": 48 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_fx_tide_wave_gap_00",
+    "frame": { "x": 256, "y": 0, "w": 64, "h": 48 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 48 },
+    "sourceSize": { "w": 64, "h": 48 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_fx_tide_wave_gap_01",
+    "frame": { "x": 320, "y": 0, "w": 64, "h": 48 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 48 },
+    "sourceSize": { "w": 64, "h": 48 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_fx_tide_wave_gap_02",
+    "frame": { "x": 384, "y": 0, "w": 64, "h": 48 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 48 },
+    "sourceSize": { "w": 64, "h": 48 },
+    "duration": 120
+   },
+   {
+    "filename": "ad_fx_tide_wave_gap_03",
+    "frame": { "x": 448, "y": 0, "w": 64, "h": 48 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 48 },
+    "sourceSize": { "w": 64, "h": 48 },
+    "duration": 120
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_fx_tide_wave.png",
+  "format": "I8",
+  "size": { "w": 512, "h": 48 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "wave", "from": 0, "to": 3, "direction": "forward", "color": "#000000ff" },
+   { "name": "gap", "from": 4, "to": 7, "direction": "forward", "color": "#000000ff" }
+  ],
+  "slices": [
+   { "name": "pivot", "keys": [{ "frame": 0, "bounds": {"x": 32, "y": 44, "w": 1, "h": 1 } }] },
+   { "name": "hit", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 13, "w": 64, "h": 32 } }] },
+   { "name": "safe", "keys": [{ "frame": 0, "bounds": {"x": 8, "y": 13, "w": 48, "h": 32 } }] }
+  ]
+ }
+}

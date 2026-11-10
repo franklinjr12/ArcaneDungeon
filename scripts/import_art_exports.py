@@ -228,8 +228,10 @@ ACTORS = {
     "lantern_wisp": _enm("AD-106/export/ad_enm_lantern_wisp", ["AD-104", "AD-106"], dict(BARE, attack_side=("cast",))),
     "storm_crystal": _enm("AD-106/export/ad_enm_storm_crystal", ["AD-104", "AD-106"], dict(BARE, move_side=("idle",))),
     "rust_golem": _enm("AD-118/export/ad_enm_rust_golem", ["AD-104", "AD-106", "AD-118"], BARE),
-    "drowned_archivist": _enm("AD-118/export/ad_bos_drowned_archivist_anim", ["AD-107", "AD-108", "AD-118"], {
-        "idle_side": ("idle",), "move_side": ("move",), "telegraph_side": ("attack_a", 0, 2), "attack_side": ("attack_a", 3, 7),
+    # AD-201: AD-212 body (submerge/emerge/page_throw/ice_stun/shielded/move_glide tags come through unaliased); the
+    # AD-212 exit ripple is deliberately not imported (AD-213 r2 pool ripple replaces it).
+    "drowned_archivist": _enm("AD-212/export/ad_bos_drowned_archivist_anim", ["AD-107", "AD-108", "AD-118", "AD-212"], {
+        "idle_side": ("idle",), "move_side": ("move_glide",), "telegraph_side": ("attack_a", 0, 2), "attack_side": ("attack_a", 3, 7),
         "phase_side": ("phase",), "hit_side": ("hit",), "death_side": ("death",)}),
     "mini_ossuary_shieldbearer": _enm("AD-109/export/ad_enm_mini_ossuary_shieldbearer", ["AD-109"]),
     "mini_rust_golem": _enm("AD-109/export/ad_enm_mini_rust_golem", ["AD-109"], BARE),
@@ -257,6 +259,12 @@ ACTORS = {
 EXTRA_SHEETS = {
     "storm_beam": (["AD-215"], "AD-215/export/ad_fx_storm_beam", "vfx", "AD-215/export/ad_fx_storm_beam_layout.json"),
     "water_states": (["AD-222"], "AD-222/export/ad_til_cistern_water_states", "til", None),
+    # AD-201 Archivist FX (AD-213 r2; the tide wave is AD-227, which supersedes the AD-213 one)
+    "pool_ripple": (["AD-213"], "AD-213/r2/export/ad_fx_pool_ripple_telegraph", "vfx", None),
+    "splash_ring": (["AD-213"], "AD-213/r2/export/ad_fx_emerge_splash_ring", "vfx", None),
+    "book_page": (["AD-213"], "AD-213/r2/export/ad_fx_page_projectile", "vfx", None),
+    "wisp_shield": (["AD-213"], "AD-213/r2/export/ad_fx_wisp_shield", "vfx", None),
+    "tide_wave": (["AD-227"], "AD-227/export/ad_fx_tide_wave", "vfx", None),
 }
 REQUIRED_ENEMY_TAGS = ["idle_side", "move_side", "telegraph_side", "attack_side", "hit_side", "death_side"]
 # optional extras (spawn_side, phase_side) are not required

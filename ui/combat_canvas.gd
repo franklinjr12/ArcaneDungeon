@@ -161,14 +161,22 @@ func _draw() -> void:
 		var enemy_mod: Color = Art.placeholder_modulate(art_kind,Color(str(enemy.tuning.get("color","#ffffff"))),enemy.get("intangible") == true,enemy.get("intangible_warning") == true and tick%6<3)
 		var movement: Vector2 = target.position-last_enemy_at.get(target.id,target.position)
 		last_enemy_at[target.id] = target.position
+		if enemy.state == "windup" and enemy.intent != null and target.alive():
+			var ripple: Dictionary = enemy.intent.snapshot()
+			if bool(ripple.get("pool_ripple",false)):
+				Art.draw_pool_ripple(self,ripple["landing"]-offset,int(enemy.state_tick),int(enemy.tuning["telegraph_ticks"]))
 		if enemy.get("submerged") == true:
 			# AD-198: a submerged boss is hidden; its emerge telegraph still comes from collect_fx.
+			var hidden_memo: Dictionary = _anim_memo["actors"].get(target.id,{})
+			hidden_memo["hidden"] = true
 			continue
 		var dissolved: int = int(_fx_memo.get("dead",{}).get(target.id,tick+1))
 		var enemy_anim := _enemy_anim(enemy,mage,tick,movement,art_kind)
 		if enemy.state == "windup" and enemy.intent != null and target.alive() and str(enemy.intent.snapshot()["kind"]) == "blink":
 			Art.draw_blink_sigil(self,enemy.intent.snapshot()["landing"]-offset,int(enemy.state_tick),int(enemy.tuning["telegraph_ticks"]))
-		if Art.actor_has_tag(art_kind,"death_side"):
+		if enemy.kind == "book_page" and _draw_book_page(enemy,enemy_at,tick,dissolved,reduced):
+			pass
+		elif Art.actor_has_tag(art_kind,"death_side"):
 			if not enemy_anim.is_empty():
 				Art.entity(self,art_kind,enemy_at,tick,movement,false,false,not target.alive(),enemy_mod,enemy_anim)
 		elif tick-dissolved < 20 or target.alive():
@@ -178,6 +186,7 @@ func _draw() -> void:
 			var enemy_flash := ReduceMotion.hit_flash_strength(reduced,flash_total-(tick-int(hit_at)),flash_total)
 			if enemy_flash > 0.0:
 				flash_entries.append({"kind":art_kind,"at":enemy_at,"tick":tick,"motion":movement,"anim":enemy_anim,"strength":enemy_flash})
+		_draw_wisp_shield(enemy,enemy_at,tick,reduced)
 		Art.draw_enemy_markers(self,enemy,enemy_at,tick,offset)
 		if target.alive():
 			_health_bar(enemy_at,target.radius+12,target.health.current/target.health.maximum,Color("#dc7060"))
@@ -263,6 +272,27 @@ func _mage_anim(mage, tick: int, velocity: Vector2, hurt: bool) -> Dictionary:
 		return {"tag":"cast_"+dir,"elapsed":tick-int(m["cast_start"]),"face_left":face}
 	return {"tag":("walk_" if velocity.length() > 0.5 else "idle_")+dir,"elapsed":tick,"loop":true,"face_left":face}
 
+## AD-201: a book page drawn from the page sheet (burn while Burning, torn once dead); false keeps the placeholder.
+func _draw_book_page(enemy, at: Vector2, tick: int, dissolved: int, reduced: bool) -> bool:
+	var target = enemy.target
+	var dead_age := -1 if target.alive() else maxi(0,tick-dissolved)
+	Art.draw_page(self,at,tick,target.status.has("burning",tick),dead_age,reduced)
+	return not Art.extra_sheet(Art.BOOK_PAGE).is_empty()
+
+## AD-201: wisp shield bubble while the boss is `shielded`; the break plays once when the shield drops.
+func _draw_wisp_shield(enemy, at: Vector2, tick: int, reduced: bool) -> void:
+	var e: Dictionary = _anim_memo["actors"].get(enemy.target.id,{})
+	if e.is_empty() or not enemy.tuning.has("wisp_shield"):
+		return
+	var on: bool = enemy.get("shielded") == true
+	if not on and bool(e.get("shield",false)):
+		e["shield_break"] = tick
+	e["shield"] = on
+	if on:
+		Art.draw_wisp_shield(self,at,tick,-1,reduced)
+	elif e.has("shield_break"):
+		Art.draw_wisp_shield(self,at,tick,tick-int(e["shield_break"]),reduced)
+
 ## AD-065 enemy/warden animation from AI state. Telegraph is stretched over the sim windup
 ## (tuning["telegraph_ticks"]) so the read and the hit line up. Returns {} when nothing is drawn.
 ## AD-200: the art kind an enemy is drawn as: its own tuning art_kind (mini-bosses), else the one its summoner's tuning names
@@ -307,6 +337,13 @@ func _enemy_anim(enemy, mage, tick: int, movement: Vector2, art_kind: String = "
 		return {"tag":"spawn_side","elapsed":tick-int(e["seen"]),"face_left":face}
 	if e.has("hit") and tick-int(e["hit"]) < Art.actor_tag_ticks(kind,"hit_side"):
 		return {"tag":"hit_side","elapsed":tick-int(e["hit"]),"face_left":face}
+	if bool(e.get("hidden",false)):
+		e["hidden"] = false
+		e["emerge_start"] = tick
+	if enemy.state == "stagger" and Art.actor_has_tag(kind,"ice_stun"):
+		return {"tag":"ice_stun","elapsed":tick,"loop":true,"face_left":face}
+	if e.has("emerge_start") and Art.actor_has_tag(kind,"emerge") and tick-int(e["emerge_start"]) < Art.actor_tag_ticks(kind,"emerge"):
+		return {"tag":"emerge","elapsed":tick-int(e["emerge_start"]),"face_left":face}
 	var radial: bool = warden and enemy.intent != null and enemy.intent.snapshot()["kind"] == "radial"
 	if enemy.state == "windup":
 		var tag := "telegraph_side"
@@ -314,6 +351,8 @@ func _enemy_anim(enemy, mage, tick: int, movement: Vector2, art_kind: String = "
 			tag = "telegraph_burst_side" if radial else "telegraph_dash_side"
 		elif enemy.intent != null and str(enemy.intent.snapshot().get("kind","")) == "blink" and Art.actor_has_tag(kind,"telegraph_blink_side"):
 			tag = "telegraph_blink_side"
+		if enemy.intent != null and ["submerge","page_throw"].has(str(enemy.intent.snapshot().get("kind",""))) and Art.actor_has_tag(kind,str(enemy.intent.snapshot()["kind"])):
+			tag = str(enemy.intent.snapshot()["kind"])
 		var window := int(enemy.tuning["telegraph_ticks"])
 		return {"tag":tag,"index":Art.stretched_index(enemy.state_tick,window,Art.actor_tag_frames(kind,tag)),"face_left":face}
 	if warden and e.has("phase_start") and tick-int(e["phase_start"]) < Art.actor_tag_ticks(kind,"phase_side"):
@@ -325,6 +364,8 @@ func _enemy_anim(enemy, mage, tick: int, movement: Vector2, art_kind: String = "
 		if warden:
 			attack = "burst_side" if radial else "dash_side"
 		return {"tag":attack,"elapsed":int(enemy.state_tick),"face_left":face}
+	if enemy.get("shielded") == true and Art.actor_has_tag(kind,"shielded"):
+		return {"tag":"shielded","elapsed":tick,"loop":true,"face_left":face}
 	return {"tag":"move_side" if movement.length() > 0.5 else "idle_side","elapsed":tick,"loop":true,"face_left":face}
 
 ## AD-093: damage numbers, status labels and 'ARC!' share one stacked layout so they never overlap.
