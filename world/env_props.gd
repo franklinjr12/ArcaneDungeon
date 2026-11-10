@@ -5,7 +5,7 @@ extends RefCounted
 const WaterTiles = preload("res://world/water_tiles.gd")
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 const DATA_FILE := "res://world/data/env_props_v1.json"
-const KIND_IDS := ["crate","cobweb","puddle","brazier","urn","cracked_wall"]
+const KIND_IDS := ["crate","cobweb","puddle","brazier","urn","cracked_wall","boss_pillar"]
 const VISUAL_KINDS := ["burst","field","beam"]
 
 var kinds: Dictionary = {}

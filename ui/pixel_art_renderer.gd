@@ -1149,7 +1149,7 @@ static func _draw_water_cells(canvas: CanvasItem, rect: Rect2, tag: String, tick
 static func env_prop_frame(kind: String, state: String, lit: bool, stage: int, tick: int) -> Dictionary:
 	_export_data()
 	var base := {"crate": "burnable_crate", "urn": "breakable_urn", "puddle": "puddle", "cobweb": "cobweb",
-		"brazier": "brazier", "cracked_wall": "cracked_wall"}.get(kind, "") as String
+		"brazier": "brazier", "cracked_wall": "cracked_wall", "boss_pillar": "cracked_wall"}.get(kind, "") as String
 	if base == "" or state == "destroyed":
 		return {}
 	var stem := "ad_prp_" + base + ("_cistern" if stage == 2 else ("" if kind == "urn" else "_ruins"))

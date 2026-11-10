@@ -6,6 +6,7 @@ const MELEE_KEYS := {"arc":["windup_ticks","reach","arc_degrees","damage"],"slam
 const SPEAR_KEYS := ["windup_ticks","count","start","spacing","radius","damage"]
 const GRAVE_KEYS := ["windup_ticks","cap","radius"]
 const SHOCK_KEYS := ["speed","width","max_radius","damage"]
+const DEBRIS_KEYS := ["radius","stun_ticks"]
 
 static func handles(tuning: Dictionary, attack: String) -> bool:
 	var melee = tuning.get("melee")
@@ -55,6 +56,24 @@ static func advance(boss, session) -> void:
 			boss.fire_summon(session,str(spec.get("kind","bone_thrall")),spec.get("offsets",[]),int(spec["cap"]))
 			session._notify("! BOSS GRAVE_RISE",boss.target.position)
 		boss._summon_age = age+1
+	if session.env_props != null and boss.tuning.has("pillar_debris"):
+		_debris(boss,session)
+
+## Debris stun: a boss_pillar broken near the boss (and while it is not mid-move, roaring or dead) opens a stagger window.
+static func _debris(boss, session) -> void:
+	var env = session.env_props
+	var events: Array = env.events
+	if boss._env_event_index > events.size():
+		boss._env_event_index = 0 # the props were replaced and the log restarted
+	var spec: Dictionary = boss.tuning["pillar_debris"]
+	for index in range(boss._env_event_index,events.size()):
+		var event: Dictionary = events[index]
+		if str(event["kind"]) != "boss_pillar" or str(event["action"]) != "break" or ["moving","submerged","roar","dead"].has(boss.state):
+			continue
+		for prop in env.props:
+			if prop["id"] == event["prop_id"] and (prop["rect"] as Rect2).get_center().distance_to(boss.target.position) <= float(spec["radius"])+boss.target.radius:
+				boss.stun(session,int(spec["stun_ticks"]))
+	boss._env_event_index = events.size()
 
 static func _burst(boss, session) -> void:
 	var number := int(boss.tuning["radial_shots"])
@@ -164,6 +183,13 @@ static func validate(settings: Dictionary) -> Array:
 			issues.append({"code":"BOSS_WARDEN_PARAM","path":"grave_rise.offsets","message":"offsets must be an array of [x,y] numbers"})
 		if typeof(settings["grave_rise"].get("kind")) != TYPE_STRING:
 			issues.append({"code":"BOSS_WARDEN_PARAM","path":"grave_rise.kind","message":"kind must be a string"})
+	if settings.has("pillar_debris"):
+		if _missing(settings["pillar_debris"],DEBRIS_KEYS,"pillar_debris",issues):
+			for key in DEBRIS_KEYS:
+				if _num(settings["pillar_debris"].get(key)) and float(settings["pillar_debris"][key]) < 1.0:
+					issues.append({"code":"BOSS_WARDEN_PARAM","path":"pillar_debris."+key,"message":"'%s' must be >= 1" % key})
+		if not settings.has("stagger"):
+			issues.append({"code":"BOSS_WARDEN_PARAM","path":"pillar_debris","message":"pillar_debris needs a stagger block"})
 	for p in (settings["phases"].size() if typeof(settings.get("phases")) == TYPE_ARRAY else 0):
 		var phase = settings["phases"][p]
 		if typeof(phase) != TYPE_DICTIONARY:

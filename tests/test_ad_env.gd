@@ -254,7 +254,7 @@ func _templates(t) -> void:
 				for entry in props:
 					seen[str(entry["kind"])] = true
 		t.check(with_props >= 3,"AD-150 templates: %s has at least 3 templates with env props" % path.get_file())
-		t.equal(seen.keys().size(),EnvProps.KIND_IDS.size(),"AD-150 templates: %s covers every prop kind" % path.get_file())
+		t.equal(seen.keys().size(),EnvProps.KIND_IDS.filter(func(k): return k != "boss_pillar").size(),"AD-150 templates: %s covers every room prop kind (boss_pillar is boss-arena only)" % path.get_file())
 
 func _template_negatives(t) -> void:
 	var tuning := _tuning()

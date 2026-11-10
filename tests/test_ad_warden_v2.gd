@@ -30,6 +30,12 @@ func run(t) -> void:
 	_timed_summon(t)
 	_aftermath_validate(t)
 	_aftermath_trace(t)
+	_pillars(t)
+	_pillar_cover_and_break(t)
+	_pillar_stun(t)
+	_pillar_no_stun(t)
+	_pillar_validate(t)
+	_pillar_trace(t)
 
 func _melee() -> Dictionary:
 	return {"sweep_1":{"shape":"arc","windup_ticks":40,"reach":150,"arc_degrees":150,"damage":14},
@@ -489,3 +495,182 @@ func _trace(seed: int) -> Array:
 
 func _aftermath_trace(t) -> void:
 	t.equal(_trace(1981),_trace(1981),"AD-199 identical seeds give an identical leap aftermath trace")
+
+## Step 3: cracked boss pillars at the phase 2 roar, Force break, debris stun. The boss stands at AT, the player 300 px north (the room's own walls fill the west side); pillar_0 sits between them, 150 px from the boss.
+const PILLARS := [[1030,300],[1250,150],[1030,780],[1250,750]]
+const FORCE := "essence.force"
+
+func _pillar_props(positions: Array = PILLARS) -> Array:
+	var props: Array = []
+	for index in positions.size():
+		props.append({"id":"pillar_%d" % index,"kind":"boss_pillar","position":positions[index]})
+	return props
+
+func _pillar_cfg(props: Array = _pillar_props(), phase_two_pool: Array = [{"pattern":"sweep_1"}], extra: Dictionary = {}) -> Dictionary:
+	var phase_one := [{"pattern":"sweep_1"}]
+	var phases := [{"threshold":1.0,"windup_ticks":40,"pool":phase_one},
+		{"threshold":0.5,"windup_ticks":40,"transition":{"roar_ticks":30,"arena_change":{"props":props}},"pool":phase_two_pool}]
+	return _cfg(phase_one,{"phases":phases,"stagger":{"ticks":90,"damage_taken_multiplier":1.5},"pillar_debris":{"radius":190,"stun_ticks":120},
+		"anchors":[[600,820],[1200,820]],"recovery_ticks":10}.merged(extra,true))
+
+## Drops the boss under 50% hp and advances until the roar has just begun.
+func _roared(cfg: Dictionary, player_offset: Vector2 = Vector2(0,-300)) -> Array:
+	var pair := _fresh(cfg,player_offset)
+	pair[1].target.health.current = pair[1].target.health.maximum*0.4
+	for i in 10:
+		pair[1].advance(pair[0])
+		if pair[1].state == "roar":
+			break
+	return pair
+
+## Advances through the roar until the boss is free again.
+func _after_roar(pair: Array) -> void:
+	for i in 60:
+		pair[1].advance(pair[0])
+		if pair[1].state != "roar":
+			return
+
+func _break(pair: Array, id: String, essence: String = FORCE) -> void:
+	for prop in pair[0].env_props.props:
+		if prop["id"] == id:
+			pair[0].env_props._apply(prop,essence,pair[0].sim.clock.tick)
+
+func _alive_pillars(s) -> int:
+	return s.env_props.props.filter(func(p): return p["state"] != "destroyed").size() if s.env_props != null else 0
+
+func _pillars(t) -> void:
+	var pair := _fresh(_pillar_cfg())
+	var walls: int = pair[0].world.walls.size()
+	for i in 20:
+		pair[1].advance(pair[0])
+	t.check(pair[0].env_props == null and pair[0].world.walls.size() == walls,"AD-199 no pillars exist before the phase 2 roar")
+	var s: Array = _roared(_pillar_cfg())
+	t.equal(s[1].state,"roar","AD-199 the phase 2 transition starts the roar")
+	t.equal(s[0].env_props.props.size(),4,"AD-199 the roar installs the 4 pillars")
+	t.equal(s[0].world.walls.size(),walls+4,"AD-199 each pillar adds a wall")
+	t.check(s[0].env_props.props.all(func(p): return p["kind"] == "boss_pillar" and (p["rect"] as Rect2).size == Vector2(64,64)),"AD-199 pillars are 64x64 boss_pillar props")
+	var on_player := _roared(_pillar_cfg(_pillar_props([[1030,150]])))
+	var player = on_player[0].sim.actor
+	t.check(on_player[0].world.valid_position(player.position,player.radius) and player.position != Vector2(1030,150),"AD-199 a pillar placed on the player displaces the player to a valid position")
+	var on_boss := _roared(_pillar_cfg(_pillar_props([[1030,450]])))
+	t.check(on_boss[0].world.valid_position(on_boss[1].target.position,on_boss[1].target.radius) and on_boss[1].target.position != AT,"AD-199 a pillar placed on the boss displaces the boss to a valid position")
+
+func _pillar_cover_and_break(t) -> void:
+	var bare := _fresh(_pillar_cfg(),Vector2(0,-300))
+	bare[0].spawn_enemy_projectile(bare[1].target.id,AT,Vector2.UP,10.0,400.0)
+	var hp := _hp(bare[0])
+	for i in 80:
+		bare[0].advance_enemy_projectiles()
+	t.check(_hp(bare[0]) < hp,"AD-199 control: a hostile shot reaches the player without cover")
+	var pair := _roared(_pillar_cfg())
+	var s = pair[0]
+	hp = _hp(s)
+	s.spawn_enemy_projectile(pair[1].target.id,AT,Vector2.UP,10.0,400.0)
+	for i in 80:
+		s.advance_enemy_projectiles()
+	t.check(_hp(s) == hp and s.enemy_shots.is_empty(),"AD-199 a hostile shot stops at a pillar")
+	var walls: int = s.world.walls.size()
+	_break(pair,"pillar_0","essence.fire")
+	t.check(_alive_pillars(s) == 4 and s.world.walls.size() == walls,"AD-199 a non-Force essence does not break a pillar")
+	var rect: Rect2 = s.env_props.props[0]["rect"]
+	_break(pair,"pillar_0")
+	t.check(_alive_pillars(s) == 3 and s.world.walls.size() == walls-1 and not s.world.walls.has(rect),"AD-199 Force breaks a pillar and frees its wall")
+	t.check(not s.sim.collision_walls.has(rect),"AD-199 a broken pillar no longer blocks spells")
+	# A real Force projectile from the player at (1030,150) shoots south into the pillar at (1030,300).
+	var shot := _roared(_pillar_cfg())
+	var env = shot[0].env_props
+	shot[0].sim.loadout.allow_edit = true
+	shot[0].sim.equip(1,{"schema_version":1,"formula_id":"test.force","display_name":"force",
+		"root":{"essence_id":FORCE,"manifestation_id":"form.projectile","modifier_ids":[],"params":{}}})
+	shot[0].sim.loadout.slots[1]["cooldown"] = 0
+	shot[0].sim.mana = 120.0
+	shot[0].sim.try_cast(1,shot[0].sim.actor.position,Vector2.DOWN)
+	for i in 60:
+		env.pre_step(shot[0].sim)
+		shot[0].sim.step()
+	t.equal(env.props[0]["state"],"destroyed","AD-199 a Force projectile breaks a pillar")
+
+func _pillar_stun(t) -> void:
+	var pair := _roared(_pillar_cfg())
+	_after_roar(pair)
+	var boss = pair[1]
+	for i in 100:
+		boss.advance(pair[0])
+		if boss.state == "windup":
+			break
+	t.check(boss.state == "windup" and boss.intent != null,"AD-199 setup: the boss is winding up a sweep")
+	_break(pair,"pillar_0")
+	boss.advance(pair[0])
+	t.check(boss.state == "stagger" and boss.staggered and boss.intent == null and boss._windup_attack == "","AD-199 debris within radius stuns the boss and cancels the windup")
+	t.equal(boss.target.damage_scale,1.5,"AD-199 the debris stun opens the damage window")
+	var ticks := 0
+	while boss.state == "stagger" and ticks < 300:
+		boss.advance(pair[0])
+		ticks += 1
+	t.equal(ticks,120,"AD-199 the debris stun lasts exactly stun_ticks")
+	t.check(not boss.staggered and boss.target.damage_scale == 1.0,"AD-199 the debris stun ends with the damage window")
+	var again := _roared(_pillar_cfg())
+	_after_roar(again)
+	_break(again,"pillar_1")
+	again[1].advance(again[0])
+	t.check(not again[1].staggered,"AD-199 a pillar broken out of radius does not stun")
+	var leap := _landed(_leap(),FAR)
+	leap[1].tuning["pillar_debris"] = {"radius":190,"stun_ticks":120}
+	for i in 10:
+		leap[1].advance(leap[0])
+	var mid_stagger: int = leap[1].state_tick
+	leap[1].stun(leap[0],120)
+	t.check(leap[1].state == "stagger" and leap[1].state_tick == 0 and mid_stagger > 0,"AD-199 a stun during a leap stagger restarts the window")
+
+func _pillar_no_stun(t) -> void:
+	var roar := _roared(_pillar_cfg())
+	_break(roar,"pillar_0")
+	roar[1].advance(roar[0])
+	t.check(roar[1].state == "roar" and not roar[1].staggered,"AD-199 a pillar broken during the roar does not stun")
+	var move := {"mode":"reposition","speed":100,"max_ticks":200}
+	var moving := _roared(_pillar_cfg(_pillar_props(),[{"move":move}]))
+	_after_roar(moving)
+	for i in 20:
+		moving[1].advance(moving[0])
+		if moving[1].state == "moving":
+			break
+	t.equal(moving[1].state,"moving","AD-199 setup: the boss is repositioning")
+	_break(moving,"pillar_0")
+	moving[1].advance(moving[0])
+	t.check(moving[1].state == "moving" and not moving[1].staggered,"AD-199 a pillar broken while the boss moves does not stun")
+	for i in 5:
+		moving[1].advance(moving[0])
+	t.check(not moving[1].staggered,"AD-199 the ignored break does not stun later")
+
+func _pillar_validate(t) -> void:
+	var good := _padded(_pillar_cfg())
+	good["phases"][1]["pool"] = good["phases"][1]["pool"]+[{"pattern":"radial"},{"pattern":"fan"},{"pattern":"targeted"}]
+	t.equal(BossCombat.validate(good),[],"AD-199 a boss with pillars and debris settings is valid")
+	var bad_kind := good.duplicate(true)
+	bad_kind["phases"][1]["transition"]["arena_change"]["props"][0]["kind"] = "nonsense"
+	var issues := BossCombat.validate(bad_kind)
+	t.check(issues.any(func(i): return i["code"] == "BOSS_TRANSITION_PARAM" and i["path"].ends_with("arena_change.props")),"AD-199 an invalid pillar entry is a BOSS_TRANSITION_PARAM on arena_change.props")
+	var bad_debris := good.duplicate(true)
+	bad_debris["pillar_debris"].erase("stun_ticks")
+	t.contains_issue(BossCombat.validate(bad_debris),"BOSS_WARDEN_PARAM","AD-199 pillar_debris needs stun_ticks")
+	var zero := good.duplicate(true)
+	zero["pillar_debris"]["radius"] = 0
+	t.contains_issue(BossCombat.validate(zero),"BOSS_WARDEN_PARAM","AD-199 pillar_debris radius must be >= 1")
+
+func _pillar_trace(t) -> void:
+	var run := func(seed: int) -> Array:
+		var s = Session.new(seed,"empty",0)
+		s.defer_clear = true
+		var boss = s.spawn_boss(_pillar_cfg(),AT)
+		s.sim.actor.position = AT+Vector2(0,-300)
+		boss.target.health.current = boss.target.health.maximum*0.4
+		var out: Array = []
+		for i in 300:
+			boss.advance(s)
+			if i == 120:
+				for prop in s.env_props.props:
+					if prop["id"] == "pillar_0":
+						s.env_props._apply(prop,FORCE,s.sim.clock.tick)
+			out.append([boss.state,boss.target.position,_hp(s),s.world.walls.size(),boss.target.damage_scale])
+		return out
+	t.equal(run.call(1981),run.call(1981),"AD-199 identical seeds give an identical pillar and stun trace")
