@@ -13,17 +13,26 @@ const BalanceRunner = preload("res://magic/runtime/spell_runner.gd")
 const SEEDS := [20261022, 20261023, 20261024, 20261025, 20261026, 20261027, 20261028, 20261029, 20261030, 20261031,
 	20261032, 20261033, 20261034, 20261035, 20261036, 20261037, 20261038, 20261039, 20261040, 20261041]
 ## Reference builds. rune_pick: first = option 0, new_rune = first locked rune else option 0, priority = RUNE_PRIORITY.
-## workshop: none = never edits, simple = water projectile + first earned modifier, best = best legal formulas for slots 0 and 1.
+## workshop: none = never edits, simple = water projectile + first earned modifier, best = best legal formulas for slots 0 and 1 (AD-228: two different
+## essences once 2+ are unlocked), mix = same, picked for typical. The pair is water+lightning first, then the other reacting pairs.
+## mix (flag, AD-228, typical and skilled only): casts alternate elements, preferring a slot whose essence reacts with a status on the target, else one
+## that differs from the last cast essence; weak keeps the plain slot rotation.
 ## buy: none, hp = max-HP upgrade only, priority = SHOP_PRIORITY. optional: takes the optional room at the door.
 const BUILDS := {
-	"weak": {"rune_pick": "first", "workshop": "none", "buy": "none", "optional": false},
-	"typical": {"rune_pick": "new_rune", "workshop": "simple", "buy": "hp", "optional": true},
-	"skilled": {"rune_pick": "priority", "workshop": "best", "buy": "priority", "optional": true},
+	"weak": {"rune_pick": "first", "workshop": "none", "buy": "none", "optional": false, "mix": false},
+	"typical": {"rune_pick": "new_rune", "workshop": "mix", "buy": "hp", "optional": true, "mix": true},
+	"skilled": {"rune_pick": "priority", "workshop": "best", "buy": "priority", "optional": true, "mix": true},
 }
 const RUNE_PRIORITY := ["essence.water", "essence.lightning", "essence.cold", "mod.chain", "mod.pierce", "mod.homing",
 	"form.burst", "mod.expand", "essence.force", "form.beam", "form.field", "mod.rapid", "trigger.on_hit"]
 const SHOP_PRIORITY := ["upgrade.hp", "rune", "upgrade.mana", "upgrade.dash", "artifact"]
 const ESSENCE_ORDER := ["essence.water", "essence.lightning", "essence.cold", "essence.fire"]
+## Essence pairs for the two editor slots: water+lightning first, then the other reacting pairs, then the rest.
+const ESSENCE_PAIRS := [["essence.water", "essence.lightning"], ["essence.water", "essence.cold"], ["essence.water", "essence.fire"],
+	["essence.cold", "essence.fire"], ["essence.cold", "essence.lightning"], ["essence.fire", "essence.lightning"]]
+## Statuses each essence reacts with (combat/interaction_resolver rules; lightning arcs off wet targets).
+const REACTS_WITH := {"essence.water": ["burning"], "essence.lightning": ["wet"], "essence.cold": ["wet"],
+	"essence.fire": ["chilled", "frozen"], "essence.force": ["frozen"]}
 const SLOT_MODS := [["mod.chain", "mod.pierce", "mod.homing"], ["mod.expand", "mod.split"]]
 const SLOT_FORMS := [["form.projectile"], ["form.burst", "form.projectile"]]
 ## Room cap: 6 minutes of sim time, so rooms over the 4 minute target stay visible.
@@ -307,12 +316,13 @@ func _r(value: float) -> float:
 func _bot(run_seed: int, build: String) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = ("%d:%s" % [run_seed, build]).hash()
-	return {"rng": rng, "rolls": {}, "last": Vector2.INF, "stuck": 0, "nudge_left": 0, "nudges": 0, "nav_age": 0, "nav": Vector2.ZERO}
+	return {"rng": rng, "mix": false, "last_essence": "", "rolls": {}, "last": Vector2.INF, "stuck": 0, "nudge_left": 0, "nudges": 0, "nav_age": 0, "nav": Vector2.ZERO}
 
 func _play(run_seed: int, build: String) -> Dictionary:
 	var flow = Flow.new(run_seed, Flow.CONFIG_V2)
 	var plan: Dictionary = BUILDS[build]
 	var bot: Dictionary = _bot(run_seed, build)
+	bot["mix"] = bool(plan.get("mix", false))
 	var rooms: Array = []
 	var earned: Array = []
 	var outcome := "won"
@@ -414,9 +424,10 @@ func _workshop(flow, plan: Dictionary, earned: Array) -> void:
 		_shop(flow, plan["buy"])
 	if plan["workshop"] == "simple":
 		_simple_edit(flow, earned)
-	elif plan["workshop"] == "best":
+	elif plan["workshop"] in ["best", "mix"]:
+		var pair: Array = _essence_pair(flow)
 		for slot in 2:
-			_best_edit(flow, slot)
+			_best_edit(flow, slot, pair[slot] if not pair.is_empty() else "")
 
 func _shop(flow, mode: String) -> void:
 	var order: Array = ["upgrade.hp"] if mode == "hp" else SHOP_PRIORITY
@@ -444,7 +455,14 @@ func _close(flow, valid: bool) -> void:
 		if flow.editor.allowed:
 			flow.close_editor(false, 0.0)
 
-func _candidates(flow, slot: int) -> Array:
+## AD-228: two different unlocked essences for slots 0 and 1, or [] when fewer than two are unlocked.
+func _essence_pair(flow) -> Array:
+	for pair in ESSENCE_PAIRS:
+		if pair[0] in flow.run.unlocked and pair[1] in flow.run.unlocked:
+			return pair
+	return []
+
+func _candidates(flow, slot: int, forced: String = "") -> Array:
 	var essences: Array = ESSENCE_ORDER.filter(func(id): return id in flow.run.unlocked)
 	var mods: Array = SLOT_MODS[slot].filter(func(id): return id in flow.run.unlocked)
 	var out: Array = []
@@ -452,11 +470,11 @@ func _candidates(flow, slot: int) -> Array:
 		return out
 	for form in SLOT_FORMS[slot]:
 		for n in range(mods.size(), -1, -1):
-			out.append({"essence": essences[slot % essences.size()], "form": form, "mods": mods.slice(0, n)})
+			out.append({"essence": forced if forced != "" else essences[slot % essences.size()], "form": form, "mods": mods.slice(0, n)})
 	return out
 
-func _best_edit(flow, slot: int) -> void:
-	for candidate in _candidates(flow, slot):
+func _best_edit(flow, slot: int, forced: String = "") -> void:
+	for candidate in _candidates(flow, slot, forced):
 		if not flow.open_editor(slot).get("ok", false):
 			return
 		flow.editor.set_root(candidate["essence"], candidate["form"])
@@ -656,9 +674,13 @@ func _threat_live(session, threat: Dictionary) -> bool:
 			return true
 	return false
 
-func _choose_slot(session, view: Dictionary, iteration: int, slots: int) -> int:
+func _choose_slot(session, view: Dictionary, iteration: int, slots: int, bot: Dictionary) -> int:
 	if view["foe"] == null or session.player.dash_left != 0 or session.player.recovery_left != 0:
 		return -1
+	if bot["mix"]:
+		var mixed: int = _mix_slot(session, view, iteration, slots, bot)
+		if mixed >= 0:
+			return mixed
 	for k in slots - 1:
 		var idx: int = 1 + (iteration + k) % (slots - 1)
 		if session.sim.loadout.slots[idx]["cooldown"] > 0:
@@ -670,6 +692,38 @@ func _choose_slot(session, view: Dictionary, iteration: int, slots: int) -> int:
 	if (view["sight"] or view["distance"] < POINT_BLANK) and bolt != null and session.sim.loadout.slots[0]["cooldown"] == 0 and session.sim.mana >= float(bolt.snapshot()["mana_cost"]):
 		return 0
 	return -1
+
+## AD-228: among the ready slots (rotation order, bolt last) prefer an essence that reacts with a status on the target, then one that differs from
+## the last cast essence; -1 when no slot is ready.
+func _mix_slot(session, view: Dictionary, iteration: int, slots: int, bot: Dictionary) -> int:
+	var ready: Array = []
+	var order: Array = []
+	for k in slots - 1:
+		order.append(1 + (iteration + k) % (slots - 1))
+	order.append(0)
+	for idx in order:
+		if session.sim.loadout.slots[idx]["cooldown"] > 0:
+			continue
+		var spell = session.sim.loadout.get_plan(idx)
+		if spell == null or session.sim.mana < float(spell.snapshot()["mana_cost"]):
+			continue
+		if idx == 0:
+			if not (view["sight"] or view["distance"] < POINT_BLANK):
+				continue
+		elif not _fits(session, view, spell):
+			continue
+		ready.append({"idx": idx, "essence": str(spell.snapshot()["root"]["essence"]["id"])})
+	if ready.is_empty():
+		return -1
+	var tick: int = session.sim.clock.tick
+	for entry in ready:
+		for status in REACTS_WITH.get(entry["essence"], []):
+			if view["foe"].target.status.has(status, tick):
+				return entry["idx"]
+	for entry in ready:
+		if entry["essence"] != bot["last_essence"]:
+			return entry["idx"]
+	return ready[0]["idx"]
 
 func _fits(session, view: Dictionary, spell) -> bool:
 	var form: String = str(spell.snapshot()["root"]["manifestation"]["id"])
@@ -695,6 +749,8 @@ func _fight(flow, rate: int, bot: Dictionary) -> Dictionary:
 	var dodges := {}
 	var pending: Array = []
 	var tracked := {}
+	var reactions := {}
+	var popups_seen := {}
 	var obs := {"seen": [], "ids": {}, "dealt": 0.0, "hits": 0, "spent": 0.0, "regen": 0.0, "idle": 0, "no_sight": 0, "phase": {}}
 	_observe(session, obs, 0)
 	for iteration in cap:
@@ -704,7 +760,7 @@ func _fight(flow, rate: int, bot: Dictionary) -> Dictionary:
 		var dodge: Dictionary = _dodge(session, view, bot)
 		var movement: Vector2 = dodge["movement"] if dodge["steer"] else _nudge(bot, view["actor"], view["movement"])
 		var jitter: float = bot["rng"].randf_range(-AIM_JITTER, AIM_JITTER)
-		var slot: int = _choose_slot(session, view, iteration, slots)
+		var slot: int = _choose_slot(session, view, iteration, slots, bot)
 		if session.sim.mana < cheapest:
 			starved += 1
 		var mana_before: float = session.sim.mana
@@ -724,9 +780,20 @@ func _fight(flow, rate: int, bot: Dictionary) -> Dictionary:
 		_observe(session, obs, ticks)
 		if slot >= 0 and flow.spells_used > used_before:
 			casts[str(slot)] += flow.spells_used - used_before
+			var cast_plan = session.sim.loadout.get_plan(slot)
+			if cast_plan != null:
+				bot["last_essence"] = str(cast_plan.snapshot()["root"]["essence"]["id"])
+		_count_reactions(session, reactions, popups_seen)
 	for entry in pending:
 		if session.damage_received <= entry["base"]:
 			dodges[entry["type"]]["succeeded"] += 1
+	var reaction_rec := {}
+	var reaction_ids: Array = reactions.keys()
+	reaction_ids.sort()
+	var reactions_total := 0
+	for id in reaction_ids:
+		reaction_rec[id] = reactions[id]
+		reactions_total += int(reactions[id])
 	var dodge_rec := {}
 	var dodge_types: Array = dodges.keys()
 	dodge_types.sort()
@@ -770,7 +837,16 @@ func _fight(flow, rate: int, bot: Dictionary) -> Dictionary:
 		"ttk_samples": ttk_sorted, "damage_taken": _r(session.damage_received - received_start), "boss_phase_seconds": phases,
 		"hits": obs["hits"], "hit_rate": _r(float(obs["hits"]) / maxf(1.0, float(total_casts))), "idle_ticks": obs["idle"],
 		"no_sight_ticks": obs["no_sight"], "idle_percent": _r(100.0 * obs["idle"] / maxf(1.0, float(ticks))),
-		"no_sight_percent": _r(100.0 * obs["no_sight"] / maxf(1.0, float(ticks))), "dodges": dodge_rec}
+		"no_sight_percent": _r(100.0 * obs["no_sight"] / maxf(1.0, float(ticks))), "dodges": dodge_rec,
+		"reactions": reaction_rec, "reactions_total": reactions_total}
+
+## AD-228: counts each resonance popup once (a popup merges same-id reactions of one tick; the id+tick pair is the key). Read-only.
+func _count_reactions(session, reactions: Dictionary, seen: Dictionary) -> void:
+	for popup in session.sim.resonance_popups:
+		var key := "%s:%d" % [popup["id"], int(popup["tick"])]
+		if not seen.has(key):
+			seen[key] = true
+			reactions[str(popup["id"])] = int(reactions.get(str(popup["id"]), 0)) + 1
 
 ## AD-228: counts a dodge as attempted when the dash started for a threat, and as succeeded when no damage arrived until the threat ended (or 30 ticks).
 func _track_dodges(session, dodge: Dictionary, received_before: float, dodges: Dictionary, pending: Array, tracked: Dictionary) -> void:
@@ -973,6 +1049,7 @@ func _diag_markdown(result: Dictionary) -> String:
 		lines.append_array(_diag_bosses(runs))
 		lines.append_array(_diag_sanity(runs))
 		lines.append_array(_diag_dodges(runs))
+		lines.append_array(_diag_reactions(runs))
 		lines.append_array(_diag_totals(runs))
 	return "\n".join(lines)
 
@@ -1032,6 +1109,39 @@ func _diag_dodges(runs: Array) -> Array:
 		lines.append("| %s | %s | %d | %d | %s |" % [build, type, a, sums[type]["succeeded"], _r(100.0 * sums[type]["succeeded"] / maxf(1.0, float(a)))])
 	if types.is_empty():
 		lines.append("| %s | (none) | 0 | 0 | 0 |" % build)
+	lines.append("")
+	return lines
+
+## AD-228: resonance reactions (popups, merged duplicates once per tick) per fought room, by room type, with the top reaction ids.
+func _diag_reactions(runs: Array) -> Array:
+	var by_type: Dictionary = {}
+	var totals: Dictionary = {}
+	for rec in _fought(runs):
+		var type := str(rec["type"])
+		if not by_type.has(type):
+			by_type[type] = {"rooms": 0, "reactions": 0}
+		by_type[type]["rooms"] += 1
+		by_type[type]["reactions"] += int(rec.get("reactions_total", 0))
+		for id in rec.get("reactions", {}):
+			totals[id] = int(totals.get(id, 0)) + int(rec["reactions"][id])
+	var build: String = str(runs[0].get("build", "")) if not runs.is_empty() else ""
+	var types: Array = by_type.keys()
+	types.sort()
+	var lines: Array = ["Reactions per fought room (resonance popups):", "", "| build | room type | rooms | reactions | mean per room |", "|---|---|---|---|---|"]
+	var all_rooms := 0
+	var all_reactions := 0
+	for type in types:
+		var n: int = by_type[type]["rooms"]
+		var total: int = by_type[type]["reactions"]
+		all_rooms += n
+		all_reactions += total
+		lines.append("| %s | %s | %d | %d | %s |" % [build, type, n, total, _r(float(total) / maxf(1.0, float(n)))])
+	lines.append("| %s | all | %d | %d | %s |" % [build, all_rooms, all_reactions, _r(float(all_reactions) / maxf(1.0, float(all_rooms)))])
+	var ids: Array = totals.keys()
+	ids.sort_custom(func(a, b): return totals[a] > totals[b] or (totals[a] == totals[b] and a < b))
+	var top: Array = ids.slice(0, 5).map(func(id): return "%s %d" % [id, totals[id]])
+	lines.append("")
+	lines.append("Top reactions: %s" % (", ".join(top) if not top.is_empty() else "(none)"))
 	lines.append("")
 	return lines
 
