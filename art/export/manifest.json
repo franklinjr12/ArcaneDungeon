@@ -7825,45 +7825,6 @@
     }
    }
   },
-  "arc_fnt_digits_3x5": {
-   "canvas": [
-    64,
-    8
-   ],
-   "category": "fnt",
-   "id": "AD-UI-011",
-   "json": "res://art/export/fnt/arc_fnt_digits_3x5.json",
-   "pivot": [
-    0,
-    0
-   ],
-   "png": "res://art/export/fnt/arc_fnt_digits_3x5.png",
-   "row": "AD-029",
-   "slices": {
-    "cell": {
-     "h": 8,
-     "w": 4,
-     "x": 0,
-     "y": 0
-    },
-    "pivot": {
-     "h": 1,
-     "w": 1,
-     "x": 0,
-     "y": 0
-    }
-   },
-   "tags": {
-    "atlas": {
-     "frames": 1,
-     "from": 0,
-     "ms": [
-      100
-     ],
-     "to": 0
-    }
-   }
-  },
   "arc_fnt_m5x7": {
    "canvas": [
     128,
