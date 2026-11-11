@@ -3,6 +3,9 @@ extends SceneTree
 ## AD-168: pacing diagnostics (report only): per room fight seconds, waves, enemy HP, player DPS, mana spent/regen, TTK per enemy kind,
 ## damage taken, boss seconds per phase and a scripted-player sanity check (hit rate, idle ticks). Printed as DIAG_MD_BEGIN/END.
 ## Run: godot --headless --path . --script res://tests/bench/run_bench.gd [-- --seeds=N|A..B --builds=weak,typical,skilled --results=DIR --trace]
+## AD-228: the bot reads the real telegraph data (intent snapshot, boss hazards, enemy shots) and dodges every telegraphed threat type: lunge, swipe_arc,
+## slam, boss_slam, boss_charge, boss_beam, tide_wave, boss_zone, shot and the generic melee windup. Dodges attempted/succeeded are counted per type per room
+## (rec["dodges"]) and summed per build in the DIAG dodge table.
 ## --seeds=A..B (0-based inclusive SEEDS indices) = chunk mode: one <seed>_<build>.json per play in --results (default user://bench_results), existing
 ## results with a matching fingerprint are skipped (resumable), no replay. --trace records sim traces (off by default; slower).
 const Flow = preload("res://world/run_flow.gd")
@@ -27,8 +30,17 @@ const SLOT_FORMS := [["form.projectile"], ["form.burst", "form.projectile"]]
 const ROOM_CAP_SECONDS := 360
 ## Max angle error (radians) added to aim and cursor each tick; a human never aims perfectly.
 const AIM_JITTER := 0.08
-## Chance the player reacts to a telegraph/shot with a dash; the other threats are missed.
+## Chance the player reacts to a telegraph/shot with a dash; the other threats are missed. AD-228: one roll per threat instance (enemy id +
+## windup start tick, hazard id or shot id) with the bot rng, the same chance for every build and every threat type.
 const DODGE_CHANCE := 0.7
+## AD-228: react once the telegraph deadline is at most this many ticks away, with this much slack around the threatened area.
+const DODGE_LEAD_TICKS := 7
+const DODGE_MARGIN := 12.0
+## Tide wave: steer toward the gap when the band is this close (px), dash once its edge is this close.
+const WAVE_STEER_PX := 260.0
+const WAVE_DASH_PX := 24.0
+## A dodge counts as succeeded when no damage arrived from the dash tick until the threat ended, at most this many ticks.
+const DODGE_TRACK_TICKS := 30
 ## Ticks without moving before the bot sidesteps, and how long it holds the sidestep heading.
 const NAV_TICKS := 6
 ## A player shoots a foe this close even when the sight check is blocked (sight uses padding).
@@ -243,6 +255,8 @@ func _summarize() -> void:
 			_restore_ints(room, ["stage", "ticks", "walk_ticks", "mana_starved_ticks", "idle_ticks", "no_sight_ticks", "hits", "waves_spawned", "enemies_spawned"])
 			for slot in room.get("casts", {}):
 				room["casts"][slot] = int(room["casts"][slot])
+			for type in room.get("dodges", {}):
+				_restore_ints(room["dodges"][type], ["attempted", "succeeded"])
 			for kind in room.get("ttk_by_kind", {}):
 				_restore_ints(room["ttk_by_kind"][kind], ["n"])
 		prints[str(data.get("fingerprint", ""))] = true
@@ -293,7 +307,7 @@ func _r(value: float) -> float:
 func _bot(run_seed: int, build: String) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = ("%d:%s" % [run_seed, build]).hash()
-	return {"rng": rng, "roll": -1, "last": Vector2.INF, "stuck": 0, "nudge_left": 0, "nudges": 0, "nav_age": 0, "nav": Vector2.ZERO}
+	return {"rng": rng, "rolls": {}, "last": Vector2.INF, "stuck": 0, "nudge_left": 0, "nudges": 0, "nav_age": 0, "nav": Vector2.ZERO}
 
 func _play(run_seed: int, build: String) -> Dictionary:
 	var flow = Flow.new(run_seed, Flow.CONFIG_V2)
@@ -504,29 +518,143 @@ func _nudge(bot: Dictionary, point: Vector2, movement: Vector2) -> Vector2:
 		return Vector2.UP.rotated(bot["nudges"] * PI / 4.0)
 	return movement
 
-## Dash on a close telegraph or shot; the decision is rolled once per threat so DODGE_CHANCE is not retried every tick.
+## Dash on a close telegraph or shot; the decision is rolled once per threat instance (bot["rolls"], keyed by threat) so DODGE_CHANCE is not retried
+## every tick. Returns dash (send the dash), steer (follow movement instead of the kiting heading) and the chosen threat.
 func _dodge(session, view: Dictionary, bot: Dictionary) -> Dictionary:
-	var threat := Vector2.ZERO
-	if session.player.dash_cooldown == 0:
-		threat = _threat(session, view)
-	if threat == Vector2.ZERO:
-		bot["roll"] = -1
-		return {"dash": false}
-	if bot["roll"] < 0:
-		bot["roll"] = 1 if bot["rng"].randf() < DODGE_CHANCE else 0
-	return {"dash": bot["roll"] == 1, "movement": threat}
+	var threats: Array = _threats(session, view)
+	var live := {}
+	for threat in threats:
+		live[threat["key"]] = true
+	for key in bot["rolls"].keys():
+		if not live.has(key):
+			bot["rolls"].erase(key)
+	var ready: bool = session.player.dash_cooldown == 0
+	var chosen = null
+	for threat in threats:
+		if not ready and threat["type"] != "tide_wave":
+			continue
+		if not bot["rolls"].has(threat["key"]):
+			bot["rolls"][threat["key"]] = 1 if bot["rng"].randf() < DODGE_CHANCE else 0
+		if chosen == null and bot["rolls"][threat["key"]] == 1:
+			chosen = threat
+	if chosen == null:
+		return {"dash": false, "steer": false}
+	return {"dash": ready and chosen["dash_ok"], "steer": true, "movement": chosen["move"], "threat": chosen}
 
-func _threat(session, view: Dictionary) -> Vector2:
+func _threat_entry(type: String, key: String, move: Vector2, enemy = null, hazard: int = -1, shot: int = -1, dash_ok: bool = true) -> Dictionary:
+	return {"type": type, "key": key, "move": move, "enemy": enemy, "hazard": hazard, "shot": shot, "dash_ok": dash_ok}
+
+## Every telegraphed threat near the player, in a fixed order (enemies, hazards, shots), each with a type label and an escape vector.
+func _threats(session, view: Dictionary) -> Array:
+	var out: Array = []
 	var actor: Vector2 = view["actor"]
+	var radius: float = session.sim.actor.radius
+	var tick: int = session.sim.clock.tick
 	for enemy in session.enemies:
-		if enemy.target.alive() and enemy.state == "windup":
-			var deadline: int = int(enemy.tuning["telegraph_ticks"]) - enemy.state_tick
-			if deadline <= 7 and actor.distance_to(enemy.target.position) < float(enemy.tuning["attack_range"]) + 65:
-				return view["direction"].rotated(PI / 2.0)
+		if not enemy.target.alive() or enemy.state != "windup":
+			continue
+		var snap: Dictionary = enemy.intent.snapshot() if enemy.intent != null else {}
+		var ticks: int = int(snap.get("telegraph_ticks", enemy.tuning.get("telegraph_ticks", 0)))
+		if ticks - enemy.state_tick > DODGE_LEAD_TICKS:
+			continue
+		var boss: bool = "boss" in enemy.target.tags
+		var key := "e%d:%d" % [enemy.target.id, tick - enemy.state_tick]
+		var kind := str(snap.get("kind", ""))
+		var shape := str(snap.get("telegraph_shape", ""))
+		if kind == "beam_sweep":
+			var origin: Vector2 = snap["origin"]
+			if actor.distance_to(origin) < float(snap["range"]) + radius + DODGE_MARGIN:
+				out.append(_threat_entry("boss_beam", key, _side(Vector2.RIGHT.rotated(float(snap["beam_angle"])), actor - origin, view), enemy))
+		elif str(snap.get("geometry", "")) == "line":
+			var origin: Vector2 = snap["origin"]
+			var dir: Vector2 = snap["direction"]
+			var rel: Vector2 = actor - origin
+			var along: float = rel.dot(dir)
+			var width: float = enemy.target.radius + radius + DODGE_MARGIN
+			if along > -width and along < float(snap["range"]) + width and absf(dir.cross(rel)) < width:
+				out.append(_threat_entry("boss_charge" if boss else "lunge", key, _side(dir, rel, view), enemy))
+		elif shape == "arc":
+			var center: Vector2 = snap["arc_center"]
+			if actor.distance_to(center) < float(snap["arc_radius"]) + radius + DODGE_MARGIN:
+				out.append(_threat_entry("swipe_arc", key, _away(actor, center, view), enemy))
+		elif shape == "slam":
+			var landing: Vector2 = snap["landing"]
+			if actor.distance_to(landing) < float(snap["range"]) + radius + DODGE_MARGIN:
+				out.append(_threat_entry("boss_slam" if boss else "slam", key, _away(actor, landing, view), enemy))
+		elif kind != "spear_line" and kind != "electrify":
+			# Unknown shape (spear_line and electrify are read from their boss hazards below): the old melee rule.
+			var reach: float = float(enemy.tuning.get("attack_range", snap.get("range", 0.0)))
+			if reach > 0.0 and actor.distance_to(enemy.target.position) < reach + 65:
+				out.append(_threat_entry("melee", key, view["direction"].rotated(PI / 2.0), enemy))
+	for hazard in session.hazards:
+		var found := _hazard_threat(hazard, actor, radius, view)
+		if not found.is_empty():
+			out.append(found)
 	for shot in session.enemy_shots:
 		if actor.distance_to(shot["position"]) < 110:
-			return shot["direction"].rotated(PI / 2.0)
-	return Vector2.ZERO
+			out.append(_threat_entry("shot", "s%d" % int(shot["id"]), shot["direction"].rotated(PI / 2.0), null, -1, int(shot["id"])))
+	return out
+
+func _hazard_threat(hazard: Dictionary, actor: Vector2, radius: float, view: Dictionary) -> Dictionary:
+	var id: int = int(hazard["id"])
+	var key := "h%d" % id
+	match str(hazard["kind"]):
+		"boss_tide_wave":
+			# Band = [y, y + thickness] moving down; the player is safe inside the gap (x within gap_width / 2 - radius).
+			var gap_x: float = hazard["gap_x"]
+			if absf(actor.x - gap_x) <= float(hazard["gap_width"]) * 0.5 - radius - 4.0:
+				return {}
+			var top: float = hazard["y"]
+			var edge: float = (actor.y - radius) - (top + float(hazard["thickness"]))
+			if top > actor.y + radius or edge > WAVE_STEER_PX:
+				return {}
+			return _threat_entry("tide_wave", key, Vector2(signf(gap_x - actor.x), 0.0), null, id, -1, edge <= WAVE_DASH_PX and not bool(hazard.get("telegraph", false)))
+		"boss_beam":
+			if bool(hazard.get("telegraph", false)):
+				return {}
+			var origin: Vector2 = hazard["position"]
+			var dir := Vector2.RIGHT.rotated(float(hazard["beam_angle"]))
+			var closest: Vector2 = Geometry2D.get_closest_point_to_segment(actor, origin, origin + dir * float(hazard["radius"]))
+			if closest.distance_to(actor) < float(hazard["beam_width"]) * 0.5 + radius + DODGE_MARGIN:
+				return _threat_entry("boss_beam", key, _side(dir, actor - origin, view), null, id)
+		"boss_warning", "boss_zone", "boss_water_warning":
+			if int(hazard["duration_ticks"]) - int(hazard["age"]) > DODGE_LEAD_TICKS and str(hazard["kind"]) != "boss_zone":
+				return {}
+			var centre: Vector2 = hazard["position"]
+			var inside: bool
+			if hazard.has("rect"):
+				inside = (hazard["rect"] as Rect2).grow(radius + DODGE_MARGIN).has_point(actor)
+			else:
+				inside = actor.distance_to(centre) < float(hazard["radius"]) + radius + DODGE_MARGIN
+			if inside:
+				return _threat_entry("boss_zone", key, _away(actor, centre, view), null, id)
+	return {}
+
+## Escape perpendicular to a line, on the side the player is already on.
+func _side(dir: Vector2, rel: Vector2, view: Dictionary) -> Vector2:
+	var cross: float = dir.cross(rel)
+	var normal: Vector2 = dir.rotated(PI / 2.0)
+	return normal if cross >= 0.0 else -normal
+
+## Escape radially away from a point (sideways of the foe direction when standing on it).
+func _away(actor: Vector2, from: Vector2, view: Dictionary) -> Vector2:
+	var away: Vector2 = actor - from
+	return away.normalized() if not away.is_zero_approx() else view["direction"].rotated(PI / 2.0)
+
+## A threat is over once its enemy left windup/attack/casting (or died), its hazard expired or its shot is gone.
+func _threat_live(session, threat: Dictionary) -> bool:
+	if threat["enemy"] != null:
+		var enemy = threat["enemy"]
+		return enemy.target.alive() and enemy.state in ["windup", "attack", "casting"]
+	if threat["hazard"] >= 0:
+		for hazard in session.hazards:
+			if int(hazard["id"]) == threat["hazard"]:
+				return true
+		return false
+	for shot in session.enemy_shots:
+		if int(shot["id"]) == threat["shot"]:
+			return true
+	return false
 
 func _choose_slot(session, view: Dictionary, iteration: int, slots: int) -> int:
 	if view["foe"] == null or session.player.dash_left != 0 or session.player.recovery_left != 0:
@@ -564,6 +692,9 @@ func _fight(flow, rate: int, bot: Dictionary) -> Dictionary:
 	var ticks := 0
 	var starved := 0
 	var casts: Dictionary = _cast_slots(flow)
+	var dodges := {}
+	var pending: Array = []
+	var tracked := {}
 	var obs := {"seen": [], "ids": {}, "dealt": 0.0, "hits": 0, "spent": 0.0, "regen": 0.0, "idle": 0, "no_sight": 0, "phase": {}}
 	_observe(session, obs, 0)
 	for iteration in cap:
@@ -571,7 +702,7 @@ func _fight(flow, rate: int, bot: Dictionary) -> Dictionary:
 			break
 		var view: Dictionary = _view(session, bot)
 		var dodge: Dictionary = _dodge(session, view, bot)
-		var movement: Vector2 = dodge["movement"] if dodge["dash"] else _nudge(bot, view["actor"], view["movement"])
+		var movement: Vector2 = dodge["movement"] if dodge["steer"] else _nudge(bot, view["actor"], view["movement"])
 		var jitter: float = bot["rng"].randf_range(-AIM_JITTER, AIM_JITTER)
 		var slot: int = _choose_slot(session, view, iteration, slots)
 		if session.sim.mana < cheapest:
@@ -583,14 +714,24 @@ func _fight(flow, rate: int, bot: Dictionary) -> Dictionary:
 			if slot < 0 and not dodge["dash"] and mana_before >= cheapest:
 				obs["idle"] += 1
 		var used_before: int = flow.spells_used
+		var received_before: float = session.damage_received
 		flow.step({"move": movement, "aim": view["direction"].rotated(jitter), "dash": dodge["dash"], "cast": slot,
 			"cursor": view["actor"] + (view["cursor"] - view["actor"]).rotated(jitter)})
 		ticks += 1
+		_track_dodges(session, dodge, received_before, dodges, pending, tracked)
 		var mana_delta: float = session.sim.mana - mana_before
 		obs["spent" if mana_delta < 0.0 else "regen"] += absf(mana_delta)
 		_observe(session, obs, ticks)
 		if slot >= 0 and flow.spells_used > used_before:
 			casts[str(slot)] += flow.spells_used - used_before
+	for entry in pending:
+		if session.damage_received <= entry["base"]:
+			dodges[entry["type"]]["succeeded"] += 1
+	var dodge_rec := {}
+	var dodge_types: Array = dodges.keys()
+	dodge_types.sort()
+	for type in dodge_types:
+		dodge_rec[type] = dodges[type]
 	var label: String = flow.state if flow.state in ["cleared", "won", "dead"] else "timeout"
 	var seconds: float = float(ticks) / rate
 	var total_casts := 0
@@ -629,7 +770,24 @@ func _fight(flow, rate: int, bot: Dictionary) -> Dictionary:
 		"ttk_samples": ttk_sorted, "damage_taken": _r(session.damage_received - received_start), "boss_phase_seconds": phases,
 		"hits": obs["hits"], "hit_rate": _r(float(obs["hits"]) / maxf(1.0, float(total_casts))), "idle_ticks": obs["idle"],
 		"no_sight_ticks": obs["no_sight"], "idle_percent": _r(100.0 * obs["idle"] / maxf(1.0, float(ticks))),
-		"no_sight_percent": _r(100.0 * obs["no_sight"] / maxf(1.0, float(ticks)))}
+		"no_sight_percent": _r(100.0 * obs["no_sight"] / maxf(1.0, float(ticks))), "dodges": dodge_rec}
+
+## AD-228: counts a dodge as attempted when the dash started for a threat, and as succeeded when no damage arrived until the threat ended (or 30 ticks).
+func _track_dodges(session, dodge: Dictionary, received_before: float, dodges: Dictionary, pending: Array, tracked: Dictionary) -> void:
+	if dodge["dash"] and session.player.dash_left > 0 and not tracked.has(dodge["threat"]["key"]):
+		var threat: Dictionary = dodge["threat"]
+		tracked[threat["key"]] = true
+		if not dodges.has(threat["type"]):
+			dodges[threat["type"]] = {"attempted": 0, "succeeded": 0}
+		dodges[threat["type"]]["attempted"] += 1
+		pending.append({"type": threat["type"], "threat": threat, "base": received_before, "age": 0})
+	for entry in pending.duplicate():
+		entry["age"] += 1
+		var hurt: bool = session.damage_received > entry["base"]
+		if hurt or entry["age"] >= DODGE_TRACK_TICKS or not _threat_live(session, entry["threat"]):
+			pending.erase(entry)
+			if not hurt:
+				dodges[entry["type"]]["succeeded"] += 1
 
 ## Read-only observation after each step: registers new enemies, sums HP lost per enemy, notes deaths and boss phase seconds.
 func _observe(session, obs: Dictionary, tick: int) -> void:
@@ -814,6 +972,7 @@ func _diag_markdown(result: Dictionary) -> String:
 		lines.append_array(_diag_kinds(runs))
 		lines.append_array(_diag_bosses(runs))
 		lines.append_array(_diag_sanity(runs))
+		lines.append_array(_diag_dodges(runs))
 		lines.append_array(_diag_totals(runs))
 	return "\n".join(lines)
 
@@ -852,6 +1011,27 @@ func _diag_kinds(runs: Array) -> Array:
 	var lines: Array = ["Time to kill per enemy kind (seconds from first sight to death):", "", "| kind | killed | TTK s (median / min / max) |", "|---|---|---|"]
 	for kind in kinds:
 		lines.append("| %s | %d | %s |" % [kind, by_kind[kind].size(), _cell(by_kind[kind])])
+	lines.append("")
+	return lines
+
+## AD-228: dodges attempted/succeeded per threat type, summed over every run of the build.
+func _diag_dodges(runs: Array) -> Array:
+	var sums: Dictionary = {}
+	for rec in _fought(runs):
+		for type in rec.get("dodges", {}):
+			if not sums.has(type):
+				sums[type] = {"attempted": 0, "succeeded": 0}
+			sums[type]["attempted"] += int(rec["dodges"][type]["attempted"])
+			sums[type]["succeeded"] += int(rec["dodges"][type]["succeeded"])
+	var build: String = str(runs[0].get("build", "")) if not runs.is_empty() else ""
+	var types: Array = sums.keys()
+	types.sort()
+	var lines: Array = ["Dodges per threat type (all runs):", "", "| build | threat type | attempted | succeeded | success % |", "|---|---|---|---|---|"]
+	for type in types:
+		var a: int = sums[type]["attempted"]
+		lines.append("| %s | %s | %d | %d | %s |" % [build, type, a, sums[type]["succeeded"], _r(100.0 * sums[type]["succeeded"] / maxf(1.0, float(a)))])
+	if types.is_empty():
+		lines.append("| %s | (none) | 0 | 0 | 0 |" % build)
 	lines.append("")
 	return lines
 
