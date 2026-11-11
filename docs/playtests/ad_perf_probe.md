@@ -310,3 +310,74 @@ The `ruins_boss` row is a time until death, so its CPU total is for the fight th
 **Caveats.**
 
 The probe is a stress scenario: enemies are forced to 1e6 HP and refilled, 8 extra enemies are added, and a cast happens every tick. It measures per-tick cost. It is largely insensitive to the AD-175 HP change, because the HP is refilled. Longer rooms raise the total CPU per room (the derived column above), not the per-tick p95. Any p95 change against AD-174 may be host noise: the AD-174 final and this run were on the same host class, but not under identical load. Only the two bosses have an AD-174 value; their p95 moved by 0.04 ms (cistern_boss) and 0.48 ms (ruins_boss), which is inside the run-to-run spread. The 8 ms proxy is unconfirmed until the reference PC is measured. The 4 ms budget still fails in every room on this host.
+
+## v1.1 A/B (AD-230)
+
+Measurement only. No optimisation and no gameplay tuning. Question: is the post-v1.1 build (PR #13 head) slower than the AD-190 build on the same host, once host load is controlled?
+
+- **Date:** 2026-11-11. Godot 4.7.1.stable.official.a13da4feb. Host: aarch64, 2-core shared VM (Neoverse-N1), not the GDD reference PC.
+- **Builds:**
+  - AD-190: merge `4e72208` (content of `b0cfaf8`), built from `git archive`.
+  - PR #13 head: `aae4509` (`ad-hermes-2026-11-10-b`; this branch contains it).
+  - Both exported to scratch dirs, each with its own `--import`. The repo was not touched.
+- **Method:** all runs under `flock /workspace/hermes-work/state/verify.lock`, run in alternating order (AD-190, PR #13, probe then `--perf-run`) for 3 rounds. Each run starts with the 1-minute load logged.
+- **Commands** (per build, per round):
+  - `godot --headless --path <dir> --script res://tests/qa/demo_perf_probe.gd`
+  - `XDG_DATA_HOME=<per-run dir> godot --headless --path <dir> -- --perf-run`
+- **Host load at each run start (1-min):** AD-190: 2.71, 1.47, 1.22. PR #13: 1.24, 1.31, 1.07. The first AD-190 run started on a busier host (2.71); the other runs were in the 1.1–1.5 range. This is a shared VM, so the numbers carry noise. Read the per-run values, not just the medians.
+
+### Which rooms are comparable
+
+The `--perf-run` fixture uses the same four rooms on both builds (`cistern_boss`, `ruins_boss`, `ruins_c07`, `cistern_p10`). This is the primary comparison.
+
+`demo_perf_probe.gd` picks its "worst combat room per stage" from the run sequence, and the v1.1 sequence changed that choice. AD-190 probed `cistern_p08` and `ruins_c05`. PR #13 probed `cistern_p01` and `ruins_c04`. Only the two boss rooms are shared, so the probe is compared on those two only.
+
+### Results: `--perf-run` sim time per room (ms, median of 3 alternating runs)
+
+| room | AD-190 p50 | AD-190 p95 (runs) | PR #13 p50 | PR #13 p95 (runs) | p95 delta | p50 delta |
+|---|---|---|---|---|---|---|
+| cistern_boss | 7.650 | 11.419 (11.42 / 12.29 / 11.23) | 9.367 | 19.666 (19.67 / 20.03 / 19.16) | **+72.2%** | +22.4% |
+| ruins_boss | 5.704 | 10.875 (10.88 / 11.01 / 10.58) | 6.002 | 15.588 (15.59 / 15.81 / 15.24) | **+43.3%** | +5.2% |
+| ruins_c07 | 5.649 | 11.645 (11.59 / 11.67 / 11.64) | 5.257 | 7.890 (7.79 / 8.91 / 7.89) | -32.2% | -6.9% |
+| cistern_p10 | 7.993 | 17.324 (18.55 / 17.32 / 16.77) | 8.498 | 27.416 (26.80 / 27.42 / 27.86) | **+58.3%** | +6.3% |
+
+Rule: a room is flagged if PR #13 p95 is at least 30% above AD-190. Flagged rooms: `cistern_boss`, `ruins_boss`, `cistern_p10`. The p95 deltas are large and consistent across the three runs, so they are not a single noisy run. The p50 deltas are much smaller, so most of the gap is in the tail.
+
+### Results: `demo_perf_probe.gd` sim p95 (ms, median of 3; shared boss rooms only)
+
+| room | AD-190 p95 (runs) | PR #13 p95 (runs) | delta |
+|---|---|---|---|
+| cistern_boss | 8.441 (8.44 / 8.21 / 8.62) | 6.755 (6.55 / 7.01 / 6.75) | -20.0% |
+| ruins_boss | 7.608 (7.53 / 8.28 / 7.61) | 14.739 (14.40 / 15.19 / 14.74) | +93.7% |
+
+The probe and `--perf-run` disagree on `cistern_boss` (probe −20%, perf-run +72%). They also disagree in size on `ruins_boss` (+94% vs +43%). The probe runs only 600 ticks with a fixed cast cadence, and its room set is different. So the boss-room sign is **not settled** by these runs. `cistern_p10` is not in the probe's room set and has only the perf-run number.
+
+### Hotspots in the flagged rooms
+
+The three flagged rooms were profiled with timers added to a scratch copy of `aae4509`: phase timers in `CombatSession.step` and `SpellRunner.advance_one_tick`, plus call counters on `clear_sight`, `navigate_direction`, `body_of` and `frozen_near`. One `--perf-run` each, 631 ticks per room (including warmup). Shares are of the instrumented tick (the timers add a little overhead). The scratch copy is not committed.
+
+| room | tick (instrumented, ms) | sim.step | queue drain (hit/event resolution) | `_audio_step` | enemy advance | of which `navigate_direction` | projectile steer+advance |
+|---|---|---|---|---|---|---|---|
+| cistern_p10 | 4.79 | 3.39 (71%) | 1.50 (31%) | 0.55 (12%) | 0.52 (11%) | 0.05 (1%) | 0.38 (8%) |
+| cistern_boss | 5.01 | 3.23 (65%) | 1.11 (22%) | 0.59 (12%) | 1.10 (22%) | 0.49 (10%) | 0.76 (15%) |
+| ruins_boss | 4.12 | 2.87 (70%) | 0.98 (24%) | 0.56 (14%) | 0.59 (14%) | 0.22 (5%) | 0.73 (18%) |
+
+**Top 3 hotspots (for the flagged rooms):**
+
+1. **Event queue drain / hit resolution** (`magic/runtime/spell_runner.gd`, `queue.drain(_process_event)` in `advance_one_tick`). 22–31% of the tick in all three flagged rooms, and the largest single cost in `cistern_p10`. Not broken down further yet.
+2. **Audio cue derivation** (`combat/combat_session.gd:_audio_step`). 12–14% of the tick in every room, including `ruins_c07` (not flagged). AD-170 removed the per-tick re-scan in this function. What is left is a smaller but still large share. Whether it grew from AD-190 was not measured.
+3. **Enemy advance.** In `cistern_boss` it is 22% of the tick, and `navigate_direction` is about half of that (10% of the tick), which is boss-movement pathing (`combat/boss_combat.gd:587`, `combat/boss_moves/boss_movement.gd:28`). In `cistern_p10` it is 11%, but `navigate_direction` is only 1%, so most of that cost is in non-navigation enemy behaviour that was not broken down.
+
+**Checked and ruled out:**
+
+- Boss hazards and water: `_step_hazards` and `_step_water` are each under 0.4% of the tick in every room. This was the first guess in the brief and it does not hold.
+- `clear_sight`: under 0.05 ms per tick (under 1%) in every room.
+- `navigate_direction` is large in `ruins_c07` (0.86 ms per tick, 19% of the tick), but that room is not flagged.
+
+### Caveats
+
+- Shared 2-core VM, not the reference PC. The 4 ms budget and the GDD 60 FPS verdict stay with TASK-051 and `docs/demo/PERF_TEST.md`.
+- Three alternating runs per build is a small sample. Round 1 AD-190 ran on a busier host (load 2.71). The flagged deltas hold in every run, but the exact percentages are host-specific.
+- The hotspot breakdown is a single instrumented run per room, and the timers add overhead. Use it to pick where to look, not as a final profile.
+- The drain and enemy-advance costs need a second level of breakdown before anyone changes code.
+- Nothing here was tuned or optimised. Whether the v1.1 gap is acceptable is Franklin's feel-test decision, not this measurement's.
