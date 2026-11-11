@@ -2,6 +2,98 @@
 
 These 8 gates decide whether the demo is ready to hand to friends. Franklin decides each one. Nothing below is marked as passed for you. QA results: [docs/benchmarks/ad_demo_qa.md](../benchmarks/ad_demo_qa.md), section "Friends Demo v1". Build and launch steps: [docs/demo/README.md](README.md).
 
+## Demo v1.1: what changed and what to try
+
+This section covers your feedback of 2026-11-09. QA numbers: [docs/benchmarks/ad_demo_qa.md](../benchmarks/ad_demo_qa.md), section "Demo v1.1" (AD-204). The G1-G8 gates below still decide the release. The bot numbers in that section are INFO only. A human has to judge feel.
+
+### Combos
+
+**What changed**
+
+- Mana regen drops from 1.8 to 0.6 per tick, so one spell spammed over and over runs dry in about 7 s (AD-193).
+- A reaction gives 12 mana back and shows a Resonance popup. Reactions that count: Wet + Lightning arc, Wet + Cold freeze, Force on Frozen (shatter), Fire on Chilled/Frozen (thaw steam), Water on Burning (extinguish) (AD-193).
+- Every enemy has a weakness (damage x1.5) or a resistance. The first time you meet one, a popup shows it. The Compendium Enemies page shows weak and resist icons. Damage numbers are coloured by tier (AD-194).
+- Reward cards lean toward runes that complete a reaction (AD-195).
+- Clear a room with 3 or more combo reactions for a Resonant clear: one rarity step up on the reward, or +25 coins. The summary screen shows combo stats (AD-195).
+
+**What to try**
+
+1. Hold one Fire spell until mana runs out. Then swap to a Water spell and hit a Burning enemy. Watch the mana refund and the Resonance popup.
+2. Wet an enemy, then hit it with Lightning, then with Cold, then with Force. Count the reactions.
+3. Clear a room with 3 reactions to get a Resonant clear. Check the banner and the reward card.
+4. Fire at a Ghoul stalker (weak to Fire) and a Grave hound, and compare the damage number colours. Open the Compendium Enemies page for the weak and resist icons.
+
+**Your verdict:** better / same / worse  Notes:
+
+### Dodge
+
+**What changed**
+
+- Dashing through an attack at the right moment (inside the dash i-frames) is a perfect dodge. It refunds 15 mana, once per dash. The player flashes briefly (AD-196).
+- Melee enemies lunge forward. Ranged bursts: the adept fires 3 shots and the hound 2. Enemy projectiles are 20-30% faster. Dash cooldown is 40 ticks (AD-196).
+- Two new fast enemies: the Ghoul stalker (arc swipe, weak to Fire) and the Riptide leaper (leaps to a landing circle, weak to Cold). Both have a slow, clear telegraph (AD-197).
+
+**What to try**
+
+1. Dash through a Ghoul stalker's swipe at the last moment. Check the mana refund and the flash.
+2. Watch the Riptide leaper's landing circle appear, then dash out of it. Attack it in its recovery.
+3. Fight a Grave hound and dash through its 2-shot burst. You get 15 mana once, not per shot.
+
+**Your verdict:** better / same / worse  Notes:
+
+### Rooms
+
+**What changed**
+
+- Every Ruins room (AD-202) and Cistern room (AD-203) follows the room rules in `docs/rooms/ROOM_RULES.md`: 2-5 obstacles, at least 1 interactive prop, one named shape, spawns 160 px or more from the entrance, no dead corners.
+- Interactive props are crates, cobwebs, braziers, urns, cracked walls and pillars, and puddles. The Cistern has pools and deep channels that force a detour.
+- Run length: 3 combat rooms per stage and a Sigil Desk before each boss (AD-224). Route bots clear 12 rooms.
+
+**What to try**
+
+1. Burn a crate or cobweb with Fire. Break a cracked pillar or wall with Force.
+2. In the Cistern, stand a Wet enemy in a pool and use Lightning, so the arc jumps to a second Wet target. Freeze a pool with Cold.
+3. Enter 3 rooms in a row and note whether each looks different. Look for a corner where you get stuck.
+
+**Your verdict:** better / same / worse  Notes:
+
+### Bosses
+
+**What changed**
+
+- Bosses move, pick attacks from weighted pools, roar between phases, and can be punished after big attacks (stagger window, +50% damage). All of it is data (AD-198).
+- Undead Warden (AD-199, 1800 HP, phases at 60% and 25%): melee combos, spear line, Grave rise summons. Phase 2: cracked pillars appear and the leap lands with a shockwave ring. Phase 3: faster windups and timed summons.
+- Mini-bosses (AD-200): Elite fallen adept (blink, homing skulls, a decoy) and Elite storm crystal (electrifies water, small crystals). They sit in the optional challenge rooms.
+- Drowned Archivist (AD-201, 2400 HP, phases at 66% and 33%): dives into pools and surfaces at another one with a ripple warning, throws book pages, sends a tide wave with a gap in phase 2, and uses lantern wisps and a storm pulse in phase 3.
+- No boss HP was raised.
+
+**What to try**
+
+1. Break a cracked pillar with Force while the Warden stands within 190 px of it. It is stunned for 2 s (120 ticks).
+2. Freeze a pool with Cold before the Archivist emerges there (phase 2). It surfaces stunned and takes +50% damage.
+3. Dash through the Archivist's tide wave body, or walk through its gap.
+4. In phase 3, shoot the 2 lantern wisps first. They shield the boss.
+5. Note how long each boss fight took and whether it felt like an event.
+
+**Your verdict:** better / same / worse  Notes:
+
+### Audio
+
+**What changed**
+
+- Enemy and cast sounds are quieter and rate-limited. Settings > Audio has a new Enemy SFX volume slider (AD-191).
+- `docs/demo/AUDIO_PRIORITY.md` lists the first 20 cues to replace with real files (AD-192).
+- Audio prompts are committed, and the Ghoul stalker and Riptide leaper have telegraph cues (AD-226).
+- All 79 cues are still placeholder or silent (`audio_check.py`, AD-204).
+
+**What to try**
+
+1. Fight a crowded room. Check that enemy attacks no longer drown out your casts.
+2. Move the Enemy SFX slider and listen.
+3. Pick the first rows of `AUDIO_PRIORITY.md` to record or generate next.
+
+**Your verdict:** better / same / worse  Notes:
+
 ## G1 Feel
 
 **Requirement:** rooms are quick and satisfying, no room runs over about 3 min, bosses feel like events and not sponges, and a winning run takes 18-25 min. The run length is a human guideline: read it from the run log and the summary timer, not from a bot number.
@@ -12,16 +104,7 @@ These 8 gates decide whether the demo is ready to hand to friends. Franklin deci
 2. After each run, note the summary timer, the longest room, and how each boss felt.
 3. Open the run log JSON of each run (see Reporting) to read the room times.
 
-**Evidence:** bot numbers are INFO only and do not decide G1. 20-seed smoke on the shorter run (AD-224: 3 combat rooms per stage, a Sigil Desk before each boss): 80 of 80 rows ok=true, both runs exit 0. All 20 route rows (typical build) won with rooms=12 (8 combat/optional rooms + 2 desk visits + 2 bosses) in 4.0-7.0 min, mean 5.4 min. Natural mode: no typical or skilled bot won (mean death time 2.5 and 2.7 min); 2 of 20 weak bots won, in 2.8 and 3.1 min. Bots are far below 18-25 min.
-
-Runes and artifacts collected per run (5 seeds, typical and skilled bots, INFO only; all 10 bot runs died before the end in both columns):
-
-| Build | Runes before | Runes after | Change | Artifacts before | Artifacts after |
-|---|---|---|---|---|---|
-| typical | 12.4 | 5.8 | -53% | 0.0 | 0.0 |
-| skilled | 13.0 | 5.6 | -57% | 0.0 | 0.0 |
-
-The rune count falls by far more than the 15% target. It follows from fewer rooms with one pick each. It is not tuned.
+**Evidence (from AD-204, Demo v1.1):** bot numbers are INFO only and do not decide G1. 20-seed smoke: 80 of 80 rows ok. Route bots (typical build) won 20 of 20 in 2.7-3.4 min. Natural bots won 1 of 60 (weak 1, typical 0, skilled 0) and mostly died between rooms 5 and 12. The longest room was 70.6 s, far under the 360 s cap. `test_ad_feel_bands.gd` ran green, so no HP sponges. The old rune and artifact table from before AD-224 is dropped. Bots are far below a human run length.
 
 **Status:** Franklin to check.
 
@@ -52,7 +135,7 @@ The rune count falls by far more than the 15% target. It follows from fewer room
 1. Play your runs from G1 and note any crash, freeze or stuck room.
 2. In the workshop, press Esc > Save & Quit, then Title > Continue. The run must resume where you left it.
 
-**Evidence:** 20-seed smoke (natural + route): 80 of 80 rows ok, no crash, no script error, no room hit the 360 s cap. Test suite 19558 passed, 0 failed, including the resume suite.
+**Evidence:** 20-seed smoke (natural + route, AD-204): 80 of 80 rows ok, no crash, no script error, no room hit the 360 s cap. Test suite 24830 passed, 0 failed, 92 suites, including the resume suite (AD-204).
 
 **Status:** partial. Smoke and the resume test are clean. Franklin to check your own runs and the workshop save and quit by hand.
 
@@ -69,7 +152,7 @@ The rune count falls by far more than the 15% target. It follows from fewer room
 3. Run `perf_test_low.bat` only if High fails, and record that result as a retest, not a pass at High.
 4. Also check the FPS overlay and the F8 report dialog by hand. The UI matrix cannot shoot them.
 
-**Evidence:** only headless numbers from a shared 2-core VM exist. They are INFO and not valid for G4. The sim probe was over its budget in 3 of 4 rooms there, and the host was not idle. Not run on the reference PC.
+**Evidence:** only headless numbers from a shared 2-core VM exist. They are INFO and not valid for G4. The sim probe was over its budget in all 4 rooms there (AD-204), and the host was loaded by other jobs. Not run on the reference PC.
 
 **Status:** Franklin to check.
 
@@ -85,7 +168,7 @@ The rune count falls by far more than the 15% target. It follows from fewer room
 2. Copy `Sigilwright-0.1.0-demo-windows.zip` to a PC without Godot, unzip it and start the game.
 3. Check that the title screen shows the build stamp and that no debug keys or menus work.
 
-**Evidence:** `export_demo.py` exit 0. It made the 0.1.0-demo Windows and Linux zips. All 4 Linux zip checks passed, including the release probe for debug keys. The Windows zip was exported but not run.
+**Evidence:** `export_demo.py` exit 0. It made the 0.1.0-demo Windows and Linux zips again in AD-204. All 4 Linux zip checks passed, including the release probe for debug keys. The Windows zip was exported but not run.
 
 **Status:** partial. Franklin to check that the Windows zip starts on a PC without Godot.
 
@@ -119,7 +202,7 @@ The rune count falls by far more than the 15% target. It follows from fewer room
 3. Open Credits from the main menu and check it.
 4. Find the licence of `art/export/fnt/arc_fnt_digits_3x5.png` and record it. It is flagged because none is recorded.
 
-**Evidence:** 393 art files: 390 placeholder, 3 third-party, 1 flagged (the digits font above). Audio: 77 of 77 cues are placeholder or silent. The credits screen is built from `game/data/credits_v1.json` and is in the UI matrix.
+**Evidence:** 393 art files: 390 placeholder, 3 third-party, 1 flagged (the digits font above). Audio: 79 of 79 cues are placeholder or silent (AD-204). The credits screen is built from `game/data/credits_v1.json` and is in the UI matrix.
 
 **Status:** partial. Licences are not complete until the font licence is found. Franklin to check that and to accept placeholder audio.
 
