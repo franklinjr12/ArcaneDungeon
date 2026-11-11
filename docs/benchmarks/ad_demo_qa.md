@@ -321,3 +321,90 @@ The UI hook has no state for the F8 report dialog or the FPS overlay, and adding
 | G6 | Feedback: run log JSON per run, F8 snapshot, feedback form, clear 'send this folder' instructions | Suites test_ad_run_log and test_ad_feedback_snapshot clean; `docs/demo/FEEDBACK_FORM.md` exists | Partial: suites pass and form exists; Franklin to check F8 in a real build (report dialog) and the instructions text |
 | G7 | Assets: placeholder list known; audio in or accepted as placeholder; credits and licences complete | `docs/demo/ASSET_STATUS.md`: 393 files, 390 placeholder, 3 third-party, 1 flagged (`art/export/fnt/arc_fnt_digits_3x5.png` has no recorded licence); `docs/demo/AUDIO_STATUS.md`: 77 of 77 cues placeholder or silent; credits screen from `game/data/credits_v1.json` is in the matrix | Partial: placeholder lists known and credits screen exists; Franklin to check the font licence (licences NOT complete until then) and accept placeholder audio |
 | G8 | Known issues list in the friends package | `README_FRIENDS.md` has a short KNOWN ISSUES section that ships in the zip via `write_readme`. `docs/demo/KNOWN_ISSUES.md` is added by the next step, but `export_demo.py` only bundles README_FRIENDS.md + FEEDBACK_FORM.md, so KNOWN_ISSUES.md itself will NOT be in the zip (owner follow-up) | Partial: README KNOWN ISSUES ships; Franklin to check that list is enough or order KNOWN_ISSUES.md bundled |
+
+## Demo v1.1 (AD-204)
+
+Date 2026-11-11. Commit `70c76b0` (branch task/AD-204-hermes-software-exec-ad: master plus the `tools/ui_matrix.sh` state change). Godot 4.7.1.stable.official.a13da4feb. Host: aarch64 2-core shared VM, NOT the reference PC, and NOT idle: other agent jobs ran on it during this pass. 1-min load at the start of each run: smoke 3.02, UI matrix 2.45, export 5.59, test suite 4.60, `--perf-run` 3.72, `demo_perf_probe.gd` 2.22 (AD-190 had 1.93 and 1.60 for UI and perf). Bot win rate and bot room lengths are INFO and not gates (Demo Plan 19.1). All outputs went to `/workspace/tmp/ad204`, not /tmp.
+
+Commands (G=/usr/local/bin/godot, S=/workspace/tmp/ad204):
+
+- `$G --headless --path . --import`
+- `$G --headless --path . --script res://tests/qa/demo_smoke.gd -- --natural=1 --seeds=10 --first=0 --det-seeds=0 --trace=0` and the same with `--first=10` (two parallel chunks, `$S/smoke_a.txt`, `$S/smoke_b.txt`)
+- `bash tools/ui_matrix.sh --godot $G --out $S/ui_matrix`
+- `python3 scripts/export_demo.py --godot $G --out $S/export` (under `flock /workspace/hermes-work/state/verify.lock`)
+- `$G --headless --path . --script res://tests/run_tests.gd` (under the same lock)
+- `XDG_DATA_HOME=$S/perf_xdg $G --headless --path . -- --perf-run`, then `$G --headless --path . --script res://tests/qa/demo_perf_probe.gd`
+- `python3 scripts/audio_check.py --output $S/AUDIO_STATUS.md` (`docs/demo/AUDIO_STATUS.md` was not overwritten)
+
+### Smoke (20 seeds 20261022-20261041, natural + route)
+
+Both chunks exited 0: `smoke_green` 40/40 per chunk, 80 rows in total, no failing seeds, no SCRIPT ERROR or crash lines. Determinism: not re-run (`--det-seeds=0`).
+
+| mode | build | n | outcomes | total min min / median / max | max of max room s | rows ok=NO |
+|---|---|---|---|---|---|---|
+| route | typical | 20 | won 20 | 2.746 / 3.067 / 3.363 | 69.700 | 0 |
+| natural | weak | 20 | won 1, dead 19 | 0.741 / 1.993 / 2.526 | 49.333 | 0 |
+| natural | typical | 20 | dead 20 | 0.779 / 1.984 / 3.077 | 54.733 | 0 |
+| natural | skilled | 20 | dead 20 | 0.849 / 1.991 / 3.142 | 70.633 | 0 |
+
+No room hit the 360 s cap (longest 70.633 s), so no possible softlock was seen. Route bots still win in about 3 minutes (AD-190: 3.048 / 3.459 / 3.745). Natural bots changed a lot: 1 win in 60 natural runs, against 41 in 60 in AD-190 (weak 17, typical 18, skilled 6). The bots now mostly die between rooms 5 and 12. This is INFO: bot win rate does not decide any gate. The cause (new enemies, mana pressure and attack timing against the same bot logic, or something else) was not investigated here. The route-vs-natural gap says a human run has to judge difficulty (G1).
+
+### UI matrix
+
+38 states x 13 size modes: 494 shots taken, 494 headings, 0 FAIL, 0 WARN lines, 38 NOTE lines (fullscreen under Xvfb without a window manager: known limit, one per state). The `SUMMARY: 494 shots, 0 failed` line was printed and 38 contact sheets were written. `compendium_enemies_known` is in the list (AD-190 shot 30 states). This run came from the `ui_matrix.sh` process left over from an earlier attempt of this task on the same commit (started at load 2.45, finished 01:04); I did not start a second one in parallel on the 2-core VM. I looked at the sheets for combat, compendium_enemies, compendium_enemies_known, reward_resonant, tip_telegraph, sigil_desk and summary_win. They are readable at all 13 sizes at the sheet's reduced scale; nothing was clipped off-screen that I could see. Observations, not defects confirmed: in `compendium_enemies_known` the footer still reads `DISCOVERED 0 / 17` while all enemy names, WEAK and RESIST icons are shown, and the portrait box is empty (the shot hook swaps in the discovered list after the page is built; not investigated). PNGs were deleted afterwards.
+
+### Release export
+
+`scripts/export_demo.py` exit 0. Zips: `Sigilwright-0.1.0-demo-windows.zip` (38.8 MB) and `Sigilwright-0.1.0-demo-linux.zip` (29.6 MB); AD-190 had 38.6 MB and 29.4 MB. Linux zip verification, 4/4 PASS: linux export starts headless and quits cleanly; AD_UI_SHOT_STATE hook inert in release build; release probe (debug keys, title, arena, run) + shipped pck contents; perf run on shipped binary writes a valid report (4 rooms). Host is aarch64, so the arm64 release template ran the pack. The Windows zip was exported but not run.
+
+### Test suite + feel bands
+
+`run_tests.gd` exit 0. TEST SUMMARY: 24830 passed / 0 failed / 92 suites (AD-190: 19558 / 0 / 78). The log has 0 FAIL lines and no SCRIPT ERROR. `test_ad_feel_bands.gd` ran (its `SUITE test_ad_feel_bands.gd` line is present) with no FAIL lines, so the no-HP-sponge feel bands are green. No gameplay code, data or tests were changed in this step. `test_ad_final_boss_v2.gd` printed INFO `ARCHIVIST_BENCH` lines (bot fight 48.5-59.7 s, phases 1-3 reached, bot dead in all four): INFO only.
+
+### Perf on the VM (INFO, headless, not valid for G4)
+
+`--perf-run` (headless, gl_compatibility, lighting high, dev build, target p95 16.7 ms, 600 ticks per room, host load 3.72), per room, ms:
+
+| room | frame p50 | frame p95 | frame max | sim p50 | sim p95 | sim max |
+|---|---|---|---|---|---|---|
+| ruins_c07 | 69.694 | 128.304 | 177.984 | 8.114 | 18.079 | 42.118 |
+| cistern_p10 | 251.561 | 406.990 | 575.460 | 15.289 | 39.617 | 69.854 |
+| ruins_boss | 109.790 | 206.637 | 297.932 | 6.005 | 16.366 | 27.460 |
+| cistern_boss | 161.120 | 249.518 | 360.584 | 9.249 | 19.760 | 45.001 |
+
+`demo_perf_probe.gd` (sim only, 4.0 ms budget, host load 2.22 at start): all 4 rooms over budget, 24 budget drop records in total (AD-190: 0).
+
+| room | p50 ms | p95 ms | max ms | drops | proxy verdict |
+|---|---|---|---|---|---|
+| cistern_boss | 3.290 | 8.195 | 20.679 | 0 | FAIL (>8.0) |
+| ruins_boss | 4.236 | 17.078 | 36.705 | 11 | FAIL (>8.0) |
+| ruins_c04 | 4.260 | 13.202 | 20.228 | 0 | FAIL (>8.0) |
+| cistern_p01 | 9.069 | 25.480 | 34.715 | 13 | FAIL (>8.0) |
+
+Every number is worse than AD-190 (for example cistern_p10 frame p95 191.986 -> 406.990 ms), but the host was loaded by other jobs (load 3.72 for the perf run against 1.60 in AD-190), so the two runs are not comparable. The probe's `budget_drop_records` count dropped effects or events; the probe did not freeze. Frame times come from a dummy renderer on a shared 2-core VM and say nothing about 60 FPS on the reference PC; `docs/demo/PERF_TEST.md` on the reference PC decides G4. A re-run on an idle host is advised before reading any trend into these.
+
+### Audio check
+
+`audio_check.py` exit 0. 79 cues: 0 real, 79 placeholder or silent (Music 4, Ambience 2, SFX 73), 0 dropped, 0 failed, 0 unverified. AD-190 had 77 of 77 placeholder or silent. That is 2 cues more than AD-190 (which two was not checked). The `--perf-run` also logged `AUDIO_PLACEHOLDER` fallbacks, for example the new enemy telegraph cues (`sfx.tele.ghoul_stalker`, `riptide_leaper`, ...) that reuse `sfx_tele_bone_thrall.wav`. So every cue currently falls back to a placeholder or silent file; no real audio files exist yet.
+
+### Changes since Demo v1 (Franklin feedback 2026-11-09)
+
+- Combos: mana pressure and a resonance mana refund (AD-193); enemy weak/resist with compendium entries (AD-194); a Resonant clear reward and combo stats on the summary screen (AD-195).
+- Dodge: enemy attack timing and a perfect-dodge reward (AD-196); new enemies Ghoul Stalker and Riptide Leaper that test dodging (AD-197).
+- Run structure: run structure change (AD-224); route bots now clear 12 rooms per run.
+- Rooms: Ruins layouts and the ROOM_RULES harness (AD-202); Cistern layout pass (AD-203).
+- Bosses: boss framework (AD-198); Undead Warden (AD-199); mini-bosses (AD-200); Drowned Archivist (AD-201).
+- Audio: AD-191, AD-192, AD-226 (all 79 cues are still placeholder or silent, see Audio check).
+
+### Gates (Demo Plan 19.4; Franklin decides)
+
+| gate | requirement | evidence | status |
+|---|---|---|---|
+| G1 | Feel: Franklin plays 3 runs; rooms quick and satisfying, no room over ~3 min, bosses feel like events, winning run 25-40 min | Bot numbers are INFO only: max room 70.633 s; route bots win in 2.7-3.4 min; natural bots win 1 of 60; feel bands green | Franklin to check |
+| G2 | Onboarding: a friend with no explanation moves, dashes, casts, reads a telegraph and crafts one spell within ~5 min | Human test not run (`docs/demo/ONBOARDING.md`); `tip_telegraph` sheet looked right | Franklin to check |
+| G3 | Stability: no crash or softlock in 20-seed smoke + Franklin's runs; workshop save/quit works | 80/80 smoke rows ok, no crash, no SCRIPT ERROR, no 360 s timeout; suite 24830/0 | Partial: 20-seed smoke and suite are clean; Franklin to check his own runs and workshop save/quit by hand |
+| G4 | Performance: 60 FPS at 1080p on the reference PC (i5 11th gen / GTX 1660), Lighting High (Low allowed) | Only headless VM numbers on a loaded host (INFO, above); `docs/demo/PERF_TEST.md` not run on the reference PC | Franklin to check |
+| G5 | Build: one script makes versioned Windows/Linux zips; no debug keys or menus; launches without Godot | `export_demo.py` exit 0, 0.1.0-demo zips for both; Linux zip verify 4/4 PASS incl. release probe | Partial: script, versioned zips and Linux release checks pass; Franklin to check the Windows zip launches without Godot |
+| G6 | Feedback: run log JSON per run, F8 snapshot, feedback form, clear 'send this folder' instructions | Suite clean (run log and feedback snapshot suites inside the 24830/0); `docs/demo/FEEDBACK_FORM.md` exists | Partial: suites pass and form exists; Franklin to check F8 in a real build (the matrix cannot shoot the report dialog) and the instructions text |
+| G7 | Assets: placeholder list known; audio in or accepted as placeholder; credits and licences complete | `docs/demo/ASSET_STATUS.md` as committed (not regenerated here): 393 files, 390 placeholder, 3 third-party, 1 flagged (`art/export/fnt/arc_fnt_digits_3x5.png`, no recorded licence); audio 79 of 79 cues placeholder or silent; credits screen is in the matrix | Partial: placeholder lists known and credits screen exists; Franklin to check the font licence (licences NOT complete until then) and accept placeholder audio |
+| G8 | Known issues list in the friends package | `README_FRIENDS.md` has a KNOWN ISSUES section that ships in the zip; `docs/demo/KNOWN_ISSUES.md` is not bundled by `export_demo.py` (not re-checked in this step) | Partial: README KNOWN ISSUES ships; Franklin to check that the list is enough and covers v1.1 |
