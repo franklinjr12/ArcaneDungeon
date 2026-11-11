@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Build the friends demo: headless Windows + Linux release exports, zipped with a README.
 
-Usage: python3 scripts/export_demo.py --godot <godot> [--out <dir>]
+Usage: python3 scripts/export_demo.py --godot <godot> [--out <dir>] [--targets windows|linux|all]
+
+On a Windows host the default target is windows only (the Linux zip cannot be verified there).
 """
 import argparse
 import json
@@ -18,7 +20,15 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from validate_godot import ensure_imported  # noqa: E402
 
 PROJECT = pathlib.Path(__file__).resolve().parents[1]
-TEMPLATES_HINT = "Export templates must be installed at ~/.local/share/godot/export_templates/4.7.1.stable/"
+def _templates_root() -> pathlib.Path:
+    if sys.platform == "win32":
+        return pathlib.Path(os.environ.get("APPDATA", pathlib.Path.home() / "AppData/Roaming")) / "Godot/export_templates"
+    if sys.platform == "darwin":
+        return pathlib.Path.home() / "Library/Application Support/Godot/export_templates"
+    return pathlib.Path.home() / ".local/share/godot/export_templates"
+
+
+TEMPLATES_HINT = f"Export templates must be installed at {_templates_root() / '4.7.1.stable'}"
 TARGETS = [
     # (preset, folder, binary name)
     ("Windows Desktop", "windows", "Sigilwright.exe"),
@@ -103,7 +113,7 @@ def _run_verify(label: str, cmd: list, env: dict, must_contain: str = "") -> str
     return output
 
 
-TEMPLATE_DIR = pathlib.Path.home() / ".local/share/godot/export_templates/4.7.1.stable"
+TEMPLATE_DIR = _templates_root() / "4.7.1.stable"
 PACK_EXCLUDED = (b"tests/run_tests", b"docs/demo/", b"art/source/", b"art/aseprite/")
 
 
@@ -207,6 +217,9 @@ def main() -> int:
     parser.add_argument("--godot", default="godot", help="Godot executable")
     parser.add_argument("--no-verify", action="store_true", help="skip running the Linux zip")
     parser.add_argument("--out", default=None, help="output dir (default <repo>/build/demo/<version>)")
+    parser.add_argument("--targets", choices=("windows", "linux", "all"),
+                        default="windows" if sys.platform == "win32" else "all",
+                        help="platforms to export (default: windows on a Windows host, else all)")
     args = parser.parse_args()
     version = read_version()
     out = pathlib.Path(args.out).resolve() if args.out else PROJECT / "build" / "demo" / version
@@ -218,7 +231,8 @@ def main() -> int:
         (build_root / ".gdignore").touch()
     out.mkdir(parents=True, exist_ok=True)
     zips = []
-    for preset, name, binary in TARGETS:
+    targets = [t for t in TARGETS if args.targets in ("all", t[1])]
+    for preset, name, binary in targets:
         folder = out / name
         export(args.godot, preset, folder, binary)
         write_readme(folder, version)
@@ -230,7 +244,11 @@ def main() -> int:
     print()
     for z in zips:
         print(f"{z} ({z.stat().st_size / 1048576:.1f} MB)")
-    if not args.no_verify:
+    if args.no_verify or args.targets == "windows":
+        print("\nnote: Linux zip verify skipped" + ("" if args.no_verify else " (linux not exported)"))
+    elif sys.platform == "win32":
+        print("\nnote: Linux zip verify skipped (cannot run a Linux binary on a Windows host)")
+    else:
         print("\n--- Verify Linux zip ---", flush=True)
         verify_linux(zips[-1], out, args.godot)
     return 0
