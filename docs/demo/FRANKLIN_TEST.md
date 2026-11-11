@@ -200,11 +200,11 @@ This section covers your feedback of 2026-11-09. QA numbers: [docs/benchmarks/ad
 1. Read [ASSET_STATUS.md](ASSET_STATUS.md) and [AUDIO_STATUS.md](AUDIO_STATUS.md).
 2. Decide whether to ship placeholder audio.
 3. Open Credits from the main menu and check it.
-4. Find the licence of `art/export/fnt/arc_fnt_digits_3x5.png` and record it. It is flagged because none is recorded.
+4. Check that the fonts in `ASSET_STATUS.md` (`arc_fnt_m5x7`, CC0; `arc_fnt_silkscreen`, OFL 1.1) match the credits screen. The unlicensed digits font was removed in AD-232.
 
-**Evidence:** 393 art files: 390 placeholder, 3 third-party, 1 flagged (the digits font above). Audio: 79 of 79 cues are placeholder or silent (AD-204). The credits screen is built from `game/data/credits_v1.json` and is in the UI matrix.
+**Evidence:** 420 asset files: 418 placeholder, 2 third-party (both fonts licensed), 0 flagged (AD-232). Audio: 79 of 79 cues are placeholder or silent (AD-204). The credits screen is built from `game/data/credits_v1.json` and is in the UI matrix.
 
-**Status:** partial. Licences are not complete until the font licence is found. Franklin to check that and to accept placeholder audio.
+**Status:** partial. Font licences are recorded (AD-232). Franklin to accept placeholder audio.
 
 **G7 result:** PASS / FAIL  Notes:
 

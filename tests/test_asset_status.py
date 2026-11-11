@@ -30,7 +30,7 @@ RULES = {
     'rules': [
         {'glob': 'art/export/fnt/arc_fnt_m5x7.*', 'status': 'third-party', 'licence': 'CC0 (test)',
          'credit': 'm5x7 font', 'note': ''},
-        {'glob': 'art/export/fnt/arc_fnt_digits_3x5.*', 'status': 'third-party', 'licence': '',
+        {'glob': 'art/export/fnt/arc_fnt_unlicensed.*', 'status': 'third-party', 'licence': '',
          'credit': '', 'note': 'origin and licence not recorded in the repo; owner to confirm'},
         {'glob': 'art/export/*', 'status': 'placeholder', 'licence': 'Project-original (Arcane Studio)',
          'credit': '', 'note': 'first art pass'},
@@ -52,7 +52,7 @@ class AssetStatusTest(unittest.TestCase):
         write(self.root, 'export_presets.cfg', PRESETS)
         write(self.root, 'game/audio/audio_cues_v1.json', json.dumps(CUES))
         write(self.root, 'art/export/fnt/arc_fnt_m5x7.png', b'font')
-        write(self.root, 'art/export/fnt/arc_fnt_digits_3x5.png', b'font')
+        write(self.root, 'art/export/fnt/arc_fnt_unlicensed.png', b'font')
         write(self.root, 'art/export/hero.png', b'art')
         write(self.root, 'assets/audio/sfx/sfx_cast_fire.wav', gen.wav_bytes(gen.render('sfx.cast.fire'), False))
         write(self.root, 'assets/audio/sfx/sfx_unmapped.wav', b'RIFF')
@@ -77,8 +77,8 @@ class AssetStatusTest(unittest.TestCase):
 
     def test_excluded_dirs_skipped(self):
         self.assertEqual(sorted(self.records()), [
-            'art/export/fnt/arc_fnt_digits_3x5.png',
             'art/export/fnt/arc_fnt_m5x7.png',
+            'art/export/fnt/arc_fnt_unlicensed.png',
             'art/export/hero.png',
             'assets/audio/sfx/sfx_cast_fire.wav',
             'assets/audio/sfx/sfx_unmapped.wav',
@@ -94,7 +94,7 @@ class AssetStatusTest(unittest.TestCase):
         self.assertFalse(self.records()['art/export/fnt/arc_fnt_m5x7.png']['flagged'])
 
     def test_third_party_without_licence_flagged(self):
-        rec = self.records()['art/export/fnt/arc_fnt_digits_3x5.png']
+        rec = self.records()['art/export/fnt/arc_fnt_unlicensed.png']
         self.assertEqual(rec['status'], 'third-party')
         self.assertTrue(rec['flagged'])
         self.assertIn('owner to confirm', rec['note'])
