@@ -6,33 +6,31 @@ Regenerate: `python3 tools/asset_status.py` (scans the repo; rules in tools/asse
 
 | type | files | final | placeholder | third-party | unknown | flagged |
 |---|---|---|---|---|---|---|
-| art | 360 | 0 | 360 | 0 | 0 | 0 |
-| font | 3 | 0 | 0 | 3 | 0 | 1 |
+| art | 388 | 0 | 388 | 0 | 0 | 0 |
+| font | 2 | 0 | 0 | 2 | 0 | 0 |
 | audio | 30 | 0 | 30 | 0 | 0 | 0 |
-| total | 393 | 0 | 390 | 3 | 0 | 1 |
+| total | 420 | 0 | 418 | 2 | 0 | 0 |
 
 ## Flagged: needs licence or origin
 
-| file | type | status | licence | note |
-|---|---|---|---|---|
-| art/export/fnt/arc_fnt_digits_3x5.png | font | third-party | (none recorded) | origin and licence not recorded in the repo; owner to confirm |
+None
 
 ## Game-art list
 
 | directory | files | placeholder | final | third-party | flagged |
 |---|---|---|---|---|---|
-| art/export/actors | 37 | 37 | 0 | 0 | 0 |
+| art/export/actors | 52 | 52 | 0 | 0 | 0 |
 | art/export/bos | 1 | 1 | 0 | 0 | 0 |
 | art/export/chr | 1 | 1 | 0 | 0 | 0 |
 | art/export/enm | 3 | 3 | 0 | 0 | 0 |
-| art/export/fnt | 3 | 0 | 0 | 3 | 1 |
+| art/export/fnt | 2 | 0 | 0 | 2 | 0 |
 | art/export/ico | 13 | 13 | 0 | 0 | 0 |
 | art/export/npc | 3 | 3 | 0 | 0 | 0 |
 | art/export/por | 1 | 1 | 0 | 0 | 0 |
 | art/export/prp | 51 | 51 | 0 | 0 | 0 |
-| art/export/til | 18 | 18 | 0 | 0 | 0 |
+| art/export/til | 20 | 20 | 0 | 0 | 0 |
 | art/export/ui | 14 | 14 | 0 | 0 | 0 |
-| art/export/vfx | 182 | 182 | 0 | 0 | 0 |
+| art/export/vfx | 193 | 193 | 0 | 0 | 0 |
 | assets/pixel | 13 | 13 | 0 | 0 | 0 |
 | assets/ui | 2 | 2 | 0 | 0 | 0 |
 | assets/ui/icons | 3 | 3 | 0 | 0 | 0 |
@@ -70,6 +68,12 @@ Missing audio cues are tracked in docs/demo/AUDIO_STATUS.md (AD-188).
 | art/export/actors/ad_enm_grave_hound_left.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/actors/ad_enm_lantern_wisp.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/actors/ad_enm_lantern_wisp_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/actors/ad_enm_mini_fallen_adept.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/actors/ad_enm_mini_fallen_adept_decoy.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/actors/ad_enm_mini_fallen_adept_decoy_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/actors/ad_enm_mini_fallen_adept_decoy_left.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/actors/ad_enm_mini_fallen_adept_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/actors/ad_enm_mini_fallen_adept_left.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/actors/ad_enm_mini_ossuary_shieldbearer.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/actors/ad_enm_mini_ossuary_shieldbearer_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/actors/ad_enm_mini_rust_golem.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
@@ -79,15 +83,23 @@ Missing audio cues are tracked in docs/demo/AUDIO_STATUS.md (AD-188).
 | art/export/actors/ad_enm_rust_golem.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/actors/ad_enm_rust_golem_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/actors/ad_enm_storm_crystal.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/actors/ad_enm_storm_crystal_elite.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/actors/ad_enm_storm_crystal_elite_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/actors/ad_enm_storm_crystal_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/actors/ad_enm_storm_crystal_small.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/actors/ad_enm_storm_crystal_small_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/actors/ad_enm_wailing_spirit.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/actors/ad_enm_wailing_spirit_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/actors/ad_fx_blink_anchor_sigil.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/actors/ad_fx_blink_anchor_sigil_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/actors/ad_fx_homing_skull.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/actors/ad_fx_homing_skull_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/actors/ad_fx_homing_skull_left.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/bos/ad_bos_ossuary_warden.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/chr/ad_chr_mage.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/enm/ad_enm_bone_thrall.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/enm/ad_enm_fallen_adept.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/enm/ad_enm_grave_hound.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
-| art/export/fnt/arc_fnt_digits_3x5.png | font | third-party | (none recorded) | origin and licence not recorded in the repo; owner to confirm |
 | art/export/fnt/arc_fnt_m5x7.png | font | third-party | CC0 (recorded in assets/ui/ad_ui_kit.json, AD-029) | m5x7 font |
 | art/export/fnt/arc_fnt_silkscreen.png | font | third-party | OFL 1.1 (recorded in assets/ui/ad_ui_kit.json, AD-029) | Silkscreen font |
 | art/export/ico/ad_ico_artifacts_atlas_16.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
@@ -170,6 +182,8 @@ Missing audio cues are tracked in docs/demo/AUDIO_STATUS.md (AD-188).
 | art/export/til/ad_til_cistern_accents_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/til/ad_til_cistern_challenge.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/til/ad_til_cistern_challenge_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/til/ad_til_cistern_water_states.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/til/ad_til_cistern_water_states_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/til/ad_til_flooded_cistern.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/til/ad_til_flooded_cistern_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/til/ad_til_guild_workshop.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
@@ -204,6 +218,12 @@ Missing audio cues are tracked in docs/demo/AUDIO_STATUS.md (AD-188).
 | art/export/vfx/ad_fx_cookie_spell_water.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/vfx/ad_fx_cookie_torch_flicker.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/vfx/ad_fx_cookie_window_shaft.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/vfx/ad_fx_emerge_splash_ring.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/vfx/ad_fx_emerge_splash_ring_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/vfx/ad_fx_page_projectile.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/vfx/ad_fx_page_projectile_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/vfx/ad_fx_pool_ripple_telegraph.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/vfx/ad_fx_pool_ripple_telegraph_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/vfx/ad_fx_ptc_droplet_16.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/vfx/ad_fx_ptc_droplet_16_mask.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/vfx/ad_fx_ptc_droplet_8.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
@@ -250,6 +270,11 @@ Missing audio cues are tracked in docs/demo/AUDIO_STATUS.md (AD-188).
 | art/export/vfx/ad_fx_ptc_wisp_8.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/vfx/ad_fx_ptc_wisp_8_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/vfx/ad_fx_ptc_wisp_8_mask.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/vfx/ad_fx_storm_beam.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/vfx/ad_fx_tide_wave.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/vfx/ad_fx_tide_wave_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/vfx/ad_fx_wisp_shield.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/vfx/ad_fx_wisp_shield_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/vfx/ad_vfx_basic_bolt.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/vfx/ad_vfx_basic_bolt_impact.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/vfx/ad_vfx_beam_fire_end.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |

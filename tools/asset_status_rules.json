@@ -16,13 +16,6 @@
       "note": ""
     },
     {
-      "glob": "art/export/fnt/arc_fnt_digits_3x5.*",
-      "status": "third-party",
-      "licence": "",
-      "credit": "",
-      "note": "origin and licence not recorded in the repo; owner to confirm"
-    },
-    {
       "glob": "art/export/*",
       "status": "placeholder",
       "licence": "Project-original (Arcane Studio)",
