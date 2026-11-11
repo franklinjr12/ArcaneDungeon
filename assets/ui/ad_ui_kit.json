@@ -10,6 +10,16 @@
   "label": "arc_fnt_m5x7 (CC0, AD-029) x2 on buttons, x1 in rows",
   "small": "arc_fnt_silkscreen (OFL 1.1, AD-029)"
  },
+ "font_licences": {
+  "arc_fnt_m5x7": {
+   "licence": "CC0",
+   "credit": "m5x7 font, Daniel Linssen"
+  },
+  "arc_fnt_silkscreen": {
+   "licence": "OFL 1.1",
+   "credit": "Silkscreen font, Jason Kottke"
+  }
+ },
  "atlas": {
   "png": "ad_ui_kit_atlas.png",
   "glow_png": "ad_ui_kit_atlas_glow.png",
