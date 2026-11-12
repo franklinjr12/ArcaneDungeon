@@ -26,6 +26,8 @@ case ARTIFACT_FILES (kind 'icon_atlas', 32 px card frames are placeholders until
 
 Actors (AD-065): python3 scripts/import_art_exports.py --actors  copies the mage/enemy/warden animation sheets
 (no cards, AD-063 nested) to art/export/actors/ and writes actors/actors_manifest.json only.
+AD-200 adds AD-214 r2 (elite adept, decoy, skull, blink sigil) and AD-215 (elite/small storm crystal) actors and the "sheets"
+section (AD-215 storm beam + layout -> vfx/, AD-222 water states -> til/): use --source /workspace/art/arcane_dungeon.
 """
 import argparse
 import json
@@ -226,11 +228,43 @@ ACTORS = {
     "lantern_wisp": _enm("AD-106/export/ad_enm_lantern_wisp", ["AD-104", "AD-106"], dict(BARE, attack_side=("cast",))),
     "storm_crystal": _enm("AD-106/export/ad_enm_storm_crystal", ["AD-104", "AD-106"], dict(BARE, move_side=("idle",))),
     "rust_golem": _enm("AD-118/export/ad_enm_rust_golem", ["AD-104", "AD-106", "AD-118"], BARE),
-    "drowned_archivist": _enm("AD-118/export/ad_bos_drowned_archivist_anim", ["AD-107", "AD-108", "AD-118"], {
-        "idle_side": ("idle",), "move_side": ("move",), "telegraph_side": ("attack_a", 0, 2), "attack_side": ("attack_a", 3, 7),
+    # AD-201: AD-212 body (submerge/emerge/page_throw/ice_stun/shielded/move_glide tags come through unaliased); the
+    # AD-212 exit ripple is deliberately not imported (AD-213 r2 pool ripple replaces it).
+    "drowned_archivist": _enm("AD-212/export/ad_bos_drowned_archivist_anim", ["AD-107", "AD-108", "AD-118", "AD-212"], {
+        "idle_side": ("idle",), "move_side": ("move_glide",), "telegraph_side": ("attack_a", 0, 2), "attack_side": ("attack_a", 3, 7),
         "phase_side": ("phase",), "hit_side": ("hit",), "death_side": ("death",)}),
     "mini_ossuary_shieldbearer": _enm("AD-109/export/ad_enm_mini_ossuary_shieldbearer", ["AD-109"]),
     "mini_rust_golem": _enm("AD-109/export/ad_enm_mini_rust_golem", ["AD-109"], BARE),
+    # AD-200 (AD-214 r2, AD-215): elite kit art. Drawn through the tuning art_kind; the sim kinds are unchanged.
+    "mini_fallen_adept": {"rows": ["AD-214"], "sheets": {"main": ("AD-214/r2/export/ad_enm_mini_fallen_adept", "ad_enm_mini_fallen_adept", True, None, {
+        "telegraph_side": ("telegraph_volley_side",), "attack_side": ("cast_fan_side",)})}},
+    "mini_fallen_adept_decoy": {"rows": ["AD-214"], "sheets": {"main": ("AD-214/r2/export/ad_enm_mini_fallen_adept_decoy", "ad_enm_mini_fallen_adept_decoy", True, None, {
+        "telegraph_side": ("idle_side",), "attack_side": ("idle_side",), "hit_side": ("idle_side", 0, 0), "death_side": ("death_pop_side",)})}},
+    "homing_skull": {"rows": ["AD-214"], "sheets": {"main": ("AD-214/r2/export/ad_fx_homing_skull", "ad_fx_homing_skull", True, None, {
+        "idle_side": ("loop",), "move_side": ("loop",), "telegraph_side": ("loop",), "attack_side": ("loop",),
+        "hit_side": ("loop", 0, 0), "death_side": ("destroyed",)})}},
+    # ground sigil on a blink landing (a telegraph marker, not an enemy: no enemy tags required)
+    "blink_anchor_sigil": {"rows": ["AD-214"], "sheets": {"main": ("AD-214/r2/export/ad_fx_blink_anchor_sigil", "ad_fx_blink_anchor_sigil", False, None)}},
+    # the elite has no hit/death tags: hit holds the first float frame, death plays the split (cracks) tag
+    "storm_crystal_elite": _enm("AD-215/export/ad_enm_storm_crystal_elite", ["AD-215"], {
+        "idle_side": ("float",), "move_side": ("float",), "telegraph_side": ("beam_charge",), "attack_side": ("pulse",),
+        "hit_side": ("float", 0, 0), "death_side": ("split",)}),
+    "storm_crystal_small": _enm("AD-215/export/ad_enm_storm_crystal_small", ["AD-215"], {
+        "idle_side": ("idle",), "move_side": ("move",), "telegraph_side": ("move", 0, 2), "attack_side": ("move",),
+        "hit_side": ("hit",), "death_side": ("death",)}),
+}
+# AD-200 sheets that are not actors: {name: (rows, src stem path, dest dir, layout json or None)}. Listed under
+# actors_manifest.json "sheets" with tags/ms/canvas/pivot, plus the layout file and a glow png when one exists.
+# AD-222 already contains the AD-216 water cells; the legacy elec_shallow/elec_deep tags stay in the sheet but unused.
+EXTRA_SHEETS = {
+    "storm_beam": (["AD-215"], "AD-215/export/ad_fx_storm_beam", "vfx", "AD-215/export/ad_fx_storm_beam_layout.json"),
+    "water_states": (["AD-222"], "AD-222/export/ad_til_cistern_water_states", "til", None),
+    # AD-201 Archivist FX (AD-213 r2; the tide wave is AD-227, which supersedes the AD-213 one)
+    "pool_ripple": (["AD-213"], "AD-213/r2/export/ad_fx_pool_ripple_telegraph", "vfx", None),
+    "splash_ring": (["AD-213"], "AD-213/r2/export/ad_fx_emerge_splash_ring", "vfx", None),
+    "book_page": (["AD-213"], "AD-213/r2/export/ad_fx_page_projectile", "vfx", None),
+    "wisp_shield": (["AD-213"], "AD-213/r2/export/ad_fx_wisp_shield", "vfx", None),
+    "tide_wave": (["AD-227"], "AD-227/export/ad_fx_tide_wave", "vfx", None),
 }
 REQUIRED_ENEMY_TAGS = ["idle_side", "move_side", "telegraph_side", "attack_side", "hit_side", "death_side"]
 # optional extras (spawn_side, phase_side) are not required
@@ -252,7 +286,7 @@ def tag_table(data):
     return out
 
 
-ENEMY_KINDS = [k for k in ACTORS if k not in ("mage", "undead_warden")]
+ENEMY_KINDS = [k for k in ACTORS if k not in ("mage", "undead_warden", "blink_anchor_sigil")]
 
 
 def glow_map(kind, key, frames, gdata, errors):
@@ -350,18 +384,49 @@ def import_actors(a):
                 if n not in ent["tags"]:
                     errors.append(f"{kind}: missing required enemy tag {n}")
         actors[kind] = ent
+    sheets = {}
+    for name, (rows, src, ddir, layout) in EXTRA_SHEETS.items():
+        jp, pp, gp = root / (src + ".json"), root / (src + ".png"), root / (src + "_glow.png")
+        if not jp.is_file() or not pp.is_file():
+            errors.append(f"sheet {name}: missing {src}.json/.png")
+            continue
+        data = json.loads(jp.read_text())
+        frames = data["frames"]
+        stem = src.rsplit("/", 1)[1]
+        base = f"res://art/export/{ddir}/"
+        sz = frames[0]["sourceSize"]
+        anchor = slice_bounds(data, "anchor") or slice_bounds(data, "pivot")
+        tg = {}
+        for n, (f, t, ms) in tag_table(data).items():
+            if not (0 <= f <= t < len(frames)):
+                errors.append(f"sheet {name}: tag {n} indices {f}..{t} out of range ({len(frames)} frames)")
+            tg[n] = {"from": f, "to": t, "frames": t - f + 1, "ms": ms}
+        sh = {"rows": rows, "png": base + stem + ".png", "json": base + stem + ".json", "glow_png": None, "layout": None,
+              "canvas": [sz["w"], sz["h"]], "anchor": anchor and [anchor["x"], anchor["y"]], "tags": tg}
+        copies += [(jp, a.dest / ddir / (stem + ".json")), (pp, a.dest / ddir / (stem + ".png"))]
+        if gp.is_file():
+            sh["glow_png"] = base + stem + "_glow.png"
+            copies.append((gp, a.dest / ddir / (stem + "_glow.png")))
+        if layout:
+            lp = root / layout
+            if not lp.is_file():
+                errors.append(f"sheet {name}: missing {layout}")
+            else:
+                sh["layout"] = base + lp.name
+                copies.append((lp, a.dest / ddir / lp.name))
+        sheets[name] = sh
     if errors:
         print("import_art_exports --actors: FAILED\n  " + "\n  ".join(errors), file=sys.stderr)
         return 1
     if a.check:
-        print(f"OK: {len(actors)} actors")
+        print(f"OK: {len(actors)} actors, {len(sheets)} sheets")
         return 0
     for src, dst in copies:
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dst)
     (a.dest / "actors" / "actors_manifest.json").write_text(
-        json.dumps({"version": 1, "scale": 2, "actors": actors}, sort_keys=True, indent=1) + "\n")
-    print(f"wrote {len(actors)} actors to {a.dest / 'actors'}")
+        json.dumps({"version": 1, "scale": 2, "actors": actors, "sheets": sheets}, sort_keys=True, indent=1) + "\n")
+    print(f"wrote {len(actors)} actors, {len(sheets)} sheets to {a.dest / 'actors'}")
     return 0
 
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c1migod5d0yak"
-path="res://.godot/imported/arc_fnt_digits_3x5.png-13a481e4732016d47bf85ee0310c374e.ctex"
+uid="uid://dm2f261bfl0v"
+path="res://.godot/imported/phase1_overhead_slam.png-a5e18ca6f62d7c1cdbc0af44617f5476.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/export/fnt/arc_fnt_digits_3x5.png"
-dest_files=["res://.godot/imported/arc_fnt_digits_3x5.png-13a481e4732016d47bf85ee0310c374e.ctex"]
+source_file="res://docs/rooms/warden_v2/phase1_overhead_slam.png"
+dest_files=["res://.godot/imported/phase1_overhead_slam.png-a5e18ca6f62d7c1cdbc0af44617f5476.ctex"]
 
 [params]
 

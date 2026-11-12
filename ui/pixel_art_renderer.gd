@@ -161,6 +161,7 @@ static var _actors: Dictionary = {}
 static var _actors_loaded := false
 static var _actor_scale := 2.0
 static var _actor_sheets: Dictionary = {}
+static var _extra_sheets: Dictionary = {}
 
 static func actor_manifest() -> Dictionary:
 	if not _actors_loaded:
@@ -168,6 +169,7 @@ static func actor_manifest() -> Dictionary:
 		var m = JSON.parse_string(FileAccess.get_file_as_string(ACTOR_MANIFEST))
 		if m is Dictionary:
 			_actors = m.get("actors", {})
+			_extra_sheets = m.get("sheets", {})
 			_actor_scale = float(m.get("scale", 2))
 	return _actors
 
@@ -332,6 +334,265 @@ static func draw_actor_glows(ci: CanvasItem, alpha_mult: float = 1.0) -> void:
 			ci.draw_texture_rect_region(it["tex"], r, it["region"], col)
 	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
+## AD-200: non-actor sheets listed under actors_manifest "sheets" (storm beam, water states). Pure lookups; {} when absent.
+static func extra_sheet(name: String) -> Dictionary:
+	actor_manifest()
+	return _extra_sheets.get(name, {})
+
+## Sheet frame region for tag frame `index` (clamped) of an extra sheet, or {} when the sheet/png/json/tag is missing.
+static func extra_sheet_frame(name: String, tag: String, index: int) -> Dictionary:
+	var sh := extra_sheet(name)
+	var tg: Dictionary = sh.get("tags", {}).get(tag, {})
+	if tg.is_empty() or not FileAccess.file_exists(str(sh["json"])) or not ResourceLoader.exists(str(sh["png"])):
+		return {}
+	var data := _actor_sheet(str(sh["json"]), str(sh["png"]))
+	var fr: Dictionary = data["json"]["frames"][int(tg["from"]) + clampi(index, 0, int(tg["frames"]) - 1)]
+	var r: Dictionary = fr["frame"]
+	var o: Dictionary = fr.get("spriteSourceSize", {"x": 0, "y": 0})
+	var out := {"tex": data["tex"], "region": Rect2(r["x"], r["y"], r["w"], r["h"]), "offset": Vector2(o["x"], o["y"]), "glow": null}
+	if sh.get("glow_png") != null and ResourceLoader.exists(str(sh["glow_png"])):
+		if not _glow_tex.has(sh["glow_png"]):
+			_glow_tex[sh["glow_png"]] = load(sh["glow_png"])
+		out["glow"] = _glow_tex[sh["glow_png"]]
+	return out
+
+## AD-200 art_kind for a summoned helper (decoy, homing skull, small crystal): the owner's tuning names it under the
+## same key as the summon spec ('kind' of the spec, or the key itself). Drawing only; the sim kind never changes.
+static func summon_art_kind(owner_tuning: Dictionary, kind: String) -> String:
+	for key in ["homing_skull", "decoy", "small_crystals"]:
+		var spec = owner_tuning.get(key)
+		if spec is Dictionary and spec.has("art_kind") and kind == str(spec.get("kind", key)):
+			return str(spec["art_kind"])
+	return kind
+
+## AD-200: blink landing marker (ground sigil) over the blink telegraph; its 4 frames stretch over the windup.
+static func draw_blink_sigil(canvas: CanvasItem, at: Vector2, state_tick: int, window_ticks: int) -> void:
+	if actor_has_tag("blink_anchor_sigil", "telegraph"):
+		var n := actor_tag_frames("blink_anchor_sigil", "telegraph")
+		draw_actor(canvas, "blink_anchor_sigil", at, {"tag": "telegraph", "index": stretched_index(state_tick, window_ticks, n)})
+
+const BEAM_ANGLES := 16
+const BEAM_SHEET := "storm_beam"
+static var _beam_layout: Array = []
+
+## Pure: index 0..15 (22.5 degree steps, a00 east, clockwise on screen = Godot y-down angles) nearest to `angle` radians.
+static func beam_angle_index(angle: float) -> int:
+	return posmod(floori(rad_to_deg(angle) / 22.5 + 0.5), BEAM_ANGLES)
+
+## Pure: segment count for a beam of `length` world units (1 art px = 2 world units): ceil(length / |step|).
+static func beam_tile_count(length: float, step: Vector2) -> int:
+	return ceili(length / _actor_scale / maxf(step.length(), 0.001))
+
+static func beam_step(index: int) -> Vector2:
+	if _beam_layout.is_empty():
+		var path := str(extra_sheet(BEAM_SHEET).get("layout", ""))
+		if path != "" and FileAccess.file_exists(path):
+			var lay = JSON.parse_string(FileAccess.get_file_as_string(path))
+			if lay is Dictionary:
+				_beam_layout = lay.get("angles", [])
+	if index < 0 or index >= _beam_layout.size():
+		return Vector2.ZERO
+	var st: Array = _beam_layout[index]["step"]
+	return Vector2(float(st[0]), float(st[1]))
+
+## Placement list [{tag, index, k}] of one beam in draw order (segs, end cap, start cap); k = step multiple of the tile anchor.
+## Telegraph: segs then the end marker. Never rotates a texture (the sheet has a pre-rendered tile set per angle).
+static func beam_parts(angle_index: int, n: int, telegraph: bool) -> Array:
+	var tag := "a%02d" % angle_index
+	var parts: Array = []
+	for k in n:
+		parts.append({"tag": ("tele_%s_seg" if telegraph else "beam_%s_seg") % tag, "k": k})
+	parts.append({"tag": ("tele_%s_end" if telegraph else "beam_%s_end") % tag, "k": n})
+	if not telegraph:
+		parts.append({"tag": "beam_%s_start" % tag, "k": 0})
+	return parts
+
+## boss_beam hazard drawn from the storm beam sheet; a plain coloured band when the sheet is missing. `reduced` holds frame 0.
+static func draw_beam(canvas: CanvasItem, hazard: Dictionary, at: Vector2, tick: int, reduced: bool) -> void:
+	var angle := float(hazard["beam_angle"])
+	var length := float(hazard["radius"])
+	var tele := bool(hazard.get("telegraph", false))
+	var idx := beam_angle_index(angle)
+	var step := beam_step(idx)
+	var sc := _actor_scale
+	if step == Vector2.ZERO or extra_sheet_frame(BEAM_SHEET, "beam_a00_seg", 0).is_empty():
+		var col := Color(1.0, 0.45, 0.45, 0.35) if tele else Color(0.85, 0.95, 1.0, 0.85)
+		canvas.draw_line(at, at + Vector2.RIGHT.rotated(angle) * length, col, float(hazard.get("beam_width", 20.0)))
+		return
+	var n := beam_tile_count(length, step)
+	var anchor := Vector2(16, 16)
+	var anc = extra_sheet(BEAM_SHEET).get("anchor")
+	if anc is Array:
+		anchor = Vector2(float(anc[0]), float(anc[1]))
+	for part in beam_parts(idx, n, tele):
+		var tg: Dictionary = extra_sheet(BEAM_SHEET)["tags"].get(part["tag"], {})
+		if tg.is_empty():
+			continue
+		var fi := 0 if reduced else loop_index(tg["ms"], tick)
+		var fr := extra_sheet_frame(BEAM_SHEET, part["tag"], fi)
+		if fr.is_empty():
+			continue
+		var cell: Vector2 = at + (step * float(part["k"]) - anchor + fr["offset"]) * sc
+		canvas.draw_texture_rect_region(fr["tex"], Rect2(cell, fr["region"].size * sc), fr["region"])
+
+const WATER_STATES := "water_states"
+
+## Pure: electrified-cell look from the cell index only (no RNG): variant 1..4 (20/40/20/20 percent) and frame offset 0..3.
+static func elec_choice(cell: Vector2i) -> Dictionary:
+	var h: int = (cell.x * 73856093 ^ cell.y * 19349663) & 0x7fffffff
+	var r := h % 100
+	return {"variant": 1 if r < 20 else (2 if r < 60 else (3 if r < 80 else 4)), "offset": (h / 100) % 4}
+
+## Tag + frame for a state_view cell ({} for none). Frozen cells are shallow only; electrified use the v1..v4 tags (never the legacy ones).
+static func water_state_tag(state: String, deep: bool, cell: Vector2i, tick: int, reduced: bool) -> Dictionary:
+	var sh := extra_sheet(WATER_STATES)
+	if state == "frozen":
+		var ftag := "frozen_deep" if deep else "frozen_shallow"
+		var fms: Array = sh.get("tags", {}).get(ftag, {}).get("ms", [])
+		return {"tag": ftag, "index": 0 if fms.is_empty() else loop_index(fms, tick)}
+	var ch := elec_choice(cell)
+	var tag := "elec_%s_v%d" % ["deep" if deep else "shallow", ch["variant"]]
+	var ms: Array = sh.get("tags", {}).get(tag, {}).get("ms", [])
+	if ms.is_empty():
+		return {}
+	return {"tag": tag, "index": 0 if reduced else (loop_index(ms, tick) + int(ch["offset"])) % ms.size()}
+
+## AD-200: session.water.state_view() cells (electrified / frozen) over the base water. Skipped quietly without the sheet.
+static func _draw_water_states(canvas: CanvasItem, session, offset: Vector2, tick: int, reduced: bool) -> void:
+	if extra_sheet(WATER_STATES).is_empty():
+		return
+	var deeps: Array[Rect2] = session.water.deep_rects()
+	for item in session.water.state_view():
+		var rect: Rect2 = item["cell_rect"]
+		var cell := Vector2i(floori(rect.position.x / 32.0), floori(rect.position.y / 32.0))
+		var deep := false
+		for d in deeps:
+			deep = deep or d.has_point(rect.get_center())
+		var pick := water_state_tag(str(item["state"]), deep, cell, tick, reduced)
+		if pick.is_empty():
+			continue
+		var fr := extra_sheet_frame(WATER_STATES, pick["tag"], int(pick["index"]))
+		if fr.is_empty():
+			continue
+		var dest := Rect2(rect.position - offset, fr["region"].size * _actor_scale)
+		canvas.draw_texture_rect_region(fr["tex"], dest, fr["region"])
+		if fr["glow"] != null:
+			_queue_glow({"tex": fr["glow"], "rect": dest, "region": fr["region"], "mirror": false, "at": Vector2.ZERO})
+
+## AD-201 Drowned Archivist FX (AD-213 r2 + AD-227 tide wave), all under actors_manifest "sheets". Drawing only; each drawer
+## returns false when its sheet is missing so the caller keeps the plain shape. Looping FX hold frame 0 when `reduced`.
+const POOL_RIPPLE := "pool_ripple"
+const SPLASH_RING := "splash_ring"
+const BOOK_PAGE := "book_page"
+const WISP_SHIELD := "wisp_shield"
+const TIDE_WAVE := "tide_wave"
+## The shield art is authored on the body canvas (96 px, hurtbox centre at 48,48) so it wraps the boss drawn at `at`.
+const BOSS_BODY_CENTER := Vector2(48, 48)
+const TIDE_NOMINAL_WARN := 60.0
+
+## Pure: frame of a one-shot after age_ticks (60 Hz); -1 once it has finished.
+static func shot_index(ms: Array, age_ticks: int) -> int:
+	var t := maxi(0, age_ticks) * 1000 / 60
+	var acc := 0
+	for i in ms.size():
+		acc += int(ms[i])
+		if t < acc:
+			return i
+	return -1
+
+static func _sheet_ms(name: String, tag: String) -> Array:
+	return extra_sheet(name).get("tags", {}).get(tag, {}).get("ms", [])
+
+## Draws frame `index` of an extra sheet tag with art-px `anchor` (default: the sheet's pivot slice) on `at`.
+## clip_x = (min, max) canvas x trims the frame horizontally (tide tiles at the arena edge); x == y means no clip.
+static func _draw_extra(canvas: CanvasItem, name: String, tag: String, index: int, at: Vector2, anchor: Vector2 = Vector2(-1, -1),
+		tint: Color = Color.WHITE, clip_x: Vector2 = Vector2.ZERO) -> bool:
+	var fr := extra_sheet_frame(name, tag, index)
+	if fr.is_empty():
+		return false
+	if anchor.x < 0.0:
+		var anc = extra_sheet(name).get("anchor")
+		anchor = Vector2(float(anc[0]), float(anc[1])) if anc is Array else Vector2.ZERO
+	var region: Rect2 = fr["region"]
+	var dest := Rect2(at + (fr["offset"] - anchor) * _actor_scale, region.size * _actor_scale)
+	if clip_x.x != clip_x.y:
+		var left := maxf(dest.position.x, clip_x.x)
+		var right := minf(dest.end.x, clip_x.y)
+		if right <= left:
+			return true
+		region = Rect2(region.position + Vector2((left - dest.position.x) / _actor_scale, 0.0), Vector2((right - left) / _actor_scale, region.size.y))
+		dest = Rect2(Vector2(left, dest.position.y), Vector2(right - left, dest.size.y))
+	canvas.draw_texture_rect_region(fr["tex"], dest, region, tint)
+	if fr["glow"] != null:
+		_queue_glow({"tex": fr["glow"], "rect": dest, "region": region, "mirror": false, "at": Vector2.ZERO})
+	return true
+
+## Emerge landing ripple (4 frames stretched over the emerge telegraph window), under the usual danger circle.
+static func draw_pool_ripple(canvas: CanvasItem, at: Vector2, state_tick: int, window_ticks: int) -> bool:
+	var n := int(extra_sheet(POOL_RIPPLE).get("tags", {}).get("telegraph", {}).get("frames", 0))
+	return n > 0 and _draw_extra(canvas, POOL_RIPPLE, "telegraph", stretched_index(state_tick, window_ticks, n), at)
+
+## Splash ring on an Archivist emerge boss_ring hazard (one shot from its first tick; the damage ring is drawn regardless).
+static func draw_splash_ring(canvas: CanvasItem, at: Vector2, age_ticks: int) -> bool:
+	var i := shot_index(_sheet_ms(SPLASH_RING, "splash"), age_ticks)
+	return i >= 0 and _draw_extra(canvas, SPLASH_RING, "splash", i, at)
+
+## Pure: {tag, index} of a book page: torn one-shot once dead (index -1 = finished, skip), burn while Burning, else flutter.
+static func page_pick(tick: int, burning: bool, dead_age: int, reduced: bool) -> Dictionary:
+	if dead_age >= 0:
+		return {"tag": "torn", "index": shot_index(_sheet_ms(BOOK_PAGE, "torn"), dead_age)}
+	var tag := "burn" if burning else "flutter"
+	var ms := _sheet_ms(BOOK_PAGE, tag)
+	return {"tag": tag, "index": 0 if reduced or ms.is_empty() else loop_index(ms, tick)}
+
+static func draw_page(canvas: CanvasItem, at: Vector2, tick: int, burning: bool, dead_age: int, reduced: bool) -> bool:
+	var pick := page_pick(tick, burning, dead_age, reduced)
+	return int(pick["index"]) >= 0 and _draw_extra(canvas, BOOK_PAGE, str(pick["tag"]), int(pick["index"]), at)
+
+## Wisp shield bubble around the boss at `at` (loop), or its break one-shot when `break_age` >= 0.
+static func draw_wisp_shield(canvas: CanvasItem, at: Vector2, tick: int, break_age: int, reduced: bool) -> bool:
+	if break_age >= 0:
+		var i := shot_index(_sheet_ms(WISP_SHIELD, "break"), break_age)
+		return i >= 0 and _draw_extra(canvas, WISP_SHIELD, "break", i, at, BOSS_BODY_CENTER)
+	var ms := _sheet_ms(WISP_SHIELD, "loop")
+	return not ms.is_empty() and _draw_extra(canvas, WISP_SHIELD, "loop", 0 if reduced else loop_index(ms, tick), at, BOSS_BODY_CENTER)
+
+## Pure: x of each tide tile's art origin (tiles are `tile_w` wide); one tile is centred on gap_x (it takes the gap frame),
+## the rest tile left and right until bounds are covered. Returns [{x, gap}] sorted by x.
+static func tide_tiles(gap_x: float, tile_w: float, left: float, right: float) -> Array:
+	var tiles: Array = []
+	var x0 := gap_x - tile_w * 0.5
+	var k := -ceili((x0 - left) / tile_w)
+	while x0 + k * tile_w < right:
+		tiles.append({"x": x0 + k * tile_w, "gap": k == 0})
+		k += 1
+	return tiles
+
+## boss_tide_wave from the AD-227 sheet: wave frames tiled across the arena, a gap frame centred on gap_x. The hit band is the
+## sheet's 'hit' slice (top of the band at the hazard y). While warning (hazard.telegraph) it is frame 0 tinted with the
+## danger ramp (telegraph.circle colours); false when the sheet is missing (caller falls back to a plain band).
+static func draw_tide_wave(canvas: CanvasItem, hazard: Dictionary, offset: Vector2, reduced: bool) -> bool:
+	var sh := extra_sheet(TIDE_WAVE)
+	if sh.is_empty() or extra_sheet_frame(TIDE_WAVE, "wave", 0).is_empty() or extra_sheet_frame(TIDE_WAVE, "gap", 0).is_empty():
+		return false
+	var tele := bool(hazard.get("telegraph", false))
+	var tint := Color.WHITE
+	if tele:
+		tint = telegraph_colors("telegraph.circle", float(hazard.get("age", 0)) / TIDE_NOMINAL_WARN)["outline"]
+	var bounds: Rect2 = hazard["bounds"]
+	var gap_x := float(hazard["gap_x"]) - offset.x
+	var tick := int(hazard.get("age", 0))
+	var wi := 0 if tele or reduced else loop_index(_sheet_ms(TIDE_WAVE, "wave"), tick)
+	var gi := 0 if tele or reduced else loop_index(_sheet_ms(TIDE_WAVE, "gap"), tick)
+	var top := float(hazard["y"]) - offset.y
+	var tile_w := float(sh["canvas"][0]) * _actor_scale
+	var clip := Vector2(bounds.position.x - offset.x, bounds.end.x - offset.x)
+	for tile in tide_tiles(gap_x, tile_w, clip.x, clip.y):
+		# the 'hit' slice starts 13 art px below the frame top; the anchor puts it on the hazard y
+		var at := Vector2(float(tile["x"]) + tile_w * 0.5, top)
+		_draw_extra(canvas, TIDE_WAVE, "gap" if tile["gap"] else "wave", gi if tile["gap"] else wi, at, Vector2(32, 13), tint, clip)
+	return true
+
 const CISTERN_TILES := "ad_til_flooded_cistern"
 
 static func _cistern_ready() -> bool:
@@ -425,6 +686,12 @@ static func walls(canvas: CanvasItem, wall_rects: Array, offset: Vector2) -> voi
 					Rect2(Vector2((tile%8)*32,32),dim))
 		canvas.draw_rect(Rect2(wall.position-offset,wall.size),Color("#bf8a47"),false,2)
 		canvas.draw_line(wall.position-offset+Vector2(3,4),wall.position-offset+Vector2(wall.size.x-3,4),Color("#dcb773",0.7),1)
+
+## AD-202: pits block walking only; very dark placeholder fill until pit art exists. Drawn after the floor, before walls.
+static func pits(canvas: CanvasItem, rects: Array, offset: Vector2) -> void:
+	for rect in rects:
+		canvas.draw_rect(Rect2(rect.position-offset,rect.size),Color("#05070b"))
+		canvas.draw_rect(Rect2(rect.position-offset,rect.size),Color("#161d28"),false,2)
 
 static func _tile_floor_export(canvas: CanvasItem, view: Rect2, offset: Vector2, stage: int) -> void:
 	_export_data()
@@ -783,7 +1050,7 @@ static func _pos(p: Variant) -> Vector2:
 static func collect_fx(session, tick: int, memo: Dictionary) -> Array:
 	var sim = session.sim
 	var out: Array = []
-	for key in ["born", "cursor", "prev", "since", "seen", "known", "dead", "phase", "eshots"]:
+	for key in ["born", "cursor", "prev", "since", "seen", "known", "dead", "phase", "roar", "eshots"]:
 		if not memo.has(key):
 			memo[key] = {}
 	if not memo.has("shots"):
@@ -976,6 +1243,9 @@ static func _collect_feedback(session, tick: int, memo: Dictionary, out: Array) 
 			if enemy.phase == 2 and int(memo["phase"].get(id, 1)) != 2:
 				pending.append(["boss.phase", target.position])
 			memo["phase"][id] = enemy.phase
+		if enemy.get("state") == "roar" and int(memo["roar"].get(id, 0)) != int(enemy.phase):
+			memo["roar"][id] = int(enemy.phase)
+			pending.append(["boss.phase", target.position])
 		if enemy.state != "windup" or enemy.intent == null or not target.alive():
 			continue
 		var intent: Dictionary = enemy.intent.snapshot()
@@ -983,6 +1253,8 @@ static func _collect_feedback(session, tick: int, memo: Dictionary, out: Array) 
 		var item := {"at": target.position, "age": int(enemy.state_tick), "rotation": to_mage.angle(), "length": 0.0, "slot": 0,
 			"window": int(enemy.tuning["telegraph_ticks"])}
 		var shape := str(intent.get("telegraph_shape", ""))
+		if shape == "none":
+			continue
 		if shape == "arc":
 			item["event"] = "telegraph.arc"
 			item["at"] = intent["arc_center"]
@@ -1011,6 +1283,10 @@ static func _collect_feedback(session, tick: int, memo: Dictionary, out: Array) 
 				item["rotation"] = dir.angle()
 		out.append(item)
 	out.append_array(hostile)
+	for hazard in session.hazards:
+		if hazard["kind"] == "boss_warning":
+			out.append({"event": "telegraph.circle", "at": hazard["position"], "age": int(hazard["age"]), "rotation": 0.0, "length": 0.0, "slot": 0,
+				"uniform": 2.0 * float(hazard["radius"]), "window": int(hazard["duration_ticks"])})
 	for p in pending:
 		_shot(shots, p[0], p[1], tick)
 		var shot: Dictionary = shots[shots.size() - 1]
@@ -1098,9 +1374,11 @@ static func draw_enemy_markers(canvas: CanvasItem, enemy, at: Vector2, tick: int
 				var low: bool = target.health.current <= target.health.maximum*0.3
 				if enemy.state == "windup" or low:
 					canvas.draw_arc(at,float(behaviour["explode_radius"]),0.0,TAU,40,Color(0.8,0.9,0.3,0.45+0.25*float((tick/6)%2)),2.0)
+		if enemy.get("staggered") == true:
+			canvas.draw_arc(at,target.radius+10.0,0.0,TAU,32,Color(1.0,0.85,0.3,0.9),3.0)
 
 ## AD-138 placeholder water: translucent shallow, darker opaque deep. Visual only.
-static func draw_water(canvas: CanvasItem, session, offset: Vector2) -> void:
+static func draw_water(canvas: CanvasItem, session, offset: Vector2, reduced: bool = false) -> void:
 	if session.water == null:
 		return
 	var cistern := _cistern_ready()
@@ -1115,6 +1393,7 @@ static func draw_water(canvas: CanvasItem, session, offset: Vector2) -> void:
 			_draw_water_cells(canvas, rect, "deep_loop" if deep else "water_loop", tick, Color(1, 1, 1, 1.0 if deep else 0.85))
 			continue
 		canvas.draw_rect(rect,Color(0.08,0.2,0.45,1.0) if deep else Color(0.55,0.78,0.95,0.4))
+	_draw_water_states(canvas, session, offset, tick, reduced)
 
 ## Fills rect with 32-unit cells of a looped cistern tag; partial edge cells are clipped by region size.
 ## Shore/deep 47-blob edge autotiling is out of scope here.
@@ -1138,9 +1417,14 @@ static func _draw_water_cells(canvas: CanvasItem, rect: Rect2, tag: String, tick
 static func env_prop_frame(kind: String, state: String, lit: bool, stage: int, tick: int) -> Dictionary:
 	_export_data()
 	var base := {"crate": "burnable_crate", "urn": "breakable_urn", "puddle": "puddle", "cobweb": "cobweb",
-		"brazier": "brazier", "cracked_wall": "cracked_wall"}.get(kind, "") as String
+		"brazier": "brazier", "cracked_wall": "cracked_wall", "boss_pillar": "cracked_wall",
+		"pillar": "cracked_wall", "cracked_pillar": "cracked_wall", "broken_wall": "cracked_wall", "column": "cracked_wall",
+		"rubble": "rubble_set", "sarcophagus": "rubble_set"}.get(kind, "") as String
 	if base == "" or state == "destroyed":
 		return {}
+	# AD-202 placeholders: the rubble set has one stage-less stem with a single "static" tag.
+	if base == "rubble_set":
+		return {"stem": "ad_prp_rubble_set", "tag": "static", "index": loop_index(_manifest["ad_prp_rubble_set"]["tags"]["static"]["ms"], tick)} if _manifest.has("ad_prp_rubble_set") else {}
 	var stem := "ad_prp_" + base + ("_cistern" if stage == 2 else ("" if kind == "urn" else "_ruins"))
 	var tag := "idle"
 	if kind == "puddle" and state == "frozen":
@@ -1227,8 +1511,49 @@ static func draw_env_props(canvas: CanvasItem, session, offset: Vector2, stage: 
 					Vector2(mid.x+3,mid.y+2),Vector2(mid.x-2,rect.end.y)]),crack,1.5)
 				canvas.draw_line(Vector2(mid.x+3,mid.y+2),Vector2(rect.end.x,mid.y+8),crack,1.0)
 
-static func draw_hazards(canvas: CanvasItem, session, offset: Vector2) -> void:
+## AD-201: true when the hazard's source boss has the tuning key (the Archivist's pools mark its emerge ring; the warden's leap ring has none).
+static func _hazard_source_has(session, hazard: Dictionary, key: String) -> bool:
+	for enemy in session.enemies:
+		if enemy.target.id == int(hazard.get("source_id", -1)):
+			return enemy.tuning.has(key)
+	return false
+
+static func draw_hazards(canvas: CanvasItem, session, offset: Vector2, reduced: bool = false) -> void:
 	for hazard in session.hazards:
+		var kind := str(hazard["kind"])
+		if kind == "boss_warning":
+			continue
+		if kind == "boss_beam":
+			draw_beam(canvas,hazard,hazard["position"]-offset,session.sim.clock.tick,reduced)
+			continue
+		if kind == "boss_tide_wave":
+			if not draw_tide_wave(canvas,hazard,offset,reduced):
+				var bounds: Rect2 = hazard["bounds"]
+				var band := Color(1.0,0.45,0.45,0.35) if bool(hazard.get("telegraph",false)) else Color(0.45,0.7,1.0,0.6)
+				var gap_x := float(hazard["gap_x"])
+				var half := float(hazard["gap_width"])*0.5
+				var top := float(hazard["y"])-offset.y
+				var thick := float(hazard["thickness"])
+				canvas.draw_rect(Rect2(bounds.position.x-offset.x,top,gap_x-half-bounds.position.x,thick),band)
+				canvas.draw_rect(Rect2(gap_x+half-offset.x,top,bounds.end.x-gap_x-half,thick),band)
+			continue
+		if kind == "boss_water_warning":
+			var rect: Rect2 = hazard["rect"]
+			canvas.draw_rect(Rect2(rect.position-offset,rect.size),Color(0.45,0.7,1.0,0.7),false,2.0)
+			continue
 		var at: Vector2 = hazard["position"]-offset
+		if kind == "boss_ring":
+			if _hazard_source_has(session,hazard,"pools"):
+				draw_splash_ring(canvas,at,int(hazard["age"]))
+			# AD-199: expanding danger ring at a constant colour (no per-tick alpha change, reduce-flash safe).
+			var ring_radius := float(hazard["ring_per_tick"])*float(hazard["age"])
+			if ring_radius > 0.0:
+				canvas.draw_arc(at,ring_radius,0.0,TAU,64,telegraph_colors("telegraph.circle",1.0)["outline"],float(hazard["ring_width"]))
+			continue
+		if kind == "boss_zone":
+			# AD-198: solid warm tint, no per-tick alpha change (reduce-flash safe).
+			canvas.draw_circle(at,float(hazard["radius"]),Color(0.9,0.3,0.15,0.4))
+			canvas.draw_arc(at,float(hazard["radius"]),0.0,TAU,40,Color(1.0,0.55,0.25,0.85),2.0)
+			continue
 		canvas.draw_circle(at,float(hazard["radius"]),Color(0.25,0.5,0.9,0.28))
 		canvas.draw_arc(at,float(hazard["radius"]),0.0,TAU,40,Color(0.45,0.7,1.0,0.6),1.5)

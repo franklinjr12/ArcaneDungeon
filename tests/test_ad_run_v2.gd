@@ -23,7 +23,7 @@ func run(t) -> void:
 			var stage_rooms: Array = rooms.filter(func(r): return int(r["stage"]) == stage_index)
 			var seen: Dictionary = {}
 			var combat := 0
-			var phase := 0 # 0 combat, 1 optional, 2 boss, 3 workshop
+			var phase := 0 # 0 combat, 1 optional, 2 workshop, 3 boss
 			var shape_ok := true
 			for i in stage_rooms.size():
 				var r: Dictionary = stage_rooms[i]
@@ -37,15 +37,15 @@ func run(t) -> void:
 					"treasure", "challenge":
 						shape_ok = shape_ok and phase == 0 and bool(r.get("optional",false))
 						phase = 1
-					"boss":
+					"workshop":
 						shape_ok = shape_ok and phase == 1
 						phase = 2
-					"workshop":
-						shape_ok = shape_ok and phase == 2 and stage_index == 0
+					"boss":
+						shape_ok = shape_ok and phase == 2
 						phase = 3
-			t.check(combat >= 5 and combat <= 6,"AD-127 seed %d stage %d combat count %d" % [run_seed,stage_index,combat])
-			t.check(shape_ok,"AD-127 seed %d stage %d order is combat, optional, boss, workshop" % [run_seed,stage_index])
-			t.check(phase == (3 if stage_index == 0 else 2),"AD-127 stage %d ends correctly" % stage_index)
+			t.check(combat == 3,"AD-127 seed %d stage %d combat count %d" % [run_seed,stage_index,combat])
+			t.check(shape_ok,"AD-127 seed %d stage %d order is combat, optional, workshop, boss" % [run_seed,stage_index])
+			t.check(phase == 3,"AD-127 stage %d ends correctly" % stage_index)
 	t.check(orders.size() >= 2,"AD-127 different seeds give different orders")
 	for id in cfg["room_templates"]:
 		var verdict: Dictionary = Room.new().initialize(cfg["room_templates"][id],tuning["arena"],tuning["enemies"].keys())
@@ -96,10 +96,10 @@ func _optional_tests(t) -> void:
 	t.equal(skipped_id,"ruins_treasure","AD-127 ruins optional room is the treasure room")
 	var result: Dictionary = skipper.try_exit(skipper.room.marker("exit"),false)
 	t.check(result["ok"],"AD-127 optional room can be skipped")
-	t.equal(skipper.room.values["type"],"boss","AD-127 skip lands in the boss room")
+	t.equal(skipper.room.values["type"],"workshop","AD-127 skip lands in the workshop")
 	t.check(not (skipped_id in _entered(skipper)),"AD-127 skipped optional room was never entered")
 	t.check(skipper.logs.any(func(e): return e["kind"] == "optional_skipped" and e["id"] == skipped_id),"AD-127 skip is logged")
-	t.equal(skipper.state,"fighting","AD-127 boss room starts fighting")
+	t.equal(skipper.state,"workshop","AD-127 workshop room is a rest state")
 
 	var taker = Flow.new(SEED,Flow.CONFIG_V2)
 	t.check(_advance_to_optional(taker),"AD-127 taker reaches the optional door")
@@ -109,9 +109,10 @@ func _optional_tests(t) -> void:
 	t.check(not taker.reward_options.is_empty(),"AD-127 treasure room offers rewards")
 	t.check(taker.choose_reward(0)["ok"],"AD-127 treasure reward can be chosen")
 	var snap: Dictionary = taker.snapshot()
-	t.check(taker.try_exit(taker.room.marker("exit"))["ok"],"AD-127 treasure room leads to the boss")
-	t.equal(taker.room.values["type"],"boss","AD-127 after treasure comes the boss")
-	t.check(taker.next_is_optional() == false,"AD-127 boss room has no optional next")
+	t.check(taker.try_exit(taker.room.marker("exit"))["ok"],"AD-127 treasure room leads to the workshop")
+	t.equal(taker.room.values["type"],"workshop","AD-127 after treasure comes the workshop")
+	t.equal(taker.state,"workshop","AD-127 taking the optional room lands in state workshop")
+	t.check(taker.next_is_optional() == false,"AD-127 workshop has no optional next")
 	var other = Flow.new(SEED,Flow.CONFIG_V2)
 	t.check(other.recover(snap.get("run"))["ok"] and str(other.room.values["id"]) == "ruins_treasure","AD-127 recover restores the same v2 room id")
 
@@ -146,7 +147,7 @@ func _full_run_tests(t) -> void:
 			t.equal(flow.state,"won","AD-127 %s ends won" % label)
 			t.equal(flow.summary()["outcome"],"won","AD-127 %s summary won" % label)
 			t.equal(flow.win_events,1,"AD-127 %s win fires once" % label)
-			t.equal(ids.count("workshop"),1,"AD-127 %s workshop entered once" % label)
+			t.equal(ids.count("workshop"),2,"AD-127 %s workshop entered twice" % label)
 			t.equal(str(flow.room.values["id"]),"cistern_boss","AD-127 %s last room is cistern boss" % label)
 			var first_cistern := ids.size()
 			for i in ids.size():

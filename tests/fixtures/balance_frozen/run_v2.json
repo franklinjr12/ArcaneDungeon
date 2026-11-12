@@ -35,6 +35,7 @@
   "edit_policy": "workshop_only",
   "max_active_enemies": 8,
   "reward_choices": 3,
+  "reward_guarantee_item": false,
   "reaction_bias_weight": 0.4,
   "resonant_clear": {"min_reactions": 3, "rarity_order": ["common", "uncommon", "rare"], "bonus_coins": 25, "seed_salt": 61681},
   "reward_pool": [
@@ -223,14 +224,309 @@
       "shot_damage": 16,
       "shot_speed": 300,
       "shot_spread": 0,
-      "telegraph_radius": 190
+      "telegraph_radius": 190,
+      "min_telegraph_ticks": 30,
+      "walk_speed": 120,
+      "enrage_speed_multiplier": 1.2,
+      "anchors": [
+        [
+          700,
+          190
+        ],
+        [
+          700,
+          710
+        ],
+        [
+          300,
+          450
+        ],
+        [
+          1030,
+          450
+        ]
+      ],
+      "stagger": {
+        "ticks": 120,
+        "damage_taken_multiplier": 1.5
+      },
+      "pillar_debris": {
+        "radius": 190,
+        "stun_ticks": 120
+      },
+      "melee": {
+        "sweep_1": {
+          "shape": "arc",
+          "windup_ticks": 40,
+          "reach": 150,
+          "arc_degrees": 150,
+          "damage": 14
+        },
+        "sweep_2": {
+          "shape": "arc",
+          "windup_ticks": 32,
+          "reach": 150,
+          "arc_degrees": 150,
+          "damage": 14
+        },
+        "overhead_slam": {
+          "shape": "slam",
+          "windup_ticks": 48,
+          "reach": 150,
+          "damage": 24
+        }
+      },
+      "spear_line": {
+        "windup_ticks": 54,
+        "count": 3,
+        "start": 120,
+        "spacing": 150,
+        "radius": 62,
+        "damage": 16
+      },
+      "grave_rise": {
+        "windup_ticks": 54,
+        "kind": "bone_thrall",
+        "offsets": [
+          [
+            -110,
+            -110
+          ],
+          [
+            -110,
+            110
+          ]
+        ],
+        "cap": 3,
+        "radius": 80
+      },
+      "phases": [
+        {
+          "threshold": 1.0,
+          "windup_ticks": 48,
+          "movement": {
+            "mode": "walk_to_player",
+            "speed": 120,
+            "stop_range": 110
+          },
+          "pool": [
+            {
+              "combo": [
+                "sweep_1",
+                "sweep_2",
+                "overhead_slam"
+              ],
+              "gap_ticks": 12,
+              "max_range": 260,
+              "weight": 4
+            },
+            {
+              "pattern": "spear_line",
+              "weight": 3
+            },
+            {
+              "pattern": "grave_rise",
+              "weight": 2
+            },
+            {
+              "move": {
+                "mode": "reposition",
+                "speed": 120,
+                "max_ticks": 150,
+                "anchor_pick": "nearest"
+              },
+              "weight": 1
+            },
+            {
+              "move": {
+                "mode": "leap",
+                "target": "player",
+                "telegraph_ticks": 48,
+                "flight_ticks": 22,
+                "radius": 90,
+                "damage": 10
+              },
+              "min_range": 420,
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "threshold": 0.6,
+          "windup_ticks": 44,
+          "transition": {
+            "roar_ticks": 90,
+            "arena_change": {
+              "clear_hazards": true,
+              "props": [
+                {
+                  "id": "warden_pillar_1",
+                  "kind": "boss_pillar",
+                  "position": [
+                    470,
+                    250
+                  ]
+                },
+                {
+                  "id": "warden_pillar_2",
+                  "kind": "boss_pillar",
+                  "position": [
+                    470,
+                    650
+                  ]
+                },
+                {
+                  "id": "warden_pillar_3",
+                  "kind": "boss_pillar",
+                  "position": [
+                    850,
+                    250
+                  ]
+                },
+                {
+                  "id": "warden_pillar_4",
+                  "kind": "boss_pillar",
+                  "position": [
+                    850,
+                    650
+                  ]
+                }
+              ]
+            }
+          },
+          "movement": {
+            "mode": "strafe",
+            "speed": 120,
+            "preferred_range": 260,
+            "margin": 50
+          },
+          "pool": [
+            {
+              "move": {
+                "mode": "leap",
+                "target": "player",
+                "telegraph_ticks": 50,
+                "flight_ticks": 24,
+                "radius": 120,
+                "damage": 20,
+                "shockwave": {
+                  "speed": 340,
+                  "width": 36,
+                  "max_radius": 420,
+                  "damage": 14
+                },
+                "burst_delay_ticks": 18
+              },
+              "big": true,
+              "weight": 4
+            },
+            {
+              "pattern": "spear_line",
+              "weight": 3
+            },
+            {
+              "pattern": "grave_rise",
+              "weight": 2
+            },
+            {
+              "combo": [
+                "sweep_1",
+                "sweep_2",
+                "overhead_slam"
+              ],
+              "gap_ticks": 12,
+              "max_range": 260,
+              "weight": 2
+            },
+            {
+              "move": {
+                "mode": "reposition",
+                "speed": 120,
+                "max_ticks": 150,
+                "anchor_pick": "farthest"
+              },
+              "weight": 1
+            }
+          ]
+        },
+        {
+          "threshold": 0.25,
+          "windup_ticks": 40,
+          "windup_scale": 0.85,
+          "transition": {
+            "roar_ticks": 60
+          },
+          "movement": {
+            "mode": "walk_to_player",
+            "speed": 144,
+            "stop_range": 110
+          },
+          "timed_summon": {
+            "first_ticks": 120,
+            "every_ticks": 1200
+          },
+          "pool": [
+            {
+              "combo": [
+                "sweep_1",
+                "sweep_2",
+                "overhead_slam"
+              ],
+              "gap_ticks": 12,
+              "max_range": 260,
+              "weight": 5
+            },
+            {
+              "pattern": "spear_line",
+              "weight": 2
+            },
+            {
+              "pattern": "radial",
+              "weight": 2
+            },
+            {
+              "move": {
+                "mode": "leap",
+                "target": "player",
+                "telegraph_ticks": 50,
+                "flight_ticks": 24,
+                "radius": 120,
+                "damage": 20,
+                "shockwave": {
+                  "speed": 340,
+                  "width": 36,
+                  "max_radius": 420,
+                  "damage": 14
+                },
+                "burst_delay_ticks": 18
+              },
+              "big": true,
+              "weight": 3
+            },
+            {
+              "move": {
+                "mode": "reposition",
+                "speed": 144,
+                "max_ticks": 120,
+                "anchor_pick": "nearest"
+              },
+              "weight": 1
+            }
+          ]
+        }
+      ]
     },
     "cistern_boss": {
-      "_note": "AD-142 PROPOSED numbers (Demo Plan default 'Drowned Archivist', pending Franklin)",
+      "_note": "AD-142 PROPOSED numbers (Demo Plan default 'Drowned Archivist', pending Franklin). AD-201 PROPOSED redesign: pool dive + ripple, pages, tide wave, wisp shield, conducting storm pulse; hp unchanged at 2400, no HP raised. Bot bench is INFO only.",
       "kind": "drowned_archivist",
       "display_name": "Drowned Archivist",
-      "hp": 950,
-      "channel_resistances": {"fire": 0.8, "water": -0.2, "lightning": -0.5, "neutral": 0.1},
+      "hp": 2400,
+      "channel_resistances": {
+        "fire": 0.8,
+        "water": -0.2,
+        "lightning": -0.5,
+        "neutral": 0.1
+      },
       "radius": 49,
       "position": [
         1030,
@@ -241,55 +537,398 @@
       "shot_speed": 280,
       "shot_spread": 0,
       "telegraph_radius": 190,
-      "phases": [
-        {
-          "threshold": 1.0,
-          "patterns": [
-            "water_bolt",
-            "wet_zone"
-          ],
-          "windup_ticks": 48
-        },
-        {
-          "threshold": 0.66,
-          "patterns": [
-            "flood",
-            "water_bolt",
-            "wet_zone"
-          ],
-          "windup_ticks": 44
-        },
-        {
-          "threshold": 0.33,
-          "patterns": [
-            "summon_wisps",
-            "storm_pulse",
-            "water_bolt"
-          ],
-          "windup_ticks": 40
-        }
+      "anchors": [
+        [
+          510,
+          215
+        ],
+        [
+          510,
+          685
+        ],
+        [
+          775,
+          450
+        ],
+        [
+          1030,
+          250
+        ],
+        [
+          1030,
+          450
+        ],
+        [
+          1030,
+          650
+        ]
       ],
+      "pools": [
+        [
+          510,
+          215
+        ],
+        [
+          510,
+          685
+        ],
+        [
+          775,
+          450
+        ]
+      ],
+      "stagger": {
+        "ticks": 120,
+        "damage_taken_multiplier": 1.5
+      },
+      "freeze_stun": {
+        "ticks": 120,
+        "radius": 48
+      },
+      "water_freeze": {
+        "radius": 48,
+        "ice_ticks": 360
+      },
+      "emerge_status": "wet",
+      "book_pages": {
+        "hp": 8,
+        "radius": 16,
+        "speed": 110,
+        "turn_deg_per_tick": 1.5,
+        "lifetime_ticks": 420,
+        "damage": 8,
+        "cap": 4,
+        "count": 2,
+        "spread_degrees": 30
+      },
+      "wisp_shield": {
+        "damage_taken_multiplier": 0.0
+      },
+      "storm_conduct": {
+        "duration_ticks": 120,
+        "damage": 5,
+        "interval_ticks": 20
+      },
       "water_bolt_shots": 5,
       "water_bolt_arc_degrees": 40,
-      "water_bolt_damage": 10,
+      "water_bolt_damage": 8,
       "wet_zone_radius": 90,
       "wet_zone_duration_ticks": 180,
       "wet_zone_interval_ticks": 30,
       "flood_duration_ticks": 240,
       "flood_sets": [
         [
-          {"kind": "shallow", "rect": [300, 120, 320, 220]},
-          {"kind": "shallow", "rect": [300, 560, 320, 220]}
+          {
+            "kind": "shallow",
+            "rect": [
+              300,
+              120,
+              320,
+              220
+            ]
+          },
+          {
+            "kind": "shallow",
+            "rect": [
+              300,
+              560,
+              320,
+              220
+            ]
+          }
         ],
         [
-          {"kind": "shallow", "rect": [560, 330, 260, 240]},
-          {"kind": "shallow", "rect": [700, 100, 260, 160]}
+          {
+            "kind": "shallow",
+            "rect": [
+              560,
+              330,
+              260,
+              240
+            ]
+          },
+          {
+            "kind": "shallow",
+            "rect": [
+              700,
+              100,
+              260,
+              160
+            ]
+          }
         ]
       ],
-      "wisp_offsets": [[60, -170], [60, 170]],
+      "wisp_offsets": [
+        [
+          60,
+          -170
+        ],
+        [
+          60,
+          170
+        ]
+      ],
       "wisp_cap": 2,
       "storm_pulse_radius": 220,
-      "storm_pulse_damage": 14
+      "storm_pulse_damage": 14,
+      "phases": [
+        {
+          "threshold": 1.0,
+          "windup_ticks": 48,
+          "movement": {
+            "mode": "float_path",
+            "speed": 50,
+            "waypoints": [
+              [
+                510,
+                215
+              ],
+              [
+                510,
+                450
+              ],
+              [
+                510,
+                685
+              ],
+              [
+                775,
+                450
+              ],
+              [
+                775,
+                250
+              ],
+              [
+                1030,
+                250
+              ],
+              [
+                1030,
+                650
+              ],
+              [
+                775,
+                650
+              ]
+            ],
+            "prefer": "toward"
+          },
+          "pool": [
+            {
+              "pattern": "water_bolt",
+              "weight": 3
+            },
+            {
+              "pattern": "page_throw",
+              "weight": 3
+            },
+            {
+              "pattern": "wet_zone",
+              "weight": 2
+            },
+            {
+              "move": {
+                "mode": "submerge",
+                "exit": "pool",
+                "telegraph_ticks": 40,
+                "submerged_ticks": 45,
+                "emerge_telegraph_ticks": 40,
+                "radius": 110,
+                "damage": 10,
+                "anchor_pick": "farthest",
+                "shockwave": {
+                  "speed": 300,
+                  "width": 36,
+                  "max_radius": 380,
+                  "damage": 6
+                }
+              },
+              "big": false,
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "threshold": 0.66,
+          "windup_ticks": 44,
+          "transition": {
+            "roar_ticks": 90
+          },
+          "movement": {
+            "mode": "float_path",
+            "speed": 60,
+            "waypoints": [
+              [
+                510,
+                215
+              ],
+              [
+                510,
+                450
+              ],
+              [
+                510,
+                685
+              ],
+              [
+                775,
+                450
+              ],
+              [
+                775,
+                250
+              ],
+              [
+                1030,
+                250
+              ],
+              [
+                1030,
+                650
+              ],
+              [
+                775,
+                650
+              ]
+            ],
+            "prefer": "toward"
+          },
+          "hazards": [
+            {
+              "type": "tide_wave",
+              "speed": 260,
+              "thickness": 64,
+              "gap_width": 96,
+              "damage": 10,
+              "channel": "water",
+              "status": "wet",
+              "warn_ticks": 60,
+              "first_ticks": 420,
+              "every_ticks": 900
+            }
+          ],
+          "pool": [
+            {
+              "pattern": "flood",
+              "weight": 2
+            },
+            {
+              "pattern": "wet_zone",
+              "weight": 3
+            },
+            {
+              "pattern": "water_bolt",
+              "weight": 3
+            },
+            {
+              "move": {
+                "mode": "submerge",
+                "exit": "pool",
+                "telegraph_ticks": 40,
+                "submerged_ticks": 45,
+                "emerge_telegraph_ticks": 40,
+                "radius": 110,
+                "damage": 10,
+                "anchor_pick": "farthest",
+                "shockwave": {
+                  "speed": 300,
+                  "width": 36,
+                  "max_radius": 380,
+                  "damage": 6
+                }
+              },
+              "big": false,
+              "weight": 2
+            }
+          ]
+        },
+        {
+          "threshold": 0.33,
+          "windup_ticks": 40,
+          "transition": {
+            "roar_ticks": 90
+          },
+          "page_speed_scale": 1.5,
+          "movement": {
+            "mode": "float_path",
+            "speed": 70,
+            "waypoints": [
+              [
+                510,
+                215
+              ],
+              [
+                510,
+                450
+              ],
+              [
+                510,
+                685
+              ],
+              [
+                775,
+                450
+              ],
+              [
+                775,
+                250
+              ],
+              [
+                1030,
+                250
+              ],
+              [
+                1030,
+                650
+              ],
+              [
+                775,
+                650
+              ]
+            ],
+            "prefer": "toward"
+          },
+          "pool": [
+            {
+              "pattern": "summon_wisps",
+              "weight": 2
+            },
+            {
+              "pattern": "storm_pulse",
+              "weight": 3
+            },
+            {
+              "pattern": "page_throw",
+              "weight": 3
+            },
+            {
+              "pattern": "water_bolt",
+              "weight": 2
+            },
+            {
+              "move": {
+                "mode": "submerge",
+                "exit": "pool",
+                "telegraph_ticks": 40,
+                "submerged_ticks": 45,
+                "emerge_telegraph_ticks": 40,
+                "radius": 110,
+                "damage": 10,
+                "anchor_pick": "farthest",
+                "shockwave": {
+                  "speed": 300,
+                  "width": 36,
+                  "max_radius": 380,
+                  "damage": 6
+                }
+              },
+              "big": false,
+              "weight": 2
+            }
+          ]
+        }
+      ]
     }
   },
   "stages": [
@@ -311,6 +950,7 @@
       ],
       "optional_room": "ruins_treasure",
       "boss_room": "ruins_boss",
+      "workshop_before_boss": false,
       "workshop_after": true
     },
     {
@@ -334,9 +974,21 @@
       ],
       "optional_room": "cistern_challenge_v1",
       "boss_room": "cistern_boss",
+      "workshop_before_boss": false,
       "workshop_after": false
     }
   ],
+  "room_rules": {
+    "min_obstacles": 2,
+    "max_obstacles": 5,
+    "min_interactions": 1,
+    "interaction_kinds": ["crate", "cobweb", "brazier", "urn", "cracked_wall", "cracked_pillar", "broken_wall", "puddle"],
+    "shapes": ["open_hall", "pillared_hall", "corridor_chamber", "ring_pit", "split_bridges", "cross_hall", "l_bend", "colonnade", "dais_island", "eel_lanes", "flooded_arena"],
+    "owner_shapes": ["open_hall", "pillared_hall", "corridor_chamber", "ring_pit", "split_bridges"],
+    "min_spawn_distance": 160,
+    "dead_corner_step": 40,
+    "player_radius": 22
+  },
   "room_template_files": [
     "res://world/data/rooms_cistern_v1.json"
   ],
@@ -346,6 +998,7 @@
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "open_hall",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -371,13 +1024,68 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "env_props": [
+          {
+            "id": "c01_sarcophagus",
+            "kind": "sarcophagus",
+            "rect": [
+              500,
+              570,
+              96,
+              48
+            ]
+          },
+          {
+            "id": "c01_rubble",
+            "kind": "rubble",
+            "rect": [
+              820,
+              290,
+              64,
+              40
+            ]
+          },
+          {
+            "id": "c01_crate",
+            "kind": "crate",
+            "rect": [
+              640,
+              250,
+              40,
+              40
+            ]
+          },
+          {
+            "id": "c01_brazier",
+            "kind": "brazier",
+            "position": [
+              900,
+              700
+            ]
+          },
+          {
+            "id": "c01_cobweb",
+            "kind": "cobweb",
+            "rect": [
+              1200,
+              60,
+              48,
+              48
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_c02": {
       "id": "ruins_c02",
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "pillared_hall",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -408,13 +1116,86 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "env_props": [
+          {
+            "id": "c02_p1",
+            "kind": "pillar",
+            "rect": [
+              516,
+              266,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "c02_p2",
+            "kind": "pillar",
+            "rect": [
+              516,
+              586,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "c02_p3",
+            "kind": "pillar",
+            "rect": [
+              836,
+              266,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "c02_p4",
+            "kind": "pillar",
+            "rect": [
+              836,
+              586,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "c02_crack",
+            "kind": "cracked_pillar",
+            "rect": [
+              676,
+              146,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "c02_urn1",
+            "kind": "urn",
+            "position": [
+              330,
+              790
+            ]
+          },
+          {
+            "id": "c02_urn2",
+            "kind": "urn",
+            "position": [
+              1010,
+              120
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_c03": {
       "id": "ruins_c03",
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "ring_pit",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -440,13 +1221,76 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "pits": [
+          [
+            520,
+            300,
+            360,
+            300
+          ]
+        ],
+        "env_props": [
+          {
+            "id": "c03_rubble",
+            "kind": "rubble",
+            "rect": [
+              300,
+              170,
+              64,
+              40
+            ]
+          },
+          {
+            "id": "c03_sarcophagus",
+            "kind": "sarcophagus",
+            "rect": [
+              940,
+              700,
+              96,
+              48
+            ]
+          },
+          {
+            "id": "c03_column",
+            "kind": "column",
+            "position": [
+              960,
+              200
+            ]
+          },
+          {
+            "id": "c03_puddle1",
+            "kind": "puddle",
+            "rect": [
+              640,
+              160,
+              120,
+              60
+            ]
+          },
+          {
+            "id": "c03_puddle2",
+            "kind": "puddle",
+            "rect": [
+              580,
+              720,
+              120,
+              60
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_c04": {
       "id": "ruins_c04",
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "corridor_chamber",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -477,13 +1321,70 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "walls": [
+          [
+            0,
+            0,
+            340,
+            340
+          ],
+          [
+            0,
+            560,
+            340,
+            340
+          ]
+        ],
+        "env_props": [
+          {
+            "id": "c04_sarcophagus",
+            "kind": "sarcophagus",
+            "rect": [
+              760,
+              380,
+              96,
+              48
+            ]
+          },
+          {
+            "id": "c04_broken",
+            "kind": "broken_wall",
+            "rect": [
+              880,
+              640,
+              96,
+              32
+            ]
+          },
+          {
+            "id": "c04_brazier1",
+            "kind": "brazier",
+            "position": [
+              385,
+              330
+            ]
+          },
+          {
+            "id": "c04_brazier2",
+            "kind": "brazier",
+            "position": [
+              385,
+              570
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_c05": {
       "id": "ruins_c05",
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "cross_hall",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -514,13 +1415,74 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "walls": [
+          [
+            0,
+            0,
+            340,
+            230
+          ],
+          [
+            1010,
+            0,
+            310,
+            200
+          ],
+          [
+            1010,
+            700,
+            310,
+            200
+          ],
+          [
+            0,
+            670,
+            340,
+            230
+          ]
+        ],
+        "env_props": [
+          {
+            "id": "c05_crate",
+            "kind": "crate",
+            "rect": [
+              680,
+              790,
+              40,
+              40
+            ]
+          },
+          {
+            "id": "c05_cobweb",
+            "kind": "cobweb",
+            "rect": [
+              676,
+              20,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "c05_urn",
+            "kind": "urn",
+            "position": [
+              700,
+              330
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_c06": {
       "id": "ruins_c06",
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "split_bridges",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -562,13 +1524,84 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "pits": [
+          [
+            660,
+            0,
+            100,
+            220
+          ],
+          [
+            660,
+            340,
+            100,
+            220
+          ],
+          [
+            660,
+            680,
+            100,
+            220
+          ]
+        ],
+        "env_props": [
+          {
+            "id": "c06_rubble",
+            "kind": "rubble",
+            "rect": [
+              450,
+              420,
+              64,
+              40
+            ]
+          },
+          {
+            "id": "c06_sarcophagus",
+            "kind": "sarcophagus",
+            "rect": [
+              900,
+              380,
+              96,
+              48
+            ]
+          },
+          {
+            "id": "c06_column",
+            "kind": "column",
+            "position": [
+              480,
+              230
+            ]
+          },
+          {
+            "id": "c06_brazier",
+            "kind": "brazier",
+            "position": [
+              560,
+              300
+            ]
+          },
+          {
+            "id": "c06_urn",
+            "kind": "urn",
+            "position": [
+              710,
+              620
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_c07": {
       "id": "ruins_c07",
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "l_bend",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -610,13 +1643,70 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "walls": [
+          [
+            420,
+            0,
+            90,
+            620
+          ],
+          [
+            420,
+            530,
+            420,
+            90
+          ]
+        ],
+        "env_props": [
+          {
+            "id": "c07_column",
+            "kind": "column",
+            "position": [
+              900,
+              250
+            ]
+          },
+          {
+            "id": "c07_rubble",
+            "kind": "rubble",
+            "rect": [
+              960,
+              430,
+              64,
+              40
+            ]
+          },
+          {
+            "id": "c07_cobweb",
+            "kind": "cobweb",
+            "rect": [
+              560,
+              40,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "c07_urn",
+            "kind": "urn",
+            "position": [
+              180,
+              760
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_c08": {
       "id": "ruins_c08",
       "stage": 0,
       "room": 0,
       "type": "combat",
+      "shape": "colonnade",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -652,13 +1742,78 @@
             ]
           ]
         }
-      ]
+      ],
+      "layout": {
+        "arena_walls": false,
+        "env_props": [
+          {
+            "id": "c08_col1",
+            "kind": "column",
+            "position": [
+              480,
+              450
+            ]
+          },
+          {
+            "id": "c08_col2",
+            "kind": "column",
+            "position": [
+              620,
+              450
+            ]
+          },
+          {
+            "id": "c08_col3",
+            "kind": "column",
+            "position": [
+              760,
+              450
+            ]
+          },
+          {
+            "id": "c08_col4",
+            "kind": "column",
+            "position": [
+              900,
+              450
+            ]
+          },
+          {
+            "id": "c08_brazier1",
+            "kind": "brazier",
+            "position": [
+              550,
+              330
+            ]
+          },
+          {
+            "id": "c08_brazier2",
+            "kind": "brazier",
+            "position": [
+              830,
+              570
+            ]
+          },
+          {
+            "id": "c08_cobweb",
+            "kind": "cobweb",
+            "rect": [
+              300,
+              60,
+              48,
+              48
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     },
     "ruins_treasure": {
       "id": "ruins_treasure",
       "stage": 0,
       "room": 0,
       "type": "treasure",
+      "shape": "dais_island",
       "scene": "res://scenes/run.tscn",
       "entrance": [
         185,
@@ -672,7 +1827,74 @@
         1150,
         450
       ],
-      "waves": []
+      "waves": [],
+      "layout": {
+        "arena_walls": false,
+        "env_props": [
+          {
+            "id": "tr_dais",
+            "kind": "sarcophagus",
+            "rect": [
+              612,
+              426,
+              96,
+              48
+            ]
+          },
+          {
+            "id": "tr_crack1",
+            "kind": "cracked_pillar",
+            "rect": [
+              536,
+              306,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "tr_crack2",
+            "kind": "cracked_pillar",
+            "rect": [
+              736,
+              546,
+              48,
+              48
+            ]
+          },
+          {
+            "id": "tr_brazier1",
+            "kind": "brazier",
+            "position": [
+              600,
+              380
+            ]
+          },
+          {
+            "id": "tr_brazier2",
+            "kind": "brazier",
+            "position": [
+              720,
+              520
+            ]
+          },
+          {
+            "id": "tr_brazier3",
+            "kind": "brazier",
+            "position": [
+              600,
+              520
+            ]
+          },
+          {
+            "id": "tr_brazier4",
+            "kind": "brazier",
+            "position": [
+              720,
+              380
+            ]
+          }
+        ]
+      }
     },
     "ruins_boss": {
       "id": "ruins_boss",
@@ -717,10 +1939,42 @@
       "boss": "cistern_boss",
       "layout": {
         "water": [
-          {"kind": "shallow", "rect": [380, 130, 260, 170]},
-          {"kind": "shallow", "rect": [380, 600, 260, 170]},
-          {"kind": "shallow", "rect": [700, 360, 150, 180]},
-          {"kind": "deep", "rect": [520, 20, 120, 80]}
+          {
+            "kind": "shallow",
+            "rect": [
+              380,
+              130,
+              260,
+              170
+            ]
+          },
+          {
+            "kind": "shallow",
+            "rect": [
+              380,
+              600,
+              260,
+              170
+            ]
+          },
+          {
+            "kind": "shallow",
+            "rect": [
+              700,
+              360,
+              150,
+              180
+            ]
+          },
+          {
+            "kind": "deep",
+            "rect": [
+              520,
+              20,
+              120,
+              80
+            ]
+          }
         ]
       }
     },

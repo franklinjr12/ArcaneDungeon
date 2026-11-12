@@ -15,6 +15,7 @@ Godot 4.7.1 stable (pinned) GL Compatibility M0–M3 playable prototypes are imp
 | [M1_magic_sandbox.md](M1_magic_sandbox.md) | M1 controls, magic runtime architecture, reproduction recipes, rules, acceptance testing |
 | [M2_combat.md](M2_combat.md) | M2 combat input, enemy behaviors, HUD, fixed scenarios, replay seed/metrics and open decisions |
 | [M3_vertical_slice.md](M3_vertical_slice.md) | M3 run walkthrough, seeded rewards/rooms, mini-boss, shop, spell editor, safe testing, full-route regression |
+| [rooms/BOSS_FRAMEWORK.md](rooms/BOSS_FRAMEWORK.md) | AD-198 boss framework: movement modes, weighted pattern pools and combos, arena hazards, phase roar, stagger, validator codes |
 | [M4_validation.md](M4_validation.md) | M4 code, regression/stress/telemetry commands, observability boundaries and deferred acceptance |
 | [demo/README.md](demo/README.md) | AD-157 closed demo: Windows/Linux export commands, headless route check, tester opt-in logs and what to send back |
 | [demo/FEEDBACK_FORM.md](demo/FEEDBACK_FORM.md) | AD-184 friends feedback questions, F8 reports and how to send the reports folder |

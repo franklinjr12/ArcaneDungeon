@@ -224,7 +224,7 @@
    "loop": true
   },
   "sfx.cast.cold": {
-   "stream": "res://assets/audio/sfx/sfx_cast_cold.ogg",
+   "stream": "res://assets/audio/sfx/sfx_cast_cold.wav",
    "placeholder": "res://assets/audio/sfx/sfx_cast_neutral.wav",
    "bus": "SFX",
    "priority": 1,
@@ -235,7 +235,7 @@
    "rate_limit_ms": 90
   },
   "sfx.cast.force": {
-   "stream": "res://assets/audio/sfx/sfx_cast_force.ogg",
+   "stream": "res://assets/audio/sfx/sfx_cast_force.wav",
    "placeholder": "res://assets/audio/sfx/sfx_cast_neutral.wav",
    "bus": "SFX",
    "priority": 1,
@@ -246,7 +246,7 @@
    "rate_limit_ms": 90
   },
   "sfx.form.beam": {
-   "stream": "res://assets/audio/sfx/sfx_form_beam.ogg",
+   "stream": "res://assets/audio/sfx/sfx_form_beam.wav",
    "placeholder": "res://assets/audio/sfx/sfx_cast_neutral.wav",
    "bus": "SFX",
    "priority": 1,
@@ -254,7 +254,7 @@
    "provided": true
   },
   "sfx.form.field": {
-   "stream": "res://assets/audio/sfx/sfx_form_field.ogg",
+   "stream": "res://assets/audio/sfx/sfx_form_field.wav",
    "placeholder": "res://assets/audio/sfx/sfx_cast_neutral.wav",
    "bus": "SFX",
    "priority": 1,
@@ -262,7 +262,7 @@
    "provided": true
   },
   "sfx.trigger.on_hit": {
-   "stream": "res://assets/audio/sfx/sfx_trigger_on_hit.ogg",
+   "stream": "res://assets/audio/sfx/sfx_trigger_on_hit.wav",
    "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
    "bus": "SFX",
    "priority": 1,
@@ -270,7 +270,7 @@
    "provided": true
   },
   "sfx.trigger.on_kill": {
-   "stream": "res://assets/audio/sfx/sfx_trigger_on_kill.ogg",
+   "stream": "res://assets/audio/sfx/sfx_trigger_on_kill.wav",
    "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
    "bus": "SFX",
    "priority": 1,
@@ -278,7 +278,7 @@
    "provided": true
   },
   "sfx.trigger.on_expire": {
-   "stream": "res://assets/audio/sfx/sfx_trigger_on_expire.ogg",
+   "stream": "res://assets/audio/sfx/sfx_trigger_on_expire.wav",
    "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
    "bus": "SFX",
    "priority": 1,
@@ -286,7 +286,7 @@
    "provided": true
   },
   "sfx.trigger.timer": {
-   "stream": "res://assets/audio/sfx/sfx_trigger_timer.ogg",
+   "stream": "res://assets/audio/sfx/sfx_trigger_timer.wav",
    "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
    "bus": "SFX",
    "priority": 1,
@@ -294,7 +294,7 @@
    "provided": true
   },
   "sfx.mod.chain": {
-   "stream": "res://assets/audio/sfx/sfx_mod_chain.ogg",
+   "stream": "res://assets/audio/sfx/sfx_mod_chain.wav",
    "placeholder": "res://assets/audio/sfx/sfx_react_arc.wav",
    "bus": "SFX",
    "priority": 1,
@@ -302,7 +302,7 @@
    "provided": true
   },
   "sfx.mod.generic": {
-   "stream": "res://assets/audio/sfx/sfx_mod_generic.ogg",
+   "stream": "res://assets/audio/sfx/sfx_mod_generic.wav",
    "placeholder": "res://assets/audio/sfx/sfx_cast_neutral.wav",
    "bus": "SFX",
    "priority": 1,
@@ -310,7 +310,7 @@
    "provided": true
   },
   "sfx.react.freeze": {
-   "stream": "res://assets/audio/sfx/sfx_react_freeze.ogg",
+   "stream": "res://assets/audio/sfx/sfx_react_freeze.wav",
    "placeholder": "res://assets/audio/sfx/sfx_react_extinguish.wav",
    "bus": "SFX",
    "priority": 1,
@@ -318,7 +318,7 @@
    "provided": true
   },
   "sfx.react.shatter": {
-   "stream": "res://assets/audio/sfx/sfx_react_shatter.ogg",
+   "stream": "res://assets/audio/sfx/sfx_react_shatter.wav",
    "placeholder": "res://assets/audio/sfx/sfx_react_arc.wav",
    "bus": "SFX",
    "priority": 1,
@@ -326,7 +326,7 @@
    "provided": true
   },
   "sfx.react.steam": {
-   "stream": "res://assets/audio/sfx/sfx_react_steam.ogg",
+   "stream": "res://assets/audio/sfx/sfx_react_steam.wav",
    "placeholder": "res://assets/audio/sfx/sfx_react_extinguish.wav",
    "bus": "SFX",
    "priority": 1,
@@ -334,7 +334,7 @@
    "provided": true
   },
   "sfx.tele.ossuary_shieldbearer": {
-   "stream": "res://assets/audio/sfx/sfx_tele_ossuary_shieldbearer.ogg",
+   "stream": "res://assets/audio/sfx/sfx_tele_ossuary_shieldbearer.wav",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
@@ -346,7 +346,7 @@
    "enemy": true
   },
   "sfx.tele.wailing_spirit": {
-   "stream": "res://assets/audio/sfx/sfx_tele_wailing_spirit.ogg",
+   "stream": "res://assets/audio/sfx/sfx_tele_wailing_spirit.wav",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
@@ -358,7 +358,7 @@
    "enemy": true
   },
   "sfx.tele.corpse_bloat": {
-   "stream": "res://assets/audio/sfx/sfx_tele_corpse_bloat.ogg",
+   "stream": "res://assets/audio/sfx/sfx_tele_corpse_bloat.wav",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
@@ -370,7 +370,7 @@
    "enemy": true
   },
   "sfx.tele.cistern_slime": {
-   "stream": "res://assets/audio/sfx/sfx_tele_cistern_slime.ogg",
+   "stream": "res://assets/audio/sfx/sfx_tele_cistern_slime.wav",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
@@ -382,7 +382,7 @@
    "enemy": true
   },
   "sfx.tele.cistern_slimelet": {
-   "stream": "res://assets/audio/sfx/sfx_tele_cistern_slimelet.ogg",
+   "stream": "res://assets/audio/sfx/sfx_tele_cistern_slimelet.wav",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
@@ -394,7 +394,7 @@
    "enemy": true
   },
   "sfx.tele.drowned_acolyte": {
-   "stream": "res://assets/audio/sfx/sfx_tele_drowned_acolyte.ogg",
+   "stream": "res://assets/audio/sfx/sfx_tele_drowned_acolyte.wav",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
@@ -406,7 +406,7 @@
    "enemy": true
   },
   "sfx.tele.deep_eel": {
-   "stream": "res://assets/audio/sfx/sfx_tele_deep_eel.ogg",
+   "stream": "res://assets/audio/sfx/sfx_tele_deep_eel.wav",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
@@ -418,7 +418,7 @@
    "enemy": true
   },
   "sfx.tele.rust_golem": {
-   "stream": "res://assets/audio/sfx/sfx_tele_rust_golem.ogg",
+   "stream": "res://assets/audio/sfx/sfx_tele_rust_golem.wav",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
@@ -430,7 +430,7 @@
    "enemy": true
   },
   "sfx.tele.lantern_wisp": {
-   "stream": "res://assets/audio/sfx/sfx_tele_lantern_wisp.ogg",
+   "stream": "res://assets/audio/sfx/sfx_tele_lantern_wisp.wav",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
@@ -442,7 +442,31 @@
    "enemy": true
   },
   "sfx.tele.storm_crystal": {
-   "stream": "res://assets/audio/sfx/sfx_tele_storm_crystal.ogg",
+   "stream": "res://assets/audio/sfx/sfx_tele_storm_crystal.wav",
+   "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
+  },
+  "sfx.tele.ghoul_stalker": {
+   "stream": "res://assets/audio/sfx/sfx_tele_ghoul_stalker.wav",
+   "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
+   "bus": "SFX",
+   "priority": 3,
+   "max_voices": 2,
+   "provided": true,
+   "volume_db": -10.0,
+   "pitch_jitter": 0.06,
+   "rate_limit_ms": 120,
+   "enemy": true
+  },
+  "sfx.tele.riptide_leaper": {
+   "stream": "res://assets/audio/sfx/sfx_tele_riptide_leaper.wav",
    "placeholder": "res://assets/audio/sfx/sfx_tele_bone_thrall.wav",
    "bus": "SFX",
    "priority": 3,
@@ -454,7 +478,7 @@
    "enemy": true
   },
   "sfx.boss.drowned_archivist.tele_a": {
-   "stream": "res://assets/audio/sfx/sfx_boss_drowned_archivist_tele_a.ogg",
+   "stream": "res://assets/audio/sfx/sfx_boss_drowned_archivist_tele_a.wav",
    "placeholder": "res://assets/audio/sfx/sfx_boss_tele_a.wav",
    "bus": "SFX",
    "priority": 3,
@@ -466,7 +490,7 @@
    "enemy": true
   },
   "sfx.boss.drowned_archivist.tele_b": {
-   "stream": "res://assets/audio/sfx/sfx_boss_drowned_archivist_tele_b.ogg",
+   "stream": "res://assets/audio/sfx/sfx_boss_drowned_archivist_tele_b.wav",
    "placeholder": "res://assets/audio/sfx/sfx_boss_tele_b.wav",
    "bus": "SFX",
    "priority": 3,
@@ -478,7 +502,7 @@
    "enemy": true
   },
   "sfx.boss.drowned_archivist.phase": {
-   "stream": "res://assets/audio/sfx/sfx_boss_drowned_archivist_phase.ogg",
+   "stream": "res://assets/audio/sfx/sfx_boss_drowned_archivist_phase.wav",
    "placeholder": "res://assets/audio/sfx/sfx_boss_phase.wav",
    "bus": "SFX",
    "priority": 1,
@@ -486,7 +510,7 @@
    "provided": true
   },
   "sfx.artifact.rebound_sigil": {
-   "stream": "res://assets/audio/sfx/sfx_artifact_rebound_sigil.ogg",
+   "stream": "res://assets/audio/sfx/sfx_artifact_rebound_sigil.wav",
    "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
    "bus": "SFX",
    "priority": 1,
@@ -494,7 +518,7 @@
    "provided": true
   },
   "sfx.artifact.residue_crystal": {
-   "stream": "res://assets/audio/sfx/sfx_artifact_residue_crystal.ogg",
+   "stream": "res://assets/audio/sfx/sfx_artifact_residue_crystal.wav",
    "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
    "bus": "SFX",
    "priority": 1,
@@ -502,7 +526,7 @@
    "provided": true
   },
   "sfx.artifact.shatterheart": {
-   "stream": "res://assets/audio/sfx/sfx_artifact_shatterheart.ogg",
+   "stream": "res://assets/audio/sfx/sfx_artifact_shatterheart.wav",
    "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
    "bus": "SFX",
    "priority": 1,
@@ -510,7 +534,7 @@
    "provided": true
   },
   "sfx.artifact.momentum_rune": {
-   "stream": "res://assets/audio/sfx/sfx_artifact_momentum_rune.ogg",
+   "stream": "res://assets/audio/sfx/sfx_artifact_momentum_rune.wav",
    "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
    "bus": "SFX",
    "priority": 1,
@@ -518,7 +542,7 @@
    "provided": true
   },
   "sfx.artifact.echo_chamber": {
-   "stream": "res://assets/audio/sfx/sfx_artifact_echo_chamber.ogg",
+   "stream": "res://assets/audio/sfx/sfx_artifact_echo_chamber.wav",
    "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
    "bus": "SFX",
    "priority": 1,
@@ -526,7 +550,7 @@
    "provided": true
   },
   "sfx.artifact.stormglass": {
-   "stream": "res://assets/audio/sfx/sfx_artifact_stormglass.ogg",
+   "stream": "res://assets/audio/sfx/sfx_artifact_stormglass.wav",
    "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
    "bus": "SFX",
    "priority": 1,
@@ -534,7 +558,7 @@
    "provided": true
   },
   "sfx.artifact.tidewalkers_boots": {
-   "stream": "res://assets/audio/sfx/sfx_artifact_tidewalkers_boots.ogg",
+   "stream": "res://assets/audio/sfx/sfx_artifact_tidewalkers_boots.wav",
    "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
    "bus": "SFX",
    "priority": 1,
@@ -542,7 +566,7 @@
    "provided": true
   },
   "sfx.artifact.ember_heart": {
-   "stream": "res://assets/audio/sfx/sfx_artifact_ember_heart.ogg",
+   "stream": "res://assets/audio/sfx/sfx_artifact_ember_heart.wav",
    "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
    "bus": "SFX",
    "priority": 1,
@@ -550,7 +574,7 @@
    "provided": true
   },
   "sfx.artifact.gravity_lens": {
-   "stream": "res://assets/audio/sfx/sfx_artifact_gravity_lens.ogg",
+   "stream": "res://assets/audio/sfx/sfx_artifact_gravity_lens.wav",
    "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
    "bus": "SFX",
    "priority": 1,
@@ -558,7 +582,7 @@
    "provided": true
   },
   "sfx.artifact.split_prism": {
-   "stream": "res://assets/audio/sfx/sfx_artifact_split_prism.ogg",
+   "stream": "res://assets/audio/sfx/sfx_artifact_split_prism.wav",
    "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
    "bus": "SFX",
    "priority": 1,
@@ -566,7 +590,7 @@
    "provided": true
   },
   "sfx.artifact.archivists_quill": {
-   "stream": "res://assets/audio/sfx/sfx_artifact_archivists_quill.ogg",
+   "stream": "res://assets/audio/sfx/sfx_artifact_archivists_quill.wav",
    "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
    "bus": "SFX",
    "priority": 1,
@@ -574,7 +598,7 @@
    "provided": true
   },
   "sfx.artifact.warding_lantern": {
-   "stream": "res://assets/audio/sfx/sfx_artifact_warding_lantern.ogg",
+   "stream": "res://assets/audio/sfx/sfx_artifact_warding_lantern.wav",
    "placeholder": "res://assets/audio/sfx/sfx_pickup_rune.wav",
    "bus": "SFX",
    "priority": 1,
@@ -582,7 +606,7 @@
    "provided": true
   },
   "sfx.env.ignite": {
-   "stream": "res://assets/audio/sfx/sfx_env_ignite.ogg",
+   "stream": "res://assets/audio/sfx/sfx_env_ignite.wav",
    "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
    "bus": "SFX",
    "priority": 1,
@@ -590,7 +614,7 @@
    "provided": true
   },
   "sfx.env.freeze": {
-   "stream": "res://assets/audio/sfx/sfx_env_freeze.ogg",
+   "stream": "res://assets/audio/sfx/sfx_env_freeze.wav",
    "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
    "bus": "SFX",
    "priority": 1,
@@ -598,7 +622,7 @@
    "provided": true
   },
   "sfx.env.thaw": {
-   "stream": "res://assets/audio/sfx/sfx_env_thaw.ogg",
+   "stream": "res://assets/audio/sfx/sfx_env_thaw.wav",
    "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
    "bus": "SFX",
    "priority": 1,
@@ -606,7 +630,7 @@
    "provided": true
   },
   "sfx.env.break": {
-   "stream": "res://assets/audio/sfx/sfx_env_break.ogg",
+   "stream": "res://assets/audio/sfx/sfx_env_break.wav",
    "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
    "bus": "SFX",
    "priority": 1,
@@ -614,7 +638,7 @@
    "provided": true
   },
   "sfx.env.burn_out": {
-   "stream": "res://assets/audio/sfx/sfx_env_burn_out.ogg",
+   "stream": "res://assets/audio/sfx/sfx_env_burn_out.wav",
    "placeholder": "res://assets/audio/sfx/sfx_hit_generic.wav",
    "bus": "SFX",
    "priority": 1,
@@ -657,8 +681,8 @@
   "telegraph:rust_golem": "sfx.tele.rust_golem",
   "telegraph:lantern_wisp": "sfx.tele.lantern_wisp",
   "telegraph:storm_crystal": "sfx.tele.storm_crystal",
-  "telegraph:ghoul_stalker": "sfx.tele.bone_thrall",
-  "telegraph:riptide_leaper": "sfx.tele.cistern_slime",
+  "telegraph:ghoul_stalker": "sfx.tele.ghoul_stalker",
+  "telegraph:riptide_leaper": "sfx.tele.riptide_leaper",
   "telegraph:fallen_adept:a": "sfx.boss.tele_a",
   "telegraph:fallen_adept:b": "sfx.boss.tele_b",
   "telegraph:storm_crystal:a": "sfx.boss.tele_a",
@@ -688,26 +712,29 @@
   "env:puddle:freeze": "sfx.env.freeze",
   "env:puddle:thaw": "sfx.env.thaw",
   "env:urn:break": "sfx.env.break",
-  "env:cracked_wall:break": "sfx.env.break"
+  "env:cracked_wall:break": "sfx.env.break",
+  "env:boss_pillar:break": "sfx.env.break",
+  "env:cracked_pillar:break": "sfx.env.break",
+  "env:broken_wall:break": "sfx.env.break"
  },
  "music": {
   "bus": "Music",
   "crossfade_sec": 1.5,
   "contexts": {
    "ruins": {
-    "stream": "res://assets/audio/music/mus_ruins.ogg",
+    "stream": "res://assets/audio/music/mus_ruins.wav",
     "placeholder": "res://assets/audio/amb/amb_ruins.wav"
    },
    "cistern": {
-    "stream": "res://assets/audio/music/mus_cistern.ogg",
+    "stream": "res://assets/audio/music/mus_cistern.wav",
     "placeholder": "res://assets/audio/amb/amb_ruins.wav"
    },
    "workshop": {
-    "stream": "res://assets/audio/music/mus_workshop.ogg",
+    "stream": "res://assets/audio/music/mus_workshop.wav",
     "placeholder": "res://assets/audio/amb/amb_workshop.wav"
    },
    "boss": {
-    "stream": "res://assets/audio/music/mus_boss.ogg",
+    "stream": "res://assets/audio/music/mus_boss.wav",
     "placeholder": "res://assets/audio/amb/amb_ruins.wav"
    }
   }

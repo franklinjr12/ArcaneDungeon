@@ -223,7 +223,7 @@ func _sequence(t) -> void:
 			if int(entry["stage"]) == 1 and entry["type"] == "combat":
 				combat_ids += 1
 				ok = ok and str(entry["id"]) in doc["pool"]
-		ok = ok and combat_ids >= 5 and combat_ids <= 6
+		ok = ok and combat_ids == 3
 	t.check(ok,"AD-138 seeds 1..20: every stage-1 combat room comes from the cistern pool")
 
 func _kill_all(flow) -> void:
@@ -263,7 +263,7 @@ func _scripted_run(run_seed: int, take_optional: bool, t, label: String):
 		var pos: Vector2 = flow.room.marker("exit")
 		flow.session.sim.actor.position = pos
 		flow.try_exit(pos,take_optional)
-	t.check(cistern_rooms >= 5 and water_rooms == cistern_rooms,"AD-138 %s: %d cistern combat rooms all with water" % [label,cistern_rooms])
+	t.check(cistern_rooms == 3 and water_rooms == cistern_rooms,"AD-138 %s: %d cistern combat rooms all with water" % [label,cistern_rooms])
 	return flow
 
 func _shallow_centre(water: Array) -> Vector2:

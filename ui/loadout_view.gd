@@ -1,5 +1,6 @@
 extends "res://ui/skin_a_overlay.gd"
 ## AD-147: read-only loadout view (pause menu, between rooms). AD-153: skin A layout (ad_ui_screen_loadout_layout.json).
+## Back (LoadoutCloseButton, reads CLOSE) and Continue close the view; right-click and the loadout key close it too (run_controller._input).
 ## Shows the 4 spell slots with their rune chains, held artifacts, run upgrades and vitals. No edit controls; purely visual
 ## (never touches the sim). Back and Continue both close the view: the exit door is still walked to.
 const Artifacts = preload("res://world/artifacts.gd")

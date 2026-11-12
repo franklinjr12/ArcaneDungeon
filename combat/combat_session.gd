@@ -7,6 +7,7 @@ const EnvProps = preload("res://world/env_props.gd")
 const Player = preload("res://combat/player_combat.gd")
 const Enemy = preload("res://combat/enemy_combat.gd")
 const Boss = preload("res://combat/boss_combat.gd")
+const Minion = preload("res://combat/boss_moves/elite_minion.gd")
 const DamageEvent = preload("res://combat/damage_event.gd")
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 const Difficulty = preload("res://game/core/difficulty.gd")
@@ -22,7 +23,7 @@ var world
 var player
 var enemies: Array = []
 var enemy_shots: Array = []
-## AD-136: spawn requests {kind, position, summoner_id} queued by components during the AI loop; flushed in order after it.
+## AD-136: spawn requests {kind, position, summoner_id} (AD-200: or {minion, position, summoner_id, settings} for an EliteMinion) queued by components during the AI loop; flushed in order after it.
 var pending_spawns: Array = []
 ## AD-137: session ground hazards (puddles) {id, kind, status, position, radius, duration_ticks, interval_ticks, age, source_id}.
 ## Read-only for rendering; advanced by _step_hazards in fixed id order.
@@ -30,8 +31,12 @@ var hazards: Array = []
 var _next_hazard_id := 1
 ## AD-138 [PROPOSED FOR PROTOTYPE]: WaterTiles or null. Water Wets anyone standing in it every data.water.wet_interval_ticks; deep water blocks walking.
 var water = null
+## AD-200: set by the caller as {source_id,damage,interval_ticks,channel}; empty = no electrified-water damage.
+var water_shock := {}
 ## AD-150 [PROPOSED FOR PROTOTYPE]: world/env_props.gd instance or null. Null leaves every rule unchanged.
 var env_props = null
+## AD-202: layout.pits rects (walking blockers only), kept for rendering.
+var pits: Array = []
 var feedback: Array = []
 var damage_events: Array = []
 var ai_transitions: Array = []
@@ -90,6 +95,7 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	sim.collision_walls = world.walls.duplicate()
 	water = null
 	env_props = null
+	pits = []
 	sim.actor.health.maximum = Difficulty.scale_f(float(data["player"]["max_hp"]),"player_hp")
 	sim.actor.health.reset()
 	sim.actor.radius = float(data["player"]["radius"])
@@ -144,9 +150,20 @@ func _flush_pending_spawns() -> void:
 	var queue: Array = pending_spawns
 	pending_spawns = []
 	for spec in queue:
+		if spec.has("minion"):
+			var minion = Minion.build(self,spec)
+			if minion != null:
+				enemies.append(minion)
+			continue
 		var spawned = spawn_enemy(str(spec["kind"]),spec["position"])
 		if spawned != null:
 			spawned.summoner_id = int(spec["summoner_id"])
+			var overrides: Dictionary = spec.get("overrides",{})
+			if overrides.has("hp"):
+				spawned.target.health.maximum = Difficulty.scale_f(float(overrides["hp"]),"enemy_hp")
+				spawned.target.health.current = spawned.target.health.maximum
+			if overrides.has("radius"):
+				spawned.target.radius = float(overrides["radius"])
 
 func add_hazard(spec: Dictionary) -> int:
 	var hazard: Dictionary = spec.duplicate(true)
@@ -155,6 +172,14 @@ func add_hazard(spec: Dictionary) -> int:
 	_next_hazard_id += 1
 	hazards.append(hazard)
 	return int(hazard["id"])
+
+## AD-198: drops a source's hazards (optionally only the given kinds); the remaining hazards keep their id order.
+func remove_hazards_from(source_id: int, kinds: Array = []) -> void:
+	var kept: Array = []
+	for hazard in hazards:
+		if int(hazard["source_id"]) != source_id or (not kinds.is_empty() and not kinds.has(str(hazard["kind"]))):
+			kept.append(hazard)
+	hazards = kept
 
 ## Ages every hazard by one tick (hazards are stored in id order); applies its status on age 1 and every interval after.
 func _step_hazards() -> void:
@@ -199,6 +224,9 @@ func _step_water() -> void:
 	if water == null:
 		return
 	var tick: int = sim.clock.tick
+	water.advance(tick)
+	if not water_shock.is_empty() and tick % maxi(1,int(water_shock["interval_ticks"])) == 0 and water.is_electrified(sim.actor.position):
+		damage_player(int(water_shock["source_id"]),float(water_shock["damage"]),str(water_shock["channel"]))
 	var interval: int = maxi(1,int(data["water"]["wet_interval_ticks"]))
 	if tick % interval != 0 or not sim.settings["statuses"].has("wet"):
 		return
@@ -209,6 +237,11 @@ func _step_water() -> void:
 	for victim in victims:
 		if victim.alive() and water.in_water(victim.position,victim.radius):
 			victim.status.apply("wet",tick,wet,{"source_id":0})
+
+func clear_water_shock() -> void:
+	water_shock = {}
+	if water != null:
+		water.clear_states()
 
 ## Read-only hazard view for rendering: position, radius, remaining ticks.
 func hazard_view() -> Array:

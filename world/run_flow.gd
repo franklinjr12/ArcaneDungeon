@@ -128,6 +128,8 @@ static func build_sequence(cfg: Dictionary, run_seed: int) -> Array:
 			pool[j] = swap
 		var ids: Array = pool.slice(0,wanted)
 		ids.append(stage["optional_room"])
+		if bool(stage.get("workshop_before_boss",false)):
+			ids.append("workshop")
 		ids.append(stage["boss_room"])
 		if bool(stage.get("workshop_after",false)):
 			ids.append("workshop")
@@ -242,10 +244,21 @@ func _build_room(entry: Dictionary) -> Dictionary:
 	# AD-138: per-room layout walls and water join the shared arena (rooms without layout are untouched).
 	var layout = room.values.get("layout",{})
 	if typeof(layout) == TYPE_DICTIONARY:
+		# AD-202: layout.arena_walls = false removes the shared arena walls; layout walls and props are appended below.
+		if layout.get("arena_walls",true) == false:
+			for dims in geometry["arena"]["walls"]:
+				var shared := Rect2(float(dims[0]),float(dims[1]),float(dims[2]),float(dims[3]))
+				session.world.walls.erase(shared)
+				session.sim.collision_walls.erase(shared)
 		for dims in layout.get("walls",[]):
 			var wall := Rect2(float(dims[0]),float(dims[1]),float(dims[2]),float(dims[3]))
 			session.world.walls.append(wall)
 			session.sim.collision_walls.append(wall)
+		if layout.has("pits"):
+			session.pits = []
+			for dims in layout["pits"]:
+				session.pits.append(Rect2(float(dims[0]),float(dims[1]),float(dims[2]),float(dims[3])))
+			session.world.add_ground_blockers(session.pits)
 		if layout.has("water"):
 			session.set_water(layout["water"])
 		if layout.has("env_props"):

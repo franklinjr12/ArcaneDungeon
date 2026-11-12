@@ -22,6 +22,14 @@ func _ready() -> void:
 	settings.apply_audio()
 	settings.apply_bindings()
 
+## Global fullscreen toggle (F11 / Alt+Enter, rebindable): works on the title screen and in a run, and persists.
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("toggle_fullscreen") and not event.is_echo():
+		settings.toggle_fullscreen()
+		settings.apply_display(get_tree().root)
+		save_settings()
+		get_viewport().set_input_as_handled()
+
 static func default_profile() -> Dictionary:
 	return {"schema_version": SCHEMA_VERSION, "stats": DEFAULT_STATS.duplicate(true), "meta": MetaProgress.empty_meta()}
 

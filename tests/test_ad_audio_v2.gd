@@ -68,9 +68,9 @@ func _coverage(t) -> void:
 			t.check(int(cues[id]["priority"]) >= floor_p, "AD-151 telegraph cue priority: " + id)
 	t.check(d.event_keys().size() > 0, "AD-151 event_keys lists the map")
 	t.equal(d.cue_for_event("nope:nothing"), "", "AD-151 unmapped event gives empty cue")
-	# A provided cue whose .ogg is missing plays through its placeholder.
+	# A provided cue whose .wav is missing plays through its placeholder.
 	d.voices.clear()
-	t.check(not ResourceLoader.exists(cues["sfx.cast.cold"]["stream"]), "AD-151 cold .ogg not yet provided")
+	t.check(not ResourceLoader.exists(cues["sfx.cast.cold"]["stream"]), "AD-151 cold .wav not yet provided")
 	t.check(d.play("sfx.cast.cold"), "AD-151 missing provided file plays placeholder")
 	d.voices.clear()
 	# Dynamic: every cue a real session emits exists in the table.

@@ -18,6 +18,16 @@
     "urn": {"shape": "circle", "radius": 14, "solid_walk": false, "blocks_spells": false,
       "break_by": ["essence.force"], "coins": 3},
     "cracked_wall": {"shape": "rect", "size": [48, 48], "solid_walk": true, "blocks_spells": true,
-      "break_by": ["essence.force"], "coins": 8}
+      "break_by": ["essence.force"], "coins": 8},
+    "boss_pillar": {"shape": "rect", "size": [64, 64], "solid_walk": true, "blocks_spells": true,
+      "break_by": ["essence.force"], "coins": 0},
+    "pillar": {"shape": "rect", "size": [48, 48], "solid_walk": true, "blocks_spells": true, "coins": 0},
+    "cracked_pillar": {"shape": "rect", "size": [48, 48], "solid_walk": true, "blocks_spells": true,
+      "break_by": ["essence.force"], "coins": 2},
+    "rubble": {"shape": "rect", "size": [64, 40], "solid_walk": true, "blocks_spells": true, "coins": 0},
+    "sarcophagus": {"shape": "rect", "size": [96, 48], "solid_walk": true, "blocks_spells": true, "coins": 0},
+    "broken_wall": {"shape": "rect", "size": [96, 32], "solid_walk": true, "blocks_spells": true,
+      "break_by": ["essence.force"], "coins": 4},
+    "column": {"shape": "circle", "radius": 22, "solid_walk": true, "blocks_spells": true, "coins": 0}
   }
 }

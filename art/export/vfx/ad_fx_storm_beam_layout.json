@@ -1,0 +1,297 @@
+{
+ "note": "place seg tile k with its anchor pixel at O + k*step (step in art px, y down); start cap anchor = O; end cap anchor = O + n*step; telegraph the same with tele_aNN_seg / tele_aNN_end. angle index i = i*22.5 deg, a00 east, clockwise on screen. 1 art px = 2 world units. Draw order: segs, end cap, start cap (beam_aNN_*) ; tele: segs then end marker.",
+ "canvas": [
+  32,
+  32
+ ],
+ "angles": [
+  {
+   "index": 0,
+   "deg": 0.0,
+   "step": [
+    16,
+    0
+   ],
+   "step_len_art_px": 16.0,
+   "beam_tags": [
+    "beam_a00_start",
+    "beam_a00_seg",
+    "beam_a00_end"
+   ],
+   "tele_tags": [
+    "tele_a00_seg",
+    "tele_a00_end"
+   ]
+  },
+  {
+   "index": 1,
+   "deg": 22.5,
+   "step": [
+    17,
+    7
+   ],
+   "step_len_art_px": 18.38,
+   "beam_tags": [
+    "beam_a01_start",
+    "beam_a01_seg",
+    "beam_a01_end"
+   ],
+   "tele_tags": [
+    "tele_a01_seg",
+    "tele_a01_end"
+   ]
+  },
+  {
+   "index": 2,
+   "deg": 45.0,
+   "step": [
+    12,
+    12
+   ],
+   "step_len_art_px": 16.97,
+   "beam_tags": [
+    "beam_a02_start",
+    "beam_a02_seg",
+    "beam_a02_end"
+   ],
+   "tele_tags": [
+    "tele_a02_seg",
+    "tele_a02_end"
+   ]
+  },
+  {
+   "index": 3,
+   "deg": 67.5,
+   "step": [
+    7,
+    17
+   ],
+   "step_len_art_px": 18.38,
+   "beam_tags": [
+    "beam_a03_start",
+    "beam_a03_seg",
+    "beam_a03_end"
+   ],
+   "tele_tags": [
+    "tele_a03_seg",
+    "tele_a03_end"
+   ]
+  },
+  {
+   "index": 4,
+   "deg": 90.0,
+   "step": [
+    0,
+    16
+   ],
+   "step_len_art_px": 16.0,
+   "beam_tags": [
+    "beam_a04_start",
+    "beam_a04_seg",
+    "beam_a04_end"
+   ],
+   "tele_tags": [
+    "tele_a04_seg",
+    "tele_a04_end"
+   ]
+  },
+  {
+   "index": 5,
+   "deg": 112.5,
+   "step": [
+    -7,
+    17
+   ],
+   "step_len_art_px": 18.38,
+   "beam_tags": [
+    "beam_a05_start",
+    "beam_a05_seg",
+    "beam_a05_end"
+   ],
+   "tele_tags": [
+    "tele_a05_seg",
+    "tele_a05_end"
+   ]
+  },
+  {
+   "index": 6,
+   "deg": 135.0,
+   "step": [
+    -12,
+    12
+   ],
+   "step_len_art_px": 16.97,
+   "beam_tags": [
+    "beam_a06_start",
+    "beam_a06_seg",
+    "beam_a06_end"
+   ],
+   "tele_tags": [
+    "tele_a06_seg",
+    "tele_a06_end"
+   ]
+  },
+  {
+   "index": 7,
+   "deg": 157.5,
+   "step": [
+    -17,
+    7
+   ],
+   "step_len_art_px": 18.38,
+   "beam_tags": [
+    "beam_a07_start",
+    "beam_a07_seg",
+    "beam_a07_end"
+   ],
+   "tele_tags": [
+    "tele_a07_seg",
+    "tele_a07_end"
+   ]
+  },
+  {
+   "index": 8,
+   "deg": 180.0,
+   "step": [
+    -16,
+    0
+   ],
+   "step_len_art_px": 16.0,
+   "beam_tags": [
+    "beam_a08_start",
+    "beam_a08_seg",
+    "beam_a08_end"
+   ],
+   "tele_tags": [
+    "tele_a08_seg",
+    "tele_a08_end"
+   ]
+  },
+  {
+   "index": 9,
+   "deg": 202.5,
+   "step": [
+    -17,
+    -7
+   ],
+   "step_len_art_px": 18.38,
+   "beam_tags": [
+    "beam_a09_start",
+    "beam_a09_seg",
+    "beam_a09_end"
+   ],
+   "tele_tags": [
+    "tele_a09_seg",
+    "tele_a09_end"
+   ]
+  },
+  {
+   "index": 10,
+   "deg": 225.0,
+   "step": [
+    -12,
+    -12
+   ],
+   "step_len_art_px": 16.97,
+   "beam_tags": [
+    "beam_a10_start",
+    "beam_a10_seg",
+    "beam_a10_end"
+   ],
+   "tele_tags": [
+    "tele_a10_seg",
+    "tele_a10_end"
+   ]
+  },
+  {
+   "index": 11,
+   "deg": 247.5,
+   "step": [
+    -7,
+    -17
+   ],
+   "step_len_art_px": 18.38,
+   "beam_tags": [
+    "beam_a11_start",
+    "beam_a11_seg",
+    "beam_a11_end"
+   ],
+   "tele_tags": [
+    "tele_a11_seg",
+    "tele_a11_end"
+   ]
+  },
+  {
+   "index": 12,
+   "deg": 270.0,
+   "step": [
+    0,
+    -16
+   ],
+   "step_len_art_px": 16.0,
+   "beam_tags": [
+    "beam_a12_start",
+    "beam_a12_seg",
+    "beam_a12_end"
+   ],
+   "tele_tags": [
+    "tele_a12_seg",
+    "tele_a12_end"
+   ]
+  },
+  {
+   "index": 13,
+   "deg": 292.5,
+   "step": [
+    7,
+    -17
+   ],
+   "step_len_art_px": 18.38,
+   "beam_tags": [
+    "beam_a13_start",
+    "beam_a13_seg",
+    "beam_a13_end"
+   ],
+   "tele_tags": [
+    "tele_a13_seg",
+    "tele_a13_end"
+   ]
+  },
+  {
+   "index": 14,
+   "deg": 315.0,
+   "step": [
+    12,
+    -12
+   ],
+   "step_len_art_px": 16.97,
+   "beam_tags": [
+    "beam_a14_start",
+    "beam_a14_seg",
+    "beam_a14_end"
+   ],
+   "tele_tags": [
+    "tele_a14_seg",
+    "tele_a14_end"
+   ]
+  },
+  {
+   "index": 15,
+   "deg": 337.5,
+   "step": [
+    17,
+    -7
+   ],
+   "step_len_art_px": 18.38,
+   "beam_tags": [
+    "beam_a15_start",
+    "beam_a15_seg",
+    "beam_a15_end"
+   ],
+   "tele_tags": [
+    "tele_a15_seg",
+    "tele_a15_end"
+   ]
+  }
+ ]
+}
