@@ -7,6 +7,7 @@ const BuildInfo = preload("res://game/core/build_info.gd")
 const PerfRun = preload("res://game/core/perf_run.gd")
 const CompendiumScreen = preload("res://ui/compendium_screen.gd")
 const CreditsScreen = preload("res://ui/credits_screen.gd")
+const MetaShopScreen = preload("res://ui/meta_shop_screen.gd")
 ## AD-067: GDD §8 Title screen. Sandbox/Arena are shown only in debug builds.
 const TEXT := {
 	"title": "menu.title",
@@ -14,6 +15,7 @@ const TEXT := {
 	"continue": "menu.continue",
 	"new_run": "menu.new_run",
 	"compendium": "menu.compendium",
+	"scriptorium": "menu.scriptorium",
 	"settings": "menu.settings",
 	"credits": "menu.credits",
 	"quit": "menu.quit",
@@ -26,13 +28,14 @@ var show_debug_entries = null
 var settings_screen: Control = null
 var compendium_screen: Control = null
 var credits_screen: Control = null
+var scriptorium_screen: Control = null
 var panel: Panel
 
 const TITLE_DIR := "res://assets/ui/title/"
 const LOGO_DIR := "res://assets/ui/logo/"
 const PARALLAX := [["par_far", 2.0], ["par_mid", 5.0], ["par_near", 10.0]]
 const OVERSCAN := 16.0
-const BUTTON_IDS := {"btn_continue": "ContinueButton", "btn_new_run": "NewRunButton", "btn_compendium": "CompendiumButton", "btn_settings": "SettingsButton", "btn_credits": "CreditsButton", "btn_quit": "QuitButton"}
+const BUTTON_IDS := {"btn_continue": "ContinueButton", "btn_new_run": "NewRunButton", "btn_compendium": "CompendiumButton", "btn_scriptorium": "ScriptoriumButton", "btn_settings": "SettingsButton", "btn_credits": "CreditsButton", "btn_quit": "QuitButton"}
 var _layers: Array = []  # {rect, depth}
 var _logo: TextureRect
 var _logo_glow: TextureRect
@@ -88,6 +91,8 @@ func _ready() -> void:
 	_buttons["btn_new_run"] = new_run
 	_buttons["btn_compendium"] = _button(panel, "CompendiumButton", tr(TEXT["compendium"]))
 	_buttons["btn_compendium"].pressed.connect(open_compendium)
+	_buttons["btn_scriptorium"] = _button(panel, "ScriptoriumButton", tr(TEXT["scriptorium"]))
+	_buttons["btn_scriptorium"].pressed.connect(open_scriptorium)
 	_buttons["btn_settings"] = _button(panel, "SettingsButton", tr(TEXT["settings"]))
 	_buttons["btn_settings"].pressed.connect(open_settings)
 	_buttons["btn_credits"] = _button(panel, "CreditsButton", tr(TEXT["credits"]))
@@ -140,8 +145,15 @@ func _build_backdrop() -> void:
 			r.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_layers.append({"rects": rects, "depth": layer[1]})
 
+## Layout focus_order plus the Scriptorium (AD-234; the art layout has no entry for it), right after Compendium.
+func _focus_order() -> Array:
+	var order: Array = SkinA.layout("menu").get("focus_order", []).duplicate()
+	if not order.has("btn_scriptorium"):
+		order.insert(order.find("btn_compendium") + 1 if order.has("btn_compendium") else order.size(), "btn_scriptorium")
+	return order
+
 func _link_focus() -> void:
-	var order: Array = SkinA.layout("menu").get("focus_order", [])
+	var order: Array = _focus_order()
 	var chain: Array = []
 	for id in order:
 		if _buttons.has(id):
@@ -166,9 +178,26 @@ func _relayout() -> void:
 		SkinA.place(_logo_glow, widgets["logo"], sc, origin)
 	if widgets.has("menu_panel"):
 		SkinA.place(panel, widgets["menu_panel"], sc, origin)
+	# The art layout has no Scriptorium slot: re-stack the button column evenly inside the panel (same top, same bottom).
+	if not widgets.has("btn_scriptorium") and widgets.has("btn_compendium"):
+		widgets["btn_scriptorium"] = widgets["btn_compendium"].duplicate()
+	var stack: Array = []
+	for id in _focus_order():
+		if _buttons.has(id) and widgets.has(id):
+			stack.append(id)
+	var mp: Dictionary = widgets.get("menu_panel", {})
+	var top := 148.0
+	var bottom := float(mp.get("y", 132)) + float(mp.get("h", 190)) - 10.0
+	var btn_h := 24.0 if stack.size() <= 6 else 20.0
+	var pitch := 28.0 if stack.size() <= 6 else (bottom - top - btn_h) / float(stack.size() - 1)
 	for id in _buttons:
 		if widgets.has(id):
-			SkinA.place(_buttons[id], widgets[id], sc, origin - panel.position)
+			var w: Dictionary = widgets[id].duplicate()
+			if id in stack:
+				w["y"] = top + pitch * stack.find(id)
+				w["h"] = btn_h
+			_buttons[id].custom_minimum_size.y = float(w.get("h", 24))
+			SkinA.place(_buttons[id], w, sc, origin - panel.position)
 			_buttons[id].add_theme_font_size_override("font_size", int(7 * sc))
 	if _debug_box != null:
 		var area: Dictionary = SkinA.layout("menu").get("safe_area", {})
@@ -247,6 +276,27 @@ func _close_compendium() -> void:
 	_logo.show()
 	_logo_glow.show()
 	panel.get_node("CompendiumButton").grab_focus()
+
+func open_scriptorium() -> void:
+	if scriptorium_screen == null:
+		scriptorium_screen = MetaShopScreen.new()
+		scriptorium_screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		add_child(scriptorium_screen)
+		scriptorium_screen.back_requested.connect(_close_scriptorium)
+	else:
+		scriptorium_screen.refresh()
+	scriptorium_screen.show()
+	panel.hide()
+	_logo.hide()
+	_logo_glow.hide()
+	scriptorium_screen._focus_first()
+
+func _close_scriptorium() -> void:
+	scriptorium_screen.hide()
+	panel.show()
+	_logo.show()
+	_logo_glow.show()
+	panel.get_node("ScriptoriumButton").grab_focus()
 
 func open_credits() -> void:
 	if credits_screen == null:

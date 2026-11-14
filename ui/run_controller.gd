@@ -19,6 +19,7 @@ const LoadoutView = preload("res://ui/loadout_view.gd")
 const EditorView = preload("res://ui/skin_a_editor.gd")
 const MerchantScript = preload("res://world/merchant.gd")
 const PerfOverlay = preload("res://debug/perf_overlay.gd")
+const MetaShopScreen = preload("res://ui/meta_shop_screen.gd")
 var flow
 var config_path: String = Flow.CONFIG_V2
 var guide = Prompts.new()
@@ -77,6 +78,8 @@ var current_notice := ""
 var summary_retry_button: Button
 var summary_new_seed_button: Button
 var summary_title_button: Button
+var summary_scriptorium_button: Button ## AD-234
+var scriptorium_screen: Control = null ## AD-234: overlay child, opened from the summary
 var cast_pending := -1
 var cursor := Vector2(400,440)
 var opened_editor_ms := 0
@@ -846,12 +849,13 @@ func _redraw_panel() -> void:
 	desk_skip_button = null
 	summary_new_seed_button = null
 	summary_title_button = null
+	summary_scriptorium_button = null
 	var in_summary: bool = flow.state in ["dead","won"]
 	var reward_choice: bool = flow.state == "cleared" and flow.room.values["type"] != "boss" and not flow.reward_collected
 	var in_workshop: bool = flow.state == "workshop"
 	workshop_holder.visible = in_workshop and not editor_open
 	reward_overlay.visible = reward_choice
-	summary_overlay.visible = in_summary
+	summary_overlay.visible = in_summary and not (scriptorium_screen != null and scriptorium_screen.visible)
 	_place_context(workshop_column)
 	if in_summary:
 		_build_summary_panel()
@@ -1387,7 +1391,29 @@ func _build_summary_panel() -> void:
 	summary_retry_button = o.button("btn_retry_seed",tr("run.btn.retry").to_upper(),func(): _retry_same_seed(),o.rect_of(layout_ids[1] if won else "btn_retry_seed"))
 	summary_new_seed_button = o.button("btn_new_run",tr("run.btn.new_seed").to_upper(),func(): _new_seed(),o.rect_of("btn_new_run"))
 	summary_title_button = o.button("btn_main_menu",tr("run.btn.title").to_upper(),func(): _to_title(),{},"ui.cancel")
-	o.finish(["btn_new_run","btn_retry_seed","btn_main_menu"] if won else ["btn_retry_seed","btn_new_run","btn_main_menu"])
+	# AD-234: the layouts have no spare slot; a short button under the row, inside the panel (panel bottom 350, row ends 330).
+	summary_scriptorium_button = o.button("btn_scriptorium",tr("run.btn.scriptorium").to_upper(),_open_scriptorium,{"x":148.0,"y":332.0,"w":108.0,"h":13.0})
+	o.finish(["btn_new_run","btn_retry_seed","btn_main_menu","btn_scriptorium"] if won else ["btn_retry_seed","btn_new_run","btn_main_menu","btn_scriptorium"])
+
+## AD-234: Scriptorium overlay above the run summary; closing returns focus to the summary button and refreshes the Ink line.
+func _open_scriptorium() -> void:
+	if scriptorium_screen == null:
+		scriptorium_screen = MetaShopScreen.new()
+		scriptorium_screen.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		add_child(scriptorium_screen)
+		scriptorium_screen.back_requested.connect(_close_scriptorium)
+	else:
+		scriptorium_screen.refresh()
+	scriptorium_screen.show()
+	summary_overlay.hide()
+	scriptorium_screen._focus_first()
+
+func _close_scriptorium() -> void:
+	scriptorium_screen.hide()
+	summary_overlay.show()
+	_redraw_panel()
+	if summary_scriptorium_button != null:
+		summary_scriptorium_button.grab_focus()
 
 ## AD-145: locks are recomputed from the profile before each run starts.
 func _apply_meta_locks() -> void:

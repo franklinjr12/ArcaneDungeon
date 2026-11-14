@@ -134,6 +134,7 @@ run.summary.ink,Ink earned +%d (total %d)
 run.btn.retry,Retry same seed
 run.btn.new_seed,New seed
 run.btn.title,Title
+run.btn.scriptorium,Scriptorium
 run.notice.retry,Retry same seed: currencies / runes reset
 run.notice.new_seed,New seed: currencies / runes reset
 run.notice.door,Door: %s
@@ -397,6 +398,7 @@ artifact.archivists_quill.desc,On Kill payloads also fire each time an elite or 
 artifact.warding_lantern.name,Warding Lantern
 artifact.warding_lantern.desc,Clearing a room gives a shield that absorbs the next hit.
 menu.compendium,Compendium
+menu.scriptorium,Scriptorium
 compendium.title,Compendium
 compendium.back,Back
 compendium.unknown,???
