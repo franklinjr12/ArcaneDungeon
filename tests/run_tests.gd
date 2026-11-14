@@ -24,6 +24,8 @@ func _run_all() -> void:
 			continue
 		print("SUITE ", filename)
 		suite.run(context)
+		if not suite is RefCounted:
+			suite.free()  # AD-233: SceneTree suites that can also run standalone
 	if "--self-test-failure" in OS.get_cmdline_user_args():
 		context.check(false, "intentional failure probe")
 	context.check(suite_count > 0, "at least one test suite discovered")

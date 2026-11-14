@@ -17,6 +17,8 @@ func _run_one() -> void:
 		if suite.has_method("run"):
 			print("SUITE ", script_name)
 			suite.run(context)
+			if not suite is RefCounted:
+				suite.free()  # AD-233: SceneTree suites that can also run standalone
 		else:
 			context.check(false, "suite exposes run(context): " + script_name)
 	print("TEST SUMMARY: %d passed / %d failed" % [context.passed, context.failed])

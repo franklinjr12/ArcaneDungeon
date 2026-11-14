@@ -1,6 +1,7 @@
 {
-	"_note": "AD-145 PROPOSED numbers (Demo Plan section 5 Meta, MVP C1). Milestone counts and unlock lists are tunable; unlocks only widen the rune/artifact pools, never grant permanent stat power.",
+	"_note": "AD-145 PROPOSED numbers (Demo Plan section 5 Meta, MVP C1). Milestone counts and unlock lists are tunable; unlocks only widen the rune/artifact pools, never grant permanent stat power. AD-233: the ink block holds the Arcane Ink earn amounts (persistent currency, kept on death).",
 	"schema_version": 1,
+	"ink": {"room_cleared": 3, "mini_boss": 8, "boss": 20, "new_stage": 5, "run_won": 15},
 	"categories": ["runes", "reactions", "enemies", "artifacts"],
 	"compendium": {
 		"reactions": ["wet_lightning_arc", "chill_freeze", "wet_cold_freeze", "frozen_force_shatter", "fire_thaw_steam"],
