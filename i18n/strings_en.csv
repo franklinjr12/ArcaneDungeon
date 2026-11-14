@@ -130,6 +130,7 @@ run.summary.time,Time: %d:%02d
 run.summary.spells,Spells used: %d
 run.summary.seed,Seed: %d
 run.summary.totals,Runs: %d  Wins: %d  Best: %s
+run.summary.ink,Ink earned +%d (total %d)
 run.btn.retry,Retry same seed
 run.btn.new_seed,New seed
 run.btn.title,Title

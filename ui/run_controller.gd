@@ -1374,6 +1374,10 @@ func _build_summary_panel() -> void:
 		o.picture(id+"_icon",SkinA.icon_or_mvp("upgrade"),{"x":ar[0],"y":ar[1],"w":ar[2],"h":ar[3]})
 	o.text("seed",(tr("run.summary.seed") % int(stats["seed"])).to_upper(),o.rect_of("seed"),"normal")
 	if save != null:
+		# AD-233: ink line shares the seed row (the seed label is only 84 wide), no layout change.
+		var seed_rect: Dictionary = o.rect_of("seed")
+		o.text("ink",(tr("run.summary.ink") % [int(stats.get("ink_earned",0)),save.ink()]).to_upper(),
+			{"x":float(seed_rect["x"])+88.0,"y":seed_rect["y"],"w":float(o.rect_of("milestone")["w"])-88.0,"h":seed_rect["h"]},"selected",HORIZONTAL_ALIGNMENT_RIGHT)
 		var totals: Dictionary = save.stats()
 		var best: float = totals["best_time_seconds"]
 		o.text("totals",(tr("run.summary.totals") % [totals["runs"],totals["wins"],

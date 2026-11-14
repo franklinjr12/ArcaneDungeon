@@ -4,6 +4,8 @@ extends SceneTree
 const TestContext = preload("res://tests/test_context.gd")
 const Service = preload("res://game/core/save_service.gd")
 const Meta = preload("res://world/meta_progress.gd")
+const Flow = preload("res://world/run_flow.gd")
+const SEED := 20261022
 const DIR := "user://ad233_test/"
 
 func _clean() -> void:
@@ -36,6 +38,10 @@ func run(t) -> void:
 	_migration(t)
 	_record(t)
 	_round_trip(t)
+	_flow_events(t)
+	_flow_exits(t)
+	_flow_save_payload(t)
+	_flow_profile(t)
 
 func _config(t) -> void:
 	var r := Meta.ink_rules()
@@ -112,6 +118,119 @@ func _round_trip(t) -> void:
 	t.equal(svc2.ink(), 23, "AD-233 ink round-trips")
 	t.equal(svc2.meta()["discovered"]["reactions"], ["chill_freeze"], "AD-233 discoveries round-trip")
 	t.equal(svc2.stats()["deaths"], 1, "AD-233 stats round-trip")
+	svc.free()
+	svc2.free()
+	_clean()
+	DirAccess.remove_absolute(DIR)
+
+func _kill_all(flow, limit: int = 3000) -> void:
+	for i in limit:
+		if flow.state != "fighting":
+			return
+		for enemy in flow.session.enemies:
+			if enemy.target.alive():
+				enemy.target.receive_damage(100000, "fire", 1, 100)
+		flow.step()
+
+func _jump(flow, index: int) -> void:
+	flow.run.sequence_index = index
+	flow._enter_current()
+
+func _flow_events(t) -> void:
+	var flow = Flow.new(SEED)
+	t.equal(flow.ink_earned, 0, "AD-233 run starts with 0 ink")
+	_kill_all(flow)
+	t.equal(flow.ink_earned, 3, "AD-233 room_cleared +3")
+	flow._finish_combat()
+	t.equal(flow.ink_earned, 3, "AD-233 clear credited once")
+	_jump(flow, 3)
+	t.equal(flow.room.values["type"], "boss", "AD-233 test room is the boss")
+	_kill_all(flow)
+	t.equal(flow.ink_earned, 23, "AD-233 boss +20 (not room_cleared)")
+	t.equal(flow.summary()["ink_earned"], 23, "AD-233 summary carries ink_earned")
+	_jump(flow, 4)
+	t.equal(flow.ink_earned, 23, "AD-233 workshop earns nothing")
+	t.equal(flow.try_exit(Vector2.ZERO)["ok"], true, "AD-233 workshop exit")
+	t.equal(flow.ink_earned, 28, "AD-233 new_stage +5 entering stage 1")
+	_jump(flow, 5)
+	t.equal(flow.ink_earned, 28, "AD-233 re-entering the same room earns no stage ink")
+	_kill_all(flow)
+	t.equal(flow.ink_earned, 28 + 3 + 15, "AD-233 stage-2 room (final in v1) pays room_cleared + run_won")
+	var won = Flow.new(SEED)
+	_jump(won, won.rooms.size() - 1)
+	_kill_all(won)
+	t.equal(won.state, "won", "AD-233 final room wins")
+	t.equal(won.ink_earned, 3 + 15, "AD-233 final room_cleared + run_won +15")
+	won._finish_combat()
+	t.equal(won.ink_earned, 18, "AD-233 run_won credited once")
+	won.start_new(SEED)
+	t.equal(won.ink_earned, 0, "AD-233 start_new resets ink_earned")
+	# Mini-boss rooms (the ones owning a mini_boss_slot) pay mini_boss instead of room_cleared.
+	var v2 = Flow.new(SEED, Flow.CONFIG_V2)
+	var mini := -1
+	for i in v2.rooms.size():
+		if v2.rooms[i].has("mini_boss_slot") and str(v2.rooms[i].get("type")) != "boss":
+			mini = i
+			break
+	t.check(mini >= 0, "AD-233 v2 sequence has a mini-boss room")
+	if mini >= 0:
+		_jump(v2, mini)
+		_kill_all(v2)
+		t.equal(v2.state, "cleared", "AD-233 mini-boss room cleared")
+		t.equal(v2.ink_earned, 8, "AD-233 mini_boss +8")
+
+func _flow_exits(t) -> void:
+	# Leaving the last room of stage 0 in the v2 config credits one stage change.
+	var flow = Flow.new(SEED, Flow.CONFIG_V2)
+	var last_stage0 := -1
+	for i in flow.rooms.size():
+		if int(flow.rooms[i].get("stage", 0)) == 0:
+			last_stage0 = i
+	_jump(flow, last_stage0)
+	if flow.state == "fighting":
+		_kill_all(flow)
+	var before: int = flow.ink_earned
+	var exit: Dictionary = flow.try_exit(flow.room.marker("exit"))
+	t.check(exit["ok"], "AD-233 v2 exit ok: %s" % str(exit))
+	t.equal(flow.ink_earned - before, 5, "AD-233 v2 new_stage credited on leaving stage 0")
+
+func _flow_save_payload(t) -> void:
+	var flow = Flow.new(SEED)
+	_jump(flow, 4)
+	flow.ink_earned = 26
+	var payload: Dictionary = flow.save_payload()
+	t.equal(payload["counters"]["ink_earned"], 26, "AD-233 payload carries ink_earned")
+	var restored = Flow.new(SEED)
+	var text: String = JSON.stringify(payload)
+	t.check(restored.resume(JSON.parse_string(text))["ok"], "AD-233 payload resumes")
+	t.equal(restored.ink_earned, 26, "AD-233 Continue keeps ink_earned")
+	var old: Dictionary = JSON.parse_string(text)
+	old["counters"].erase("ink_earned")
+	var legacy = Flow.new(SEED)
+	t.check(legacy.resume(old)["ok"], "AD-233 payload without ink_earned still loads")
+	t.equal(legacy.ink_earned, 0, "AD-233 missing ink_earned defaults 0")
+
+func _flow_profile(t) -> void:
+	# Death keeps the ink, and a fresh SaveService reading the same dir sees it.
+	_clean()
+	var flow = Flow.new(SEED)
+	_kill_all(flow)
+	t.check(flow.try_exit(flow.room.marker("exit"))["ok"], "AD-233 walked into room 2")
+	flow.session.sim.actor.receive_damage(100000, "fire", 2, 100)
+	flow.step({"cast": 0})
+	t.equal(flow.summary()["outcome"], "lost", "AD-233 run lost")
+	var stats: Dictionary = flow.summary()
+	stats["discovered"] = flow.discoveries()
+	var svc = Service.new()
+	svc.set_base_dir(DIR)
+	svc.record_discoveries({"reactions": ["chill_freeze"]})
+	svc.record_run(stats)
+	t.equal(svc.ink(), 3, "AD-233 death keeps the room's ink in the profile")
+	var svc2 = Service.new()
+	svc2.set_base_dir(DIR)
+	svc2.load_profile()
+	t.equal(svc2.ink(), 3, "AD-233 ink survives relaunch")
+	t.equal(svc2.meta()["discovered"]["reactions"], ["chill_freeze"], "AD-233 discoveries survive with ink")
 	svc.free()
 	svc2.free()
 	_clean()
