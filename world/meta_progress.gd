@@ -24,11 +24,27 @@ static func empty_meta() -> Dictionary:
 	var discovered := {}
 	for cat in categories():
 		discovered[cat] = []
-	return {"discovered": discovered}
+	return {"discovered": discovered, "ink": 0}
+
+## AD-233: Arcane Ink earn amounts per event (room_cleared, mini_boss, boss, new_stage, run_won).
+static func ink_rules() -> Dictionary:
+	var rules = load_config().get("ink", {})
+	return rules if rules is Dictionary else {}
+
+## Adds a non-negative amount of ink; returns the new total.
+static func add_ink(meta: Dictionary, amount: int) -> int:
+	meta["ink"] = int(meta.get("ink", 0)) + maxi(amount, 0)
+	return meta["ink"]
 
 static func valid_meta(m) -> bool:
 	if typeof(m) != TYPE_DICTIONARY or typeof(m.get("discovered")) != TYPE_DICTIONARY:
 		return false
+	var ink = m.get("ink", 0)
+	if typeof(ink) != TYPE_INT and typeof(ink) != TYPE_FLOAT:
+		return false
+	if float(ink) < 0.0 or float(ink) != floorf(float(ink)):
+		return false
+	m["ink"] = int(ink)
 	var d: Dictionary = m["discovered"]
 	for cat in categories():
 		if typeof(d.get(cat)) != TYPE_ARRAY:
