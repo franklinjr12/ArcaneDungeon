@@ -217,6 +217,22 @@ func record_discoveries(discoveries: Dictionary) -> Dictionary:
 func ink() -> int:
 	return int(profile["meta"].get("ink", 0))
 
+## AD-234: Scriptorium purchases; each change is saved immediately.
+func buy_upgrade(id: String) -> bool:
+	if not MetaProgress.buy(profile["meta"], id):
+		return false
+	save_profile()
+	return true
+
+func respec_upgrades() -> int:
+	var refunded := MetaProgress.respec(profile["meta"])
+	if refunded > 0:
+		save_profile()
+	return refunded
+
+func meta_bonuses() -> Dictionary:
+	return MetaProgress.bonuses(profile["meta"])
+
 func meta() -> Dictionary:
 	return profile["meta"].duplicate(true)
 
