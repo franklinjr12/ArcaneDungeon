@@ -6,7 +6,7 @@ Light, persistent progression for the closed demo. Numbers marked **PROPOSED** a
 `user://profile.json` gains `meta.discovered`: a sorted list of unique ids per category (`runes`, `reactions`, `enemies`, `artifacts`) (schema v2), and `meta.ink` (schema v3, see Arcane Ink below). Code: `world/meta_progress.gd`, `SaveService.meta()`, `record_discoveries()`, `locked_runes()`, `locked_artifacts()`.
 
 ## Migration
-A v1 or v2 profile loads with its stats and discoveries intact; a missing `meta.ink` defaults to 0. The migration happens in memory; the file is written as v3 on the next save. A v1 profile loads with its stats intact and an empty `meta` block. A corrupt profile or an invalid `meta` block is quarantined and replaced with defaults (existing corrupt-profile handling).
+A v1 or v2 profile loads with its stats and discoveries intact; a missing `meta.ink` defaults to 0. The migration happens in memory; the file is written as v3 on the next save. A corrupt profile or an invalid `meta` block is quarantined and replaced with defaults (existing corrupt-profile handling).
 
 ## Discovery sources
 At run end the run state reports ids seen during the run (runes owned, reactions triggered, enemies killed, artifacts held); `SaveService.record_run` merges them. Merging is idempotent and deterministic (no RNG, no clock).
