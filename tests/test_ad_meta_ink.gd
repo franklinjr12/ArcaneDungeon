@@ -1,5 +1,7 @@
-extends RefCounted
+extends SceneTree
 ## AD-233: Arcane Ink currency in the profile (schema v3): migration, config, record_run, round trip.
+## Discovered by run_tests.gd (run(t)) and also runnable directly: --script res://tests/test_ad_meta_ink.gd
+const TestContext = preload("res://tests/test_context.gd")
 const Service = preload("res://game/core/save_service.gd")
 const Meta = preload("res://world/meta_progress.gd")
 const DIR := "user://ad233_test/"
@@ -20,6 +22,14 @@ func _corrupt_count() -> int:
 		if f.begins_with("profile.json.corrupt-"):
 			n += 1
 	return n
+
+func _initialize() -> void:
+	var t := TestContext.new()
+	run(t)
+	print("TEST SUMMARY: %d passed / %d failed" % [t.passed, t.failed])
+	for failure in t.failures:
+		printerr("FAILED: ", failure)
+	quit(1 if t.failed > 0 else 0)
 
 func run(t) -> void:
 	_config(t)
