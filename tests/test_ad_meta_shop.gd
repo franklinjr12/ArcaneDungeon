@@ -6,6 +6,7 @@ const Service = preload("res://game/core/save_service.gd")
 const Meta = preload("res://world/meta_progress.gd")
 const Flow = preload("res://world/run_flow.gd")
 const State = preload("res://world/run_state.gd")
+const Screen = preload("res://ui/meta_shop_screen.gd")
 const Difficulty = preload("res://game/core/difficulty.gd")
 const SEED := 20261022
 const DIR := "user://ad234_test/"
@@ -16,6 +17,10 @@ func _clean() -> void:
 		DirAccess.remove_absolute(DIR + f)
 
 func _initialize() -> void:
+	# The root window is not in the tree yet during _initialize, so the screen group runs on the first frame.
+	process_frame.connect(_run_direct, CONNECT_ONE_SHOT)
+
+func _run_direct() -> void:
 	var t := TestContext.new()
 	run(t)
 	print("TEST SUMMARY: %d passed / %d failed" % [t.passed, t.failed])
@@ -32,6 +37,7 @@ func run(t) -> void:
 	_legacy_and_validation(t)
 	_run_start_bonuses(t)
 	_run_state_round_trip(t)
+	_screen(t)
 
 func _service(ink: int):
 	_clean()
@@ -195,3 +201,45 @@ func _run_state_round_trip(t) -> void:
 		var broken: Dictionary = snap.duplicate(true)
 		broken["mana_regen_mult"] = bad
 		t.check(not State.new().restore(broken, flow.session.sim.registry, flow.rooms.size())["ok"], "AD-234 invalid regen mult rejected: %s" % str(bad))
+
+func _screen(t) -> void:
+	var svc = _service(20)
+	var screen = Screen.new()
+	screen.save_service = svc
+	var back_count := [0]
+	screen.back_requested.connect(func(): back_count[0] += 1)
+	(Engine.get_main_loop() as SceneTree).root.add_child(screen)
+	t.equal(screen.ink_label.text, "Arcane Ink: 20", "AD-234 screen shows ink")
+	t.equal(screen.tier_labels["max_hp"].text, "Tier 0/5", "AD-234 screen shows tier")
+	t.equal(screen.cost_labels["max_hp"].text, "Cost: 15 Ink", "AD-234 screen shows cost")
+	t.equal(screen.next_labels["max_hp"].text, "Next: +6 max HP (total +6)", "AD-234 screen next effect hp")
+	t.equal(screen.next_labels["mana_regen"].text, "Next: +4% mana regeneration (total +4%)", "AD-234 screen next effect regen")
+	t.check(not screen.buy_buttons["max_hp"].disabled, "AD-234 screen hp buy enabled with 20 ink")
+	screen.buy_buttons["max_hp"].pressed.emit()
+	t.equal(svc.ink(), 5, "AD-234 screen buy deducts 15 ink")
+	t.equal(screen.ink_label.text, "Arcane Ink: 5", "AD-234 screen ink label refreshed")
+	t.equal(screen.tier_labels["max_hp"].text, "Tier 1/5", "AD-234 screen tier refreshed")
+	var svc2 = _reload()
+	t.equal([svc2.ink(), Meta.tier(svc2.meta(), "max_hp")], [5, 1], "AD-234 screen buy persisted")
+	svc2.free()
+	t.check(screen.buy_buttons["max_hp"].disabled, "AD-234 screen second hp buy disabled with 5 ink")
+	t.equal(screen.buy_buttons["max_hp"].text, "Need 20 more Ink", "AD-234 screen shows shortfall")
+	screen.buy_buttons["max_hp"].pressed.emit()
+	t.equal([svc.ink(), Meta.tier(svc.meta(), "max_hp")], [5, 1], "AD-234 screen unaffordable press does nothing")
+	screen.respec_button.pressed.emit()
+	t.equal(svc.ink(), 20, "AD-234 screen respec refunds")
+	t.equal(screen.ink_label.text, "Arcane Ink: 20", "AD-234 screen respec refreshes ink")
+	t.equal(screen.tier_labels["max_hp"].text, "Tier 0/5", "AD-234 screen respec refreshes tiers")
+	var cancel := InputEventAction.new()
+	cancel.action = "ui_cancel"
+	cancel.pressed = true
+	screen._unhandled_input(cancel)
+	t.equal(back_count[0], 1, "AD-234 screen ui_cancel emits back_requested")
+	screen.back_button.pressed.emit()
+	t.equal(back_count[0], 2, "AD-234 screen back button emits back_requested")
+	var all_focus := true
+	for b in screen.buy_buttons.values() + [screen.respec_button, screen.back_button]:
+		all_focus = all_focus and b.focus_mode == Control.FOCUS_ALL
+	t.check(all_focus, "AD-234 screen buttons have focus_mode ALL")
+	screen.free()
+	_done(svc)
