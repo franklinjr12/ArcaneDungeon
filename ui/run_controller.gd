@@ -1394,6 +1394,7 @@ func _apply_meta_locks() -> void:
 	var save = get_node_or_null("/root/SaveService")
 	if save != null:
 		flow.set_meta_locks(save.locked_runes(),save.locked_artifacts())
+		flow.set_meta_bonuses(save.meta_bonuses())
 
 func _retry_same_seed() -> void:
 	close_pause()

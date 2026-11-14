@@ -32,6 +32,8 @@ var rewards
 var merchant
 ## AD-144: base max mana of the current room before the merchant bonus.
 var _base_max_mana := 0.0
+## AD-234: base mana regen per tick of the current room before the Scriptorium multiplier.
+var _base_regen := 0.0
 var editor
 var range_sim
 var state := "uninitialized"
@@ -62,6 +64,8 @@ var resonant_clear := false
 ## AD-145: meta locks (opt-in, default empty) and per-run discovery tracking.
 var meta_locked_runes: Array = []
 var meta_locked_artifacts: Array = []
+## AD-234: Scriptorium bonuses (max_hp, max_mana, mana_regen_mult) applied at run start.
+var meta_bonuses: Dictionary = {}
 var _seen_enemies: Dictionary = {}
 ## AD-194: newest-8 first-sighting log [{kind,tick}] for the HUD popup. Presentation only, never saved or snapshotted.
 var first_encounters: Array = []
@@ -165,6 +169,9 @@ func set_meta_locks(runes: Array, artifacts: Array) -> void:
 	meta_locked_runes = runes.duplicate()
 	meta_locked_artifacts = artifacts.duplicate()
 
+func set_meta_bonuses(bonuses: Dictionary) -> void:
+	meta_bonuses = bonuses.duplicate()
+
 ## AD-145: sorted unique ids seen this run, per Compendium category.
 func discoveries() -> Dictionary:
 	var seen_runes: Array = run.unlocked.duplicate() if run != null else []
@@ -194,7 +201,7 @@ func start_new(run_seed: int) -> void:
 	first_encounters.clear()
 	_seen_reactions.clear()
 	run = State.new()
-	run.initialize(run_seed,config,formulas)
+	run.initialize(run_seed,config,formulas,meta_bonuses)
 	rooms = build_sequence(config,run_seed)
 	boss_defeated_events = 0
 	transition_count = 0
@@ -274,6 +281,8 @@ func _build_room(entry: Dictionary) -> Dictionary:
 	# Owner request 2026-11-05: mana fully regenerates on every room change.
 	_base_max_mana = float(session.sim.settings["combat"]["player_max_mana"])
 	session.sim.settings["combat"]["player_max_mana"] = _base_max_mana+run.max_mana_bonus
+	_base_regen = float(session.sim.settings["combat"]["regen_mana_per_tick"])
+	session.sim.settings["combat"]["regen_mana_per_tick"] = _base_regen*run.mana_regen_mult
 	session.player.set_dash_bonus(run.dash_charges_bonus)
 	run.mana = float(session.sim.settings["combat"]["player_max_mana"])
 	session.sim.mana = run.mana
