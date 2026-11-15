@@ -134,6 +134,7 @@ run.summary.ink,Ink earned +%d (total %d)
 run.btn.retry,Retry same seed
 run.btn.new_seed,New seed
 run.btn.title,Title
+run.btn.scriptorium,Scriptorium
 run.notice.retry,Retry same seed: currencies / runes reset
 run.notice.new_seed,New seed: currencies / runes reset
 run.notice.door,Door: %s
@@ -397,6 +398,7 @@ artifact.archivists_quill.desc,On Kill payloads also fire each time an elite or 
 artifact.warding_lantern.name,Warding Lantern
 artifact.warding_lantern.desc,Clearing a room gives a shield that absorbs the next hit.
 menu.compendium,Compendium
+menu.scriptorium,Scriptorium
 compendium.title,Compendium
 compendium.back,Back
 compendium.unknown,???
@@ -588,3 +590,19 @@ run.notice.resonant_clear,Resonant clear! Reward rarity raised
 run.reward.resonant_banner,RESONANT CLEAR: +1 RARITY
 run.reward.bonus_coins,+%d COINS
 run.summary.combo_stats,Reactions: %d   Elements: %d   Spells crafted: %d
+meta_shop.title,Scriptorium
+meta_shop.ink,Arcane Ink: %d
+meta_shop.tier,Tier %d/%d
+meta_shop.cost,Cost: %d Ink
+meta_shop.max,MAX
+meta_shop.buy,Buy
+meta_shop.respec,Respec (refunds all spent Ink)
+meta_shop.back,Back
+meta_shop.need_ink,Need %d more Ink
+meta_shop.name.max_hp,Max HP
+meta_shop.name.max_mana,Max Mana
+meta_shop.name.mana_regen,Mana Regen
+meta_shop.next.max_hp,Next: +%d max HP (total +%d)
+meta_shop.next.max_mana,Next: +%d max mana (total +%d)
+meta_shop.next.mana_regen,Next: +%d%% mana regeneration (total +%d%%)
+meta_shop.next.done,Fully upgraded: +%s

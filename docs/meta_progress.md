@@ -31,8 +31,22 @@ Persistent currency earned in every run and kept on death, quit and win. Currenc
 - **Summary:** the run summary shows `Ink earned +N (total M)` (`run.summary.ink`), where N is this run and M is the saved total after the run is recorded.
 - **Tests:** `tests/test_ad_meta_ink.gd` (config values, add/negative rules, v1/v2 to v3 migration keeping discoveries, ink kept on death/quit/win, save/relaunch round trip). It runs under `run_tests.gd` via `run(t)` and directly with `--script res://tests/test_ad_meta_ink.gd`.
 
+## Scriptorium (AD-234)
+Between-runs upgrades bought with Arcane Ink, 5 tiers each:
+
+| Upgrade | Per tier | Tier costs (Ink) |
+|---|---|---|
+| Max HP | +6 | 15 / 25 / 40 / 60 / 85 |
+| Max mana | +6 | 15 / 25 / 40 / 60 / 85 |
+| Mana regen | +4% | 15 / 25 / 40 / 60 / 85 |
+
+Respec is free and refunds all spent Ink. Buy and respec are saved immediately (`SaveService.buy_upgrade` / `respec_upgrades`).
+- **Data:** the `upgrades` block of `world/data/meta_v1.json`; helpers in `world/meta_progress.gd`.
+- **Applied:** at run start `ui/run_controller.gd` passes `save.meta_bonuses()` to `RunFlow`, and `world/run_state.gd` applies max HP, max mana (the `max_mana_bonus` path) and `mana_regen_mult` (on the in-combat mana gain).
+- **Screen:** `ui/meta_shop_screen.gd` (`scenes/meta_shop.tscn`), opened from the main menu (`ScriptoriumButton`, between Compendium and Settings) and from the run summary (`summary_scriptorium_button`). Keyboard and gamepad navigable; `ui_cancel` closes it. Tests: `tests/test_ad_meta_shop.gd`, `tests/test_ad_menus_functional.gd`.
+
 ## No stat power
-Unlocks only widen which runes and artifacts can appear. Nothing changes HP, damage, mana or any other stat; a test asserts stats are untouched by milestones.
+Unlocks only widen which runes and artifacts can appear. Nothing changes HP, damage, mana or any other stat; a test asserts stats are untouched by milestones. The Scriptorium is the one exception and is bought with Ink, not unlocked.
 
 ## Compendium
 `ui/compendium_screen.gd`, opened from the main menu (`CompendiumButton`). Four sections shown as discovered/total, undiscovered entries show `???`, plus a Milestones list with progress and met/locked marks. Read-only; Back or `ui_cancel` returns to the title. Debug shot state: `AD_UI_SHOT_STATE=compendium`. Tests: `tests/test_ad_meta.gd`.

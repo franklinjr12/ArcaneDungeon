@@ -20,13 +20,16 @@ var artifacts: Array = []
 ## AD-144 merchant upgrades, run-persistent.
 var max_mana_bonus := 0.0
 var dash_charges_bonus := 0
+## AD-234: Scriptorium regen multiplier on the in-combat mana gain (1.0 = base).
+var mana_regen_mult := 1.0
 
-func initialize(run_seed: int, config: Dictionary, formulas_by_id: Dictionary) -> void:
+## `bonuses` (AD-234 Scriptorium, optional): max_hp / max_mana (additive), mana_regen_mult.
+func initialize(run_seed: int, config: Dictionary, formulas_by_id: Dictionary, bonuses: Dictionary = {}) -> void:
 	seed = run_seed
 	sequence_index = 0
-	hp = Difficulty.scale_f(150.0,"player_hp")
+	max_hp = Difficulty.scale_f(150.0,"player_hp") + float(bonuses.get("max_hp",0.0))
+	hp = max_hp
 	mana = Difficulty.scale_f(120.0,"player_mana")
-	max_hp = hp
 	currency = int(config["initial_currency"])
 	unlocked = config["initial_unlocked"].duplicate(true)
 	formulas.clear()
@@ -38,7 +41,8 @@ func initialize(run_seed: int, config: Dictionary, formulas_by_id: Dictionary) -
 	edit_count = 0
 	quick_edit_count = 0
 	artifacts.clear()
-	max_mana_bonus = 0.0
+	max_mana_bonus = float(bonuses.get("max_mana",0.0))
+	mana_regen_mult = float(bonuses.get("mana_regen_mult",1.0))
 	dash_charges_bonus = 0
 
 func snapshot() -> Dictionary:
@@ -47,7 +51,8 @@ func snapshot() -> Dictionary:
 		"formulas":formulas.duplicate(true),"collected":collected.duplicate(true),
 		"purchases":purchases.duplicate(true),"edit_seconds":edit_seconds,
 		"edit_count":edit_count,"quick_edit_count":quick_edit_count,"artifacts":artifacts.duplicate(true),
-		"max_mana_bonus":max_mana_bonus,"dash_charges_bonus":dash_charges_bonus}
+		"max_mana_bonus":max_mana_bonus,"dash_charges_bonus":dash_charges_bonus,
+		"mana_regen_mult":mana_regen_mult}
 
 func restore(data: Variant, registry, max_rooms: int) -> Dictionary:
 	if typeof(data) != TYPE_DICTIONARY:
@@ -74,6 +79,9 @@ func restore(data: Variant, registry, max_rooms: int) -> Dictionary:
 		if data.has(key) and (typeof(data[key]) not in [TYPE_INT,TYPE_FLOAT] or not is_finite(float(data[key])) or float(data[key]) < 0):
 			return {"ok":false,"reason":"RUN_UPGRADES_INVALID"}
 	if data.has("dash_charges_bonus") and not _whole_number(data["dash_charges_bonus"]):
+		return {"ok":false,"reason":"RUN_UPGRADES_INVALID"}
+	# AD-234: optional so saves from before the Scriptorium still load.
+	if data.has("mana_regen_mult") and (typeof(data["mana_regen_mult"]) not in [TYPE_INT,TYPE_FLOAT] or not is_finite(float(data["mana_regen_mult"])) or float(data["mana_regen_mult"]) < 1.0 or float(data["mana_regen_mult"]) > 3.0):
 		return {"ok":false,"reason":"RUN_UPGRADES_INVALID"}
 	var mana_bonus := float(data.get("max_mana_bonus",0.0))
 	if float(data["max_hp"]) < 1.0 or float(data["hp"]) > float(data["max_hp"]) or float(data["mana"]) > Difficulty.scale_f(120.0,"player_mana")+mana_bonus:
@@ -111,6 +119,7 @@ func restore(data: Variant, registry, max_rooms: int) -> Dictionary:
 	artifacts = data["artifacts"].duplicate(true) if data.has("artifacts") else []
 	max_mana_bonus = mana_bonus
 	dash_charges_bonus = int(data.get("dash_charges_bonus",0))
+	mana_regen_mult = float(data.get("mana_regen_mult",1.0))
 	return {"ok":true,"reason":"LOADED"}
 
 func add_artifact(id: String) -> Dictionary:
