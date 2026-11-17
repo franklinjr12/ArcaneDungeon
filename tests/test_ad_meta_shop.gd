@@ -60,8 +60,8 @@ func _done(svc) -> void:
 func _config(t) -> void:
 	t.equal(Meta.upgrade_ids(), ["max_hp", "max_mana", "mana_regen"], "AD-234 upgrade ids")
 	t.equal(float(Meta.upgrade_def("max_hp")["per_tier"]), 6.0, "AD-234 max_hp per tier")
-	t.equal(float(Meta.upgrade_def("max_mana")["per_tier"]), 6.0, "AD-234 max_mana per tier")
-	t.equal(float(Meta.upgrade_def("mana_regen")["per_tier"]), 0.04, "AD-234 mana_regen per tier")
+	t.equal(float(Meta.upgrade_def("max_mana")["per_tier"]), 4.0, "AD-234 max_mana per tier")
+	t.equal(float(Meta.upgrade_def("mana_regen")["per_tier"]), 0.02, "AD-234 mana_regen per tier")
 	for id in Meta.upgrade_ids():
 		t.equal(Meta.max_tier(id), 5, "AD-234 5 tiers: %s" % id)
 		var costs: Array = []
@@ -127,8 +127,8 @@ func _bonuses(t) -> void:
 		Meta.buy(m, "mana_regen")
 	b = Meta.bonuses(m)
 	t.equal(b["max_hp"], 18.0, "AD-234 max_hp bonus")
-	t.equal(b["max_mana"], 30.0, "AD-234 max_mana bonus")
-	t.check(absf(b["mana_regen_mult"] - 1.08) < 0.0001, "AD-234 regen multiplier")
+	t.equal(b["max_mana"], 20.0, "AD-234 max_mana bonus")
+	t.check(absf(b["mana_regen_mult"] - 1.04) < 0.0001, "AD-234 regen multiplier")
 
 func _legacy_and_validation(t) -> void:
 	var legacy := Meta.empty_meta()
@@ -213,7 +213,7 @@ func _screen(t) -> void:
 	t.equal(screen.tier_labels["max_hp"].text, "Tier 0/5", "AD-234 screen shows tier")
 	t.equal(screen.cost_labels["max_hp"].text, "Cost: 15 Ink", "AD-234 screen shows cost")
 	t.equal(screen.next_labels["max_hp"].text, "Next: +6 max HP (total +6)", "AD-234 screen next effect hp")
-	t.equal(screen.next_labels["mana_regen"].text, "Next: +4% mana regeneration (total +4%)", "AD-234 screen next effect regen")
+	t.equal(screen.next_labels["mana_regen"].text, "Next: +2% mana regeneration (total +2%)", "AD-234 screen next effect regen")
 	t.check(not screen.buy_buttons["max_hp"].disabled, "AD-234 screen hp buy enabled with 20 ink")
 	screen.buy_buttons["max_hp"].pressed.emit()
 	t.equal(svc.ink(), 5, "AD-234 screen buy deducts 15 ink")
