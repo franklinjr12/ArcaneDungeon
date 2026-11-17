@@ -101,3 +101,11 @@ Reactions per fought room (resonance popups):
 | skilled | 6 (0.545) | 6 (1.0) | 131 (2.977) | 143 (2.344) |
 
 Top reactions: weak `water_extinguish` 384; typical `water_extinguish` 128, `wet_lightning_arc` 15; skilled `water_extinguish` 129, `wet_lightning_arc` 14. The weak bot's higher count is `water_extinguish` from its single water spell, not mixing. The mixing bots add `wet_lightning_arc` but get few reactions in boss rooms.
+
+## AD-236 warden bench meta profile
+
+`warden_bench.gd` takes `--meta=fresh|full` (user args after `--`, default `fresh`, behaviour unchanged). `full` sets every Scriptorium upgrade to `MetaProgress.max_tier(id)` (15 tiers) and applies `MetaProgress.bonuses` to the session like `run_flow.gd` does at run start (max HP, max mana, regen multiplier). Each fight line carries `meta=` and `damage_taken=`; each summary line adds `wins`, `losses` and `median_damage_taken`.
+
+```
+/usr/local/bin/godot --headless --path . --script res://tests/bench/warden_bench.gd -- --meta=full | grep WARDEN_BENCH_SUMMARY
+```
