@@ -760,7 +760,9 @@ func _physics_process(_delta: float) -> void:
 	if refresh_counter%7 == 0:
 		var key: String = str(flow.run.sequence_index)+":"+flow.state+":"+str(flow.reward_collected)
 		if key != scene_key:
-			if flow.state == "cleared" and flow.resonant_clear:
+			if flow.state == "cleared" and flow.post_boss_heal > 0.0:
+				current_notice = tr("run.notice.post_boss_heal") % int(round(float(flow.config.get("post_boss_heal_pct",0.0))*100.0))
+			elif flow.state == "cleared" and flow.resonant_clear:
 				current_notice = tr("run.notice.resonant_clear")
 			elif flow.state == "cleared" and not flow.reward_collected and not flow.reward_options.is_empty():
 				current_notice = tr("run.notice.room_cleared") % flow.reward_options.size()
