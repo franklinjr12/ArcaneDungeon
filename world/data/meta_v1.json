@@ -4,8 +4,8 @@
 	"ink": {"room_cleared": 3, "mini_boss": 8, "boss": 20, "new_stage": 5, "run_won": 15},
 	"upgrades": {
 		"max_hp": {"per_tier": 6, "costs": [15, 25, 40, 60, 85]},
-		"max_mana": {"per_tier": 6, "costs": [15, 25, 40, 60, 85]},
-		"mana_regen": {"per_tier": 0.04, "costs": [15, 25, 40, 60, 85]}
+		"max_mana": {"per_tier": 4, "costs": [15, 25, 40, 60, 85]},
+		"mana_regen": {"per_tier": 0.02, "costs": [15, 25, 40, 60, 85]}
 	},
 	"categories": ["runes", "reactions", "enemies", "artifacts"],
 	"compendium": {
