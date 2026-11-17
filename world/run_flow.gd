@@ -40,6 +40,8 @@ var state := "uninitialized"
 var reward_options: Array = []
 var reward_collected := false
 var boss_defeated_events := 0
+## AD-235: HP restored by the last boss kill (0 after other clears, or when already at max). Read by the UI toast.
+var post_boss_heal := 0.0
 var transition_count := 0
 var edit_policy := "workshop_only"
 var mode := "combat"
@@ -482,6 +484,15 @@ func step(command: Dictionary = {}) -> Dictionary:
 func _credit_ink(key: String) -> void:
 	ink_earned += int(MetaProgress.ink_rules().get(key,0))
 
+## AD-235: after a boss dies, heal post_boss_heal_pct (run_v2.json) of max HP, capped at max. Mini-bosses never call this.
+func _post_boss_heal() -> void:
+	var health = session.sim.actor.health
+	var before: float = health.current
+	var target: float = minf(health.maximum, before + health.maximum * float(config.get("post_boss_heal_pct",0.0)))
+	post_boss_heal = maxf(0.0, target - before)
+	health.current = target
+	run.hp = target
+
 func _finish_combat() -> void:
 	if state != "fighting":
 		return
@@ -506,9 +517,11 @@ func _finish_combat() -> void:
 	var lantern = session.sim.artifacts
 	if lantern != null and lantern.has("warding_lantern"):
 		session.player.shield = int(lantern.param("warding_lantern","shield_hits",1))
+	post_boss_heal = 0.0
 	if room.values["type"] == "boss":
 		boss_defeated_events += 1
 		_credit_ink("boss")
+		_post_boss_heal()
 	elif room.values.has("mini_boss_slot"):
 		# Mini-boss rooms are exactly the ones that own a mini_boss_slot (rooms_*_v1.json).
 		_credit_ink("mini_boss")

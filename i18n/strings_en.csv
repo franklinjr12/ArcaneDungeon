@@ -52,6 +52,7 @@ run.notice.dev_cheat,Dev cheat: %s
 run.notice.test_cast,Test cast slot %d: %s
 run.notice.range_reset,Safe test range reset
 run.notice.room_cleared,"Room cleared! Pick a reward (keys 1-%d), then walk to EXIT and press F"
+run.notice.post_boss_heal,Recovered %d%% HP
 run.notice.opt_in_first,Opt in first; data are kept locally and never uploaded.
 run.notice.export_ok,"Local files: user://arcane_m4_experiment.{json,csv}"
 run.notice.export_failed,Export failed

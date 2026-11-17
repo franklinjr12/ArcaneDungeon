@@ -32,6 +32,7 @@
   "boss_currency": 95,
   "workshop_restore_hp": 150,
   "workshop_restore_mana": 120,
+  "post_boss_heal_pct": 0.25,
   "edit_policy": "workshop_only",
   "max_active_enemies": 8,
   "reward_choices": 3,
