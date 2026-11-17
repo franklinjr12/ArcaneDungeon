@@ -4,7 +4,7 @@ extends Node
 const Settings = preload("res://game/core/settings.gd")
 const ErrorLog = preload("res://game/core/error_log.gd")
 const MetaProgress = preload("res://world/meta_progress.gd")
-const SCHEMA_VERSION := 2
+const SCHEMA_VERSION := 3
 const SETTINGS_FILE := "settings.cfg"
 const PROFILE_FILE := "profile.json"
 const RUN_FILE := "run.json"
@@ -79,6 +79,7 @@ static func migrate(data: Dictionary) -> Dictionary:
 		match version:
 			0: d = _migrate_v0_to_v1(d)
 			1: d = _migrate_v1_to_v2(d)
+			2: d = _migrate_v2_to_v3(d)
 			_: break
 		version = int(d.get("schema_version", version + 1))
 	return d
@@ -99,6 +100,13 @@ static func _migrate_v1_to_v2(d: Dictionary) -> Dictionary:
 	var out := d.duplicate(true)
 	out["meta"] = MetaProgress.empty_meta()
 	out["schema_version"] = 2
+	return out
+
+static func _migrate_v2_to_v3(d: Dictionary) -> Dictionary:
+	var out := d.duplicate(true)
+	if typeof(out.get("meta")) == TYPE_DICTIONARY and not (out["meta"] as Dictionary).has("ink"):
+		out["meta"]["ink"] = 0
+	out["schema_version"] = 3
 	return out
 
 static func _is_num(v) -> bool:
@@ -194,6 +202,9 @@ func record_run(summary: Dictionary) -> void:
 	s["last_seed"] = int(summary.get("seed", -1))
 	if typeof(summary.get("discovered")) == TYPE_DICTIONARY:
 		MetaProgress.merge(profile["meta"], summary["discovered"])
+	var earned = summary.get("ink_earned", 0)
+	if typeof(earned) == TYPE_INT and earned > 0:
+		MetaProgress.add_ink(profile["meta"], earned)
 	save_profile()
 
 ## AD-145: merges discoveries, saves once; returns the new ids per category and newly met milestones.
@@ -202,6 +213,25 @@ func record_discoveries(discoveries: Dictionary) -> Dictionary:
 	var added := MetaProgress.merge(profile["meta"], discoveries)
 	save_profile()
 	return {"new": added, "milestones": MetaProgress.newly_met(before, profile["meta"])}
+
+func ink() -> int:
+	return int(profile["meta"].get("ink", 0))
+
+## AD-234: Scriptorium purchases; each change is saved immediately.
+func buy_upgrade(id: String) -> bool:
+	if not MetaProgress.buy(profile["meta"], id):
+		return false
+	save_profile()
+	return true
+
+func respec_upgrades() -> int:
+	var refunded := MetaProgress.respec(profile["meta"])
+	if refunded > 0:
+		save_profile()
+	return refunded
+
+func meta_bonuses() -> Dictionary:
+	return MetaProgress.bonuses(profile["meta"])
 
 func meta() -> Dictionary:
 	return profile["meta"].duplicate(true)

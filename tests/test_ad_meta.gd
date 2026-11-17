@@ -168,7 +168,7 @@ func _profile(t) -> void:
 	# v1 file migrates with stats kept.
 	_write("profile.json", JSON.stringify({"schema_version": 1, "stats": {"runs": 4, "wins": 1, "deaths": 3, "best_time_seconds": 50.0, "last_seed": 9}}))
 	svc2.load_profile()
-	t.equal(svc2.profile["schema_version"], 2, "AD-145 v1 migrated to v2")
+	t.equal(svc2.profile["schema_version"], 3, "AD-145 v1 migrated to current schema")
 	t.equal(svc2.meta(), Meta.empty_meta(), "AD-145 v1 gets empty meta")
 	t.equal(svc2.stats()["runs"], 4, "AD-145 v1 stats kept")
 	# Invalid meta / junk -> quarantined, defaults.
@@ -182,7 +182,7 @@ func _profile(t) -> void:
 	_write("profile.json", "{not json")
 	svc2.load_profile()
 	t.equal(_corrupt_count(), 3, "AD-145 non-JSON quarantined")
-	_write("profile.json", JSON.stringify({"schema_version": 3, "stats": {}}))
+	_write("profile.json", JSON.stringify({"schema_version": 4, "stats": {}}))
 	svc2.load_profile()
 	t.equal(_corrupt_count(), 4, "AD-145 future version quarantined")
 	t.equal(svc2.profile, Service.default_profile(), "AD-145 defaults after quarantine")

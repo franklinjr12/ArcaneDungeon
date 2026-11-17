@@ -13,6 +13,7 @@ const Editor = preload("res://magic/editor/spell_editor.gd")
 const Session = preload("res://combat/combat_session.gd")
 const Runner = preload("res://magic/runtime/spell_runner.gd")
 const ExperimentLog = preload("res://debug/experiment_log.gd")
+const MetaProgress = preload("res://world/meta_progress.gd")
 const CONFIG := "res://world/data/vertical_slice_v1.json"
 const CONFIG_V2 := "res://world/data/run_v2.json"
 const SAVE_VERSION := 1
@@ -31,6 +32,8 @@ var rewards
 var merchant
 ## AD-144: base max mana of the current room before the merchant bonus.
 var _base_max_mana := 0.0
+## AD-234: base mana regen per tick of the current room before the Scriptorium multiplier.
+var _base_regen := 0.0
 var editor
 var range_sim
 var state := "uninitialized"
@@ -46,6 +49,8 @@ var win_events := 0
 # Run-local summary counters (not in RunState, so the save schema is untouched).
 # ticks_elapsed counts fighting-state step() calls only (combat time, deterministic).
 var rooms_cleared := 0
+## AD-233: Arcane Ink credited so far this run (earn rules in meta_v1.json). Saved to the profile when the run ends.
+var ink_earned := 0
 var kills := 0
 var ticks_elapsed := 0
 var spells_used := 0
@@ -59,6 +64,8 @@ var resonant_clear := false
 ## AD-145: meta locks (opt-in, default empty) and per-run discovery tracking.
 var meta_locked_runes: Array = []
 var meta_locked_artifacts: Array = []
+## AD-234: Scriptorium bonuses (max_hp, max_mana, mana_regen_mult) applied at run start.
+var meta_bonuses: Dictionary = {}
 var _seen_enemies: Dictionary = {}
 ## AD-194: newest-8 first-sighting log [{kind,tick}] for the HUD popup. Presentation only, never saved or snapshotted.
 var first_encounters: Array = []
@@ -162,6 +169,9 @@ func set_meta_locks(runes: Array, artifacts: Array) -> void:
 	meta_locked_runes = runes.duplicate()
 	meta_locked_artifacts = artifacts.duplicate()
 
+func set_meta_bonuses(bonuses: Dictionary) -> void:
+	meta_bonuses = bonuses.duplicate()
+
 ## AD-145: sorted unique ids seen this run, per Compendium category.
 func discoveries() -> Dictionary:
 	var seen_runes: Array = run.unlocked.duplicate() if run != null else []
@@ -191,13 +201,14 @@ func start_new(run_seed: int) -> void:
 	first_encounters.clear()
 	_seen_reactions.clear()
 	run = State.new()
-	run.initialize(run_seed,config,formulas)
+	run.initialize(run_seed,config,formulas,meta_bonuses)
 	rooms = build_sequence(config,run_seed)
 	boss_defeated_events = 0
 	transition_count = 0
 	outcome = ""
 	win_events = 0
 	rooms_cleared = 0
+	ink_earned = 0
 	kills = 0
 	ticks_elapsed = 0
 	spells_used = 0
@@ -270,6 +281,8 @@ func _build_room(entry: Dictionary) -> Dictionary:
 	# Owner request 2026-11-05: mana fully regenerates on every room change.
 	_base_max_mana = float(session.sim.settings["combat"]["player_max_mana"])
 	session.sim.settings["combat"]["player_max_mana"] = _base_max_mana+run.max_mana_bonus
+	_base_regen = float(session.sim.settings["combat"]["regen_mana_per_tick"])
+	session.sim.settings["combat"]["regen_mana_per_tick"] = _base_regen*run.mana_regen_mult
 	session.player.set_dash_bonus(run.dash_charges_bonus)
 	run.mana = float(session.sim.settings["combat"]["player_max_mana"])
 	session.sim.mana = run.mana
@@ -466,6 +479,9 @@ func step(command: Dictionary = {}) -> Dictionary:
 		_finish_combat()
 	return {"ok":true,"state":state}
 
+func _credit_ink(key: String) -> void:
+	ink_earned += int(MetaProgress.ink_rules().get(key,0))
+
 func _finish_combat() -> void:
 	if state != "fighting":
 		return
@@ -492,10 +508,17 @@ func _finish_combat() -> void:
 		session.player.shield = int(lantern.param("warding_lantern","shield_hits",1))
 	if room.values["type"] == "boss":
 		boss_defeated_events += 1
+		_credit_ink("boss")
+	elif room.values.has("mini_boss_slot"):
+		# Mini-boss rooms are exactly the ones that own a mini_boss_slot (rooms_*_v1.json).
+		_credit_ink("mini_boss")
+	else:
+		_credit_ink("room_cleared")
 	if run.sequence_index >= rooms.size()-1:
 		# Final room cleared: run complete, no reward choice.
 		outcome = "won"
 		win_events += 1
+		_credit_ink("run_won")
 		experiment.record("slice_complete",{"room_index":run.sequence_index})
 		state = "won"
 		run_log.finish("won",run.artifacts,null)
@@ -526,7 +549,7 @@ func _death_cause() -> Dictionary:
 
 func summary() -> Dictionary:
 	return {"outcome":outcome,"seed":run.seed,"rooms_cleared":rooms_cleared,"kills":kills,
-		"ticks":ticks_elapsed,"seconds":float(ticks_elapsed)/float(session.sim.clock.tick_rate),
+		"ink_earned":ink_earned,"ticks":ticks_elapsed,"seconds":float(ticks_elapsed)/float(session.sim.clock.tick_rate),
 		"spells_used":spells_used,"reactions_triggered":run_log.reactions_triggered,
 		"elements_used":run_log.elements_used.size(),"spells_crafted":run_log.spells_crafted.size()}
 
@@ -603,11 +626,14 @@ func try_exit(position: Vector2, take_optional: bool = true) -> Dictionary:
 		if mode != "workshop":
 			run.hp = session.sim.actor.health.current
 			run.mana = session.sim.mana
+	var previous_stage := int(rooms[run.sequence_index].get("stage",0))
 	if not take_optional and next_is_optional():
 		logs.append({"kind":"optional_skipped","id":rooms[run.sequence_index+1]["id"]})
 		run.sequence_index += 1
 	run.sequence_index += 1
 	transition_count += 1
+	if int(rooms[run.sequence_index].get("stage",0)) > previous_stage:
+		_credit_ink("new_stage")
 	var outcome: Dictionary = _enter_current()
 	if outcome["ok"]:
 		logs.append({"kind":"transition","index":run.sequence_index})
@@ -776,7 +802,7 @@ func save_payload() -> Dictionary:
 	return {"version":SAVE_VERSION,"config_path":config_path,"run":run.snapshot(),
 		"counters":{"rooms_cleared":rooms_cleared,"kills":kills,"ticks_elapsed":ticks_elapsed,
 			"spells_used":spells_used,"wet_kills":wet_kills,"arcs":arc_total(),
-			"boss_defeated_events":boss_defeated_events,"transition_count":transition_count},
+			"boss_defeated_events":boss_defeated_events,"transition_count":transition_count,"ink_earned":ink_earned},
 		"seen_enemies":enemies,"seen_reactions":reactions,
 		"meta_locked_runes":meta_locked_runes.duplicate(),"meta_locked_artifacts":meta_locked_artifacts.duplicate(),
 		"merchant_stock":merchant.stock.duplicate(true),"edit_policy":edit_policy,"run_log":run_log.snapshot()}
@@ -852,6 +878,7 @@ func resume(payload: Variant) -> Dictionary:
 	wet_kills = int(counters["wet_kills"])
 	boss_defeated_events = int(counters["boss_defeated_events"])
 	transition_count = int(counters["transition_count"])
+	ink_earned = int(counters["ink_earned"]) if _whole(counters.get("ink_earned")) and float(counters["ink_earned"]) >= 0.0 else 0
 	_seen_enemies.clear()
 	first_encounters.clear()
 	for id in payload["seen_enemies"]:

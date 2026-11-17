@@ -7,7 +7,9 @@ func _initialize() -> void:
 
 func _run_all() -> void:
 	var context := TestContext.new()
-	var files := DirAccess.get_files_at("res://tests")
+	# Negative probe: only the injected failure runs, so it does not repeat the full ~5 min suite.
+	var self_test := "--self-test-failure" in OS.get_cmdline_user_args()
+	var files := PackedStringArray() if self_test else DirAccess.get_files_at("res://tests")
 	files.sort()
 	var suite_count := 0
 	for filename in files:
@@ -24,9 +26,12 @@ func _run_all() -> void:
 			continue
 		print("SUITE ", filename)
 		suite.run(context)
-	if "--self-test-failure" in OS.get_cmdline_user_args():
+		if not suite is RefCounted:
+			suite.free()  # AD-233: SceneTree suites that can also run standalone
+	if self_test:
 		context.check(false, "intentional failure probe")
-	context.check(suite_count > 0, "at least one test suite discovered")
+	else:
+		context.check(suite_count > 0, "at least one test suite discovered")
 	print("TEST SUMMARY: %d passed / %d failed / %d suites" % [context.passed, context.failed, suite_count])
 	for failure in context.failures:
 		printerr("FAILED: ", failure)

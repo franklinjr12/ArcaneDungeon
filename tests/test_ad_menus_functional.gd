@@ -142,6 +142,7 @@ func run(t) -> void:
 	scene.queue_free()
 	vp.queue_free()
 	_title_keyboard(t)
+	_scriptorium(t)
 	vp = _viewport()
 
 	_new_settings(t, root, save)
@@ -165,6 +166,42 @@ func _title_keyboard(t) -> void:
 	t.check(menu.settings_screen != null and menu.settings_screen.visible, "AD-205 title: click Settings opens it")
 	_keyboard(t, vp, menu.settings_screen, "title", func(): t.check(menu.settings_screen.close_open_popup(), "AD-205 title: close_open_popup closes the open dropdown"))
 	t.check(menu.settings_screen.visible, "AD-205 title: popup cancel leaves Settings open")
+	vp.queue_free()
+
+## AD-234: the Scriptorium is reachable from the title menu and the run summary by keyboard/gamepad actions.
+func _scriptorium(t) -> void:
+	var vp := _viewport()
+	var menu: Node = load("res://scenes/main.tscn").instantiate()
+	menu.show_debug_entries = false
+	vp.add_child(menu)
+	var btn: Button = menu.find_child("ScriptoriumButton", true, false)
+	t.check(btn != null and btn.text == menu.tr("menu.scriptorium"), "AD-234 title: ScriptoriumButton exists")
+	var compendium: Button = menu.find_child("CompendiumButton", true, false)
+	var settings: Button = menu.find_child("SettingsButton", true, false)
+	t.check(compendium.get_node(compendium.focus_neighbor_bottom) == btn and btn.get_node(btn.focus_neighbor_bottom) == settings, "AD-234 title: Scriptorium sits between Compendium and Settings in the focus chain")
+	t.check(menu.panel.get_global_rect().encloses(btn.get_global_rect()), "AD-234 title: ScriptoriumButton inside the menu panel")
+	btn.grab_focus()
+	_action(vp, "ui_accept")
+	var screen = menu.scriptorium_screen
+	t.check(screen != null and screen.visible and not menu.panel.visible, "AD-234 title: ui_accept opens the Scriptorium")
+	var first := _focus(vp)
+	t.check(first != null and screen.is_ancestor_of(first), "AD-234 title: focus lands inside the Scriptorium")
+	_action(vp, "ui_down")
+	t.check(_focus(vp) != null and _focus(vp) != first and screen.is_ancestor_of(_focus(vp)), "AD-234 title: ui_down moves between Scriptorium rows")
+	_action(vp, "ui_cancel")
+	t.check(not screen.visible and menu.panel.visible and _focus(vp) == btn, "AD-234 title: ui_cancel closes it and focus returns to the button")
+	vp.queue_free()
+	vp = _viewport()
+	var scene := _scene(vp)
+	t.check(scene.apply_debug_shot_state("summary"), "AD-234 run: summary shown")
+	var sb: Button = scene.summary_scriptorium_button
+	t.check(sb != null and sb.visible, "AD-234 run: summary exposes summary_scriptorium_button")
+	scene._open_scriptorium()
+	var sc = scene.scriptorium_screen
+	t.check(sc != null and sc.visible and not scene.summary_overlay.visible, "AD-234 run: Scriptorium opens over the summary")
+	_action(vp, "ui_cancel")
+	t.check(not sc.visible and scene.summary_overlay.visible and _focus(vp) == scene.summary_scriptorium_button, "AD-234 run: ui_cancel returns focus to the summary Scriptorium button")
+	scene.queue_free()
 	vp.queue_free()
 
 ## Keyboard-only walk of an open Settings screen: initial focus, focus ring, vertical chains, Tab/Q/E, slider, dropdown popup.
