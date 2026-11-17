@@ -1,0 +1,310 @@
+{
+  "anchors": [
+    [
+      700,
+      190
+    ],
+    [
+      700,
+      710
+    ],
+    [
+      300,
+      450
+    ],
+    [
+      1030,
+      450
+    ]
+  ],
+  "display_name": "Undead warden",
+  "enrage_speed_multiplier": 1.2,
+  "grave_rise": {
+    "cap": 3,
+    "kind": "bone_thrall",
+    "offsets": [
+      [
+        -110,
+        -110
+      ],
+      [
+        -110,
+        110
+      ]
+    ],
+    "radius": 80,
+    "windup_ticks": 54
+  },
+  "hp": 1800,
+  "kind": "undead_warden",
+  "melee": {
+    "overhead_slam": {
+      "damage": 24,
+      "reach": 150,
+      "shape": "slam",
+      "windup_ticks": 48
+    },
+    "sweep_1": {
+      "arc_degrees": 150,
+      "damage": 14,
+      "reach": 150,
+      "shape": "arc",
+      "windup_ticks": 40
+    },
+    "sweep_2": {
+      "arc_degrees": 150,
+      "damage": 14,
+      "reach": 150,
+      "shape": "arc",
+      "windup_ticks": 32
+    }
+  },
+  "min_telegraph_ticks": 30,
+  "phase_threshold": 0.5,
+  "phases": [
+    {
+      "movement": {
+        "mode": "walk_to_player",
+        "speed": 120,
+        "stop_range": 110
+      },
+      "pool": [
+        {
+          "combo": [
+            "sweep_1",
+            "sweep_2",
+            "overhead_slam"
+          ],
+          "gap_ticks": 12,
+          "max_range": 260,
+          "weight": 4
+        },
+        {
+          "pattern": "spear_line",
+          "weight": 3
+        },
+        {
+          "pattern": "grave_rise",
+          "weight": 2
+        },
+        {
+          "move": {
+            "anchor_pick": "nearest",
+            "max_ticks": 150,
+            "mode": "reposition",
+            "speed": 120
+          },
+          "weight": 1
+        },
+        {
+          "min_range": 420,
+          "move": {
+            "damage": 10,
+            "flight_ticks": 22,
+            "mode": "leap",
+            "radius": 90,
+            "target": "player",
+            "telegraph_ticks": 48
+          },
+          "weight": 2
+        }
+      ],
+      "threshold": 1.0,
+      "windup_ticks": 48
+    },
+    {
+      "movement": {
+        "margin": 50,
+        "mode": "strafe",
+        "preferred_range": 260,
+        "speed": 120
+      },
+      "pool": [
+        {
+          "big": true,
+          "move": {
+            "burst_delay_ticks": 18,
+            "damage": 20,
+            "flight_ticks": 24,
+            "mode": "leap",
+            "radius": 120,
+            "shockwave": {
+              "damage": 14,
+              "max_radius": 420,
+              "speed": 340,
+              "width": 36
+            },
+            "target": "player",
+            "telegraph_ticks": 50
+          },
+          "weight": 4
+        },
+        {
+          "pattern": "spear_line",
+          "weight": 3
+        },
+        {
+          "pattern": "grave_rise",
+          "weight": 2
+        },
+        {
+          "combo": [
+            "sweep_1",
+            "sweep_2",
+            "overhead_slam"
+          ],
+          "gap_ticks": 12,
+          "max_range": 260,
+          "weight": 2
+        },
+        {
+          "move": {
+            "anchor_pick": "farthest",
+            "max_ticks": 150,
+            "mode": "reposition",
+            "speed": 120
+          },
+          "weight": 1
+        }
+      ],
+      "threshold": 0.6,
+      "transition": {
+        "arena_change": {
+          "clear_hazards": true,
+          "props": [
+            {
+              "id": "warden_pillar_1",
+              "kind": "boss_pillar",
+              "position": [
+                470,
+                250
+              ]
+            },
+            {
+              "id": "warden_pillar_2",
+              "kind": "boss_pillar",
+              "position": [
+                470,
+                650
+              ]
+            },
+            {
+              "id": "warden_pillar_3",
+              "kind": "boss_pillar",
+              "position": [
+                850,
+                250
+              ]
+            },
+            {
+              "id": "warden_pillar_4",
+              "kind": "boss_pillar",
+              "position": [
+                850,
+                650
+              ]
+            }
+          ]
+        },
+        "roar_ticks": 90
+      },
+      "windup_ticks": 44
+    },
+    {
+      "movement": {
+        "mode": "walk_to_player",
+        "speed": 144,
+        "stop_range": 110
+      },
+      "pool": [
+        {
+          "combo": [
+            "sweep_1",
+            "sweep_2",
+            "overhead_slam"
+          ],
+          "gap_ticks": 12,
+          "max_range": 260,
+          "weight": 5
+        },
+        {
+          "pattern": "spear_line",
+          "weight": 2
+        },
+        {
+          "pattern": "radial",
+          "weight": 2
+        },
+        {
+          "big": true,
+          "move": {
+            "burst_delay_ticks": 18,
+            "damage": 20,
+            "flight_ticks": 24,
+            "mode": "leap",
+            "radius": 120,
+            "shockwave": {
+              "damage": 14,
+              "max_radius": 420,
+              "speed": 340,
+              "width": 36
+            },
+            "target": "player",
+            "telegraph_ticks": 50
+          },
+          "weight": 3
+        },
+        {
+          "move": {
+            "anchor_pick": "nearest",
+            "max_ticks": 120,
+            "mode": "reposition",
+            "speed": 144
+          },
+          "weight": 1
+        }
+      ],
+      "threshold": 0.25,
+      "timed_summon": {
+        "every_ticks": 1200,
+        "first_ticks": 120
+      },
+      "transition": {
+        "roar_ticks": 60
+      },
+      "windup_scale": 0.85,
+      "windup_ticks": 40
+    }
+  ],
+  "pillar_debris": {
+    "radius": 190,
+    "stun_ticks": 120
+  },
+  "position": [
+    1030,
+    450
+  ],
+  "radial_damage": 9,
+  "radial_shots": 8,
+  "radius": 49,
+  "recovery_ticks": 44,
+  "second_phase_windup_ticks": 33,
+  "shot_damage": 16,
+  "shot_speed": 300,
+  "shot_spread": 0,
+  "spear_line": {
+    "count": 3,
+    "damage": 16,
+    "radius": 62,
+    "spacing": 150,
+    "start": 120,
+    "windup_ticks": 54
+  },
+  "stagger": {
+    "damage_taken_multiplier": 1.5,
+    "ticks": 120
+  },
+  "telegraph_radius": 190,
+  "walk_speed": 120,
+  "windup_ticks": 48
+}
