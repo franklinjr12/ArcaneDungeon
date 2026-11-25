@@ -1,0 +1,120 @@
+{
+ "frames": [
+  {
+   "filename": "ad_prp_chains_ruins_hanging_00",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 200
+  },
+  {
+   "filename": "ad_prp_chains_ruins_sagging_00",
+   "frame": {
+    "x": 16,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 200
+  },
+  {
+   "filename": "ad_prp_chains_ruins_floor_pile_00",
+   "frame": {
+    "x": 32,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 200
+  }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_prp_chains_ruins.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 48,
+   "h": 16
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "hanging",
+    "from": 0,
+    "to": 0,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "sagging",
+    "from": 1,
+    "to": 1,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "floor_pile",
+    "from": 2,
+    "to": 2,
+    "direction": "forward",
+    "color": "#000000ff"
+   }
+  ],
+  "slices": [
+   {
+    "name": "pivot",
+    "keys": [
+     {
+      "frame": 0,
+      "bounds": {
+       "x": 8,
+       "y": 14,
+       "w": 1,
+       "h": 1
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

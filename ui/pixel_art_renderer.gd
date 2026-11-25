@@ -15,12 +15,14 @@ const ICONS = ["fire","water","lightning","projectile","burst","orb","homing","s
 	"health","mana","rune","coin","dodge","wet","burning","charged","damage","door","shop","book","staff","shield"]
 const EFFECT_ROWS = ["fire","water","lightning","orb","enemy","arc","impact","dodge"]
 ## AD-137 placeholder art: new Stage 1 kinds borrow an existing sprite until the art import row (tinted by tuning color).
-const PLACEHOLDER_KIND := {"ghoul_stalker":"bone_thrall","riptide_leaper":"cistern_slime","rune_sentry":"ossuary_shieldbearer","grave_mite":"bone_thrall","ash_censer":"lantern_wisp","tide_siphon":"drowned_acolyte","lamprey":"deep_eel"}
+const PLACEHOLDER_KIND := {"riptide_leaper":"cistern_slime","rune_sentry":"ossuary_shieldbearer","grave_mite":"bone_thrall","ash_censer":"lantern_wisp","tide_siphon":"drowned_acolyte","lamprey":"deep_eel"}
 const F = {"mage":MAGE,"bone_thrall":PURSUER,"fallen_adept":RANGED,"grave_hound":FLANKER,"undead_warden":BOSS,"dummy":DUMMY}
 
 # AD-030: debug-only swap to art/export sprites (F6). Default stays assets/pixel.
 const EXPORT_MANIFEST := "res://art/export/manifest.json"
 const EXPORT_MAP := "res://art/export/engine_map.json"
+const RUINS_WALL_MASS := "ad_til_ruins_wall_mass"
+static var _ruins_pres: Dictionary = {}
 const PRESENTATION := "res://world/data/presentation_v1.json"
 static var use_art_export := false
 static var _telegraph_styles: Dictionary = {}
@@ -639,8 +641,10 @@ static func tile_floor(canvas: CanvasItem, view: Rect2, offset: Vector2, stage: 
 	if stage == 2 and _cistern_ready():
 		_tile_floor_cistern(canvas, view, offset, stage)
 		return
-	if use_art_export:
+	if use_art_export or (stage == 0 and ruins_art_ready()):
 		_tile_floor_export(canvas, view, offset, stage)
+		if stage == 0:
+			draw_ruins_backdrop(canvas, view)
 		return
 	canvas.draw_rect(Rect2(Vector2.ZERO,view.size),Color("#0f1924"))
 	var max_x := int(ceil(view.size.x/32))+3
@@ -659,6 +663,9 @@ static func tile_floor(canvas: CanvasItem, view: Rect2, offset: Vector2, stage: 
 	# Avoid bright grid: reference is continuous carved flagstones.
 
 static func decorations(canvas: CanvasItem, offset: Vector2, stage: int = 0) -> void:
+	# AD-249: Ruins rooms use the data-driven decor list (presentation_v1.json ruins.decor, keyed by room id meta).
+	if stage == 0 and ruins_art_ready() and _draw_ruins_decor(canvas, offset, str(canvas.get_meta("room_id", ""))):
+		return
 	# Decorative-only; never implicitly introduces a collectible or solid obstacle.
 	var placements := [
 		[Vector2(108,104),3],[Vector2(304,105),2],[Vector2(746,124),7],
@@ -675,7 +682,30 @@ static func decorations(canvas: CanvasItem, offset: Vector2, stage: int = 0) -> 
 		canvas.draw_texture_rect_region(PROPS,Rect2(at-Vector2(24,35),Vector2(48,48)),
 			Rect2(Vector2(n*48,0),Vector2(48,48)))
 
-static func walls(canvas: CanvasItem, wall_rects: Array, offset: Vector2) -> void:
+## AD-249: draws presentation ruins.decor[room_id] (kind, x, y = foot point, side); false if the room has no list.
+static func _draw_ruins_decor(canvas: CanvasItem, offset: Vector2, room_id: String) -> bool:
+	var pres := ruins_presentation()
+	var list: Array = pres.get("decor", {}).get(room_id, [])
+	if not bool(pres.get("enabled", false)) or list.is_empty():
+		return false
+	var kinds: Dictionary = pres.get("decor_kinds", {})
+	for entry in list:
+		var k: Dictionary = kinds.get(str(entry[0]), {})
+		var stem := str(k.get("stem", ""))
+		if not _manifest.has(stem) or not _manifest[stem]["tags"].has(str(k.get("tag", ""))):
+			continue
+		var j: Dictionary = _export_json(stem)
+		var f: Dictionary = j["frames"][int(_manifest[stem]["tags"][str(k["tag"])]["from"])]["frame"]
+		var region := Rect2(f["x"], f["y"], f["w"], f["h"])
+		var pv: Array = _manifest[stem]["pivot"]
+		var foot := Vector2(float(entry[1]), float(entry[2])) - offset
+		canvas.draw_texture_rect_region(_texs[stem], Rect2(foot - Vector2(float(pv[0]), float(pv[1])) * 2.0, region.size * 2.0), region)
+	return true
+
+static func walls(canvas: CanvasItem, wall_rects: Array, offset: Vector2, stage: int = 0) -> void:
+	if stage == 0 and ruins_art_ready():
+		_walls_ruins(canvas, wall_rects, offset)
+		return
 	for wall in wall_rects:
 		canvas.draw_rect(Rect2(wall.position-offset-Vector2(4,7),wall.size+Vector2(8,14)),Color("#0b1218",0.84))
 		for y in range(0,int(wall.size.y),32):
@@ -687,6 +717,53 @@ static func walls(canvas: CanvasItem, wall_rects: Array, offset: Vector2) -> voi
 					Rect2(Vector2((tile%8)*32,32),dim))
 		canvas.draw_rect(Rect2(wall.position-offset,wall.size),Color("#bf8a47"),false,2)
 		canvas.draw_line(wall.position-offset+Vector2(3,4),wall.position-offset+Vector2(wall.size.x-3,4),Color("#dcb773",0.7),1)
+
+## AD-249 map 1: presentation_v1.json "ruins" block (backdrop/vignette stems, on/off flag, vignette alpha).
+static func ruins_presentation() -> Dictionary:
+	if _ruins_pres.is_empty():
+		var data = JSON.parse_string(FileAccess.get_file_as_string(PRESENTATION))
+		_ruins_pres = data["ruins"] if data is Dictionary and data.has("ruins") else {"_": true}
+	return _ruins_pres
+
+static func ruins_art_ready() -> bool:
+	_export_data()
+	return _manifest.has(RUINS_WALL_MASS)
+
+## Ruins walls: AD-244 wall-mass cells (16 px art, scale 2 = 32 units), frame picked by a deterministic cell hash.
+static func _walls_ruins(canvas: CanvasItem, wall_rects: Array, offset: Vector2) -> void:
+	var j: Dictionary = _export_json(RUINS_WALL_MASS)
+	var tex: Texture2D = _texs[RUINS_WALL_MASS]
+	var tg: Dictionary = _manifest[RUINS_WALL_MASS]["tags"]["top_mass"]
+	for wall in wall_rects:
+		canvas.draw_rect(Rect2(wall.position-offset-Vector2(4,7),wall.size+Vector2(8,14)),Color("#0b1218",0.84))
+		for y in range(0,int(wall.size.y),32):
+			for x in range(0,int(wall.size.x),32):
+				var gx := int(floor((wall.position.x+x)/32.0))
+				var gy := int(floor((wall.position.y+y)/32.0))
+				var h: int = (gx * 73856093 ^ gy * 19349663) & 0x7fffffff
+				var f: Dictionary = j["frames"][int(tg["from"]) + h % int(tg["frames"])]["frame"]
+				var dim := Vector2(minf(32,wall.size.x-x),minf(32,wall.size.y-y))
+				canvas.draw_texture_rect_region(tex,Rect2(wall.position+Vector2(x,y)-offset,dim),
+					Rect2(f["x"],f["y"],dim.x/2.0,dim.y/2.0))
+		canvas.draw_rect(Rect2(wall.position-offset,wall.size),Color("#bf8a47"),false,2)
+
+## Far-depth backdrop over the floor, scaled x2 to the view (alpha from presentation data).
+static func draw_ruins_backdrop(canvas: CanvasItem, view: Rect2) -> void:
+	var pres := ruins_presentation()
+	var stem := str(pres.get("backdrop_stem", ""))
+	if not bool(pres.get("enabled", false)) or not _manifest.has(stem):
+		return
+	_export_json(stem)
+	canvas.draw_texture_rect(_texs[stem], Rect2(Vector2.ZERO, view.size), false, Color(1, 1, 1, float(pres.get("backdrop_alpha", 1.0))))
+
+## Vignette over the room, before the HUD (stage 0 only).
+static func draw_ruins_vignette(canvas: CanvasItem, view: Vector2, stage: int) -> void:
+	var pres := ruins_presentation()
+	var stem := str(pres.get("vignette_stem", ""))
+	if stage != 0 or not bool(pres.get("enabled", false)) or not _manifest.has(stem):
+		return
+	_export_json(stem)
+	canvas.draw_texture_rect(_texs[stem], Rect2(Vector2.ZERO, view), false, Color(1, 1, 1, float(pres.get("vignette_alpha", 1.0))))
 
 ## AD-202: pits block walking only; very dark placeholder fill until pit art exists. Drawn after the floor, before walls.
 static func pits(canvas: CanvasItem, rects: Array, offset: Vector2) -> void:
@@ -1474,7 +1551,7 @@ static func env_prop_frame(kind: String, state: String, lit: bool, stage: int, t
 	_export_data()
 	var base := {"crate": "burnable_crate", "urn": "breakable_urn", "puddle": "puddle", "cobweb": "cobweb",
 		"brazier": "brazier", "cracked_wall": "cracked_wall", "boss_pillar": "cracked_wall",
-		"pillar": "cracked_wall", "cracked_pillar": "cracked_wall", "broken_wall": "cracked_wall", "column": "cracked_wall",
+		"pillar": "cracked_wall", "cracked_pillar": "cracked_pillar", "broken_wall": "broken_wall", "column": "cracked_wall",
 		"rubble": "rubble_set", "sarcophagus": "rubble_set"}.get(kind, "") as String
 	if base == "" or state == "destroyed":
 		return {}
@@ -1483,6 +1560,12 @@ static func env_prop_frame(kind: String, state: String, lit: bool, stage: int, t
 		return {"stem": "ad_prp_rubble_set", "tag": "static", "index": loop_index(_manifest["ad_prp_rubble_set"]["tags"]["static"]["ms"], tick)} if _manifest.has("ad_prp_rubble_set") else {}
 	var stem := "ad_prp_" + base + ("_cistern" if stage == 2 else ("" if kind == "urn" else "_ruins"))
 	var tag := "idle"
+	if kind in ["cracked_pillar", "broken_wall"]:
+		# AD-245 own sheets exist for ruins only; the cistern keeps the cracked-wall sheet.
+		if stage == 2:
+			stem = "ad_prp_cracked_wall_cistern"
+		else:
+			tag = "intact" if kind == "cracked_pillar" else "wall"
 	if kind == "puddle" and state == "frozen":
 		stem = "ad_prp_ice_patch"
 	elif kind == "brazier":

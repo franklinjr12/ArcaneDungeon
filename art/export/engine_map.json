@@ -19,25 +19,25 @@
    "dead": "death_down"
   },
   "ad_enm_bone_thrall": {
-   "idle": "idle",
-   "move": "move",
-   "cast": "attack",
-   "hit": "hit",
-   "dead": "death"
+   "idle": "idle_side",
+   "move": "move_side",
+   "cast": "attack_side",
+   "hit": "hit_side",
+   "dead": "death_side"
   },
   "ad_enm_fallen_adept": {
-   "idle": "idle",
-   "move": "move",
-   "cast": "attack",
-   "hit": "hit",
-   "dead": "death"
+   "idle": "idle_side",
+   "move": "move_side",
+   "cast": "attack_side",
+   "hit": "hit_side",
+   "dead": "death_side"
   },
   "ad_enm_grave_hound": {
-   "idle": "idle",
-   "move": "move",
-   "cast": "attack",
-   "hit": "hit",
-   "dead": "death"
+   "idle": "idle_side",
+   "move": "move_side",
+   "cast": "attack_side",
+   "hit": "hit_side",
+   "dead": "death_side"
   },
   "ad_bos_ossuary_warden": {
    "idle": "idle",
