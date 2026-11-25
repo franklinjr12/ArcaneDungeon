@@ -22,3 +22,7 @@ __pycache__/
 
 # Export output (AD-186)
 build/
+
+# Godot/OS temp files (Windows)
+*.import~*
+*.TMP

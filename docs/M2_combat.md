@@ -143,6 +143,18 @@ Config: `world/data/run_v2.json` `bosses.cistern_boss` (hp, `phases`, `min_teleg
 
 The boss room (`room_templates.cistern_boss.layout.water`) has static shallow water plus one small deep rect away from the entrance-boss route. Tests: `tests/test_ad_final_boss.gd` (phases, telegraph floor, arena validity, 2 scripted builds 0 and 2 plus a no-Water Fire+Lightning loadout each killing the boss in 5400-10800 ticks = 90-180 s with identical kill ticks on re-run, run summary `won` after the kill). Run one suite with a script that loads `tests/test_ad_final_boss.gd` and calls `run(context)`, or the whole suite: `godot --headless --path . --script res://tests/run_tests.gd`.
 
+### AD-237 Ruins enemies v2 (numbers PROPOSED)
+
+Three new Ruins kinds in `combat/combat_tuning_v1.json` (all numbers [PROPOSED FOR PROTOTYPE]); each has one weakness (a single negative `channel_resistances` entry), a sandbox scenario and a `meta_v1.json` compendium entry. Placeholder art is tinted existing sprites; final art is pending.
+
+| enemy | components / params | scenario | counter |
+| --- | --- | --- | --- |
+| Rune Sentry (hp 60, Lightning -0.5) | `turret` + `rune_sentry`: 75-tick telegraph line, then beam `beam_length` 300, `beam_half_width` 14, `beam_sweep_degrees_per_tick` 0.5, `beam_active_ticks` 180, `hit_interval_ticks` 30; damage 10 | `rune_sentry` (1 sentry) | step sideways or out of reach; Lightning |
+| Grave Mite (hp 12, speed 190, Fire -0.5) | `swarm_chase` (`weave_degrees` 12) + `melee_attack`; 12-tick bite telegraph, damage 3 | `grave_mites` (6 mites) | Burst / field forms, Fire |
+| Ash Censer (hp 50, Cold -0.5) | `keep_distance` + `fire_ward` (`ward_radius` 120, `ward_fire_resistance` 0.75, i.e. fire does 25%) | `ash_censer` (censer, 2 thralls, 1 hound) | kill the censer, or Wet the allies to drop the ward; Cold |
+
+Not yet in `rooms_ruins_v1.json` waves (sandbox scenarios and compendium only). Tests: `tests/test_ad_enemies_ruins_v2.gd`.
+
 ## Boundaries and owner decisions
 
 The arena is *not* M3 room progression, boss design, loot, a spell editor, a production sprite pipeline or gamepad integration. Player motion, dodge timings, enemy archetypes/HP and attack damage, Burst range/LOS, fixed arena obstacles, accessible flash treatment, two loadout slots, initial seed, and encounter recipes are **PROPOSED FOR PROTOTYPE**, not locked design. A later human playtest should verify warning legibility, pacing, actual 60-FPS rendering, camera comfort and combat feel before treating M2 as polished.
