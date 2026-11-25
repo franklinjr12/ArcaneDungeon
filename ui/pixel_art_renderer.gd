@@ -663,6 +663,9 @@ static func tile_floor(canvas: CanvasItem, view: Rect2, offset: Vector2, stage: 
 	# Avoid bright grid: reference is continuous carved flagstones.
 
 static func decorations(canvas: CanvasItem, offset: Vector2, stage: int = 0) -> void:
+	# AD-249: Ruins rooms use the data-driven decor list (presentation_v1.json ruins.decor, keyed by room id meta).
+	if stage == 0 and ruins_art_ready() and _draw_ruins_decor(canvas, offset, str(canvas.get_meta("room_id", ""))):
+		return
 	# Decorative-only; never implicitly introduces a collectible or solid obstacle.
 	var placements := [
 		[Vector2(108,104),3],[Vector2(304,105),2],[Vector2(746,124),7],
@@ -678,6 +681,26 @@ static func decorations(canvas: CanvasItem, offset: Vector2, stage: int = 0) -> 
 			n = 6
 		canvas.draw_texture_rect_region(PROPS,Rect2(at-Vector2(24,35),Vector2(48,48)),
 			Rect2(Vector2(n*48,0),Vector2(48,48)))
+
+## AD-249: draws presentation ruins.decor[room_id] (kind, x, y = foot point, side); false if the room has no list.
+static func _draw_ruins_decor(canvas: CanvasItem, offset: Vector2, room_id: String) -> bool:
+	var pres := ruins_presentation()
+	var list: Array = pres.get("decor", {}).get(room_id, [])
+	if not bool(pres.get("enabled", false)) or list.is_empty():
+		return false
+	var kinds: Dictionary = pres.get("decor_kinds", {})
+	for entry in list:
+		var k: Dictionary = kinds.get(str(entry[0]), {})
+		var stem := str(k.get("stem", ""))
+		if not _manifest.has(stem) or not _manifest[stem]["tags"].has(str(k.get("tag", ""))):
+			continue
+		var j: Dictionary = _export_json(stem)
+		var f: Dictionary = j["frames"][int(_manifest[stem]["tags"][str(k["tag"])]["from"])]["frame"]
+		var region := Rect2(f["x"], f["y"], f["w"], f["h"])
+		var pv: Array = _manifest[stem]["pivot"]
+		var foot := Vector2(float(entry[1]), float(entry[2])) - offset
+		canvas.draw_texture_rect_region(_texs[stem], Rect2(foot - Vector2(float(pv[0]), float(pv[1])) * 2.0, region.size * 2.0), region)
+	return true
 
 static func walls(canvas: CanvasItem, wall_rects: Array, offset: Vector2, stage: int = 0) -> void:
 	if stage == 0 and ruins_art_ready():

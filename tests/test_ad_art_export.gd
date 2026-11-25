@@ -98,6 +98,7 @@ func run(t) -> void:
 	_actors(t)
 	_renderer(t)
 	_map1_art(t)
+	_ruins_decor(t)
 	_env_props(t)
 	_elites_art(t)
 
@@ -461,6 +462,32 @@ func _map1_art(t) -> void:
 	for key in ["enabled", "backdrop_stem", "backdrop_alpha", "vignette_stem", "vignette_alpha"]:
 		t.check(pres.has(key), "AD-249 presentation key " + key)
 	t.check(man.has(str(pres.get("backdrop_stem", ""))) and man.has(str(pres.get("vignette_stem", ""))), "AD-249 presentation stems exist in manifest")
+
+## AD-249: every Ruins room decor list has 8-12 entries; tall kinds stand within one tile of a wall rect (arena edge strips or layout walls).
+func _ruins_decor(t) -> void:
+	var pres := ART.ruins_presentation()
+	var decor: Dictionary = pres.get("decor", {})
+	var kinds: Dictionary = pres.get("decor_kinds", {})
+	var rooms: Dictionary = _json("res://world/data/run_v2.json")["room_templates"]
+	var man: Dictionary = ART.export_manifest()
+	t.check(decor.size() >= 9, "AD-249 decor lists exist for the Ruins rooms")
+	for rid in decor:
+		var list: Array = decor[rid]
+		t.check(list.size() >= 8 and list.size() <= 12, "AD-249 %s decor count 8..12 (%d)" % [rid, list.size()])
+		t.check(rooms.has(rid) and int(rooms[rid]["stage"]) == 0, "AD-249 decor room is a Ruins room: " + rid)
+		var walls: Array = [Rect2(0, 0, 1320, 40), Rect2(0, 860, 1320, 40), Rect2(0, 0, 40, 900), Rect2(1280, 0, 40, 900)]
+		for w in rooms.get(rid, {}).get("layout", {}).get("walls", []):
+			walls.append(Rect2(w[0], w[1], w[2], w[3]))
+		for e in list:
+			var k: Dictionary = kinds.get(str(e[0]), {})
+			t.check(not k.is_empty() and man.has(str(k["stem"])) and man[str(k["stem"])]["tags"].has(str(k["tag"])), "AD-249 decor kind resolves: " + str(e[0]))
+			if bool(k.get("tall", false)):
+				var p := Vector2(float(e[1]), float(e[2]))
+				var near := false
+				for w in walls:
+					var d := Vector2(maxf(maxf(w.position.x - p.x, p.x - w.end.x), 0.0), maxf(maxf(w.position.y - p.y, p.y - w.end.y), 0.0)).length()
+					near = near or d <= 32.0
+				t.check(near, "AD-249 tall %s in %s within one tile of a wall" % [str(e[0]), rid])
 
 const AD200_ART_KINDS := ["mini_fallen_adept", "mini_fallen_adept_decoy", "homing_skull", "storm_crystal_elite", "storm_crystal_small"]
 
