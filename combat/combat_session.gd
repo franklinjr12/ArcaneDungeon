@@ -12,6 +12,7 @@ const DamageEvent = preload("res://combat/damage_event.gd")
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 const Difficulty = preload("res://game/core/difficulty.gd")
 const AudioDirector = preload("res://game/audio/audio_director.gd")
+const LampreyPair = preload("res://combat/enemy_behaviours/lamprey_pair.gd")
 const TUNING_FILE := "res://combat/combat_tuning_v1.json"
 ## Test-only path override (TestContext.with_frozen_balance); empty means TUNING_FILE.
 static var tuning_override := ""
@@ -142,6 +143,7 @@ func spawn_enemy(kind: String, at: Vector2):
 		target.health.resistances = p["channel_resistances"].duplicate(true)
 	var enemy = Enemy.new(target,kind,p)
 	enemies.append(enemy)
+	LampreyPair.link_on_spawn(self,enemy)
 	return enemy
 
 func _flush_pending_spawns() -> void:
@@ -251,6 +253,14 @@ func hazard_view() -> Array:
 			"remaining_ticks":int(hazard["duration_ticks"])-int(hazard["age"])})
 	return view
 
+## AD-238: read-only lamprey tether view for rendering, ordered by eel A's id: [{a_id,b_id,from,to,cut}].
+func tether_view() -> Array:
+	var view: Array = []
+	for resolved in LampreyPair.links(self):
+		view.append({"a_id":resolved["a"].target.id,"b_id":resolved["b"].target.id,"from":resolved["a"].target.position,
+			"to":resolved["b"].target.position,"cut":bool(resolved["link"]["cut"])})
+	return view
+
 ## Live summons owned by `summoner_id`, including ones still queued.
 func summons_owned_by(summoner_id: int) -> int:
 	var count := 0
@@ -340,7 +350,12 @@ func step() -> void:
 	player.step_timers()
 	if env_props != null:
 		env_props.pre_step(sim)
+	var shot_positions := {}
+	for entry in sim.active:
+		if entry["kind"] == "projectile":
+			shot_positions[entry["effect"].id] = entry["effect"].position
 	sim.step()
+	LampreyPair.check_spell_cuts(self,shot_positions)
 	# AI progresses once after all player spells for the tick.
 	var audio_before: Array = []
 	if audio_sink.is_valid():
@@ -476,6 +491,8 @@ func damage_player(source_id: int, amount: float, channel: String, attack_id: in
 		player.shield -= 1
 		_notify("SHIELDED",sim.actor.position)
 		return {"accepted":false,"reason":"SHIELDED"}
+	if channel == "lightning" and sim.actor.status.has("wet",sim.clock.tick):
+		amount *= _wet_lightning_scale(source_id)
 	var event = DamageEvent.new(source_id,source.team,sim.actor.id,amount,channel,attack_id,sim.clock.tick)
 	var dealt: float = sim.actor.receive_damage(amount,channel,source.team,float(sim.settings["combat"]["armor_scale"]))
 	if dealt > 0:
@@ -487,6 +504,15 @@ func damage_player(source_id: int, amount: float, channel: String, attack_id: in
 		_notify("-%d HP" % roundi(dealt),sim.actor.position)
 	return {"accepted":dealt>0,"damage":dealt,"reason":"HIT" if dealt>0 else "BLOCKED"}
 
+## AD-238: enemy lightning on a Wet player scales by the source enemy's `wet_lightning_scale` behaviour param (1.0 when it has none).
+func _wet_lightning_scale(source_id: int) -> float:
+	for enemy in enemies:
+		if enemy.target.id == source_id:
+			for entry in enemy.tuning.get("behaviours",[]):
+				if entry.has("wet_lightning_scale"):
+					return float(entry["wet_lightning_scale"])
+	return 1.0
+
 func on_enemy_death(enemy) -> void:
 	if _death_ids.has(enemy.target.id):
 		return
@@ -497,16 +523,19 @@ func on_enemy_death(enemy) -> void:
 	ai_transitions.append_array(enemy.transitions.duplicate(true))
 	_notify("%s DOWN" % enemy.kind.to_upper(),enemy.target.position)
 
-func spawn_enemy_projectile(source_id: int, origin: Vector2, direction: Vector2, amount: float, speed: float, spread: float = 0.0) -> void:
+func spawn_enemy_projectile(source_id: int, origin: Vector2, direction: Vector2, amount: float, speed: float, spread: float = 0.0, channel: String = "physical") -> void:
 	if state != "playing" or direction.is_zero_approx():
 		return
 	var source = sim.targets.get_target(source_id)
 	if source == null or not source.alive():
 		return
 	var heading: Vector2 = direction.rotated(deg_to_rad(spread)).normalized()
-	enemy_shots.append({"id":sim.clock.next_id("enemy_shot"),"attack_id":sim.clock.next_id("attack"),"source_id":source_id,
+	var shot := {"id":sim.clock.next_id("enemy_shot"),"attack_id":sim.clock.next_id("attack"),"source_id":source_id,
 		"position":origin+heading*(source.radius+12),"direction":heading,"speed":speed,
-		"damage":amount,"age":0,"radius":float(data["enemy_projectile"]["radius"])})
+		"damage":amount,"age":0,"radius":float(data["enemy_projectile"]["radius"])}
+	if channel != "physical":
+		shot["channel"] = channel
+	enemy_shots.append(shot)
 	_notify("! SHOT",origin)
 
 func advance_enemy_projectiles() -> void:
@@ -527,7 +556,7 @@ func advance_enemy_projectiles() -> void:
 			wall_time = minf(wall_time,Projectile._bounds_exit_time(start,destination,world.bounds))
 		var hit_time: float = Projectile._segment_circle_time(start,destination,sim.actor.position,float(projectile["radius"])+sim.actor.radius)
 		if hit_time >= 0.0 and hit_time <= wall_time and state == "playing":
-			damage_player(int(projectile["source_id"]),float(projectile["damage"]),"physical",int(projectile["attack_id"]))
+			damage_player(int(projectile["source_id"]),float(projectile["damage"]),str(projectile.get("channel","physical")),int(projectile["attack_id"]))
 			enemy_shots.erase(projectile)
 		elif wall_time < 0.99999:
 			enemy_shots.erase(projectile)

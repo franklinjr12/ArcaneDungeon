@@ -388,13 +388,15 @@ func _windup_ok(t, kind: String, ticks: int, label: String) -> void:
 func _renderer(t) -> void:
 	for k in REAL_KINDS:
 		t.equal(ART.resolve_kind(k), k, "AD-154 resolve_kind own entry: " + k)
-	t.equal(ART.PLACEHOLDER_KIND.keys(), ["ghoul_stalker", "riptide_leaper", "rune_sentry", "grave_mite", "ash_censer"], "AD-237 only the pounce enemies, the Rune sentry, the Grave mite and the Ash censer borrow sprites")
+	t.equal(ART.PLACEHOLDER_KIND.keys(), ["ghoul_stalker", "riptide_leaper", "rune_sentry", "grave_mite", "ash_censer", "tide_siphon", "lamprey"], "AD-237/238 only the pounce enemies, Ruins v2 and Cistern v2 enemies borrow sprites")
 	var spirit := ART.placeholder_modulate("wailing_spirit", Color.RED, true, false)
 	t.check(is_equal_approx(spirit.a, 0.4), "AD-154 intangible alpha kept")
 	t.check(spirit.r == 1.0 and spirit.g == 1.0 and spirit.b == 1.0, "AD-154 real art has no tint")
 	t.check(is_equal_approx(ART.placeholder_modulate("deep_eel", Color.RED, false, true).a, 0.7), "AD-154 warning flicker alpha kept")
 	var tuning = JSON.parse_string(FileAccess.get_file_as_string(TUNING))
 	for kind in tuning["enemies"]:
+		if int(tuning["enemies"][kind]["telegraph_ticks"]) <= 0:
+			continue # AD-238 lamprey: no attack windup, the tether is the damage source
 		_windup_ok(t, kind, int(tuning["enemies"][kind]["telegraph_ticks"]), "enemy " + kind)
 	for id in tuning["mini_bosses"]:
 		var mb: Dictionary = tuning["mini_bosses"][id]

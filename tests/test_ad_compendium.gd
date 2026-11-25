@@ -39,7 +39,7 @@ func run(t) -> void:
 	t.equal(screen.page_count("enemies"), 2, "AD-153 compendium enemies page (14 cells, 20 entries)")
 	screen.select_tab("enemies")
 	screen._page_step("enemies", 1)
-	t.equal(screen.entries("enemies").size(), 6, "AD-153 compendium enemies page 2 has the remainder")
+	t.equal(screen.entries("enemies").size(), 8, "AD-153 compendium enemies page 2 has the remainder")
 	screen._page_step("enemies", -1)
 	var ev := InputEventKey.new()
 	ev.pressed = true
