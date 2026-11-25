@@ -1,5 +1,5 @@
 extends RefCounted
-## AD-237: new Ruins enemies. Step 1: Rune Sentry (rotating telegraphed beam). Step 2: Grave Mites (swarm).
+## AD-237: new Ruins enemies. Step 1: Rune Sentry (rotating telegraphed beam). Step 2: Grave Mites (swarm). Step 3: Ash Censer (fire ward).
 const Session = preload("res://combat/combat_session.gd")
 const Registry = preload("res://combat/enemy_behaviours/registry.gd")
 
@@ -19,6 +19,14 @@ func run(t) -> void:
 	_mite_bite_windup(t)
 	_mite_burst_vs_bolt(t)
 	_mite_deterministic(t)
+	_censer_config(t)
+	_censer_validate(t)
+	_censer_scenario(t)
+	_censer_ward(t)
+	_censer_range(t)
+	_censer_wet(t)
+	_censer_death(t)
+	_censer_deterministic(t)
 
 func _sentry_session() -> Array:
 	var s = Session.new(237,"empty",0)
@@ -237,3 +245,142 @@ func _mite_run() -> Array:
 
 func _mite_deterministic(t) -> void:
 	t.check(_mite_run() == _mite_run(),"AD-237 mite swarm run deterministic")
+
+func _censer_session() -> Array:
+	var s = Session.new(237,"empty",0)
+	var player = s.sim.actor
+	var censer = s.spawn_enemy("ash_censer",player.position+Vector2(300,0))
+	return [s,censer]
+
+func _ward(censer):
+	for b in censer.behaviours:
+		if b.has_method("warded_ids"):
+			return b
+	return null
+
+func _fire_taken(ally) -> float:
+	var h: float = ally.target.health.current
+	ally.target.receive_damage(10.0,"fire",0,1.0)
+	var taken: float = h-ally.target.health.current
+	ally.target.health.current = h
+	return taken
+
+func _wet(s, ally) -> void:
+	ally.target.status.apply("wet",s.sim.clock.tick,s.sim.settings["statuses"]["wet"],{"team":0})
+
+func _censer_config(t) -> void:
+	var s = Session.new(237,"empty",0)
+	var cfg: Dictionary = s.data["enemies"].get("ash_censer",{})
+	t.check(not cfg.is_empty() and Registry.validate_enemy(cfg).is_empty(),"AD-237 ash_censer config validates")
+	var negatives: Array = []
+	for channel in cfg["channel_resistances"]:
+		if float(cfg["channel_resistances"][channel]) < 0.0:
+			negatives.append(channel)
+	t.check(negatives == ["cold"],"AD-237 ash_censer has exactly one weakness: cold (%s)" % str(negatives))
+	t.check(float(cfg["damage"]) == 0.0 and float(cfg["hp"]) <= float(s.data["enemies"]["bone_thrall"]["hp"]),"AD-237 ash_censer deals no damage and is no HP sponge")
+
+func _censer_validate(t) -> void:
+	var script = Registry.SCRIPTS["fire_ward"]
+	t.check(script.validate({"id":"fire_ward","ward_radius":120,"ward_fire_resistance":0.75}).is_empty(),"AD-237 valid fire_ward accepted")
+	t.check(not script.validate({"id":"fire_ward","ward_radius":0,"ward_fire_resistance":0.75}).is_empty(),"AD-237 zero ward_radius rejected")
+	t.check(not script.validate({"id":"fire_ward","ward_radius":120,"ward_fire_resistance":1.5}).is_empty(),"AD-237 ward resistance above 1 rejected")
+	t.check(not script.validate({"id":"fire_ward","ward_radius":120,"ward_fire_resistance":-0.1}).is_empty(),"AD-237 negative ward resistance rejected")
+	t.check(not script.validate({"id":"fire_ward","ward_radius":120}).is_empty(),"AD-237 missing ward resistance rejected")
+
+func _censer_scenario(t) -> void:
+	var s = Session.new(237,"ash_censer",0)
+	var kinds: Array = s.enemies.map(func(e): return e.kind)
+	t.check(kinds.count("ash_censer") == 1 and kinds.count("bone_thrall") == 2 and kinds.count("grave_hound") == 1,"AD-237 scenario ash_censer: one censer, two thralls, one hound (%s)" % str(kinds))
+	var censer = s.enemies[kinds.find("ash_censer")]
+	for e in s.enemies:
+		if e != censer:
+			t.check(e.target.position.distance_to(censer.target.position) <= 120.0,"AD-237 scenario %s starts inside the ward" % e.kind)
+	s.step()
+	t.equal(_ward(censer).warded_ids().size(),3,"AD-237 ward is active on the scenario allies after one tick")
+
+func _censer_ward(t) -> void:
+	var a := _censer_session()
+	var s = a[0]
+	var censer = a[1]
+	var thrall = s.spawn_enemy("bone_thrall",censer.target.position+Vector2(0,90))
+	var before := _fire_taken(thrall)
+	s.step()
+	t.equal(_ward(censer).warded_ids(),[thrall.target.id],"AD-237 ally within 120 is warded")
+	var after := _fire_taken(thrall)
+	t.check(is_equal_approx(after,before*0.25),"AD-237 warded ally takes fire x0.25 (%s vs %s)" % [after,before])
+	var neutral_before: float = thrall.target.health.current
+	thrall.target.receive_damage(10.0,"neutral",0,1.0)
+	t.check(is_equal_approx(neutral_before-thrall.target.health.current,before),"AD-237 ward does not touch other channels")
+	t.check(not _ward(censer).warded_ids().has(censer.target.id) and not censer.target.health.resistances.has("fire"),"AD-237 the censer does not ward itself")
+
+func _censer_range(t) -> void:
+	var a := _censer_session()
+	var s = a[0]
+	var censer = a[1]
+	var far = s.spawn_enemy("bone_thrall",censer.target.position+Vector2(0,121))
+	var edge = s.spawn_enemy("bone_thrall",censer.target.position+Vector2(0,-120))
+	var mover = s.spawn_enemy("bone_thrall",censer.target.position+Vector2(80,0))
+	s.step()
+	var warded: Array = _ward(censer).warded_ids()
+	t.check(not warded.has(far.target.id) and not far.target.health.resistances.has("fire"),"AD-237 ally at distance > 120 is unwarded")
+	t.check(warded.has(edge.target.id) and warded.has(mover.target.id),"AD-237 ally exactly 120 away is warded")
+	mover.target.position = censer.target.position+Vector2(200,0)
+	s.step()
+	t.check(not _ward(censer).warded_ids().has(mover.target.id) and not mover.target.health.resistances.has("fire"),"AD-237 ally leaving range loses the ward the same tick")
+	var boss = s.spawn_enemy("bone_thrall",censer.target.position+Vector2(0,60))
+	boss.target.tags.append("boss")
+	s.step()
+	t.check(not _ward(censer).warded_ids().has(boss.target.id),"AD-237 bosses are never warded")
+
+func _censer_wet(t) -> void:
+	var a := _censer_session()
+	var s = a[0]
+	var censer = a[1]
+	var thrall = s.spawn_enemy("bone_thrall",censer.target.position+Vector2(0,90))
+	s.step()
+	t.check(_ward(censer).warded_ids() == [thrall.target.id],"AD-237 ward on before wetting")
+	_wet(s,thrall)
+	s.step()
+	t.check(_ward(censer).warded_ids().is_empty() and not thrall.target.health.resistances.has("fire"),"AD-237 wetting the ally removes the ward the same tick")
+	var hp: float = thrall.target.health.current
+	thrall.target.receive_damage(10.0,"water",0,1.0)
+	t.check(thrall.target.health.current < hp,"AD-237 a water hit lands on the unwarded ally")
+	t.check(is_equal_approx(_fire_taken(thrall),10.0),"AD-237 wet ally takes full fire damage")
+	s.step()
+	t.check(_ward(censer).warded_ids().is_empty(),"AD-237 a wet ally stays unwarded while Wet")
+	var cold_before: float = censer.target.health.current
+	censer.target.receive_damage(10.0,"cold",0,1.0)
+	var neutral_taken := 10.0
+	t.check(cold_before-censer.target.health.current > neutral_taken,"AD-237 the censer is weak to cold")
+
+func _censer_death(t) -> void:
+	var a := _censer_session()
+	var s = a[0]
+	var censer = a[1]
+	var plain = s.spawn_enemy("bone_thrall",censer.target.position+Vector2(0,60))
+	var weak = s.spawn_enemy("grave_hound",censer.target.position+Vector2(0,-60))
+	var strong = s.spawn_enemy("bone_thrall",censer.target.position+Vector2(60,0))
+	weak.target.health.resistances["fire"] = -0.5
+	strong.target.health.resistances["fire"] = 0.9
+	var plain_had: bool = plain.target.health.resistances.has("fire")
+	var before := _fire_taken(weak)
+	s.step()
+	t.equal(_ward(censer).warded_ids().size(),2,"AD-237 weak and plain allies warded; the 0.9 resister is left alone")
+	t.check(is_equal_approx(strong.target.health.resistances["fire"],0.9),"AD-237 an ally resisting fire more than the ward keeps its value")
+	t.check(is_equal_approx(_fire_taken(weak),10.0*0.25),"AD-237 a fire-weak ally is warded to x0.25")
+	censer.target.health.current = 0.0
+	s.step()
+	t.check(is_equal_approx(weak.target.health.resistances["fire"],-0.5),"AD-237 killing the censer restores the original -0.5 exactly")
+	t.check(is_equal_approx(_fire_taken(weak),before),"AD-237 weak ally takes its original fire damage again")
+	t.check(plain.target.health.resistances.has("fire") == plain_had and not plain.target.health.resistances.has("fire"),"AD-237 an ally with no fire entry gets none back (not zeroed)")
+	t.check(is_equal_approx(strong.target.health.resistances["fire"],0.9),"AD-237 the strong resister is untouched after the censer dies")
+	t.check(_ward(censer).warded_ids().is_empty(),"AD-237 no ally stays warded after the censer dies")
+
+func _censer_run() -> Array:
+	var s = Session.new(237,"ash_censer",0)
+	for i in 120:
+		s.step()
+	return [s.sim.actor.health.current,s.enemies.map(func(e): return [e.target.position,e.state,e.target.health.resistances.duplicate()])]
+
+func _censer_deterministic(t) -> void:
+	t.check(_censer_run() == _censer_run(),"AD-237 censer run deterministic")

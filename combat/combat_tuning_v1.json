@@ -329,6 +329,25 @@
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
       "behaviours": [{"id": "keep_distance", "approach_margin": 50, "retreat_margin": 70, "approach_without_sight": true}, {"id": "support_buff", "buff_radius": 220, "buff_damage_scale": 0.3}]
     },
+    "ash_censer": {
+      "_note": "AD-237 PROPOSED numbers. Support: allies within 120 u take fire x0.25 (fire resistance 0.75) while it lives and they are not Wet; it does not attack and keeps away. Counter: kill it (weak to cold, -0.5) or wet the allies (Water) to drop the ward.",
+      "display_name": "Ash censer",
+      "hp": 50,
+      "radius": 20,
+      "move_speed": 80,
+      "perception_radius": 1250,
+      "preferred_range": 260,
+      "attack_range": 300,
+      "telegraph_ticks": 40,
+      "recovery_ticks": 30,
+      "cooldown_ticks": 60,
+      "damage": 0,
+      "attack_kind": "ranged",
+      "color": "#c98a5a",
+      "channel_resistances": {"cold": -0.5},
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "keep_distance", "approach_margin": 50, "retreat_margin": 70, "approach_without_sight": true}, {"id": "fire_ward", "ward_radius": 120, "ward_fire_resistance": 0.75}]
+    },
     "storm_crystal": {
       "_note": "AD-140 PROPOSED numbers. Static turret: telegraphed Charged pulse around itself; Lightning that hits it arcs to the nearest other target. Counter: stay out of the pulse ring and hit it with Lightning when enemies are close to it.",
       "display_name": "Storm crystal",
@@ -500,6 +519,15 @@
           1150,
           650
         ]
+      ]
+    },
+    "ash_censer": {
+      "name": "Ash Censer",
+      "enemies": [
+        ["ash_censer", 1100, 450],
+        ["bone_thrall", 1040, 400],
+        ["bone_thrall", 1040, 500],
+        ["grave_hound", 1150, 450]
       ]
     },
     "empty": {
