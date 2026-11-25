@@ -118,7 +118,7 @@ func _enter(t, cfg: Dictionary, id: String, label: String):
 	t.check(found.size() == 2,"AD-242 %s: a seed rolls the event" % label)
 	if found.size() != 2:
 		return null
-	var flow = Flow.new(int(found[0]))
+	var flow = Flow.new(int(found[0]),Flow.CONFIG_V2)
 	flow.start_new(int(found[0]))
 	flow.run.sequence_index = int(found[1])
 	flow._enter_current()

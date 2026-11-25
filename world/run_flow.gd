@@ -79,6 +79,8 @@ var wet_kills := 0
 var arcs := 0
 ## AD-130: opt-in Sigil Desk prelude (not part of rooms/sequence_index/save schema).
 var prelude := false
+## AD-242: boss-adjacent event id of the current room for the UI ('' = none).
+var event_id := ""
 var prelude_built := false
 var prelude_tested := false
 ## AD-020: output-only audio sink (Callable(cue_id, position)); the simulation never reads it.
@@ -347,6 +349,7 @@ func _build_room(entry: Dictionary) -> Dictionary:
 	merchant = null
 	range_sim = null
 	encounter = null
+	event_id = ""
 	rewards = Reward.new(config,meta_locked_runes,meta_locked_artifacts)
 	_attach_artifacts()
 	session.player.shield = carried_shield
@@ -403,7 +406,7 @@ func _enter_current() -> Dictionary:
 		encounter = Encounter.new()
 		var entry: Dictionary = rooms[run.sequence_index]
 		# AD-239: 1-based room number within the stage drives the affix chance.
-		encounter.initialize(room,session,int(config["max_active_enemies"]),int(entry.get("room",0))+1,bool(entry.get("optional",false)),int(run.seed))
+		encounter.initialize(room,session,int(config["max_active_enemies"]),int(entry.get("room",0))+1,bool(entry.get("optional",false)),int(run.seed),_event_for(entry))
 		state = "fighting"
 	_prior_reactions = 0
 	room_reactions = 0
@@ -414,6 +417,18 @@ func _enter_current() -> Dictionary:
 	run_log.enter_room(run.sequence_index,str(room.values["id"]),str(room.values["type"]),ticks_elapsed)
 	logs.append({"kind":"room_enter","id":room.values["id"],"index":run.sequence_index})
 	return {"ok":true}
+
+## AD-242: event data for a sequence entry; a timed event without its own flood_sets borrows the cistern boss's rising-water sets.
+func _event_for(entry: Dictionary) -> Dictionary:
+	event_id = str(entry.get("event",""))
+	var events = config.get("events",{})
+	if event_id == "" or not events is Dictionary or not events.has(event_id):
+		event_id = ""
+		return {}
+	var event: Dictionary = events[event_id].duplicate(true)
+	if event.has("duration_seconds") and not event.has("flood_sets"):
+		event["flood_sets"] = config.get("bosses",{}).get("cistern_boss",{}).get("flood_sets",[]).duplicate(true)
+	return event
 
 func prelude_available() -> bool:
 	var desk = config.get("sigil_desk")
