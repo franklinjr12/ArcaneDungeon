@@ -817,13 +817,15 @@ func save_payload() -> Dictionary:
 		return {}
 	var enemies: Array = _seen_enemies.keys()
 	var reactions: Array = _seen_reactions.keys()
+	var affixes: Array = _seen_affixes.keys()
 	enemies.sort()
 	reactions.sort()
+	affixes.sort()
 	return {"version":SAVE_VERSION,"config_path":config_path,"run":run.snapshot(),
 		"counters":{"rooms_cleared":rooms_cleared,"kills":kills,"ticks_elapsed":ticks_elapsed,
 			"spells_used":spells_used,"wet_kills":wet_kills,"arcs":arc_total(),
 			"boss_defeated_events":boss_defeated_events,"transition_count":transition_count,"ink_earned":ink_earned},
-		"seen_enemies":enemies,"seen_reactions":reactions,
+		"seen_enemies":enemies,"seen_reactions":reactions,"seen_affixes":affixes,
 		"meta_locked_runes":meta_locked_runes.duplicate(),"meta_locked_artifacts":meta_locked_artifacts.duplicate(),
 		"merchant_stock":merchant.stock.duplicate(true),"edit_policy":edit_policy,"run_log":run_log.snapshot()}
 
@@ -906,6 +908,9 @@ func resume(payload: Variant) -> Dictionary:
 	_seen_reactions.clear()
 	for id in payload["seen_reactions"]:
 		_seen_reactions[str(id)] = true
+	_seen_affixes.clear()
+	for id in payload.get("seen_affixes", []):  # optional: saves from before AD-241 lack it
+		_seen_affixes[str(id)] = true
 	edit_policy = str(payload["edit_policy"])
 	prelude = false
 	prelude_built = false

@@ -164,7 +164,7 @@ func _pool(t) -> void:
 	var doc: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(POOL_PATH))
 	var tuning: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://combat/combat_tuning_v1.json"))
 	var rules: Dictionary = doc["rules"]
-	t.check(doc["pool"].size() == int(rules["pool_size"]) and doc["pool"].size() == 10,"AD-138 cistern pool has 10 templates")
+	t.check(doc["pool"].size() == int(rules["pool_size"]) and doc["pool"].size() == 14,"AD-138 cistern pool has 14 templates")
 	var layouts: Dictionary = {}
 	var deep_rooms := 0
 	for id in doc["room_templates"]:

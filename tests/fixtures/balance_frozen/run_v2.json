@@ -38,7 +38,16 @@
   "reward_choices": 3,
   "reward_guarantee_item": false,
   "reaction_bias_weight": 0.4,
-  "resonant_clear": {"min_reactions": 3, "rarity_order": ["common", "uncommon", "rare"], "bonus_coins": 25, "seed_salt": 61681},
+  "resonant_clear": {
+    "min_reactions": 3,
+    "rarity_order": [
+      "common",
+      "uncommon",
+      "rare"
+    ],
+    "bonus_coins": 25,
+    "seed_salt": 61681
+  },
   "reward_pool": [
     "essence.fire",
     "essence.water",
@@ -947,7 +956,11 @@
         "ruins_c05",
         "ruins_c06",
         "ruins_c07",
-        "ruins_c08"
+        "ruins_c08",
+        "ruins_c09",
+        "ruins_c10",
+        "ruins_c11",
+        "ruins_c12"
       ],
       "optional_room": "ruins_treasure",
       "boss_room": "ruins_boss",
@@ -971,7 +984,11 @@
         "cistern_p07",
         "cistern_p08",
         "cistern_p09",
-        "cistern_p10"
+        "cistern_p10",
+        "cistern_p11",
+        "cistern_p12",
+        "cistern_p13",
+        "cistern_p14"
       ],
       "optional_room": "cistern_challenge_v1",
       "boss_room": "cistern_boss",
@@ -979,13 +996,60 @@
       "workshop_after": false
     }
   ],
+  "room_affixes": {
+    "ids": [
+      "dark",
+      "unstable",
+      "haunted"
+    ],
+    "dark": {
+      "light_radius": 220
+    },
+    "unstable": {
+      "collapse_delay_ticks": 120,
+      "telegraph_ticks": 30,
+      "collapse_anim_ticks": 20
+    },
+    "haunted": {
+      "respawn_kind": "lantern_wisp",
+      "respawns": 1,
+      "respawn_delay_ticks": 90
+    }
+  },
   "room_rules": {
     "min_obstacles": 2,
     "max_obstacles": 5,
     "min_interactions": 1,
-    "interaction_kinds": ["crate", "cobweb", "brazier", "urn", "cracked_wall", "cracked_pillar", "broken_wall", "puddle"],
-    "shapes": ["open_hall", "pillared_hall", "corridor_chamber", "ring_pit", "split_bridges", "cross_hall", "l_bend", "colonnade", "dais_island", "eel_lanes", "flooded_arena"],
-    "owner_shapes": ["open_hall", "pillared_hall", "corridor_chamber", "ring_pit", "split_bridges"],
+    "interaction_kinds": [
+      "crate",
+      "cobweb",
+      "brazier",
+      "urn",
+      "cracked_wall",
+      "cracked_pillar",
+      "broken_wall",
+      "puddle"
+    ],
+    "shapes": [
+      "open_hall",
+      "pillared_hall",
+      "corridor_chamber",
+      "ring_pit",
+      "split_bridges",
+      "cross_hall",
+      "l_bend",
+      "colonnade",
+      "dais_island",
+      "eel_lanes",
+      "flooded_arena"
+    ],
+    "owner_shapes": [
+      "open_hall",
+      "pillared_hall",
+      "corridor_chamber",
+      "ring_pit",
+      "split_bridges"
+    ],
     "min_spawn_distance": 160,
     "dead_corner_step": 40,
     "player_radius": 22
@@ -1595,7 +1659,8 @@
           }
         ]
       },
-      "min_spawn_distance": 160
+      "min_spawn_distance": 160,
+      "room_affix": "dark"
     },
     "ruins_c07": {
       "id": "ruins_c07",
@@ -1998,6 +2063,477 @@
         450
       ],
       "waves": []
+    },
+    "ruins_c09": {
+      "id": "ruins_c09",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "shape": "dais_island",
+      "room_affix": "dark",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "rune_sentry",
+              1120,
+              640
+            ],
+            [
+              "grave_mite",
+              375,
+              270
+            ],
+            [
+              "grave_mite",
+              1080,
+              255
+            ],
+            [
+              "grave_mite",
+              410,
+              665
+            ]
+          ]
+        },
+        {
+          "trigger": "on_clear",
+          "delay_ticks": 45,
+          "enemies": [
+            [
+              "rune_sentry",
+              1050,
+              500
+            ],
+            [
+              "ash_censer",
+              700,
+              455
+            ],
+            [
+              "bone_thrall",
+              375,
+              270
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "arena_walls": false,
+        "walls": [
+          [
+            760,
+            100,
+            120,
+            140
+          ]
+        ],
+        "env_props": [
+          {
+            "id": "c09_crate",
+            "kind": "crate",
+            "rect": [
+              900,
+              380,
+              40,
+              40
+            ]
+          },
+          {
+            "id": "c09_brazier",
+            "kind": "brazier",
+            "position": [
+              900,
+              700
+            ]
+          },
+          {
+            "id": "c09_cobweb",
+            "kind": "cobweb",
+            "rect": [
+              1200,
+              60,
+              48,
+              48
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
+    },
+    "ruins_c10": {
+      "id": "ruins_c10",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "shape": "open_hall",
+      "room_affix": "unstable",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "grave_mite",
+              375,
+              270
+            ],
+            [
+              "grave_mite",
+              1080,
+              255
+            ],
+            [
+              "grave_mite",
+              1120,
+              640
+            ],
+            [
+              "fallen_adept",
+              410,
+              665
+            ]
+          ]
+        },
+        {
+          "trigger": "on_clear",
+          "delay_ticks": 45,
+          "enemies": [
+            [
+              "ash_censer",
+              700,
+              455
+            ],
+            [
+              "grave_hound",
+              1050,
+              500
+            ],
+            [
+              "grave_mite",
+              410,
+              665
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "arena_walls": false,
+        "walls": [
+          [
+            880,
+            150,
+            90,
+            120
+          ],
+          [
+            880,
+            630,
+            90,
+            120
+          ]
+        ],
+        "cracked_tiles": [
+          [
+            560,
+            300,
+            120,
+            100
+          ],
+          [
+            560,
+            520,
+            120,
+            100
+          ]
+        ],
+        "env_props": [
+          {
+            "id": "c10_crate",
+            "kind": "crate",
+            "rect": [
+              300,
+              170,
+              40,
+              40
+            ]
+          },
+          {
+            "id": "c10_urn",
+            "kind": "urn",
+            "position": [
+              700,
+              780
+            ]
+          },
+          {
+            "id": "c10_cobweb",
+            "kind": "cobweb",
+            "rect": [
+              676,
+              20,
+              48,
+              48
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
+    },
+    "ruins_c11": {
+      "id": "ruins_c11",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "shape": "pillared_hall",
+      "room_affix": "haunted",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "lantern_wisp",
+              1050,
+              500
+            ],
+            [
+              "rune_sentry",
+              1120,
+              640
+            ],
+            [
+              "bone_thrall",
+              375,
+              270
+            ]
+          ]
+        },
+        {
+          "trigger": "on_clear",
+          "delay_ticks": 45,
+          "enemies": [
+            [
+              "grave_mite",
+              410,
+              665
+            ],
+            [
+              "grave_mite",
+              375,
+              270
+            ],
+            [
+              "grave_mite",
+              1080,
+              255
+            ],
+            [
+              "ghoul_stalker",
+              1120,
+              640
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "arena_walls": false,
+        "env_props": [
+          {
+            "id": "c11_column1",
+            "kind": "column",
+            "position": [
+              420,
+              200
+            ]
+          },
+          {
+            "id": "c11_column2",
+            "kind": "column",
+            "position": [
+              900,
+              250
+            ]
+          },
+          {
+            "id": "c11_column3",
+            "kind": "column",
+            "position": [
+              700,
+              700
+            ]
+          },
+          {
+            "id": "c11_urn",
+            "kind": "urn",
+            "position": [
+              1000,
+              760
+            ]
+          },
+          {
+            "id": "c11_cobweb",
+            "kind": "cobweb",
+            "rect": [
+              40,
+              40,
+              48,
+              48
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
+    },
+    "ruins_c12": {
+      "id": "ruins_c12",
+      "stage": 0,
+      "room": 0,
+      "type": "combat",
+      "shape": "ring_pit",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "ash_censer",
+              700,
+              455
+            ],
+            [
+              "bone_thrall",
+              375,
+              270
+            ],
+            [
+              "bone_thrall",
+              1080,
+              255
+            ]
+          ]
+        },
+        {
+          "trigger": "on_clear",
+          "delay_ticks": 45,
+          "enemies": [
+            [
+              "rune_sentry",
+              1050,
+              500
+            ],
+            [
+              "grave_mite",
+              410,
+              665
+            ],
+            [
+              "grave_mite",
+              1120,
+              640
+            ],
+            [
+              "fallen_adept",
+              375,
+              270
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "arena_walls": false,
+        "pits": [
+          [
+            560,
+            640,
+            240,
+            160
+          ]
+        ],
+        "env_props": [
+          {
+            "id": "c12_column",
+            "kind": "column",
+            "position": [
+              960,
+              200
+            ]
+          },
+          {
+            "id": "c12_sarcophagus",
+            "kind": "sarcophagus",
+            "rect": [
+              940,
+              700,
+              96,
+              48
+            ]
+          },
+          {
+            "id": "c12_urn",
+            "kind": "urn",
+            "position": [
+              300,
+              760
+            ]
+          }
+        ]
+      },
+      "min_spawn_distance": 160
     }
   }
 }

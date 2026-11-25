@@ -2,6 +2,7 @@ extends RefCounted
 ## TASK-037: pending waves guard against early clear; state has exactly one clear transition.
 const Difficulty = preload("res://game/core/difficulty.gd")
 const Affixes = preload("res://world/affixes.gd")
+const RoomAffixes = preload("res://world/room_affixes.gd")
 var room
 var session
 var schedule: Array = []
@@ -16,6 +17,8 @@ var cap := 8
 var room_index := 0
 var optional_room := false
 var run_seed := 0
+## AD-241: room affix runtime (dark/unstable/haunted); "none" rooms leave every hook a no-op.
+var room_affix
 
 func initialize(template, battle, maximum: int, depth: int = 0, optional: bool = false, seed_value: int = 0) -> void:
 	room_index = depth
@@ -32,7 +35,14 @@ func initialize(template, battle, maximum: int, depth: int = 0, optional: bool =
 	cleared_wave_tick = 0
 	log.clear()
 	started_tick = session.sim.clock.tick
+	room_affix = RoomAffixes.new()
+	room_affix.setup(room.values)
+	session.room_affix = room_affix
 	advance()
+
+## AD-241 dark room light radius in world units; 0 = unlimited.
+func light_radius() -> float:
+	return room_affix.light_radius()
 
 func advance() -> void:
 	if session.state == "dead" or clear_emissions > 0:
@@ -55,6 +65,7 @@ func advance() -> void:
 		for i in wave["enemies"].size():
 			var spawn: Array = wave["enemies"][i]
 			var enemy = session.spawn_enemy(str(spawn[0]),Vector2(float(spawn[1]),float(spawn[2])))
+			room_affix.track_spawn(enemy,str(spawn[0]),Vector2(float(spawn[1]),float(spawn[2])))
 			if enemy != null and idx == elite[0] and i == elite[1] and room_index > 0:
 				var id := Affixes.roll(Affixes.room_seed(run_seed,str(room.values.get("id",""))),room_index,optional_room)
 				if id != "":
@@ -65,7 +76,10 @@ func advance() -> void:
 			var pos: Array = slot["position"]
 			if session.spawn_mini_boss(str(slot["id"]),Vector2(float(pos[0]),float(pos[1])),room.values.get("elite",{})) != null:
 				log.append({"event":"mini_boss_spawn","id":str(slot["id"]),"tick":now})
-	if session.alive_enemies() > 0:
+	for entry in room_affix.step_haunted(session,now):
+		log.append(entry)
+	# Haunted: a dead wisp owing its respawn holds the clear like an alive enemy.
+	if session.alive_enemies() > 0 or room_affix.pending_respawn():
 		return
 	if launched.size() < schedule.size():
 		# Delay the on_clear wave after the previous wave was removed.

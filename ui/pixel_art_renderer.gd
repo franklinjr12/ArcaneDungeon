@@ -694,6 +694,38 @@ static func pits(canvas: CanvasItem, rects: Array, offset: Vector2) -> void:
 		canvas.draw_rect(Rect2(rect.position-offset,rect.size),Color("#05070b"))
 		canvas.draw_rect(Rect2(rect.position-offset,rect.size),Color("#161d28"),false,2)
 
+## AD-241 unstable room: placeholder tints per state (idle/telegraph/collapse/pit) until AD-251 cracked-tile art exists.
+## Telegraph pulses every telegraph_ticks unless flashes are reduced (then a steady warning tint).
+static func cracked_tiles(canvas: CanvasItem, session, offset: Vector2, tick: int, reduced: bool) -> void:
+	if session.room_affix == null or session.room_affix.tiles.is_empty():
+		return
+	var period: int = maxi(2,int(session.room_affix.settings.get("telegraph_ticks",30)))
+	for tile in session.room_affix.tile_view(tick):
+		var rect := Rect2(tile["rect"].position-offset,tile["rect"].size)
+		match str(tile["state"]):
+			"idle":
+				canvas.draw_rect(rect,Color("#3a3026",0.35))
+				canvas.draw_line(rect.position+rect.size*Vector2(0.2,0.3),rect.position+rect.size*Vector2(0.55,0.6),Color("#1c1610",0.8),1)
+				canvas.draw_line(rect.position+rect.size*Vector2(0.55,0.6),rect.position+rect.size*Vector2(0.8,0.45),Color("#1c1610",0.8),1)
+			"telegraph":
+				var hot: bool = reduced or int(tile["age"])%period < period/2
+				canvas.draw_rect(rect,Color("#d0542e",0.45 if hot else 0.25))
+				canvas.draw_rect(rect,Color("#ffb070",0.9),false,2)
+			"collapse", "pit":
+				canvas.draw_rect(rect,Color("#05070b"))
+				canvas.draw_rect(rect,Color("#161d28"),false,2)
+
+## AD-241 dark room: everything farther than `radius` from the player is masked; a short soft edge inside the radius.
+## Render-only and static (no flicker), so reduce-motion needs no variant.
+static func darkness(canvas: CanvasItem, center: Vector2, radius: float, view: Vector2) -> void:
+	if radius <= 0.0:
+		return
+	var far: float = view.length()+center.length()
+	canvas.draw_arc(center,radius+far*0.5,0.0,TAU,96,Color(0.01,0.01,0.03,0.94),far)
+	for i in 4:
+		var r: float = radius-float(i)*8.0-4.0
+		canvas.draw_arc(center,r,0.0,TAU,96,Color(0.01,0.01,0.03,0.18*float(4-i)),8.0)
+
 static func _tile_floor_export(canvas: CanvasItem, view: Rect2, offset: Vector2, stage: int) -> void:
 	_export_data()
 	var fl: Dictionary = _map["floor"]
