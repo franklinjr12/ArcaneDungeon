@@ -32,6 +32,9 @@ static func is_known(id: String) -> bool:
 static func rarity_of(id: String) -> String:
 	return str(definitions().get(id, {}).get("rarity", "common"))
 
+static func tag_of(id: String) -> String:
+	return str(definitions().get(id, {}).get("tag", ""))
+
 func _init(initial_ids: Array = []) -> void:
 	for id in initial_ids:
 		if can_add(str(id)):

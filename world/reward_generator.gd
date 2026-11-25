@@ -87,9 +87,16 @@ static func artifact_choice(run, hash_value: int, force_artifact: bool, excluded
 	var roll := random.randf()
 	if not force_artifact and roll >= float(settings.get("reward_artifact_chance",0.0)):
 		return {}
-	var id: String = candidates[random.randi() % candidates.size()]
+	var pool: Array = candidates
+	if not held.is_empty():
+		# AD-240: bias toward tags already held; the extra roll is drawn only when something is held.
+		var held_tags: Array = held.map(func(h): return Artifacts.tag_of(str(h)))
+		var matching: Array = candidates.filter(func(c): return Artifacts.tag_of(str(c)) in held_tags)
+		if random.randf() < float(settings.get("tag_bias",0.0)) and not matching.is_empty():
+			pool = matching
+	var id: String = pool[random.randi() % pool.size()]
 	var def: Dictionary = Artifacts.definitions()[id]
-	return {"kind":"artifact","id":id,"name_key":str(def["name_key"]),"behaviour_key":str(def["desc_key"]),"rarity":str(def.get("rarity","common"))}
+	return {"kind":"artifact","id":id,"name_key":str(def["name_key"]),"behaviour_key":str(def["desc_key"]),"rarity":str(def.get("rarity","common")),"tag":str(def.get("tag",""))}
 
 static func rarity_of(id: String, tuning: Dictionary) -> String:
 	return str(tuning.get("rune_rarity",{}).get(id,"common"))

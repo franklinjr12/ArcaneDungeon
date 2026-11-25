@@ -7,6 +7,7 @@ const Merchant = preload("res://world/merchant.gd")
 const Flow = preload("res://world/run_flow.gd")
 const Runner = preload("res://magic/runtime/spell_runner.gd")
 const Session = preload("res://combat/combat_session.gd")
+const V2 = preload("res://tests/test_ad_artifacts_v2.gd")
 const SEED := 20261022
 const IDS := ["rebound_sigil","residue_crystal","shatterheart","momentum_rune","echo_chamber","stormglass",
 	"tidewalkers_boots","ember_heart","gravity_lens","split_prism","archivists_quill","warding_lantern"]
@@ -59,7 +60,7 @@ func _config(t) -> void:
 	var cfg: Dictionary = Artifacts.load_config()
 	var defs: Dictionary = cfg["artifacts"]
 	var keys := _csv_keys()
-	t.equal(defs.size(),12,"AD-143 config has 12 artifacts")
+	t.equal(defs.size(),IDS.size()+V2.IDS.size(),"AD-143 config has every tested artifact")
 	for id in IDS:
 		t.check(defs.has(id),"AD-143 artifact present: "+id)
 		var def: Dictionary = defs.get(id,{})
@@ -541,5 +542,6 @@ func _all_artifacts_tested(t) -> void:
 	var from_data: Array = Artifacts.definitions().keys()
 	from_data.sort()
 	var tested: Array = IDS.duplicate()
+	tested.append_array(V2.IDS)
 	tested.sort()
 	t.equal(tested,from_data,"AD-143 every artifact in the data has a test")
