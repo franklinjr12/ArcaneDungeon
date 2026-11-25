@@ -34,3 +34,51 @@ Damage taken per fight is very noisy (single fights range 0..89); medians of 8 c
 
 ## NOT DONE
 - Fresh profile "boss 1 still a likely death for the bot": NOT MET. Warden bench build 0 wins 8/8 on fresh profile (this is master's behaviour, unrelated to meta; meta cannot fix it and boss numbers must not change). Whole-run `run_bench.gd` was not run for an INFO row.
+
+# AD-243 tuning pass: 20-seed whole-run bench, fresh vs full meta
+
+## Reproduce
+`tests/bench/run_bench.gd` got a `--meta=fresh|full` switch (default fresh, behaviour unchanged; `full` = every Scriptorium upgrade at max tier, applied through `RunFlow.set_meta_bonuses` + `start_new` like the game does). Use a separate `--results` folder per profile.
+```
+G="godot --headless --path . --script res://tests/bench/run_bench.gd --"
+for r in 0..4 5..9 10..14 15..19; do $G --seeds=$r --jobs=2 --meta=fresh --results=$TMPDIR/ad243_fresh; done
+for r in 0..4 5..9 10..14 15..19; do $G --seeds=$r --jobs=2 --meta=full  --results=$TMPDIR/ad243_full;  done
+godot --headless --path . --script res://tests/bench/warden_bench.gd -- --meta=fresh   # and --meta=full
+```
+20 seeds (20261022..20261041) x 3 builds (weak / typical / skilled) = 60 runs per profile.
+
+## Numbers
+| profile | build | won / dead (of 20) | run minutes, won runs (min / median / max) | all runs (min / median / max) |
+|---|---|---|---|---|
+| fresh | weak | 8 / 12 | 2.8 / 3.1 / 3.3 | 2.7 / 3.1 / 3.3 |
+| fresh | typical | 3 / 17 | 3.6 / 3.7 / 4.0 | 1.0 / 3.6 / 4.4 |
+| fresh | skilled | 3 / 17 | 3.6 / 3.7 / 4.0 | 1.2 / 3.7 / 4.3 |
+| fresh | all | 14 / 46 (23% won) | 2.8 / 3.3 / 4.0 | |
+| full | weak | 18 / 2 | 2.7 / 2.9 / 3.6 | 2.7 / 2.9 / 3.6 |
+| full | typical | 12 / 8 | 3.3 / 3.7 / 4.0 | 1.9 / 3.7 / 4.0 |
+| full | skilled | 15 / 5 | 3.4 / 3.6 / 3.9 | 3.4 / 3.6 / 3.9 |
+| full | all | 45 / 15 (75% won) | 2.7 / 3.5 / 4.0 | |
+
+Where runs end (death room, all builds):
+
+| profile | ruins rooms before boss 1 | boss 1 (`ruins_boss`) | cistern rooms before boss 2 | boss 2 (`cistern_boss`) |
+|---|---|---|---|---|
+| fresh (46 deaths) | 0 | 2 | 3 (`cistern_challenge_v1`) | 41 |
+| full (15 deaths) | 0 | 0 | 1 (`cistern_challenge_v1`) | 14 |
+
+Warden bench (boss 1 alone, 8 seeds): fresh build 0 8/0, median damage taken 31.0; fresh build 2 8/0, 49.0; full build 0 8/0, 33.0; full build 2 8/0, 33.0. Identical to the AD-236 table above (boss 1 and meta unchanged).
+
+## Changed numbers
+None. No data file was changed in this step (before = after for `combat_tuning_v1.json`, `run_v2.json`, `rooms_cistern_v1.json`, `affixes_v1.json`, `artifacts_v1.json`, `meta_v1.json`; `tests/fixtures/balance_frozen/` untouched). Only the bench gained the `--meta` switch.
+
+## Targets
+- Boss 1 numbers and behaviour frozen: MET (`test_ad_boss1_frozen.gd` green, nothing in boss 1 data touched).
+- Feel bands green, fresh and full: MET (`test_ad_feel_bands.gd` green; the bands read live data, meta never touches enemy HP). The suite now also runs standalone (`godot --headless --path . --script res://tests/test_ad_feel_bands.gd` prints `PASS`, exit 0); bands unchanged.
+- Full meta reaches boss 2 and is not a free win: MET for the bot. Full meta wins 75% (vs 23% fresh); 14 of 15 full-meta deaths are at boss 2.
+NOT DONE: run length 18-25 min for a full successful run. The bot's won runs take 2.7-4.0 min (median 3.5 full, 3.3 fresh). The scripted player clears each room in seconds, so no density, affix or artifact number moves it into 18-25 min without HP sponges (forbidden by the plan and the feel bands). This needs a human playtest for the real figure (same conclusion as AD-241).
+NOT DONE: fresh profile likely dies on or before boss 1. Fresh bots die in 46 of 60 runs, but only 2 of those on or before boss 1; 41 die at boss 2. The bot wins boss 1 8/8 even on a fresh profile (warden bench), because it dodges every telegraph 70% of the time, which a first-run human does not. Boss 1 cannot change, and raising Ruins room lethality until this bot dies there would overshoot badly for humans (Franklin's playtest already reports dying to bosses), so no number was tuned to the bot. Re-check with human fresh-profile runs.
+
+## AD-243 acceptance re-check (final)
+- Table with 20-seed fresh and full-meta numbers: met (above).
+- `test_ad_feel_bands.gd` passes (38/0) and `test_ad_boss1_frozen.gd` passes (198/0); `validate_godot.py --godot godot` exit 0.
+- BOSS2_GAPS.md covers telegraph clarity, phase change, arena use and always moving: met (`docs/demo/BOSS2_GAPS.md` sections 1-4).

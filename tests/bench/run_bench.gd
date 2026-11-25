@@ -6,10 +6,12 @@ extends SceneTree
 ## AD-228: the bot reads the real telegraph data (intent snapshot, boss hazards, enemy shots) and dodges every telegraphed threat type: lunge, swipe_arc,
 ## slam, boss_slam, boss_charge, boss_beam, tide_wave, boss_zone, shot and the generic melee windup. Dodges attempted/succeeded are counted per type per room
 ## (rec["dodges"]) and summed per build in the DIAG dodge table.
+## --meta=full: every Scriptorium upgrade at max tier (AD-243; default fresh).
 ## --seeds=A..B (0-based inclusive SEEDS indices) = chunk mode: one <seed>_<build>.json per play in --results (default user://bench_results), existing
 ## results with a matching fingerprint are skipped (resumable), no replay. --trace records sim traces (off by default; slower).
 const Flow = preload("res://world/run_flow.gd")
 const BalanceRunner = preload("res://magic/runtime/spell_runner.gd")
+const MetaProgress = preload("res://world/meta_progress.gd")
 const SEEDS := [20261022, 20261023, 20261024, 20261025, 20261026, 20261027, 20261028, 20261029, 20261030, 20261031,
 	20261032, 20261033, 20261034, 20261035, 20261036, 20261037, 20261038, 20261039, 20261040, 20261041]
 ## Reference builds. rune_pick: first = option 0, new_rune = first locked rune else option 0, priority = RUNE_PRIORITY.
@@ -210,6 +212,8 @@ func _spawn_jobs() -> void:
 			"--seeds=%d..%d" % [start, start + size - 1], "--builds=" + ",".join(names), "--results=" + dir]
 		if _record_trace:
 			args.append("--trace")
+		if _option("--meta=", "fresh") == "full":
+			args.append("--meta=full")
 		var pid := OS.create_process(OS.get_executable_path(), args)
 		if pid == -1:
 			printerr("AD_DEMO_BENCH cannot start child for seeds %d..%d" % [start, start + size - 1])
@@ -320,6 +324,9 @@ func _bot(run_seed: int, build: String) -> Dictionary:
 
 func _play(run_seed: int, build: String) -> Dictionary:
 	var flow = Flow.new(run_seed, Flow.CONFIG_V2)
+	if _option("--meta=", "fresh") == "full":
+		flow.set_meta_bonuses(_full_meta_bonuses())
+		flow.start_new(run_seed)
 	var plan: Dictionary = BUILDS[build]
 	var bot: Dictionary = _bot(run_seed, build)
 	bot["mix"] = bool(plan.get("mix", false))
@@ -340,6 +347,13 @@ func _play(run_seed: int, build: String) -> Dictionary:
 			outcome = "error"
 			break
 	return _record(flow, run_seed, build, outcome, rooms, rate)
+
+## AD-243: --meta=full plays with every Scriptorium upgrade at max tier (default fresh = no bonuses).
+func _full_meta_bonuses() -> Dictionary:
+	var meta := MetaProgress.empty_meta()
+	for id in MetaProgress.upgrade_ids():
+		meta["upgrades"][id] = MetaProgress.max_tier(id)
+	return MetaProgress.bonuses(meta)
 
 func _enter(flow, plan: Dictionary, earned: Array, rate: int, bot: Dictionary) -> Dictionary:
 	var index: int = flow.run.sequence_index

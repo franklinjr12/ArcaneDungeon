@@ -1,10 +1,22 @@
-extends RefCounted
+extends SceneTree
 ## AD-236 step 1: boss 1 (ruins_warden) is the quality reference and must not drift.
 ## The fixture holds the master values of bosses.ruins_warden. Live data is compared against it,
 ## and the headline values are asserted explicitly so a regenerated fixture cannot hide a change.
+const TestContext = preload("res://tests/test_context.gd")
 const RUN_PATH := "res://world/data/run_v2.json"
 const FIXTURE := "boss1_frozen/ruins_warden.json"
 const DATA_DIR := "res://world/data"
+
+## Discovered by run_tests.gd (run(t)) and also runnable directly: --script res://tests/test_ad_boss1_frozen.gd
+func _initialize() -> void:
+	var t := TestContext.new()
+	run(t)
+	print("TEST SUMMARY: %d passed / %d failed" % [t.passed, t.failed])
+	for failure in t.failures:
+		printerr("FAILED: ", failure)
+	if t.failed == 0:
+		print("PASS")
+	quit(1 if t.failed > 0 else 0)
 
 func run(t) -> void:
 	var live = _load_json(RUN_PATH)
