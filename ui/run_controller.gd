@@ -57,6 +57,8 @@ var show_dev_tools = null
 var perf_seed = null
 var _notice_seen := ""
 var _notice_until_ms := 0
+var _event_card_key := ""
+var _event_card_until_ms := 0
 var _last_wet_kills := 0
 var _last_arcs := 0
 const TELEMETRY_INDEX := {"room1":3,"first_reward":4,"first_workshop":5,"telegraph":6,"spells_are_runes":7}
@@ -109,6 +111,7 @@ const HUD_ARTIFACT_LEFT := 499.0
 const HUD_BOSS_BOTTOM := 46.0
 const HUD_STATUS_BOTTOM := 80.0
 const NOTICE_MS := 5000
+const EVENT_CARD_MS := 2500
 const TEST_RANGE_SIZE := Vector2(916,650)
 const DESK_DOOR_RADIUS := 34.0
 const EDITOR_SIZE := Vector2(632,665) # AD-153: 296 canvas px at x2 (skin A editor column) plus the panel frame and scrollbar
@@ -791,6 +794,23 @@ func room_display_name(room_id: String) -> String:
 	var key = flavour.get("room_names", {}).get(room_id, "")
 	return tr(str(key)) if key != "" else room_id
 
+## AD-242: title card (once per room entry, EVENT_CARD_MS) and, for a timed event, the seconds left. "" outside event rooms.
+func _event_notice() -> String:
+	if flow.event_id == "" or flow.state != "fighting":
+		return ""
+	var event: Dictionary = flow.config.get("events",{}).get(flow.event_id,{})
+	var key := "%d:%s" % [flow.run.sequence_index,flow.event_id]
+	var now := Time.get_ticks_msec()
+	if key != _event_card_key:
+		_event_card_key = key
+		_event_card_until_ms = now+EVENT_CARD_MS
+	if now < _event_card_until_ms:
+		return tr(str(event.get("title_key","")))+"\n"+tr(str(event.get("subtitle_key","")))
+	var left: int = flow.encounter.event_seconds_left() if flow.encounter != null else 0
+	if left > 0:
+		return tr("event.timer") % [tr(str(event.get("title_key",""))),left]
+	return ""
+
 ## Rift line is returned once per run (reset on retry / new seed).
 func stage_banner() -> String:
 	if _rift_shown:
@@ -1206,6 +1226,10 @@ func _update_labels() -> void:
 		_notice_seen = current_notice
 		_notice_until_ms = Time.get_ticks_msec()+NOTICE_MS
 	notice_panel.visible = current_notice != "" and Time.get_ticks_msec() < _notice_until_ms
+	var event_text := _event_notice()
+	if event_text != "":
+		notices.text = event_text
+		notice_panel.visible = true
 	pause_button.disabled = not can_pause()
 	_update_dev_label()
 	if tip != null and _debug_pinned_tip != "":

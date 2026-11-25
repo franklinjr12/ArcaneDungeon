@@ -653,3 +653,8 @@ affix.shielded.name,Shielded
 affix.shielded.desc,A frontal ward blocks most projectiles.
 affix.anchored.name,Anchored
 affix.anchored.desc,Cannot be knocked back and moves slower.
+event.herald.title,Herald of the Warden
+event.herald.subtitle,The Warden's adept bars the way.
+event.flood_gate.title,Flood Gate
+event.flood_gate.subtitle,Survive the rising water.
+event.timer,%s: %d s

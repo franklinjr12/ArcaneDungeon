@@ -41,7 +41,8 @@ func _scripted_run(run_seed: int, take_optional: bool, visits: Array):
 func run(t) -> void:
 	var cfg: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(Flow.CONFIG_V2))
 	for run_seed in range(1,21):
-		var rooms: Array = Flow.build_sequence(cfg,run_seed)
+		# AD-242: the always-on Flood Gate event room is an extra combat entry in stage 1; checked in test_ad_boss_events.
+		var rooms: Array = Flow.build_sequence(cfg,run_seed).filter(func(r): return str(r["id"]) != "cistern_flood_gate")
 		t.equal(rooms.size(),12,"AD-224 seed %d has 12 entries" % run_seed)
 		for stage_index in 2:
 			var types: Array = []
@@ -64,7 +65,7 @@ func run(t) -> void:
 				type = "optional"
 			if counts.has(type):
 				counts[type] += 1
-		t.equal(counts,{"combat":6,"optional":2 if take_optional else 0,"workshop":2,"boss":2},"AD-224 %s room counts" % label)
+		t.equal(counts,{"combat":7,"optional":2 if take_optional else 0,"workshop":2,"boss":2},"AD-224 %s room counts" % label)
 		t.equal(visits.size(),2,"AD-224 %s two desk visits" % label)
 		for v in visits:
 			t.check(v["merchant"],"AD-224 %s merchant has stock at the desk" % label)

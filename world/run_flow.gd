@@ -241,8 +241,9 @@ func _track_enemies() -> void:
 				while first_encounters.size() > 8:
 					first_encounters.pop_front()
 			_seen_enemies[str(enemy.kind)] = true
-		if str(enemy.affix) != "":
-			_seen_affixes[str(enemy.affix)] = true
+		var affix := str(enemy.get("affix")) if enemy.get("affix") != null else ""
+		if affix != "":
+			_seen_affixes[affix] = true
 
 func start_new(run_seed: int) -> void:
 	_seen_enemies.clear()
