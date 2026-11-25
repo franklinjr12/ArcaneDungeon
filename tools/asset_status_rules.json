@@ -16,6 +16,314 @@
       "note": ""
     },
     {
+      "glob": "art/export/til/ad_bgd_ruins_depth.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/enm/ad_enm_bone_thrall.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/actors/ad_enm_bone_thrall.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/enm/ad_enm_fallen_adept.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/actors/ad_enm_fallen_adept.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/actors/ad_enm_fallen_adept_left.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/enm/ad_enm_ghoul_stalker.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/actors/ad_enm_ghoul_stalker.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/actors/ad_enm_ghoul_stalker_left.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/enm/ad_enm_grave_hound.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/actors/ad_enm_grave_hound.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/actors/ad_enm_grave_hound_left.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/vfx/ad_fx_vignette_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_banner_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_bone_pile_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_bookshelf_ruins_16.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_bookshelf_ruins_32.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_brazier_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_brazier_ruins_glow.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_breakable_urn.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_breakable_urn_glow.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_broken_wall_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_burnable_crate_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_burnable_crate_ruins_glow.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_candles_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_chains_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_cobweb_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_cobweb_ruins_glow.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_column_broken_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_column_snapped_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_column_toppled_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_cracked_pillar_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_cracked_wall_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_puddle_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_puddle_ruins_glow.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_rubble_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_rune_plinth_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_sarcophagus_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/prp/ad_prp_scroll_pile_ruins.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/til/ad_til_ruins_floor.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/til/ad_til_ruins_floor_var.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/til/ad_til_ruins_light.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/til/ad_til_ruins_wall.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
+      "glob": "art/export/til/ad_til_ruins_wall_mass.png",
+      "status": "final",
+      "licence": "Project-original (Arcane Studio)",
+      "credit": "",
+      "note": "AD-244/245/246 approved"
+    },
+    {
       "glob": "art/export/*",
       "status": "placeholder",
       "licence": "Project-original (Arcane Studio)",

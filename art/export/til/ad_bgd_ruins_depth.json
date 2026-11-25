@@ -1,0 +1,62 @@
+{
+ "frames": [
+  {
+   "filename": "ad_bgd_ruins_depth_depth_00",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 640,
+    "h": 360
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 640,
+    "h": 360
+   },
+   "sourceSize": {
+    "w": 640,
+    "h": 360
+   },
+   "duration": 1000
+  }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_bgd_ruins_depth.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 640,
+   "h": 360
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "depth",
+    "from": 0,
+    "to": 0,
+    "direction": "forward",
+    "color": "#000000ff"
+   }
+  ],
+  "slices": [
+   {
+    "name": "pivot",
+    "keys": [
+     {
+      "frame": 0,
+      "bounds": {
+       "x": 320,
+       "y": 358,
+       "w": 1,
+       "h": 1
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

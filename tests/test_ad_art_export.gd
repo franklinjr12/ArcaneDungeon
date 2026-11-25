@@ -108,7 +108,7 @@ func _cistern(t, m: Dictionary, assets: Dictionary) -> void:
 	t.equal(assets.get("ad_fx_cistern_motes", {}).get("category", ""), "vfx", "AD-154 motes are vfx")
 	t.equal(assets.get("ad_fx_cistern_motes", {}).get("id", ""), "AD-TIL-010-motes", "AD-154 motes id")
 	for s in ["brazier_cistern", "brazier_ruins", "breakable_urn", "breakable_urn_cistern", "burnable_crate_cistern", "burnable_crate_ruins", "cobweb_cistern", "cobweb_ruins", "cracked_wall_cistern", "cracked_wall_ruins", "ice_patch", "puddle_cistern", "puddle_ruins"]:
-		t.check(assets.has("ad_prp_" + s) and assets["ad_prp_" + s]["row"] == "AD-120", "AD-154 AD-120 prop " + s)
+		t.check(assets.has("ad_prp_" + s) and assets["ad_prp_" + s]["row"] in ["AD-120", "AD-245"], "AD-154 AD-120/AD-245 prop " + s)
 	for s in ["treasure_chest", "challenge_altar"]:
 		for v in ["ruins", "cistern"]:
 			var k := "ad_prp_%s_%s" % [s, v]

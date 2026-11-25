@@ -208,9 +208,11 @@ def _enm(src, rows, alias=None):
 # kind: rows, sheets{key: (src stem path, dest stem, has_left, tag filter (None = all)[, tag aliases])}
 ACTORS = {
     "mage": {"rows": ["AD-061", "AD-062", "AD-064", "AD-121"], "sheets": {"main": ("AD-121/export/ad_chr_mage", "ad_chr_mage", False, None)}},
-    "bone_thrall": {"rows": ["AD-052"], "sheets": {"main": ("AD-052/export/ad_enm_bone_thrall", "ad_enm_bone_thrall", False, None)}},
-    "fallen_adept": {"rows": ["AD-053", "AD-063"], "sheets": {"main": ("AD-063/adept/export/ad_enm_fallen_adept", "ad_enm_fallen_adept", True, None)}},
-    "grave_hound": {"rows": ["AD-054", "AD-063"], "sheets": {"main": ("AD-063/hound/export/ad_enm_grave_hound", "ad_enm_grave_hound", True, None)}},
+    "bone_thrall": {"rows": ["AD-052", "AD-246"], "sheets": {"main": ("AD-246/export/ad_enm_bone_thrall", "ad_enm_bone_thrall", False, None)}},
+    "fallen_adept": {"rows": ["AD-053", "AD-063", "AD-246"], "sheets": {"main": ("AD-246/export/ad_enm_fallen_adept", "ad_enm_fallen_adept", True, None)}},
+    "grave_hound": {"rows": ["AD-054", "AD-063", "AD-246"], "sheets": {"main": ("AD-246/export/ad_enm_grave_hound", "ad_enm_grave_hound", True, None)}},
+    # AD-249: map 1 refresh (AD-246); ghoul_stalker is its own actor (was a bone_thrall placeholder)
+    "ghoul_stalker": {"rows": ["AD-246"], "sheets": {"main": ("AD-246/export/ad_enm_ghoul_stalker", "ad_enm_ghoul_stalker", True, None)}},
     "undead_warden": {"rows": ["AD-055", "AD-056", "AD-063", "AD-064"], "sheets": {
         "main": ("AD-063/warden/export/ad_bos_ossuary_warden", "ad_bos_ossuary_warden", True, WARDEN_MAIN),
         "late": ("AD-064/export/ad_bos_ossuary_warden", "ad_bos_ossuary_warden_late", True, WARDEN_LATE)}},
