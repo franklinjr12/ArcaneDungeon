@@ -53,6 +53,15 @@ static func roll(seed_value: int, room_index: int, optional: bool) -> String:
 	var list := ids()
 	return str(list[rng.randi_range(0, list.size() - 1)])
 
+## Which wave spawn is the room's elite: [wave, index] from data; mini-bosses are never it.
+static func elite_slot() -> Array:
+	var slot: Dictionary = config().get("elite_spawn", {})
+	return [int(slot.get("wave", 0)), int(slot.get("index", 0))]
+
+## Seed for a room: run seed mixed with the room id so every room rolls independently.
+static func room_seed(run_seed: int, room_id: String) -> int:
+	return hash([run_seed, room_id])
+
 static func outline_color(id: String) -> Color:
 	return Color.html(str(param(id, "outline_color", "#ffffff")))
 
@@ -69,3 +78,10 @@ static func apply(_session, enemy, id: String) -> void:
 	if not is_known(id) or not eligible(enemy):
 		return
 	enemy.affix = id
+	enemy.target.tags.append("affix:" + id)
+	if id == "warded":
+		var essences: Array = param(id, "counters", {}).keys()
+		essences.sort()
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash([enemy.target.id, id])
+		enemy.affix_essence = str(essences[rng.randi_range(0, essences.size() - 1)])

@@ -14,6 +14,8 @@ var intent
 var death_announced := false
 ## AD-239: elite affix id ("" = none); never set on bosses.
 var affix := ""
+## AD-239: essence a warded elite is immune to ("" otherwise).
+var affix_essence := ""
 var transitions: Array = []
 var heading := Vector2.LEFT
 var behaviours: Array = []

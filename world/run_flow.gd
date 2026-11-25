@@ -361,7 +361,9 @@ func _enter_current() -> Dictionary:
 		state = "fighting"
 	else:
 		encounter = Encounter.new()
-		encounter.initialize(room,session,int(config["max_active_enemies"]))
+		var entry: Dictionary = rooms[run.sequence_index]
+		# AD-239: 1-based room number within the stage drives the affix chance.
+		encounter.initialize(room,session,int(config["max_active_enemies"]),int(entry.get("room",0))+1,bool(entry.get("optional",false)),int(run.seed))
 		state = "fighting"
 	_prior_reactions = 0
 	room_reactions = 0
