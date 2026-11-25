@@ -12,6 +12,7 @@ const DamageEvent = preload("res://combat/damage_event.gd")
 const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 const Difficulty = preload("res://game/core/difficulty.gd")
 const AudioDirector = preload("res://game/audio/audio_director.gd")
+const LampreyPair = preload("res://combat/enemy_behaviours/lamprey_pair.gd")
 const TUNING_FILE := "res://combat/combat_tuning_v1.json"
 ## Test-only path override (TestContext.with_frozen_balance); empty means TUNING_FILE.
 static var tuning_override := ""
@@ -142,6 +143,7 @@ func spawn_enemy(kind: String, at: Vector2):
 		target.health.resistances = p["channel_resistances"].duplicate(true)
 	var enemy = Enemy.new(target,kind,p)
 	enemies.append(enemy)
+	LampreyPair.link_on_spawn(self,enemy)
 	return enemy
 
 func _flush_pending_spawns() -> void:
@@ -251,6 +253,14 @@ func hazard_view() -> Array:
 			"remaining_ticks":int(hazard["duration_ticks"])-int(hazard["age"])})
 	return view
 
+## AD-238: read-only lamprey tether view for rendering, ordered by eel A's id: [{a_id,b_id,from,to,cut}].
+func tether_view() -> Array:
+	var view: Array = []
+	for resolved in LampreyPair.links(self):
+		view.append({"a_id":resolved["a"].target.id,"b_id":resolved["b"].target.id,"from":resolved["a"].target.position,
+			"to":resolved["b"].target.position,"cut":bool(resolved["link"]["cut"])})
+	return view
+
 ## Live summons owned by `summoner_id`, including ones still queued.
 func summons_owned_by(summoner_id: int) -> int:
 	var count := 0
@@ -340,7 +350,12 @@ func step() -> void:
 	player.step_timers()
 	if env_props != null:
 		env_props.pre_step(sim)
+	var shot_positions := {}
+	for entry in sim.active:
+		if entry["kind"] == "projectile":
+			shot_positions[entry["effect"].id] = entry["effect"].position
 	sim.step()
+	LampreyPair.check_spell_cuts(self,shot_positions)
 	# AI progresses once after all player spells for the tick.
 	var audio_before: Array = []
 	if audio_sink.is_valid():

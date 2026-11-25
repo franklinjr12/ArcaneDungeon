@@ -25,6 +25,8 @@ const WEAK := {
 	"rune_sentry": "lightning",
 	"grave_mite": "fire",
 	"ash_censer": "cold",
+	"tide_siphon": "lightning",
+	"lamprey": "lightning",
 }
 
 func run(t) -> void:

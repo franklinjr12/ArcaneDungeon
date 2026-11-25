@@ -31,6 +31,8 @@ var ai: Dictionary = {}
 ## Set by modifier components (phase_walls): ignore walls when moving / ignore line of sight for attacks.
 var phase_walls := false
 var ignore_sight := false
+## AD-238: release tick of state "stunned" (set by stun(); -1 = never stunned).
+var stun_until := -1
 var _movers: Array = []
 var _attacker = null
 
@@ -73,6 +75,17 @@ func begin_tick() -> void:
 ## Damage-taken precedence: shield_front's frontal scale, support_buff's scale and intangible_cycle's phase scale all multiply.
 func apply_scales() -> void:
 	target.damage_scale = shield_scale*buff_damage_scale*phase_scale
+
+## AD-238: state "stunned" (brain suspended, intent dropped). The stun spans `ticks` session ticks counting both the
+## tick it lands (T) and the release tick T+ticks-1, on which the enemy leaves "stunned" and acts again.
+## Re-stunning only extends. A dead enemy is never stunned.
+func stun(session, ticks: int) -> void:
+	if not target.alive() or ticks <= 0:
+		return
+	var tick: int = session.sim.clock.tick
+	stun_until = maxi(stun_until,tick+ticks-1)
+	intent = null
+	change_state("stunned",tick)
 
 func change_state(next: String, tick: int) -> void:
 	if state == next:
@@ -141,6 +154,10 @@ func advance(session) -> void:
 		return
 	if session.state != "playing":
 		return
+	if state == "stunned":
+		if session.sim.clock.tick < stun_until:
+			return
+		change_state("chase",session.sim.clock.tick)
 	# Frozen: the whole brain is suspended (no movement, state progress, cooldown or windup completion).
 	if target.status.has("frozen",session.sim.clock.tick):
 		return
