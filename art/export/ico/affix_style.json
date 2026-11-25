@@ -1,0 +1,202 @@
+{
+ "status": "CANDIDATE - game-art APPROVE pending",
+ "outline_hex": "#c0dd74",
+ "outline_px": 1,
+ "outline_source": "fx-nature-4 (art01 palette index 59), the first candidate",
+ "outline_rule": "one colour for every elite; 1 px outline drawn in code on the transparent pixels 4-adjacent to the sprite silhouette; no outline on non-elite actors",
+ "outline_contrast_min_3to1": {
+  "start": true,
+  "alt": true
+ },
+ "outline_test": {
+  "floors": {
+   "ruins_floor_tile": [
+    "#363736",
+    "#1f2020",
+    "#4d4c4a"
+   ],
+   "ruins_screen_lit": [
+    "#111919",
+    "#171c1c",
+    "#202720",
+    "#242722",
+    "#1d2422",
+    "#18201e"
+   ],
+   "cistern_floor_tile": [
+    "#184251",
+    "#0f1b24",
+    "#363736",
+    "#020c13",
+    "#1f2020",
+    "#235a6e",
+    "#4d4c4a"
+   ]
+  },
+  "candidates": {
+   "start": {
+    "hex": "#c0dd74",
+    "passes_3to1_both_stages": true,
+    "contrast": {
+     "ruins_floor_tile": {
+      "min": 5.65,
+      "per_floor": {
+       "#363736": 7.88,
+       "#1f2020": 10.76,
+       "#4d4c4a": 5.65
+      }
+     },
+     "ruins_screen_lit": {
+      "min": 9.97,
+      "per_floor": {
+       "#111919": 11.76,
+       "#171c1c": 11.35,
+       "#202720": 10.08,
+       "#242722": 9.97,
+       "#1d2422": 10.42,
+       "#18201e": 10.94
+      }
+     },
+     "cistern_floor_tile": {
+      "min": 5.01,
+      "per_floor": {
+       "#184251": 7.14,
+       "#0f1b24": 11.51,
+       "#363736": 7.88,
+       "#020c13": 13.0,
+       "#1f2020": 10.76,
+       "#235a6e": 5.01,
+       "#4d4c4a": 5.65
+      }
+     }
+    },
+    "min_dE76_to_reserved": 39.9,
+    "dE76_to_reserved": {
+     "telegraph #F0A060 (presentation_v1)": 50.6,
+     "hp red (hp-red-2)": 87.5,
+     "hp red (hp-red-3 rim)": 66.4,
+     "mana blue (mana-blue-2)": 118.3,
+     "rune violet #8C6595 (fx-arcane-3)": 91.9,
+     "coin gold (ui-gold-4)": 39.9,
+     "damage-number white (ui-text-3)": 48.6
+    }
+   },
+   "alt": {
+    "hex": "#b8d9f0",
+    "passes_3to1_both_stages": true,
+    "contrast": {
+     "ruins_floor_tile": {
+      "min": 5.81,
+      "per_floor": {
+       "#363736": 8.1,
+       "#1f2020": 11.06,
+       "#4d4c4a": 5.81
+      }
+     },
+     "ruins_screen_lit": {
+      "min": 10.24,
+      "per_floor": {
+       "#111919": 12.08,
+       "#171c1c": 11.66,
+       "#202720": 10.36,
+       "#242722": 10.24,
+       "#1d2422": 10.71,
+       "#18201e": 11.25
+      }
+     },
+     "cistern_floor_tile": {
+      "min": 5.15,
+      "per_floor": {
+       "#184251": 7.34,
+       "#0f1b24": 11.83,
+       "#363736": 8.1,
+       "#020c13": 13.36,
+       "#1f2020": 11.06,
+       "#235a6e": 5.15,
+       "#4d4c4a": 5.81
+      }
+     }
+    },
+    "min_dE76_to_reserved": 22.2,
+    "dE76_to_reserved": {
+     "telegraph #F0A060 (presentation_v1)": 67.9,
+     "hp red (hp-red-2)": 85.4,
+     "hp red (hp-red-3 rim)": 61.5,
+     "mana blue (mana-blue-2)": 67.3,
+     "rune violet #8C6595 (fx-arcane-3)": 48.0,
+     "coin gold (ui-gold-4)": 62.7,
+     "damage-number white (ui-text-3)": 22.2
+    }
+   }
+  },
+  "chosen": "start"
+ },
+ "affixes": {
+  "volatile": "telegraphed death blast",
+  "warded": "immune to one essence, weak to its counter (base icon + gem variant per essence)",
+  "hasted": "faster movement and attacks",
+  "splitting": "splits into two smaller on death",
+  "shielded": "frontal projectile ward",
+  "anchored": "immune to knockback / force, slower"
+ },
+ "icons": {
+  "volatile": {
+   "16": "ad_ico_affix_volatile_16.png",
+   "8": "ad_ico_affix_volatile_8.png"
+  },
+  "warded": {
+   "16": "ad_ico_affix_warded_16.png",
+   "8": "ad_ico_affix_warded_8.png"
+  },
+  "warded_fire": {
+   "16": "ad_ico_affix_warded_fire_16.png",
+   "8": "ad_ico_affix_warded_fire_8.png"
+  },
+  "warded_water": {
+   "16": "ad_ico_affix_warded_water_16.png",
+   "8": "ad_ico_affix_warded_water_8.png"
+  },
+  "warded_lightning": {
+   "16": "ad_ico_affix_warded_lightning_16.png",
+   "8": "ad_ico_affix_warded_lightning_8.png"
+  },
+  "warded_earth": {
+   "16": "ad_ico_affix_warded_earth_16.png",
+   "8": "ad_ico_affix_warded_earth_8.png"
+  },
+  "hasted": {
+   "16": "ad_ico_affix_hasted_16.png",
+   "8": "ad_ico_affix_hasted_8.png"
+  },
+  "splitting": {
+   "16": "ad_ico_affix_splitting_16.png",
+   "8": "ad_ico_affix_splitting_8.png"
+  },
+  "shielded": {
+   "16": "ad_ico_affix_shielded_16.png",
+   "8": "ad_ico_affix_shielded_8.png"
+  },
+  "anchored": {
+   "16": "ad_ico_affix_anchored_16.png",
+   "8": "ad_ico_affix_anchored_8.png"
+  }
+ },
+ "atlas": {
+  "16": "ad_ico_affix_atlas_16.png",
+  "8": "ad_ico_affix_atlas_8.png",
+  "columns": 5
+ },
+ "affix_order": [
+  "volatile",
+  "warded",
+  "warded_fire",
+  "warded_water",
+  "warded_lightning",
+  "warded_earth",
+  "hasted",
+  "splitting",
+  "shielded",
+  "anchored"
+ ],
+ "palette": "arcane_palette_v02.gpl (art01 64-index set; no new hexes)"
+}
