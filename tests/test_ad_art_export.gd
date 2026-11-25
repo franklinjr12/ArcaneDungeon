@@ -1,7 +1,17 @@
-extends RefCounted
+extends SceneTree
 const ART = preload("res://ui/pixel_art_renderer.gd")
+const TestContext = preload("res://tests/test_context.gd")
 ## AD-030: every art/export manifest entry loads as SpriteFrames and matches its Aseprite json.
 const MANIFEST := "res://art/export/manifest.json"
+
+## Discovered by run_tests.gd (run(t)) and also runnable directly: --script res://tests/test_ad_art_export.gd
+func _initialize() -> void:
+	var t := TestContext.new()
+	run(t)
+	print("TEST SUMMARY: %d passed / %d failed" % [t.passed, t.failed])
+	for failure in t.failures:
+		printerr("FAILED: ", failure)
+	quit(1 if t.failed > 0 else 0)
 
 func run(t) -> void:
 	var m = JSON.parse_string(FileAccess.get_file_as_string(MANIFEST))
