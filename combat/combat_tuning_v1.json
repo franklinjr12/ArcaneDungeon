@@ -366,6 +366,25 @@
       "channel_resistances": {"cold": -0.5},
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
       "behaviours": [{"id": "chase"}, {"id": "pounce", "style": "leap", "slam_radius": 70, "leap_ticks": 14}]
+    },
+    "rune_sentry": {
+      "_note": "AD-237 PROPOSED numbers. Stationary pylon: 75-tick telegraph line (no damage) locks on the player, then the beam sweeps clockwise 0.5 deg/tick (30 deg/s) for 180 ticks (90 deg). Tangential beam speed at full 300 reach is ~157 u/s vs player 255 u/s, so stepping sideways or backing out of reach always works; it forces movement, not a reflex check. Counter: Lightning (-0.5); hp 60 = 6 bolt hits.",
+      "display_name": "Rune sentry",
+      "hp": 60,
+      "radius": 26,
+      "move_speed": 0,
+      "perception_radius": 1250,
+      "preferred_range": 0,
+      "attack_range": 300,
+      "telegraph_ticks": 75,
+      "recovery_ticks": 60,
+      "cooldown_ticks": 45,
+      "damage": 10,
+      "attack_kind": "line",
+      "color": "#8f7bd6",
+      "channel_resistances": {"lightning": -0.5},
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "turret"}, {"id": "rune_sentry", "beam_length": 300, "beam_half_width": 14, "beam_sweep_degrees_per_tick": 0.5, "beam_active_ticks": 180, "hit_interval_ticks": 30}]
     }
   },
   "scenarios": {
@@ -416,6 +435,16 @@
           "grave_hound",
           390,
           510
+        ]
+      ]
+    },
+    "rune_sentry": {
+      "name": "Rune Sentry",
+      "enemies": [
+        [
+          "rune_sentry",
+          700,
+          455
         ]
       ]
     },

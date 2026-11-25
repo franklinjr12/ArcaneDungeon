@@ -22,6 +22,7 @@ const WEAK := {
 	"storm_crystal": "force",
 	"ghoul_stalker": "fire",
 	"riptide_leaper": "cold",
+	"rune_sentry": "lightning",
 }
 
 func run(t) -> void:
