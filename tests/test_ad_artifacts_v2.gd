@@ -5,6 +5,7 @@ const Reward = preload("res://world/reward_generator.gd")
 const Flow = preload("res://world/run_flow.gd")
 const Meta = preload("res://world/meta_progress.gd")
 const Runner = preload("res://magic/runtime/spell_runner.gd")
+const Session = preload("res://combat/combat_session.gd")
 const IDS := ["thunderhead","frostbrand","kindling","undertow","overcharge","shard_mail",
 	"quicksilver_ink","conduit_coil","tidecaller_shell","mirror_glyph","grave_salt","fracture_lens"]
 const TAGS := ["reaction","form","trigger","defence"]
@@ -24,6 +25,9 @@ func run(t) -> void:
 	test_quicksilver_ink(t)
 	test_mirror_glyph(t)
 	test_fracture_lens(t)
+	test_shard_mail(t)
+	test_tidecaller_shell(t)
+	test_grave_salt(t)
 
 func _csv_keys() -> Dictionary:
 	var keys := {}
@@ -393,3 +397,96 @@ func test_fracture_lens(t) -> void:
 		_fire(r)
 	t.equal(bolt.trace.filter_records(-1,"","hit")[0]["amount"],plain_bolt.trace.filter_records(-1,"","hit")[0]["amount"],"AD-240 fracture lens: projectile damage is unchanged")
 	t.check(size > 0.0 and damage < 0.0,"AD-240 fracture lens: tunables read from data")
+
+
+## --- Step 4: defence artifacts (shard_mail, tidecaller_shell, grave_salt) ---------------------------------
+
+func _session(ids):
+	var s = Session.new(240,"empty",0)
+	s.sim.loadout.allow_edit = true
+	s.defer_clear = true
+	s.sim.settings["combat"]["regen_mana_per_tick"] = 0.0
+	if ids != null:
+		s.sim.artifacts = Artifacts.new(ids)
+	return s
+
+## Shatters a frozen target with a force bolt, then returns [session, hp lost to one 10-damage hit right after].
+func _shatter_hit(ids, freeze: bool) -> Array:
+	var s = _session(ids)
+	var formula := {"schema_version":2,"formula_id":"test.ad240","display_name":"t",
+		"root":{"essence_id":"essence.force","manifestation_id":"form.projectile","modifier_ids":[],"params":{}}}
+	s.sim.equip(1,formula)
+	var foe = s.spawn_enemy("bone_thrall",Vector2(900,800))
+	var victim = s.sim.add_target(s.sim.actor.position+Vector2(160,0),Vector2.ZERO,100000.0)
+	if freeze:
+		_status(s.sim,victim,"frozen")
+	s.sim.try_cast(1,s.sim.actor.position,Vector2.RIGHT)
+	for i in 40:
+		s.sim.step()
+	var before: float = s.sim.actor.health.current
+	s.damage_player(foe.target.id,10.0,"physical")
+	return [s,before-s.sim.actor.health.current]
+
+func test_shard_mail(t) -> void:
+	var params := Artifacts.new(["shard_mail"])
+	var reduction := float(params.param("shard_mail","reduction"))
+	var window := int(params.param("shard_mail","duration_ticks"))
+	var plain: Array = _shatter_hit(null,true)
+	var held: Array = _shatter_hit(["shard_mail"],true)
+	t.check(plain[1] > 0.0,"AD-240 shard mail: a hit lands without it")
+	t.check(held[0].sim.trace.filter_records(-1,"","reaction").any(func(e): return e["reason"] == "frozen_force_shatter"),"AD-240 shard mail: the shatter reaction fired")
+	t.check(absf(held[1]-plain[1]*(1.0-reduction)) < 0.01,"AD-240 shard mail: damage right after a shatter is cut by `reduction`")
+	var no_shatter: Array = _shatter_hit(["shard_mail"],false)
+	t.equal(no_shatter[1],plain[1],"AD-240 shard mail: no shatter, no reduction")
+	var s = held[0]
+	var foe = s.enemies[0]
+	s.sim.step()
+	var left: int = int(s.sim.artifacts.state["shard_mail_until"])-s.sim.clock.tick
+	t.check(left > 0 and left <= window,"AD-240 shard mail: the timer lives in artifacts.state and is at most duration_ticks")
+	for i in window+2:
+		s.sim.step()
+	var hp: float = s.sim.actor.health.current
+	s.damage_player(foe.target.id,10.0,"physical")
+	t.equal(hp-s.sim.actor.health.current,plain[1],"AD-240 shard mail: the reduction ends after duration_ticks")
+
+func _shell_mana(ids, spot: Vector2) -> float:
+	var s = _session(ids)
+	s.set_water([{"kind":"shallow","rect":[300,300,500,120]}])
+	s.sim.actor.position = spot
+	s.sim.mana = 10.0
+	for i in 60:
+		s.step()
+	return s.sim.mana-10.0
+
+func test_tidecaller_shell(t) -> void:
+	var per_second := float(Artifacts.new(["tidecaller_shell"]).param("tidecaller_shell","mana_per_second"))
+	var wet := _shell_mana(["tidecaller_shell"],Vector2(400,360))
+	t.check(absf(wet-per_second) < 0.05,"AD-240 tidecaller shell: one second in water restores mana_per_second (%.2f)" % wet)
+	t.equal(_shell_mana(["tidecaller_shell"],Vector2(400,700)),0.0,"AD-240 tidecaller shell: nothing restored on dry ground")
+	t.equal(_shell_mana(null,Vector2(400,360)),0.0,"AD-240 tidecaller shell: no artifact, no restore in water")
+
+func _salt_kill(ids, status: String) -> Array:
+	var r = _sim("essence.fire",ids)
+	var target = r.add_target(Vector2(300,340),Vector2.ZERO,1.0)
+	if status != "":
+		_status(r,target,status)
+	r.actor.health.current = 50.0
+	_fire(r)
+	return [r,target]
+
+func test_grave_salt(t) -> void:
+	var heal := float(Artifacts.new(["grave_salt"]).param("grave_salt","heal"))
+	for status in ["wet","burning","frozen"]:
+		var held: Array = _salt_kill(["grave_salt"],status)
+		t.check(not held[1].alive(),"AD-240 grave salt %s: the target dies" % status)
+		t.equal(held[0].actor.health.current,50.0+heal,"AD-240 grave salt %s: killing a reacting target heals `heal`" % status)
+		t.equal(held[0].trace.filter_records(-1,"","artifact").filter(func(e): return e["reason"] == "artifact.grave_salt").size(),1,"AD-240 grave salt %s: the heal is traced once" % status)
+		var plain: Array = _salt_kill(null,status)
+		t.equal(plain[0].actor.health.current,50.0,"AD-240 grave salt %s: no artifact, no heal" % status)
+	var bare: Array = _salt_kill(["grave_salt"],"")
+	t.check(not bare[1].alive() and bare[0].actor.health.current == 50.0,"AD-240 grave salt: a kill with no reaction status heals nothing")
+	var full = _sim("essence.fire",["grave_salt"])
+	var victim = full.add_target(Vector2(300,340),Vector2.ZERO,1.0)
+	_status(full,victim,"wet")
+	_fire(full)
+	t.equal(full.actor.health.current,full.actor.health.maximum,"AD-240 grave salt: healing never exceeds max HP")

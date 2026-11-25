@@ -48,6 +48,7 @@ var initialized := false
 ## AD-143: target ids whose death already ran the on-kill artifact hooks (once per target).
 var _kill_seen: Dictionary = {}
 const ARTIFACT_COLD_ESSENCE := "essence.cold"
+const GRAVE_SALT_STATUSES := ["wet","burning","frozen"]
 ## AD-143: held artifacts (world/artifacts.gd instance) or null; null keeps behaviour unchanged.
 var artifacts = null:
 	set(value):
@@ -236,6 +237,8 @@ func _on_target_died(target, ctx: Dictionary) -> void:
 			"burst_radius":float(artifacts.param("shatterheart","radius",70)),
 			"base_damage":float(artifacts.param("shatterheart","damage",12))}}
 		_spawn_burst(blast,target.position,base)
+	if _art("grave_salt") and GRAVE_SALT_STATUSES.any(func(id): return target.status.has(id,clock.tick)):
+		_grave_salt_heal(target,base)
 	if _art("ember_heart") and target.status.has("burning",clock.tick):
 		var near: Array = targets.query(target.position,float(artifacts.param("ember_heart","radius",110)),actor.team,[target.id],"",clock.tick)
 		if not near.is_empty():
@@ -253,6 +256,26 @@ func _on_target_died(target, ctx: Dictionary) -> void:
 				{"cast_id":base["cast_id"],"root_cast_id":base["root_cast_id"],"formula_id":base["formula_id"],"team":actor.team})
 			trace.record("status",{"cast_id":base["cast_id"],"root_cast_id":base["root_cast_id"],"formula_id":base["formula_id"],
 				"target_id":neighbour.id,"reason":"burning:applied","tick":clock.tick})
+
+## AD-240 Grave Salt: a kill on a target still carrying a reaction status (wet/burning/frozen) heals the caster `heal` HP directly.
+func _grave_salt_heal(target, base: Dictionary) -> void:
+	if not actor.alive():
+		return
+	var before: float = actor.health.current
+	actor.health.current = minf(actor.health.maximum,before+float(artifacts.param("grave_salt","heal",3)))
+	trace.record("artifact",{"cast_id":base["cast_id"],"root_cast_id":base["root_cast_id"],"formula_id":base["formula_id"],
+		"target_id":target.id,"reason":"artifact.grave_salt","amount":roundi(actor.health.current-before),"tick":clock.tick})
+
+## AD-240 Shard Mail: fraction of incoming player damage removed while the post-shatter window is open (0.0 otherwise).
+func incoming_damage_reduction() -> float:
+	if not _art("shard_mail") or clock.tick >= int(artifacts.state.get("shard_mail_until",-1)):
+		return 0.0
+	return float(artifacts.param("shard_mail","reduction",0.3))
+
+## AD-240 Tidecaller Shell: called each session tick while the player stands in water; mana_per_second spread over the tick rate.
+func artifact_water_step() -> void:
+	if _art("tidecaller_shell"):
+		mana = minf(float(settings["combat"]["player_max_mana"]),mana+float(artifacts.param("tidecaller_shell","mana_per_second",2))/float(clock.tick_rate))
 
 ## AD-240 Conduit Coil: lightning damage landing on a Burning target sets off one overload burst, once per target per root cast.
 ## The burst carries `artifact_kill` (like the on-kill blasts), so its own lightning hits can never trigger another one.
@@ -741,6 +764,8 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 			"target_id":target.id,"reason":state_change["state"]+":"+state_change["action"],"tick":clock.tick})
 	for entry in result["reactions"]:
 		_resonance(str(entry["id"]),int(ctx["team"]))
+		if str(entry["id"]) == "frozen_force_shatter" and _art("shard_mail"):
+			artifacts.state["shard_mail_until"] = clock.tick+int(artifacts.param("shard_mail","duration_ticks",60))
 		var bonus := float(entry["bonus_damage"])
 		if bonus > 0.0:
 			_track_damage(bonus)

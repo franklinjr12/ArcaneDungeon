@@ -227,6 +227,8 @@ func _step_water() -> void:
 		return
 	var tick: int = sim.clock.tick
 	water.advance(tick)
+	if water.in_water(sim.actor.position,sim.actor.radius):
+		sim.artifact_water_step()
 	if not water_shock.is_empty() and tick % maxi(1,int(water_shock["interval_ticks"])) == 0 and water.is_electrified(sim.actor.position):
 		damage_player(int(water_shock["source_id"]),float(water_shock["damage"]),str(water_shock["channel"]))
 	var interval: int = maxi(1,int(data["water"]["wet_interval_ticks"]))
@@ -493,6 +495,7 @@ func damage_player(source_id: int, amount: float, channel: String, attack_id: in
 		return {"accepted":false,"reason":"SHIELDED"}
 	if channel == "lightning" and sim.actor.status.has("wet",sim.clock.tick):
 		amount *= _wet_lightning_scale(source_id)
+	amount *= 1.0-sim.incoming_damage_reduction()
 	var event = DamageEvent.new(source_id,source.team,sim.actor.id,amount,channel,attack_id,sim.clock.tick)
 	var dealt: float = sim.actor.receive_damage(amount,channel,source.team,float(sim.settings["combat"]["armor_scale"]))
 	if dealt > 0:
