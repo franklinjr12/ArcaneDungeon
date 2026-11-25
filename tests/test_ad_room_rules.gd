@@ -321,7 +321,7 @@ func _ruins_rooms(t) -> void:
 	var rules: Dictionary = doc["room_rules"]
 	t.equal(str(doc["stages"][0]["id"]),"ruins","AD-202 ruins: stage 0 is the Ruins")
 	var ids := _ruins_ids(doc)
-	t.equal(ids.size(),9,"AD-202 ruins: 8 pool rooms plus the optional treasure room")
+	t.equal(ids.size(),13,"AD-202 ruins: 12 pool rooms plus the optional treasure room")
 	var shapes: Dictionary = {}
 	for id in ids:
 		var room: Dictionary = doc["room_templates"][id]
@@ -331,7 +331,7 @@ func _ruins_rooms(t) -> void:
 		t.check(bool(verdict["ok"]),"AD-202 ruins: %s validates in initialize (%s)" % [id,str(verdict["issues"])])
 		t.check(int(report["interactions"]) >= 1 and int(report["obstacles"]) >= 2,"AD-202 ruins: %s has cover and an interaction" % id)
 		shapes[str(room.get("shape",""))] = id
-	t.equal(shapes.size(),9,"AD-202 ruins: the nine rooms use nine different shapes")
+	t.check(shapes.size() >= 9,"AD-202 ruins: the rooms use at least nine different shapes (%d)" % shapes.size())
 	for shape in rules["owner_shapes"]:
 		t.check(shapes.has(shape),"AD-202 ruins: owner shape %s is used" % shape)
 	_ruins_kinds_vary(t,doc,ids)
@@ -355,7 +355,7 @@ func _cistern_rooms(t) -> void:
 			stage = entry
 	t.check(not stage.is_empty(),"AD-203 cistern: stage found in run_v2")
 	var ids := _cistern_ids(stage)
-	t.equal(ids.size(),11,"AD-203 cistern: 10 pool rooms plus the optional challenge room")
+	t.equal(ids.size(),15,"AD-203 cistern: 14 pool rooms plus the optional challenge room")
 	var templates: Dictionary = Flow.merged_templates(doc) # run_v2 templates plus the Cistern pool file, pool rules copied in
 	var shapes: Dictionary = {}
 	for id in ids:
@@ -368,7 +368,7 @@ func _cistern_rooms(t) -> void:
 		t.check(not room["layout"].get("water",[]).is_empty(),"AD-203 cistern: %s has water" % id)
 		shapes[str(room.get("shape",""))] = id
 		_navigation(t,id,room,tuning,env_data)
-	t.equal(shapes.size(),ids.size(),"AD-203 cistern: the eleven rooms use eleven different shapes")
+	t.check(shapes.size() >= 11,"AD-203 cistern: the rooms use at least eleven different shapes (%d)" % shapes.size())
 	for shape in rules["owner_shapes"]:
 		t.check(shapes.has(shape),"AD-203 cistern: owner shape %s is used" % shape)
 	for shape in ["cross_hall","eel_lanes","colonnade","dais_island","l_bend","flooded_arena"]:

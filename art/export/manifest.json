@@ -1,5 +1,38 @@
 {
  "assets": {
+  "ad_bgd_ruins_depth": {
+   "canvas": [
+    640,
+    360
+   ],
+   "category": "til",
+   "id": "AD-245-ad_bgd_ruins_depth",
+   "json": "res://art/export/til/ad_bgd_ruins_depth.json",
+   "pivot": [
+    320,
+    358
+   ],
+   "png": "res://art/export/til/ad_bgd_ruins_depth.png",
+   "row": "AD-245",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 320,
+     "y": 358
+    }
+   },
+   "tags": {
+    "depth": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      1000
+     ],
+     "to": 0
+    }
+   }
+  },
   "ad_bos_ossuary_warden": {
    "canvas": [
     64,
@@ -381,6 +414,230 @@
     }
    }
   },
+  "ad_enm_ash_censer": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "enm",
+   "id": "AD-247-ad_enm_ash_censer",
+   "json": "res://art/export/enm/ad_enm_ash_censer.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/enm/ad_enm_ash_censer.png",
+   "row": "AD-247",
+   "slices": {
+    "hurtbox": {
+     "h": 28,
+     "w": 21,
+     "x": 8,
+     "y": 3
+    },
+    "muzzle": {
+     "h": 1,
+     "w": 1,
+     "x": 24,
+     "y": 22
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "attack_side": {
+     "frames": 4,
+     "from": 11,
+     "ms": [
+      70,
+      70,
+      130,
+      200
+     ],
+     "to": 14
+    },
+    "death_side": {
+     "frames": 5,
+     "from": 17,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      200
+     ],
+     "to": 21
+    },
+    "hit_side": {
+     "frames": 2,
+     "from": 15,
+     "ms": [
+      60,
+      100
+     ],
+     "to": 16
+    },
+    "idle_side": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    },
+    "move_side": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 7
+    },
+    "spawn_side": {
+     "frames": 4,
+     "from": 22,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 25
+    },
+    "telegraph_side": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      173,
+      173,
+      174
+     ],
+     "to": 10
+    }
+   }
+  },
+  "ad_enm_ash_censer_left": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "enm",
+   "id": "AD-247-ad_enm_ash_censer_left",
+   "json": "res://art/export/enm/ad_enm_ash_censer_left.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/enm/ad_enm_ash_censer_left.png",
+   "row": "AD-247",
+   "slices": {
+    "hurtbox": {
+     "h": 28,
+     "w": 21,
+     "x": 3,
+     "y": 3
+    },
+    "muzzle": {
+     "h": 1,
+     "w": 1,
+     "x": 7,
+     "y": 22
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "attack_side": {
+     "frames": 4,
+     "from": 11,
+     "ms": [
+      70,
+      70,
+      130,
+      200
+     ],
+     "to": 14
+    },
+    "death_side": {
+     "frames": 5,
+     "from": 17,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      200
+     ],
+     "to": 21
+    },
+    "hit_side": {
+     "frames": 2,
+     "from": 15,
+     "ms": [
+      60,
+      100
+     ],
+     "to": 16
+    },
+    "idle_side": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    },
+    "move_side": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 7
+    },
+    "spawn_side": {
+     "frames": 4,
+     "from": 22,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 25
+    },
+    "telegraph_side": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      173,
+      173,
+      174
+     ],
+     "to": 10
+    }
+   }
+  },
   "ad_enm_bone_thrall": {
    "canvas": [
     32,
@@ -394,12 +651,18 @@
     30
    ],
    "png": "res://art/export/enm/ad_enm_bone_thrall.png",
-   "row": "AD-024",
+   "row": "AD-246",
    "slices": {
     "hurtbox": {
-     "h": 21,
-     "w": 10,
-     "x": 11,
+     "h": 28,
+     "w": 24,
+     "x": 3,
+     "y": 3
+    },
+    "muzzle": {
+     "h": 1,
+     "w": 1,
+     "x": 29,
      "y": 9
     },
     "pivot": {
@@ -410,18 +673,18 @@
     }
    },
    "tags": {
-    "attack": {
+    "attack_side": {
      "frames": 4,
      "from": 11,
      "ms": [
-      80,
-      80,
-      80,
-      80
+      70,
+      70,
+      130,
+      200
      ],
      "to": 14
     },
-    "death": {
+    "death_side": {
      "frames": 5,
      "from": 17,
      "ms": [
@@ -433,16 +696,16 @@
      ],
      "to": 21
     },
-    "hit": {
+    "hit_side": {
      "frames": 2,
      "from": 15,
      "ms": [
-      80,
-      80
+      60,
+      100
      ],
      "to": 16
     },
-    "idle": {
+    "idle_side": {
      "frames": 4,
      "from": 0,
      "ms": [
@@ -453,7 +716,7 @@
      ],
      "to": 3
     },
-    "move": {
+    "move_side": {
      "frames": 4,
      "from": 4,
      "ms": [
@@ -464,24 +727,24 @@
      ],
      "to": 7
     },
-    "spawn": {
+    "spawn_side": {
      "frames": 4,
      "from": 22,
      "ms": [
-      100,
-      100,
-      100,
-      100
-     ],
-     "to": 25
-    },
-    "telegraph": {
-     "frames": 3,
-     "from": 8,
-     "ms": [
+      120,
       120,
       120,
       120
+     ],
+     "to": 25
+    },
+    "telegraph_side": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      173,
+      173,
+      174
      ],
      "to": 10
     }
@@ -500,19 +763,19 @@
     30
    ],
    "png": "res://art/export/enm/ad_enm_fallen_adept.png",
-   "row": "AD-024",
+   "row": "AD-246",
    "slices": {
     "hurtbox": {
-     "h": 21,
-     "w": 10,
-     "x": 11,
-     "y": 9
+     "h": 31,
+     "w": 20,
+     "x": 7,
+     "y": 0
     },
     "muzzle": {
-     "h": 2,
-     "w": 2,
-     "x": 23,
-     "y": 5
+     "h": 1,
+     "w": 1,
+     "x": 24,
+     "y": 4
     },
     "pivot": {
      "h": 1,
@@ -522,39 +785,39 @@
     }
    },
    "tags": {
-    "attack": {
+    "attack_side": {
      "frames": 4,
      "from": 11,
      "ms": [
-      80,
-      80,
-      80,
-      80
+      70,
+      60,
+      180,
+      190
      ],
      "to": 14
     },
-    "death": {
+    "death_side": {
      "frames": 5,
      "from": 17,
      "ms": [
-      100,
-      100,
-      100,
-      100,
-      100
+      110,
+      110,
+      110,
+      110,
+      220
      ],
      "to": 21
     },
-    "hit": {
+    "hit_side": {
      "frames": 2,
      "from": 15,
      "ms": [
-      80,
-      80
+      70,
+      90
      ],
      "to": 16
     },
-    "idle": {
+    "idle_side": {
      "frames": 4,
      "from": 0,
      "ms": [
@@ -565,7 +828,7 @@
      ],
      "to": 3
     },
-    "move": {
+    "move_side": {
      "frames": 4,
      "from": 4,
      "ms": [
@@ -576,24 +839,136 @@
      ],
      "to": 7
     },
-    "spawn": {
+    "spawn_side": {
      "frames": 4,
      "from": 22,
      "ms": [
-      100,
-      100,
-      100,
-      100
-     ],
-     "to": 25
-    },
-    "telegraph": {
-     "frames": 3,
-     "from": 8,
-     "ms": [
+      120,
       120,
       120,
       120
+     ],
+     "to": 25
+    },
+    "telegraph_side": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      240,
+      240,
+      240
+     ],
+     "to": 10
+    }
+   }
+  },
+  "ad_enm_ghoul_stalker": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "enm",
+   "id": "AD-246-ad_enm_ghoul_stalker",
+   "json": "res://art/export/enm/ad_enm_ghoul_stalker.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/enm/ad_enm_ghoul_stalker.png",
+   "row": "AD-246",
+   "slices": {
+    "hurtbox": {
+     "h": 22,
+     "w": 24,
+     "x": 5,
+     "y": 8
+    },
+    "muzzle": {
+     "h": 1,
+     "w": 1,
+     "x": 30,
+     "y": 26
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "attack_side": {
+     "frames": 4,
+     "from": 11,
+     "ms": [
+      70,
+      90,
+      90,
+      130
+     ],
+     "to": 14
+    },
+    "death_side": {
+     "frames": 5,
+     "from": 17,
+     "ms": [
+      100,
+      110,
+      110,
+      110,
+      220
+     ],
+     "to": 21
+    },
+    "hit_side": {
+     "frames": 2,
+     "from": 15,
+     "ms": [
+      60,
+      100
+     ],
+     "to": 16
+    },
+    "idle_side": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    },
+    "move_side": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      90,
+      90,
+      90,
+      90
+     ],
+     "to": 7
+    },
+    "spawn_side": {
+     "frames": 4,
+     "from": 22,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 25
+    },
+    "telegraph_side": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      200,
+      200,
+      220
      ],
      "to": 10
     }
@@ -612,13 +987,19 @@
     30
    ],
    "png": "res://art/export/enm/ad_enm_grave_hound.png",
-   "row": "AD-024",
+   "row": "AD-246",
    "slices": {
     "hurtbox": {
-     "h": 15,
-     "w": 24,
-     "x": 4,
-     "y": 15
+     "h": 18,
+     "w": 31,
+     "x": 1,
+     "y": 13
+    },
+    "muzzle": {
+     "h": 1,
+     "w": 1,
+     "x": 29,
+     "y": 20
     },
     "pivot": {
      "h": 1,
@@ -628,18 +1009,344 @@
     }
    },
    "tags": {
-    "attack": {
+    "attack_side": {
      "frames": 4,
      "from": 11,
+     "ms": [
+      60,
+      70,
+      110,
+      190
+     ],
+     "to": 14
+    },
+    "death_side": {
+     "frames": 5,
+     "from": 17,
+     "ms": [
+      110,
+      110,
+      110,
+      110,
+      220
+     ],
+     "to": 21
+    },
+    "hit_side": {
+     "frames": 2,
+     "from": 15,
+     "ms": [
+      70,
+      90
+     ],
+     "to": 16
+    },
+    "idle_side": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    },
+    "move_side": {
+     "frames": 4,
+     "from": 4,
      "ms": [
       80,
       80,
       80,
       80
      ],
+     "to": 7
+    },
+    "spawn_side": {
+     "frames": 4,
+     "from": 22,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 25
+    },
+    "telegraph_side": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      190,
+      190,
+      190
+     ],
+     "to": 10
+    }
+   }
+  },
+  "ad_enm_grave_mite": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "enm",
+   "id": "AD-247-ad_enm_grave_mite",
+   "json": "res://art/export/enm/ad_enm_grave_mite.json",
+   "pivot": [
+    8,
+    14
+   ],
+   "png": "res://art/export/enm/ad_enm_grave_mite.png",
+   "row": "AD-247",
+   "slices": {
+    "hurtbox": {
+     "h": 11,
+     "w": 16,
+     "x": 0,
+     "y": 4
+    },
+    "muzzle": {
+     "h": 1,
+     "w": 1,
+     "x": 14,
+     "y": 10
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 14
+    }
+   },
+   "tags": {
+    "attack_side": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      60,
+      70,
+      140
+     ],
+     "to": 10
+    },
+    "death_side": {
+     "frames": 3,
+     "from": 12,
+     "ms": [
+      100,
+      100,
+      200
+     ],
      "to": 14
     },
-    "death": {
+    "hit_side": {
+     "frames": 1,
+     "from": 11,
+     "ms": [
+      90
+     ],
+     "to": 11
+    },
+    "idle_side": {
+     "frames": 2,
+     "from": 0,
+     "ms": [
+      150,
+      150
+     ],
+     "to": 1
+    },
+    "move_side": {
+     "frames": 4,
+     "from": 2,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 5
+    },
+    "spawn_side": {
+     "frames": 3,
+     "from": 15,
+     "ms": [
+      120,
+      120,
+      120
+     ],
+     "to": 17
+    },
+    "telegraph_side": {
+     "frames": 2,
+     "from": 6,
+     "ms": [
+      173,
+      174
+     ],
+     "to": 7
+    }
+   }
+  },
+  "ad_enm_grave_mite_left": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "enm",
+   "id": "AD-247-ad_enm_grave_mite_left",
+   "json": "res://art/export/enm/ad_enm_grave_mite_left.json",
+   "pivot": [
+    8,
+    14
+   ],
+   "png": "res://art/export/enm/ad_enm_grave_mite_left.png",
+   "row": "AD-247",
+   "slices": {
+    "hurtbox": {
+     "h": 11,
+     "w": 16,
+     "x": 0,
+     "y": 4
+    },
+    "muzzle": {
+     "h": 1,
+     "w": 1,
+     "x": 1,
+     "y": 10
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 14
+    }
+   },
+   "tags": {
+    "attack_side": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      60,
+      70,
+      140
+     ],
+     "to": 10
+    },
+    "death_side": {
+     "frames": 3,
+     "from": 12,
+     "ms": [
+      100,
+      100,
+      200
+     ],
+     "to": 14
+    },
+    "hit_side": {
+     "frames": 1,
+     "from": 11,
+     "ms": [
+      90
+     ],
+     "to": 11
+    },
+    "idle_side": {
+     "frames": 2,
+     "from": 0,
+     "ms": [
+      150,
+      150
+     ],
+     "to": 1
+    },
+    "move_side": {
+     "frames": 4,
+     "from": 2,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 5
+    },
+    "spawn_side": {
+     "frames": 3,
+     "from": 15,
+     "ms": [
+      120,
+      120,
+      120
+     ],
+     "to": 17
+    },
+    "telegraph_side": {
+     "frames": 2,
+     "from": 6,
+     "ms": [
+      173,
+      174
+     ],
+     "to": 7
+    }
+   }
+  },
+  "ad_enm_lamprey": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "enm",
+   "id": "AD-247-ad_enm_lamprey",
+   "json": "res://art/export/enm/ad_enm_lamprey.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/enm/ad_enm_lamprey.png",
+   "row": "AD-247",
+   "slices": {
+    "hurtbox": {
+     "h": 18,
+     "w": 30,
+     "x": 1,
+     "y": 13
+    },
+    "muzzle": {
+     "h": 1,
+     "w": 1,
+     "x": 29,
+     "y": 18
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    },
+    "tether": {
+     "h": 1,
+     "w": 1,
+     "x": 14,
+     "y": 21
+    }
+   },
+   "tags": {
+    "attack_side": {
+     "frames": 4,
+     "from": 11,
+     "ms": [
+      70,
+      70,
+      130,
+      200
+     ],
+     "to": 14
+    },
+    "death_side": {
      "frames": 5,
      "from": 17,
      "ms": [
@@ -647,7 +1354,237 @@
       100,
       100,
       100,
+      200
+     ],
+     "to": 21
+    },
+    "hit_side": {
+     "frames": 2,
+     "from": 15,
+     "ms": [
+      60,
       100
+     ],
+     "to": 16
+    },
+    "idle_side": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    },
+    "move_side": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 7
+    },
+    "spawn_side": {
+     "frames": 4,
+     "from": 22,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 25
+    },
+    "telegraph_side": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      173,
+      173,
+      174
+     ],
+     "to": 10
+    }
+   }
+  },
+  "ad_enm_lamprey_left": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "enm",
+   "id": "AD-247-ad_enm_lamprey_left",
+   "json": "res://art/export/enm/ad_enm_lamprey_left.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/enm/ad_enm_lamprey_left.png",
+   "row": "AD-247",
+   "slices": {
+    "hurtbox": {
+     "h": 18,
+     "w": 30,
+     "x": 1,
+     "y": 13
+    },
+    "muzzle": {
+     "h": 1,
+     "w": 1,
+     "x": 2,
+     "y": 18
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    },
+    "tether": {
+     "h": 1,
+     "w": 1,
+     "x": 17,
+     "y": 21
+    }
+   },
+   "tags": {
+    "attack_side": {
+     "frames": 4,
+     "from": 11,
+     "ms": [
+      70,
+      70,
+      130,
+      200
+     ],
+     "to": 14
+    },
+    "death_side": {
+     "frames": 5,
+     "from": 17,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      200
+     ],
+     "to": 21
+    },
+    "hit_side": {
+     "frames": 2,
+     "from": 15,
+     "ms": [
+      60,
+      100
+     ],
+     "to": 16
+    },
+    "idle_side": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    },
+    "move_side": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 7
+    },
+    "spawn_side": {
+     "frames": 4,
+     "from": 22,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 25
+    },
+    "telegraph_side": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      173,
+      173,
+      174
+     ],
+     "to": 10
+    }
+   }
+  },
+  "ad_enm_rune_sentry": {
+   "canvas": [
+    32,
+    48
+   ],
+   "category": "enm",
+   "id": "AD-247-ad_enm_rune_sentry",
+   "json": "res://art/export/enm/ad_enm_rune_sentry.json",
+   "pivot": [
+    16,
+    45
+   ],
+   "png": "res://art/export/enm/ad_enm_rune_sentry.png",
+   "row": "AD-247",
+   "slices": {
+    "hurtbox": {
+     "h": 41,
+     "w": 24,
+     "x": 4,
+     "y": 5
+    },
+    "muzzle": {
+     "h": 1,
+     "w": 1,
+     "x": 20,
+     "y": 28
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 45
+    }
+   },
+   "tags": {
+    "attack": {
+     "frames": 4,
+     "from": 11,
+     "ms": [
+      90,
+      110,
+      110,
+      160
+     ],
+     "to": 14
+    },
+    "death": {
+     "frames": 5,
+     "from": 17,
+     "ms": [
+      110,
+      110,
+      110,
+      120,
+      220
      ],
      "to": 21
     },
@@ -655,8 +1592,8 @@
      "frames": 2,
      "from": 15,
      "ms": [
-      80,
-      80
+      60,
+      100
      ],
      "to": 16
     },
@@ -675,10 +1612,10 @@
      "frames": 4,
      "from": 4,
      "ms": [
-      100,
-      100,
-      100,
-      100
+      150,
+      150,
+      150,
+      150
      ],
      "to": 7
     },
@@ -686,10 +1623,10 @@
      "frames": 4,
      "from": 22,
      "ms": [
-      100,
-      100,
-      100,
-      100
+      120,
+      120,
+      120,
+      120
      ],
      "to": 25
     },
@@ -697,9 +1634,233 @@
      "frames": 3,
      "from": 8,
      "ms": [
+      260,
+      260,
+      300
+     ],
+     "to": 10
+    }
+   }
+  },
+  "ad_enm_tide_siphon": {
+   "canvas": [
+    48,
+    48
+   ],
+   "category": "enm",
+   "id": "AD-247-ad_enm_tide_siphon",
+   "json": "res://art/export/enm/ad_enm_tide_siphon.json",
+   "pivot": [
+    24,
+    45
+   ],
+   "png": "res://art/export/enm/ad_enm_tide_siphon.png",
+   "row": "AD-247",
+   "slices": {
+    "hurtbox": {
+     "h": 30,
+     "w": 42,
+     "x": 6,
+     "y": 16
+    },
+    "muzzle": {
+     "h": 1,
+     "w": 1,
+     "x": 45,
+     "y": 31
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 24,
+     "y": 45
+    }
+   },
+   "tags": {
+    "attack_side": {
+     "frames": 4,
+     "from": 11,
+     "ms": [
+      70,
+      70,
+      130,
+      200
+     ],
+     "to": 14
+    },
+    "death_side": {
+     "frames": 5,
+     "from": 17,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      200
+     ],
+     "to": 21
+    },
+    "hit_side": {
+     "frames": 2,
+     "from": 15,
+     "ms": [
+      60,
+      100
+     ],
+     "to": 16
+    },
+    "idle_side": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    },
+    "move_side": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 7
+    },
+    "spawn_side": {
+     "frames": 4,
+     "from": 22,
+     "ms": [
+      120,
       120,
       120,
       120
+     ],
+     "to": 25
+    },
+    "telegraph_side": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      173,
+      173,
+      174
+     ],
+     "to": 10
+    }
+   }
+  },
+  "ad_enm_tide_siphon_left": {
+   "canvas": [
+    48,
+    48
+   ],
+   "category": "enm",
+   "id": "AD-247-ad_enm_tide_siphon_left",
+   "json": "res://art/export/enm/ad_enm_tide_siphon_left.json",
+   "pivot": [
+    24,
+    45
+   ],
+   "png": "res://art/export/enm/ad_enm_tide_siphon_left.png",
+   "row": "AD-247",
+   "slices": {
+    "hurtbox": {
+     "h": 30,
+     "w": 42,
+     "x": 0,
+     "y": 16
+    },
+    "muzzle": {
+     "h": 1,
+     "w": 1,
+     "x": 2,
+     "y": 31
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 24,
+     "y": 45
+    }
+   },
+   "tags": {
+    "attack_side": {
+     "frames": 4,
+     "from": 11,
+     "ms": [
+      70,
+      70,
+      130,
+      200
+     ],
+     "to": 14
+    },
+    "death_side": {
+     "frames": 5,
+     "from": 17,
+     "ms": [
+      100,
+      100,
+      100,
+      100,
+      200
+     ],
+     "to": 21
+    },
+    "hit_side": {
+     "frames": 2,
+     "from": 15,
+     "ms": [
+      60,
+      100
+     ],
+     "to": 16
+    },
+    "idle_side": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    },
+    "move_side": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      100,
+      100,
+      100,
+      100
+     ],
+     "to": 7
+    },
+    "spawn_side": {
+     "frames": 4,
+     "from": 22,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 25
+    },
+    "telegraph_side": {
+     "frames": 3,
+     "from": 8,
+     "ms": [
+      173,
+      173,
+      174
      ],
      "to": 10
     }
@@ -1645,6 +2806,235 @@
     }
    }
   },
+  "ad_fx_vignette_ruins": {
+   "canvas": [
+    640,
+    360
+   ],
+   "category": "vfx",
+   "id": "AD-245-ad_fx_vignette_ruins",
+   "json": "res://art/export/vfx/ad_fx_vignette_ruins.json",
+   "pivot": [
+    320,
+    358
+   ],
+   "png": "res://art/export/vfx/ad_fx_vignette_ruins.png",
+   "row": "AD-245",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 320,
+     "y": 358
+    }
+   },
+   "tags": {
+    "overlay": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      1000
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_ico_affix_atlas_16": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "ico",
+   "id": "AD-248-ad_ico_affix_atlas_16",
+   "json": "res://art/export/ico/ad_ico_affix_atlas_16.json",
+   "pivot": [
+    8.0,
+    8.0
+   ],
+   "png": "res://art/export/ico/ad_ico_affix_atlas_16.png",
+   "row": "AD-248",
+   "slices": {},
+   "tags": {
+    "ad_ico_affix_anchored": {
+     "frames": 1,
+     "from": 9,
+     "ms": [
+      100
+     ],
+     "to": 9
+    },
+    "ad_ico_affix_hasted": {
+     "frames": 1,
+     "from": 6,
+     "ms": [
+      100
+     ],
+     "to": 6
+    },
+    "ad_ico_affix_shielded": {
+     "frames": 1,
+     "from": 8,
+     "ms": [
+      100
+     ],
+     "to": 8
+    },
+    "ad_ico_affix_splitting": {
+     "frames": 1,
+     "from": 7,
+     "ms": [
+      100
+     ],
+     "to": 7
+    },
+    "ad_ico_affix_volatile": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      100
+     ],
+     "to": 0
+    },
+    "ad_ico_affix_warded": {
+     "frames": 1,
+     "from": 1,
+     "ms": [
+      100
+     ],
+     "to": 1
+    },
+    "ad_ico_affix_warded_earth": {
+     "frames": 1,
+     "from": 5,
+     "ms": [
+      100
+     ],
+     "to": 5
+    },
+    "ad_ico_affix_warded_fire": {
+     "frames": 1,
+     "from": 2,
+     "ms": [
+      100
+     ],
+     "to": 2
+    },
+    "ad_ico_affix_warded_lightning": {
+     "frames": 1,
+     "from": 4,
+     "ms": [
+      100
+     ],
+     "to": 4
+    },
+    "ad_ico_affix_warded_water": {
+     "frames": 1,
+     "from": 3,
+     "ms": [
+      100
+     ],
+     "to": 3
+    }
+   }
+  },
+  "ad_ico_affix_atlas_8": {
+   "canvas": [
+    8,
+    8
+   ],
+   "category": "ico",
+   "id": "AD-248-ad_ico_affix_atlas_8",
+   "json": "res://art/export/ico/ad_ico_affix_atlas_8.json",
+   "pivot": [
+    4.0,
+    4.0
+   ],
+   "png": "res://art/export/ico/ad_ico_affix_atlas_8.png",
+   "row": "AD-248",
+   "slices": {},
+   "tags": {
+    "ad_ico_affix_anchored": {
+     "frames": 1,
+     "from": 9,
+     "ms": [
+      100
+     ],
+     "to": 9
+    },
+    "ad_ico_affix_hasted": {
+     "frames": 1,
+     "from": 6,
+     "ms": [
+      100
+     ],
+     "to": 6
+    },
+    "ad_ico_affix_shielded": {
+     "frames": 1,
+     "from": 8,
+     "ms": [
+      100
+     ],
+     "to": 8
+    },
+    "ad_ico_affix_splitting": {
+     "frames": 1,
+     "from": 7,
+     "ms": [
+      100
+     ],
+     "to": 7
+    },
+    "ad_ico_affix_volatile": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      100
+     ],
+     "to": 0
+    },
+    "ad_ico_affix_warded": {
+     "frames": 1,
+     "from": 1,
+     "ms": [
+      100
+     ],
+     "to": 1
+    },
+    "ad_ico_affix_warded_earth": {
+     "frames": 1,
+     "from": 5,
+     "ms": [
+      100
+     ],
+     "to": 5
+    },
+    "ad_ico_affix_warded_fire": {
+     "frames": 1,
+     "from": 2,
+     "ms": [
+      100
+     ],
+     "to": 2
+    },
+    "ad_ico_affix_warded_lightning": {
+     "frames": 1,
+     "from": 4,
+     "ms": [
+      100
+     ],
+     "to": 4
+    },
+    "ad_ico_affix_warded_water": {
+     "frames": 1,
+     "from": 3,
+     "ms": [
+      100
+     ],
+     "to": 3
+    }
+   }
+  },
   "ad_ico_artifacts": {
    "canvas": [
     16,
@@ -2101,6 +3491,154 @@
     }
    }
   },
+  "ad_prp_banner_ruins": {
+   "canvas": [
+    16,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-245-ad_prp_banner_ruins",
+   "json": "res://art/export/prp/ad_prp_banner_ruins.json",
+   "pivot": [
+    8,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_banner_ruins.png",
+   "row": "AD-245",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 30
+    }
+   },
+   "tags": {
+    "intact": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    },
+    "torn": {
+     "frames": 1,
+     "from": 1,
+     "ms": [
+      200
+     ],
+     "to": 1
+    }
+   }
+  },
+  "ad_prp_bone_pile_ruins": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "prp",
+   "id": "AD-245-ad_prp_bone_pile_ruins",
+   "json": "res://art/export/prp/ad_prp_bone_pile_ruins.json",
+   "pivot": [
+    8,
+    14
+   ],
+   "png": "res://art/export/prp/ad_prp_bone_pile_ruins.png",
+   "row": "AD-245",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 14
+    }
+   },
+   "tags": {
+    "ribs": {
+     "frames": 1,
+     "from": 1,
+     "ms": [
+      200
+     ],
+     "to": 1
+    },
+    "skull": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_bookshelf_ruins_16": {
+   "canvas": [
+    16,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-245-ad_prp_bookshelf_ruins_16",
+   "json": "res://art/export/prp/ad_prp_bookshelf_ruins_16.json",
+   "pivot": [
+    8,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_bookshelf_ruins_16.png",
+   "row": "AD-245",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 30
+    }
+   },
+   "tags": {
+    "static": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_bookshelf_ruins_32": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-245-ad_prp_bookshelf_ruins_32",
+   "json": "res://art/export/prp/ad_prp_bookshelf_ruins_32.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_bookshelf_ruins_32.png",
+   "row": "AD-245",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "static": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
   "ad_prp_brazier_cistern": {
    "canvas": [
     32,
@@ -2175,7 +3713,7 @@
     30
    ],
    "png": "res://art/export/prp/ad_prp_brazier_ruins.png",
-   "row": "AD-120",
+   "row": "AD-245",
    "slices": {
     "hurtbox": {
      "h": 31,
@@ -2235,7 +3773,7 @@
     30
    ],
    "png": "res://art/export/prp/ad_prp_breakable_urn.png",
-   "row": "AD-120",
+   "row": "AD-245",
    "slices": {
     "hurtbox": {
      "h": 31,
@@ -2323,6 +3861,53 @@
     }
    }
   },
+  "ad_prp_broken_wall_ruins": {
+   "canvas": [
+    16,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-245-ad_prp_broken_wall_ruins",
+   "json": "res://art/export/prp/ad_prp_broken_wall_ruins.json",
+   "pivot": [
+    8,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_broken_wall_ruins.png",
+   "row": "AD-245",
+   "slices": {
+    "hurtbox": {
+     "h": 29,
+     "w": 16,
+     "x": 0,
+     "y": 2
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 30
+    }
+   },
+   "tags": {
+    "rubble": {
+     "frames": 1,
+     "from": 1,
+     "ms": [
+      200
+     ],
+     "to": 1
+    },
+    "wall": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
   "ad_prp_burnable_crate_cistern": {
    "canvas": [
     32,
@@ -2396,7 +3981,7 @@
     30
    ],
    "png": "res://art/export/prp/ad_prp_burnable_crate_ruins.png",
-   "row": "AD-120",
+   "row": "AD-245",
    "slices": {
     "hurtbox": {
      "h": 29,
@@ -2438,6 +4023,89 @@
       200
      ],
      "to": 0
+    }
+   }
+  },
+  "ad_prp_candles_ruins": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "prp",
+   "id": "AD-245-ad_prp_candles_ruins",
+   "json": "res://art/export/prp/ad_prp_candles_ruins.json",
+   "pivot": [
+    8,
+    14
+   ],
+   "png": "res://art/export/prp/ad_prp_candles_ruins.png",
+   "row": "AD-245",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 14
+    }
+   },
+   "tags": {
+    "flicker": {
+     "frames": 2,
+     "from": 0,
+     "ms": [
+      140,
+      160
+     ],
+     "to": 1
+    }
+   }
+  },
+  "ad_prp_chains_ruins": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "prp",
+   "id": "AD-245-ad_prp_chains_ruins",
+   "json": "res://art/export/prp/ad_prp_chains_ruins.json",
+   "pivot": [
+    8,
+    14
+   ],
+   "png": "res://art/export/prp/ad_prp_chains_ruins.png",
+   "row": "AD-245",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 14
+    }
+   },
+   "tags": {
+    "floor_pile": {
+     "frames": 1,
+     "from": 2,
+     "ms": [
+      200
+     ],
+     "to": 2
+    },
+    "hanging": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    },
+    "sagging": {
+     "frames": 1,
+     "from": 1,
+     "ms": [
+      200
+     ],
+     "to": 1
     }
    }
   },
@@ -2736,7 +4404,7 @@
     30
    ],
    "png": "res://art/export/prp/ad_prp_cobweb_ruins.png",
-   "row": "AD-120",
+   "row": "AD-245",
    "slices": {
     "hurtbox": {
      "h": 27,
@@ -2822,6 +4490,160 @@
     }
    }
   },
+  "ad_prp_column_broken_ruins": {
+   "canvas": [
+    16,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-245-ad_prp_column_broken_ruins",
+   "json": "res://art/export/prp/ad_prp_column_broken_ruins.json",
+   "pivot": [
+    8,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_column_broken_ruins.png",
+   "row": "AD-245",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 30
+    }
+   },
+   "tags": {
+    "broken": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_column_snapped_ruins": {
+   "canvas": [
+    16,
+    48
+   ],
+   "category": "prp",
+   "id": "AD-245-ad_prp_column_snapped_ruins",
+   "json": "res://art/export/prp/ad_prp_column_snapped_ruins.json",
+   "pivot": [
+    8,
+    46
+   ],
+   "png": "res://art/export/prp/ad_prp_column_snapped_ruins.png",
+   "row": "AD-245",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 46
+    }
+   },
+   "tags": {
+    "snapped": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_column_toppled_ruins": {
+   "canvas": [
+    32,
+    16
+   ],
+   "category": "prp",
+   "id": "AD-245-ad_prp_column_toppled_ruins",
+   "json": "res://art/export/prp/ad_prp_column_toppled_ruins.json",
+   "pivot": [
+    16,
+    14
+   ],
+   "png": "res://art/export/prp/ad_prp_column_toppled_ruins.png",
+   "row": "AD-245",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 14
+    }
+   },
+   "tags": {
+    "toppled": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_cracked_pillar_ruins": {
+   "canvas": [
+    16,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-245-ad_prp_cracked_pillar_ruins",
+   "json": "res://art/export/prp/ad_prp_cracked_pillar_ruins.json",
+   "pivot": [
+    8,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_cracked_pillar_ruins.png",
+   "row": "AD-245",
+   "slices": {
+    "hurtbox": {
+     "h": 29,
+     "w": 14,
+     "x": 1,
+     "y": 2
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 30
+    }
+   },
+   "tags": {
+    "broken": {
+     "frames": 1,
+     "from": 2,
+     "ms": [
+      200
+     ],
+     "to": 2
+    },
+    "cracked": {
+     "frames": 1,
+     "from": 1,
+     "ms": [
+      200
+     ],
+     "to": 1
+    },
+    "intact": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
   "ad_prp_cracked_wall_cistern": {
    "canvas": [
     32,
@@ -2888,7 +4710,6 @@
     32
    ],
    "category": "prp",
-   "glow": "res://art/export/prp/ad_prp_cracked_wall_ruins_glow.png",
    "id": "AD-PRP-116g",
    "json": "res://art/export/prp/ad_prp_cracked_wall_ruins.json",
    "pivot": [
@@ -2896,7 +4717,7 @@
     30
    ],
    "png": "res://art/export/prp/ad_prp_cracked_wall_ruins.png",
-   "row": "AD-120",
+   "row": "AD-245",
    "slices": {
     "hurtbox": {
      "h": 29,
@@ -3153,7 +4974,7 @@
     30
    ],
    "png": "res://art/export/prp/ad_prp_puddle_ruins.png",
-   "row": "AD-120",
+   "row": "AD-245",
    "slices": {
     "hurtbox": {
      "h": 16,
@@ -3259,6 +5080,39 @@
       80
      ],
      "to": 4
+    }
+   }
+  },
+  "ad_prp_rubble_ruins": {
+   "canvas": [
+    32,
+    16
+   ],
+   "category": "prp",
+   "id": "AD-245-ad_prp_rubble_ruins",
+   "json": "res://art/export/prp/ad_prp_rubble_ruins.json",
+   "pivot": [
+    16,
+    14
+   ],
+   "png": "res://art/export/prp/ad_prp_rubble_ruins.png",
+   "row": "AD-245",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 14
+    }
+   },
+   "tags": {
+    "static": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
     }
    }
   },
@@ -3400,6 +5254,137 @@
       100
      ],
      "to": 3
+    }
+   }
+  },
+  "ad_prp_rune_plinth_ruins": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "prp",
+   "id": "AD-245-ad_prp_rune_plinth_ruins",
+   "json": "res://art/export/prp/ad_prp_rune_plinth_ruins.json",
+   "pivot": [
+    8,
+    14
+   ],
+   "png": "res://art/export/prp/ad_prp_rune_plinth_ruins.png",
+   "row": "AD-245",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 14
+    }
+   },
+   "tags": {
+    "dim_violet": {
+     "frames": 1,
+     "from": 1,
+     "ms": [
+      200
+     ],
+     "to": 1
+    },
+    "unlit": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_sarcophagus_ruins": {
+   "canvas": [
+    32,
+    16
+   ],
+   "category": "prp",
+   "id": "AD-245-ad_prp_sarcophagus_ruins",
+   "json": "res://art/export/prp/ad_prp_sarcophagus_ruins.json",
+   "pivot": [
+    16,
+    14
+   ],
+   "png": "res://art/export/prp/ad_prp_sarcophagus_ruins.png",
+   "row": "AD-245",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 14
+    }
+   },
+   "tags": {
+    "closed": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    },
+    "cracked": {
+     "frames": 1,
+     "from": 1,
+     "ms": [
+      200
+     ],
+     "to": 1
+    }
+   }
+  },
+  "ad_prp_scroll_pile_ruins": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "prp",
+   "id": "AD-245-ad_prp_scroll_pile_ruins",
+   "json": "res://art/export/prp/ad_prp_scroll_pile_ruins.json",
+   "pivot": [
+    8,
+    14
+   ],
+   "png": "res://art/export/prp/ad_prp_scroll_pile_ruins.png",
+   "row": "AD-245",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 14
+    }
+   },
+   "tags": {
+    "v0": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      200
+     ],
+     "to": 0
+    },
+    "v1": {
+     "frames": 1,
+     "from": 1,
+     "ms": [
+      200
+     ],
+     "to": 1
+    },
+    "v2": {
+     "frames": 1,
+     "from": 2,
+     "ms": [
+      200
+     ],
+     "to": 2
     }
    }
   },
@@ -4352,7 +6337,7 @@
     15
    ],
    "png": "res://art/export/til/ad_til_ruins_floor.png",
-   "row": "AD-025",
+   "row": "AD-244",
    "slices": {
     "pivot": {
      "h": 1,
@@ -4402,6 +6387,174 @@
     }
    }
   },
+  "ad_til_ruins_floor_var": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "til",
+   "id": "AD-244-ad_til_ruins_floor_var",
+   "json": "res://art/export/til/ad_til_ruins_floor_var.json",
+   "pivot": [
+    0,
+    15
+   ],
+   "png": "res://art/export/til/ad_til_ruins_floor_var.png",
+   "row": "AD-244",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 15
+    }
+   },
+   "tags": {
+    "accent_alt": {
+     "frames": 4,
+     "from": 52,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 55
+    },
+    "interior": {
+     "frames": 4,
+     "from": 48,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 51
+    },
+    "var_b": {
+     "frames": 16,
+     "from": 0,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 15
+    },
+    "var_c": {
+     "frames": 16,
+     "from": 16,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 31
+    },
+    "var_d": {
+     "frames": 16,
+     "from": 32,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 47
+    }
+   }
+  },
+  "ad_til_ruins_light": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "til",
+   "id": "AD-244-ad_til_ruins_light",
+   "json": "res://art/export/til/ad_til_ruins_light.json",
+   "pivot": [
+    0,
+    15
+   ],
+   "png": "res://art/export/til/ad_til_ruins_light.png",
+   "row": "AD-244",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 15
+    }
+   },
+   "tags": {
+    "pool32": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 3
+    },
+    "pool48": {
+     "frames": 9,
+     "from": 4,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 12
+    }
+   }
+  },
   "ad_til_ruins_wall": {
    "canvas": [
     16,
@@ -4415,7 +6568,7 @@
     31
    ],
    "png": "res://art/export/til/ad_til_ruins_wall.png",
-   "row": "AD-025",
+   "row": "AD-244",
    "slices": {
     "pivot": {
      "h": 1,
@@ -4458,6 +6611,54 @@
       1000
      ],
      "to": 19
+    }
+   }
+  },
+  "ad_til_ruins_wall_mass": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "til",
+   "id": "AD-244-ad_til_ruins_wall_mass",
+   "json": "res://art/export/til/ad_til_ruins_wall_mass.json",
+   "pivot": [
+    0,
+    15
+   ],
+   "png": "res://art/export/til/ad_til_ruins_wall_mass.png",
+   "row": "AD-244",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 15
+    }
+   },
+   "tags": {
+    "top_mass": {
+     "frames": 16,
+     "from": 0,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 15
     }
    }
   },
@@ -8016,7 +10217,12 @@
   "AD-115",
   "AD-117",
   "AD-119",
-  "AD-123"
+  "AD-123",
+  "AD-244",
+  "AD-245",
+  "AD-246",
+  "AD-247",
+  "AD-248"
  ],
  "version": 1
 }

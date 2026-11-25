@@ -40,6 +40,8 @@ var state := "uninitialized"
 var reward_options: Array = []
 var reward_collected := false
 var boss_defeated_events := 0
+## AD-235: HP restored by the last boss kill (0 after other clears, or when already at max). Read by the UI toast.
+var post_boss_heal := 0.0
 var transition_count := 0
 var edit_policy := "workshop_only"
 var mode := "combat"
@@ -67,6 +69,8 @@ var meta_locked_artifacts: Array = []
 ## AD-234: Scriptorium bonuses (max_hp, max_mana, mana_regen_mult) applied at run start.
 var meta_bonuses: Dictionary = {}
 var _seen_enemies: Dictionary = {}
+## AD-239: affix ids seen on elites this run.
+var _seen_affixes: Dictionary = {}
 ## AD-194: newest-8 first-sighting log [{kind,tick}] for the HUD popup. Presentation only, never saved or snapshotted.
 var first_encounters: Array = []
 var _seen_reactions: Dictionary = {}
@@ -75,6 +79,8 @@ var wet_kills := 0
 var arcs := 0
 ## AD-130: opt-in Sigil Desk prelude (not part of rooms/sequence_index/save schema).
 var prelude := false
+## AD-242: boss-adjacent event id of the current room for the UI ('' = none).
+var event_id := ""
 var prelude_built := false
 var prelude_tested := false
 ## AD-020: output-only audio sink (Callable(cue_id, position)); the simulation never reads it.
@@ -140,7 +146,7 @@ static func build_sequence(cfg: Dictionary, run_seed: int) -> Array:
 		ids.append(stage["boss_room"])
 		if bool(stage.get("workshop_after",false)):
 			ids.append("workshop")
-		var in_stage := 0
+		var stage_entries: Array = []
 		for id in ids:
 			if not templates.has(str(id)):
 				push_error("Room template missing: %s" % id)
@@ -148,12 +154,52 @@ static func build_sequence(cfg: Dictionary, run_seed: int) -> Array:
 			var entry: Dictionary = templates[str(id)].duplicate(true)
 			if str(id) == str(stage["optional_room"]):
 				entry["optional"] = true
+			stage_entries.append(entry)
+		if not _apply_events(cfg,templates,str(stage["id"]),run_seed,stage_entries):
+			return []
+		var in_stage := 0
+		for entry in stage_entries:
 			entry["stage"] = stage_index
 			entry["room"] = in_stage
 			in_stage += 1
 			out.append(entry)
 		stage_index += 1
 	return out
+
+## AD-242: seeded boss-adjacent events for one stage. Own RNG per event so the stage shuffle (and old room orders) is untouched.
+static func _apply_events(cfg: Dictionary, templates: Dictionary, stage_id: String, run_seed: int, entries: Array) -> bool:
+	var events: Dictionary = cfg.get("events",{})
+	for event_id in events:
+		var event: Dictionary = events[event_id]
+		if str(event.get("stage","")) != stage_id:
+			continue
+		var rng := RandomNumberGenerator.new()
+		var hash_value := 2166136261
+		for c in ("%d:%s:event" % [run_seed,str(event_id)]).to_utf8_buffer():
+			hash_value = ((hash_value ^ int(c))*16777619) & 0x7fffffff
+		rng.seed = hash_value ^ int(event.get("seed_salt",0))
+		if rng.randf() >= float(event.get("chance",0.0)):
+			continue
+		if event.has("after_room"):
+			var at := int(event["after_room"])
+			if at >= entries.size() or str(entries[at].get("type","")) != "combat":
+				push_error("Event %s target room is not a combat room" % event_id)
+				return false
+			entries[at]["event"] = str(event_id)
+		else:
+			var template_id := str(event.get("template",""))
+			if not templates.has(template_id):
+				push_error("Event %s template missing: %s" % [event_id,template_id])
+				return false
+			var flood: Dictionary = templates[template_id].duplicate(true)
+			flood["event"] = str(event_id)
+			var before := entries.size()-1
+			for i in entries.size():
+				if str(entries[i].get("type","")) == "workshop":
+					before = i
+					break
+			entries.insert(before,flood)
+	return true
 
 func _cue(id: String, at = null) -> void:
 	if audio_sink.is_valid():
@@ -176,7 +222,7 @@ func set_meta_bonuses(bonuses: Dictionary) -> void:
 func discoveries() -> Dictionary:
 	var seen_runes: Array = run.unlocked.duplicate() if run != null else []
 	var seen_artifacts: Array = run.artifacts.duplicate() if run != null else []
-	var out := {"runes":[],"reactions":_seen_reactions.keys(),"enemies":_seen_enemies.keys(),"artifacts":[]}
+	var out := {"runes":[],"reactions":_seen_reactions.keys(),"enemies":_seen_enemies.keys(),"artifacts":[],"affixes":_seen_affixes.keys()}
 	for id in seen_runes:
 		if str(id) not in out["runes"]:
 			out["runes"].append(str(id))
@@ -195,9 +241,13 @@ func _track_enemies() -> void:
 				while first_encounters.size() > 8:
 					first_encounters.pop_front()
 			_seen_enemies[str(enemy.kind)] = true
+		var affix := str(enemy.get("affix")) if enemy.get("affix") != null else ""
+		if affix != "":
+			_seen_affixes[affix] = true
 
 func start_new(run_seed: int) -> void:
 	_seen_enemies.clear()
+	_seen_affixes.clear()
 	first_encounters.clear()
 	_seen_reactions.clear()
 	run = State.new()
@@ -300,6 +350,7 @@ func _build_room(entry: Dictionary) -> Dictionary:
 	merchant = null
 	range_sim = null
 	encounter = null
+	event_id = ""
 	rewards = Reward.new(config,meta_locked_runes,meta_locked_artifacts)
 	_attach_artifacts()
 	session.player.shield = carried_shield
@@ -354,7 +405,9 @@ func _enter_current() -> Dictionary:
 		state = "fighting"
 	else:
 		encounter = Encounter.new()
-		encounter.initialize(room,session,int(config["max_active_enemies"]))
+		var entry: Dictionary = rooms[run.sequence_index]
+		# AD-239: 1-based room number within the stage drives the affix chance.
+		encounter.initialize(room,session,int(config["max_active_enemies"]),int(entry.get("room",0))+1,bool(entry.get("optional",false)),int(run.seed),_event_for(entry))
 		state = "fighting"
 	_prior_reactions = 0
 	room_reactions = 0
@@ -365,6 +418,18 @@ func _enter_current() -> Dictionary:
 	run_log.enter_room(run.sequence_index,str(room.values["id"]),str(room.values["type"]),ticks_elapsed)
 	logs.append({"kind":"room_enter","id":room.values["id"],"index":run.sequence_index})
 	return {"ok":true}
+
+## AD-242: event data for a sequence entry; a timed event without its own flood_sets borrows the cistern boss's rising-water sets.
+func _event_for(entry: Dictionary) -> Dictionary:
+	event_id = str(entry.get("event",""))
+	var events = config.get("events",{})
+	if event_id == "" or not events is Dictionary or not events.has(event_id):
+		event_id = ""
+		return {}
+	var event: Dictionary = events[event_id].duplicate(true)
+	if event.has("duration_seconds") and not event.has("flood_sets"):
+		event["flood_sets"] = config.get("bosses",{}).get("cistern_boss",{}).get("flood_sets",[]).duplicate(true)
+	return event
 
 func prelude_available() -> bool:
 	var desk = config.get("sigil_desk")
@@ -482,6 +547,15 @@ func step(command: Dictionary = {}) -> Dictionary:
 func _credit_ink(key: String) -> void:
 	ink_earned += int(MetaProgress.ink_rules().get(key,0))
 
+## AD-235: after a boss dies, heal post_boss_heal_pct (run_v2.json) of max HP, capped at max. Mini-bosses never call this.
+func _post_boss_heal() -> void:
+	var health = session.sim.actor.health
+	var before: float = health.current
+	var target: float = minf(health.maximum, before + health.maximum * float(config.get("post_boss_heal_pct",0.0)))
+	post_boss_heal = maxf(0.0, target - before)
+	health.current = target
+	run.hp = target
+
 func _finish_combat() -> void:
 	if state != "fighting":
 		return
@@ -506,9 +580,14 @@ func _finish_combat() -> void:
 	var lantern = session.sim.artifacts
 	if lantern != null and lantern.has("warding_lantern"):
 		session.player.shield = int(lantern.param("warding_lantern","shield_hits",1))
+	post_boss_heal = 0.0
 	if room.values["type"] == "boss":
 		boss_defeated_events += 1
 		_credit_ink("boss")
+		_post_boss_heal()
+	elif event_id != "" and config.get("events",{}).get(event_id,{}).get("reward",{}).has("ink"):
+		# AD-242: the event's data ink replaces the generic clear credit so the room total is exact.
+		ink_earned += int(config["events"][event_id]["reward"]["ink"])
 	elif room.values.has("mini_boss_slot"):
 		# Mini-boss rooms are exactly the ones that own a mini_boss_slot (rooms_*_v1.json).
 		_credit_ink("mini_boss")
@@ -531,9 +610,33 @@ func _finish_combat() -> void:
 		_cue("sfx.pickup.currency",session.sim.actor.position)
 		reward_collected = true
 	else:
-		reward_options = rewards.choices(run,str(room.values["id"]),false,resonant_clear)
+		reward_options = _event_reward_options()
+		if reward_options.is_empty():
+			reward_options = rewards.choices(run,str(room.values["id"]),false,resonant_clear)
 	experiment.record("room_clear",{"room_index":run.sequence_index})
 	logs.append({"kind":"combat_clear","id":room.values["id"]})
+
+## AD-242: event rooms offer only artifact cards (reward.artifact_choices from data); empty = not an event room.
+func _event_reward_options() -> Array:
+	var reward: Dictionary = config.get("events",{}).get(event_id,{}).get("reward",{}) if event_id != "" else {}
+	var wanted := int(reward.get("artifact_choices",0))
+	if wanted <= 0:
+		return []
+	var key := "%d:%s:event_reward" % [run.seed,str(room.values["id"])]
+	var hash_value := 2166136261
+	for c in key.to_utf8_buffer():
+		hash_value = ((hash_value ^ int(c))*16777619) & 0x7fffffff
+	var excluded: Array = rewards.excluded_artifacts.duplicate()
+	var options: Array = []
+	for attempt in wanted:
+		var card: Dictionary = Reward.artifact_choice(run,hash_value+attempt*7919,true,excluded)
+		if card.is_empty():
+			break
+		excluded.append(str(card["id"]))
+		options.append(card)
+	if options.is_empty():
+		return [{"kind":"currency","amount":Difficulty.scale_i(int(config["room_reward_currency"]),"coin_rate",0)}]
+	return options
 
 func _death_cause() -> Dictionary:
 	var kind := "unknown"
@@ -797,13 +900,15 @@ func save_payload() -> Dictionary:
 		return {}
 	var enemies: Array = _seen_enemies.keys()
 	var reactions: Array = _seen_reactions.keys()
+	var affixes: Array = _seen_affixes.keys()
 	enemies.sort()
 	reactions.sort()
+	affixes.sort()
 	return {"version":SAVE_VERSION,"config_path":config_path,"run":run.snapshot(),
 		"counters":{"rooms_cleared":rooms_cleared,"kills":kills,"ticks_elapsed":ticks_elapsed,
 			"spells_used":spells_used,"wet_kills":wet_kills,"arcs":arc_total(),
 			"boss_defeated_events":boss_defeated_events,"transition_count":transition_count,"ink_earned":ink_earned},
-		"seen_enemies":enemies,"seen_reactions":reactions,
+		"seen_enemies":enemies,"seen_reactions":reactions,"seen_affixes":affixes,
 		"meta_locked_runes":meta_locked_runes.duplicate(),"meta_locked_artifacts":meta_locked_artifacts.duplicate(),
 		"merchant_stock":merchant.stock.duplicate(true),"edit_policy":edit_policy,"run_log":run_log.snapshot()}
 
@@ -886,6 +991,9 @@ func resume(payload: Variant) -> Dictionary:
 	_seen_reactions.clear()
 	for id in payload["seen_reactions"]:
 		_seen_reactions[str(id)] = true
+	_seen_affixes.clear()
+	for id in payload.get("seen_affixes", []):  # optional: saves from before AD-241 lack it
+		_seen_affixes[str(id)] = true
 	edit_policy = str(payload["edit_policy"])
 	prelude = false
 	prelude_built = false

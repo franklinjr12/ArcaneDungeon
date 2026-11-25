@@ -101,3 +101,29 @@ Reactions per fought room (resonance popups):
 | skilled | 6 (0.545) | 6 (1.0) | 131 (2.977) | 143 (2.344) |
 
 Top reactions: weak `water_extinguish` 384; typical `water_extinguish` 128, `wet_lightning_arc` 15; skilled `water_extinguish` 129, `wet_lightning_arc` 14. The weak bot's higher count is `water_extinguish` from its single water spell, not mixing. The mixing bots add `wet_lightning_arc` but get few reactions in boss rooms.
+
+## AD-236 warden bench meta profile
+
+`warden_bench.gd` takes `--meta=fresh|full` (user args after `--`, default `fresh`, behaviour unchanged). `full` sets every Scriptorium upgrade to `MetaProgress.max_tier(id)` (15 tiers) and applies `MetaProgress.bonuses` to the session like `run_flow.gd` does at run start (max HP, max mana, regen multiplier). Each fight line carries `meta=` and `damage_taken=`; each summary line adds `wins`, `losses` and `median_damage_taken`.
+
+```
+/usr/local/bin/godot --headless --path . --script res://tests/bench/warden_bench.gd -- --meta=full | grep WARDEN_BENCH_SUMMARY
+```
+
+## AD-241 room pool 12/14 + affixes
+
+Command (all 20 seeds x 3 builds, results in a scratch folder, not committed):
+`for r in 0..4 5..9 10..14 15..19; do G --seeds=$r --jobs=2 --results=$TMPDIR/b241; done`, then read `run.total_seconds` of every `won` result file.
+
+Outcomes: weak 11/20 won, typical 9/20, skilled 4/20 (60 runs, 24 wins).
+
+Full successful runs, minutes (`total_seconds / 60`):
+
+| build | wins | median | min | max |
+|---|---|---|---|---|
+| weak | 11 | 2.3 | 2.1 | 2.7 |
+| typical | 9 | 3.1 | 2.7 | 3.8 |
+| skilled | 4 | 3.1 | 3.1 | 3.1 |
+| all | 24 | 2.8 | 2.1 | 3.8 |
+
+**Not in the 18-25 min target.** The scripted player clears rooms in seconds (see the AD-2xx note in `docs/benchmarks/ad_demo_bench.md`: bench runs are 2-5 min, not 30-40), so adding 8 rooms and affixes does not move the bot's run length into 18-25 min. No room data was tuned: enemy HP is not stretched (no HP sponges) and the boss numbers and feel bands are frozen. The 18-25 min figure needs a human playtest, not this bot.

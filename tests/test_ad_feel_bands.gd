@@ -1,14 +1,27 @@
-extends RefCounted
+extends SceneTree
 ## AD-182: feel-band guardrail. Run length must come from rooms/density/content, never from HP sponges:
 ## hits-to-kill with the basic neutral bolt (raw hp / raw bolt damage, no channel resistance) stays inside fixed bands on LIVE data.
+const TestContext = preload("res://tests/test_context.gd")
 const TUNING := "res://combat/combat_tuning_v1.json"
 const RUN := "res://world/data/run_v2.json"
+const Meta = preload("res://world/meta_progress.gd")
 const RUNES := "res://magic/data/runes_v2.json"
 const HEAVY := ["ossuary_shieldbearer", "corpse_bloat", "cistern_slime", "rust_golem"]
 const HEAVY_LIMIT := 30
 const LIGHT_LIMIT := 15
 const MINI_BOSS_LIMIT := 70
 const BOSS_LIMIT := 320
+
+## Discovered by run_tests.gd (run(t)) and also runnable directly: --script res://tests/test_ad_feel_bands.gd
+func _initialize() -> void:
+	var t := TestContext.new()
+	run(t)
+	print("TEST SUMMARY: %d passed / %d failed" % [t.passed, t.failed])
+	for failure in t.failures:
+		printerr("FAILED: ", failure)
+	if t.failed == 0:
+		print("PASS")
+	quit(1 if t.failed > 0 else 0)
 
 func run(t) -> void:
 	var tuning = JSON.parse_string(FileAccess.get_file_as_string(TUNING))
@@ -28,6 +41,24 @@ func run(t) -> void:
 		_band(t, "mini_boss", kind, float(tuning["mini_bosses"][kind]["hp"]), bolt, MINI_BOSS_LIMIT)
 	for kind in run_data["bosses"]:
 		_band(t, "boss", kind, float(run_data["bosses"][kind]["hp"]), bolt, BOSS_LIMIT)
+	_meta(t, run_data, bolt)
+
+## AD-236: meta never touches enemy/boss hp, so the hits-to-kill bands hold for fresh and full-meta profiles.
+func _meta(t, run_data: Dictionary, bolt: float) -> void:
+	var allowed := ["per_tier", "costs"]
+	var full := Meta.empty_meta()
+	for id in Meta.upgrade_ids():
+		full["upgrades"][id] = Meta.max_tier(id)
+		for key in Meta.upgrade_def(id):
+			t.check(key in allowed, "AD-236 upgrade %s field %s cannot alter enemy/boss hp" % [id, key])
+	t.equal(Meta.bonuses(Meta.empty_meta()), {"max_hp": 0.0, "max_mana": 0.0, "mana_regen_mult": 1.0}, "AD-236 fresh meta has no bonuses")
+	var b := Meta.bonuses(full)
+	t.equal(b.keys().size(), 3, "AD-236 full meta bonus fields are only hp/mana/regen")
+	t.check(float(b["max_hp"]) <= 40.0, "AD-236 full meta max_hp bonus %s <= 40" % b["max_hp"])
+	for mode in ["fresh", "full"]:
+		for kind in run_data["bosses"]:
+			var hits := int(ceil(float(run_data["bosses"][kind]["hp"]) / bolt))
+			t.check(hits <= BOSS_LIMIT, "AD-236 %s meta boss %s hits-to-kill %d <= %d" % [mode, kind, hits, BOSS_LIMIT])
 
 func _band(t, group: String, kind: String, hp: float, bolt: float, limit: int) -> void:
 	var hits := int(ceil(hp / bolt))

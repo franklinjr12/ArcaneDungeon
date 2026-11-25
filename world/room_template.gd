@@ -121,8 +121,70 @@ func initialize(room: Dictionary, arena: Dictionary, known_enemy_types: Array) -
 						issues.append({"code":"ROOM_PEDESTAL_INVALID","path":"pedestals","message":"Pedestal kind/position invalid or unreachable"})
 		if room["type"] == "challenge" and room.has("elite") and (typeof(room.get("elite")) != TYPE_DICTIONARY or typeof(room.get("challenge_reward")) != TYPE_DICTIONARY):
 			issues.append({"code":"ROOM_CHALLENGE_INVALID","path":"elite","message":"Challenge room needs elite and challenge_reward blocks"})
+	_check_room_affix(room,layout,world,points)
 	values = room.duplicate(true) if issues.is_empty() else {}
 	return {"ok":issues.is_empty(),"issues":issues.duplicate(true)}
+
+## AD-241. Optional room_affix (none/dark/unstable/haunted). Not the elite `affix` block (world/affixes.gd).
+func _check_room_affix(room: Dictionary, layout, world, points: Dictionary) -> void:
+	var affix := str(room.get("room_affix","none"))
+	if affix == "none":
+		return
+	if affix not in ["dark","unstable","haunted"]:
+		issues.append({"code":"ROOM_AFFIX_UNKNOWN","path":"room_affix","message":"Unknown room affix "+affix})
+		return
+	if str(room["type"]) != "combat":
+		issues.append({"code":"ROOM_AFFIX_NOT_ALLOWED","path":"room_affix","message":"Room affixes are combat rooms only"})
+		return
+	if affix == "haunted":
+		var wisps := 0
+		if typeof(room["waves"]) == TYPE_ARRAY:
+			for wave in room["waves"]:
+				if typeof(wave) != TYPE_DICTIONARY:
+					continue
+				for entry in wave.get("enemies",[]):
+					if typeof(entry) == TYPE_ARRAY and entry.size() == 3 and str(entry[0]) == "lantern_wisp":
+						wisps += 1
+		if wisps == 0:
+			issues.append({"code":"ROOM_AFFIX_INVALID","path":"room_affix","message":"Haunted room needs a lantern_wisp spawn"})
+	elif affix == "unstable":
+		var tiles = layout.get("cracked_tiles") if typeof(layout) == TYPE_DICTIONARY else null
+		var rects: Array = []
+		var ok: bool = typeof(tiles) == TYPE_ARRAY and not tiles.is_empty()
+		if ok:
+			for dims in tiles:
+				if typeof(dims) != TYPE_ARRAY or not EnvProps._num_array(dims,4) or float(dims[2]) < 56.0 or float(dims[3]) < 56.0:
+					ok = false
+					break
+				var rect := Rect2(float(dims[0]),float(dims[1]),float(dims[2]),float(dims[3]))
+				for key in ["entrance","exit","reward"]:
+					if points.has(key) and rect.grow(22.0).has_point(points[key]):
+						ok = false
+				rects.append(rect)
+		if not ok:
+			issues.append({"code":"ROOM_AFFIX_INVALID","path":"layout.cracked_tiles","message":"Unstable room needs cracked_tiles [x,y,w,h] >= 56 u clear of entrance/exit/reward"})
+			return
+		# Worst case: every cracked tile has collapsed into a pit. Temporary copy; the real world is untouched.
+		var saved: Array = world.ground_blockers.duplicate()
+		world.add_ground_blockers(rects)
+		if points.has("entrance"):
+			var radius := float(room.get("player_radius",22))
+			var step := float(room.get("grid_step",20))
+			var targets: Array = []
+			for key in ["exit","reward"]:
+				if points.has(key):
+					targets.append(points[key])
+			for wave in room["waves"] if typeof(room["waves"]) == TYPE_ARRAY else []:
+				if typeof(wave) != TYPE_DICTIONARY:
+					continue
+				for entry in wave.get("enemies",[]):
+					if typeof(entry) == TYPE_ARRAY and entry.size() == 3:
+						targets.append(Vector2(float(entry[1]),float(entry[2])))
+			for target in targets:
+				if not reachable(world,points["entrance"],target,radius,step):
+					issues.append({"code":"ROOM_AFFIX_INVALID","path":"layout.cracked_tiles","message":"Collapsed tiles cut off exit, reward or a spawn"})
+					break
+		world.ground_blockers = saved
 
 func marker(name: String) -> Vector2:
 	var coords: Array = values[name]

@@ -62,7 +62,8 @@ func resolve(hit: Variant, target, target_store, tick: int) -> Dictionary:
 		outcome["reactions"].append({"id":"chill_freeze","target_id":target.id,"bonus_damage":0.0,"affected_ids":[]})
 	var knockback := float(rule.get("knockback_force",0))
 	if knockback > 0.0:
-		var immune := false
+		# AD-239: anchored elites carry the knockback_immune tag.
+		var immune: bool = target.tags.has("knockback_immune")
 		for tag in reactions.get("knockback_immune_tags",[]):
 			if target.tags.has(tag):
 				immune = true
@@ -82,8 +83,15 @@ func resolve(hit: Variant, target, target_store, tick: int) -> Dictionary:
 			outcome["reaction"] = {"source_id":target.id,"target_id":arc_target.id,
 				"damage":float(payload.get("damage",0))*float(combat["arc_damage_scale"])*dry_scale,
 				"team":team,"channel":"lightning"}
-			if storm:
-				outcome["reaction"]["jumps_left"] = int(artifacts.param("stormglass","extra_jumps",1))
+			# AD-240 Thunderhead adds its extra_jumps on top of Stormglass (additive); neither changes damage.
+			var thunder: bool = artifacts != null and artifacts.has("thunderhead")
+			if storm or thunder:
+				var jumps := 0
+				if storm:
+					jumps += int(artifacts.param("stormglass","extra_jumps",1))
+				if thunder:
+					jumps += int(artifacts.param("thunderhead","extra_jumps",1))
+				outcome["reaction"]["jumps_left"] = jumps
 				outcome["reaction"]["seen"] = [target.id,arc_target.id]
 	return outcome
 
@@ -127,6 +135,9 @@ func _apply_reaction(rule: Dictionary, payload: Dictionary, target, target_store
 		outcome["status_events"].append({"state":str(status_id),"action":"applied"})
 	var bonus := 0.0
 	var scale := float(rule.get("bonus_damage_scale",0))
+	# AD-240 Frostbrand: frozen targets take extra force damage on the shatter reaction.
+	if scale > 0.0 and str(rule.get("id","")) == "frozen_force_shatter" and artifacts != null and artifacts.has("frostbrand"):
+		scale += float(artifacts.param("frostbrand","force_scale",0.4))
 	if scale > 0.0:
 		bonus = target.receive_damage(float(payload.get("damage",0))*scale,str(rule["channel"]),int(payload.get("team",1)),float(settings["combat"]["armor_scale"]))
 		outcome["damage"] = float(outcome["damage"]) + bonus

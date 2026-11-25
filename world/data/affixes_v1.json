@@ -1,0 +1,15 @@
+{
+	"_note": "AD-239 PROPOSED numbers (Shareable Alpha Plan v1 sections 2-3). One affix per elite, elites from room min_room on, never on bosses/mini-bosses. spawn_chance_by_depth: key '2' = room 2, '3' = room 3 and deeper non-optional rooms, 'optional' = any optional room. Outline colours are provisional readability picks (no palette swatches are specified in docs/art_direction.md); icon ids name placeholder icon cells. shielded.front_arc_degrees is a half-angle (shield_front component semantics).",
+	"schema_version": 1,
+	"min_room": 2,
+	"elite_spawn": {"wave": 0, "index": 0},
+	"spawn_chance_by_depth": {"2": 0.20, "3": 0.35, "optional": 0.50},
+	"affixes": {
+		"volatile": {"name_key": "affix.volatile.name", "desc_key": "affix.volatile.desc", "outline_color": "#ff6a2b", "icon": "affix_volatile", "blast_radius": 90, "blast_damage": 12, "blast_channel": "physical", "telegraph_ticks": 45},
+		"warded": {"name_key": "affix.warded.name", "desc_key": "affix.warded.desc", "outline_color": "#3fa9ff", "icon": "affix_warded", "weak_multiplier": 1.5, "counters": {"fire": "water", "water": "lightning", "lightning": "fire"}},
+		"hasted": {"name_key": "affix.hasted.name", "desc_key": "affix.hasted.desc", "outline_color": "#ffe34a", "icon": "affix_hasted", "speed_multiplier": 1.30},
+		"splitting": {"name_key": "affix.splitting.name", "desc_key": "affix.splitting.desc", "outline_color": "#7dff6a", "icon": "affix_splitting", "children": 2, "hp_fraction": 0.4, "radius_scale": 0.7, "split_radius": 24},
+		"shielded": {"name_key": "affix.shielded.name", "desc_key": "affix.shielded.desc", "outline_color": "#e8f0ff", "icon": "affix_shielded", "front_damage_scale": 0.25, "front_arc_degrees": 60},
+		"anchored": {"name_key": "affix.anchored.name", "desc_key": "affix.anchored.desc", "outline_color": "#b46bff", "icon": "affix_anchored", "speed_multiplier": 0.85, "knockback_immune": true}
+	}
+}

@@ -30,6 +30,8 @@ func run(t) -> void:
 				t.check(not seen.has(r["id"]),"AD-127 seed %d stage %d no repeated template %s" % [run_seed,stage_index,r["id"]])
 				seen[r["id"]] = true
 				t.check(int(r["room"]) == i,"AD-127 room index is stage-local")
+				if r.has("event") and str(r["type"]) == "combat" and phase == 1:
+					continue # AD-242: flood gate event room sits between the optional room and the workshop; not a pool combat room
 				match str(r["type"]):
 					"combat":
 						combat += 1

@@ -122,7 +122,7 @@ func _discoveries(t) -> void:
 		copy.sort()
 		sorted_ok = sorted_ok and copy == da[key]
 	t.equal(sorted_ok, true, "AD-145 discoveries sorted")
-	t.equal(da.keys().size(), 4, "AD-145 discoveries has four categories")
+	t.equal(da.keys().size(), 5, "AD-145 discoveries has five categories (AD-239 adds affixes)")
 	t.equal(a.summary().has("discovered"), false, "AD-145 summary excludes discoveries")
 
 func _profile(t) -> void:
@@ -131,7 +131,7 @@ func _profile(t) -> void:
 	svc.set_base_dir(DIR)
 	t.equal(svc.meta(), Meta.empty_meta(), "AD-145 default meta empty")
 	t.equal(svc.locked_runes(), ["trigger.on_expire", "trigger.timer"], "AD-145 default locked runes")
-	t.equal(svc.locked_artifacts(), ["archivists_quill", "echo_chamber", "gravity_lens", "shatterheart", "stormglass"], "AD-145 default locked artifacts")
+	t.equal(svc.locked_artifacts(), ["archivists_quill", "conduit_coil", "echo_chamber", "grave_salt", "gravity_lens", "mirror_glyph", "shatterheart", "stormglass", "thunderhead"], "AD-145 default locked artifacts")
 	# Persistence across instances.
 	svc.record_run({"outcome": "lost", "seed": 5, "discovered": {"runes": ["form.burst", "essence.fire"], "enemies": ["rust_golem"]}})
 	var svc2 = Service.new()

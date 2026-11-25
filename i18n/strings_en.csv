@@ -52,6 +52,7 @@ run.notice.dev_cheat,Dev cheat: %s
 run.notice.test_cast,Test cast slot %d: %s
 run.notice.range_reset,Safe test range reset
 run.notice.room_cleared,"Room cleared! Pick a reward (keys 1-%d), then walk to EXIT and press F"
+run.notice.post_boss_heal,Recovered %d%% HP
 run.notice.opt_in_first,Opt in first; data are kept locally and never uploaded.
 run.notice.export_ok,"Local files: user://arcane_m4_experiment.{json,csv}"
 run.notice.export_failed,Export failed
@@ -443,6 +444,11 @@ compendium.enemy.grave_hound,Grave Hound
 compendium.enemy.lantern_wisp,Lantern Wisp
 compendium.enemy.ossuary_shieldbearer,Ossuary Shieldbearer
 compendium.enemy.riptide_leaper,Riptide Leaper
+compendium.enemy.rune_sentry,Rune Sentry
+compendium.enemy.grave_mite,Grave Mites
+compendium.enemy.ash_censer,Ash Censer
+compendium.enemy.tide_siphon,Tide Siphon
+compendium.enemy.lamprey,Lamprey
 compendium.enemy.rust_golem,Rust Golem
 compendium.enemy.storm_crystal,Storm Crystal
 compendium.enemy.undead_warden,Undead Warden
@@ -606,3 +612,49 @@ meta_shop.next.max_hp,Next: +%d max HP (total +%d)
 meta_shop.next.max_mana,Next: +%d max mana (total +%d)
 meta_shop.next.mana_regen,Next: +%d%% mana regeneration (total +%d%%)
 meta_shop.next.done,Fully upgraded: +%s
+artifact.thunderhead.name,Thunderhead
+artifact.thunderhead.desc,"Wet lightning arcs chain to one more target."
+artifact.frostbrand.name,Frostbrand
+artifact.frostbrand.desc,"Frozen enemies take 40% more force damage."
+artifact.kindling.name,Kindling
+artifact.kindling.desc,"Burning enemies spread burn to nearby foes when they die."
+artifact.undertow.name,Undertow
+artifact.undertow.desc,"Wet enemies you hit are pulled 40 units toward your orb."
+artifact.overcharge.name,Overcharge
+artifact.overcharge.desc,"Every 3rd cast costs no mana."
+artifact.shard_mail.name,Shard Mail
+artifact.shard_mail.desc,"Shattering a frozen enemy grants 1 s of 30% damage reduction."
+artifact.quicksilver_ink.name,Quicksilver Ink
+artifact.quicksilver_ink.desc,"After a dash, your next cast deals 25% more damage."
+artifact.conduit_coil.name,Conduit Coil
+artifact.conduit_coil.desc,"Lightning hitting a burning enemy triggers an overload burst."
+artifact.tidecaller_shell.name,Tidecaller Shell
+artifact.tidecaller_shell.desc,"Standing in water restores 2 mana per second."
+artifact.mirror_glyph.name,Mirror Glyph
+artifact.mirror_glyph.desc,"Beams reflect once off walls."
+artifact.grave_salt.name,Grave Salt
+artifact.grave_salt.desc,"Kills during a reaction drop a mote that heals 3 HP."
+artifact.fracture_lens.name,Fracture Lens
+artifact.fracture_lens.desc,"Area and field forms are 20% larger but deal 10% less damage."
+run.reward.artifact_tag.reaction,Reaction tag
+run.reward.artifact_tag.form,Form tag
+run.reward.artifact_tag.trigger,Trigger tag
+run.reward.artifact_tag.defence,Defence tag
+compendium.section.affixes,Affixes
+affix.volatile.name,Volatile
+affix.volatile.desc,Dies in a telegraphed blast.
+affix.warded.name,Warded
+affix.warded.desc,Immune to one essence and weak to its counter.
+affix.hasted.name,Hasted
+affix.hasted.desc,Moves 30% faster.
+affix.splitting.name,Splitting
+affix.splitting.desc,Splits into two smaller foes on death.
+affix.shielded.name,Shielded
+affix.shielded.desc,A frontal ward blocks most projectiles.
+affix.anchored.name,Anchored
+affix.anchored.desc,Cannot be knocked back and moves slower.
+event.herald.title,Herald of the Warden
+event.herald.subtitle,The Warden's adept bars the way.
+event.flood_gate.title,Flood Gate
+event.flood_gate.subtitle,Survive the rising water.
+event.timer,%s: %d s

@@ -12,6 +12,14 @@ var state_tick := 0
 var cooldown := 0
 var intent
 var death_announced := false
+## AD-239: elite affix id ("" = none); never set on bosses.
+var affix := ""
+## AD-239: essence a warded elite is immune to ("" otherwise).
+var affix_essence := ""
+## AD-239: persistent affix move multiplier (hasted/anchored); unlike speed_scale it is not reset in begin_tick.
+var affix_speed_scale := 1.0
+## AD-239: shield_front component instance for a shielded elite (null otherwise); ticked by Affixes.tick.
+var affix_shield = null
 var transitions: Array = []
 var heading := Vector2.LEFT
 var behaviours: Array = []
@@ -31,6 +39,8 @@ var ai: Dictionary = {}
 ## Set by modifier components (phase_walls): ignore walls when moving / ignore line of sight for attacks.
 var phase_walls := false
 var ignore_sight := false
+## AD-238: release tick of state "stunned" (set by stun(); -1 = never stunned).
+var stun_until := -1
 var _movers: Array = []
 var _attacker = null
 
@@ -74,6 +84,17 @@ func begin_tick() -> void:
 func apply_scales() -> void:
 	target.damage_scale = shield_scale*buff_damage_scale*phase_scale
 
+## AD-238: state "stunned" (brain suspended, intent dropped). The stun spans `ticks` session ticks counting both the
+## tick it lands (T) and the release tick T+ticks-1, on which the enemy leaves "stunned" and acts again.
+## Re-stunning only extends. A dead enemy is never stunned.
+func stun(session, ticks: int) -> void:
+	if not target.alive() or ticks <= 0:
+		return
+	var tick: int = session.sim.clock.tick
+	stun_until = maxi(stun_until,tick+ticks-1)
+	intent = null
+	change_state("stunned",tick)
+
 func change_state(next: String, tick: int) -> void:
 	if state == next:
 		return
@@ -102,6 +123,8 @@ func _move(session, desired: Vector2) -> void:
 	var speed := float(tuning["move_speed"])
 	if speed_scale != 1.0:
 		speed *= speed_scale
+	if affix_speed_scale != 1.0:
+		speed *= affix_speed_scale
 	if target.status.has("chilled",session.sim.clock.tick):
 		speed *= float(session.sim.settings["statuses"]["chilled"].get("move_scale",1.0))
 	var displacement := desired.normalized()*speed/float(session.sim.clock.tick_rate)
@@ -141,6 +164,10 @@ func advance(session) -> void:
 		return
 	if session.state != "playing":
 		return
+	if state == "stunned":
+		if session.sim.clock.tick < stun_until:
+			return
+		change_state("chase",session.sim.clock.tick)
 	# Frozen: the whole brain is suspended (no movement, state progress, cooldown or windup completion).
 	if target.status.has("frozen",session.sim.clock.tick):
 		return

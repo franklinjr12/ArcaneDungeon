@@ -57,6 +57,8 @@ var show_dev_tools = null
 var perf_seed = null
 var _notice_seen := ""
 var _notice_until_ms := 0
+var _event_card_key := ""
+var _event_card_until_ms := 0
 var _last_wet_kills := 0
 var _last_arcs := 0
 const TELEMETRY_INDEX := {"room1":3,"first_reward":4,"first_workshop":5,"telegraph":6,"spells_are_runes":7}
@@ -109,6 +111,7 @@ const HUD_ARTIFACT_LEFT := 499.0
 const HUD_BOSS_BOTTOM := 46.0
 const HUD_STATUS_BOTTOM := 80.0
 const NOTICE_MS := 5000
+const EVENT_CARD_MS := 2500
 const TEST_RANGE_SIZE := Vector2(916,650)
 const DESK_DOOR_RADIUS := 34.0
 const EDITOR_SIZE := Vector2(632,665) # AD-153: 296 canvas px at x2 (skin A editor column) plus the panel frame and scrollbar
@@ -760,7 +763,9 @@ func _physics_process(_delta: float) -> void:
 	if refresh_counter%7 == 0:
 		var key: String = str(flow.run.sequence_index)+":"+flow.state+":"+str(flow.reward_collected)
 		if key != scene_key:
-			if flow.state == "cleared" and flow.resonant_clear:
+			if flow.state == "cleared" and flow.post_boss_heal > 0.0:
+				current_notice = tr("run.notice.post_boss_heal") % int(round(float(flow.config.get("post_boss_heal_pct",0.0))*100.0))
+			elif flow.state == "cleared" and flow.resonant_clear:
 				current_notice = tr("run.notice.resonant_clear")
 			elif flow.state == "cleared" and not flow.reward_collected and not flow.reward_options.is_empty():
 				current_notice = tr("run.notice.room_cleared") % flow.reward_options.size()
@@ -788,6 +793,23 @@ func _move_test_mage(dir: Vector2) -> void:
 func room_display_name(room_id: String) -> String:
 	var key = flavour.get("room_names", {}).get(room_id, "")
 	return tr(str(key)) if key != "" else room_id
+
+## AD-242: title card (once per room entry, EVENT_CARD_MS) and, for a timed event, the seconds left. "" outside event rooms.
+func _event_notice() -> String:
+	if flow.event_id == "" or flow.state != "fighting":
+		return ""
+	var event: Dictionary = flow.config.get("events",{}).get(flow.event_id,{})
+	var key := "%d:%s" % [flow.run.sequence_index,flow.event_id]
+	var now := Time.get_ticks_msec()
+	if key != _event_card_key:
+		_event_card_key = key
+		_event_card_until_ms = now+EVENT_CARD_MS
+	if now < _event_card_until_ms:
+		return tr(str(event.get("title_key","")))+"\n"+tr(str(event.get("subtitle_key","")))
+	var left: int = flow.encounter.event_seconds_left() if flow.encounter != null else 0
+	if left > 0:
+		return tr("event.timer") % [tr(str(event.get("title_key",""))),left]
+	return ""
 
 ## Rift line is returned once per run (reset on retry / new seed).
 func stage_banner() -> String:
@@ -828,6 +850,7 @@ func _redraw_panel() -> void:
 	scene_key = str(flow.run.sequence_index)+":"+flow.state+":"+str(flow.reward_collected)
 	arena_canvas.session = flow.session
 	arena_canvas.environment_id = 2 if int(flow.room.values.get("stage",0))>=1 else (1 if flow.room.values["type"]=="boss" else 0)
+	arena_canvas.set_meta("room_id",str(flow.room.values.get("id","")))
 	arena_canvas.lighting_stage = int(flow.room.values.get("stage",0))
 	arena_canvas.lighting_room_type = str(flow.room.values.get("type","combat"))
 	arena_canvas.lighting_props = flow.room.values.get("layout",{}).get("props",[])
@@ -961,6 +984,8 @@ func _build_reward_panel() -> void:
 			desc = tr(str(item["behaviour_key"]))
 			tag_key = "run.reward.tag_"+kind
 			art = _rune_art(str(item["id"])) if kind == "rune" else SkinA.icon_or_mvp("upgrade")
+			if kind == "artifact" and str(item.get("tag","")) != "":
+				desc += "\n"+tr("run.reward.artifact_tag."+str(item["tag"]))
 		var card := _kit_card(o,"card_1","card_%d" % (i+1),dx,kind,rarity,card_name,art)
 		reward_cards.append(card)
 		var tip_w := minf(160.0,step-8.0)
@@ -1202,6 +1227,10 @@ func _update_labels() -> void:
 		_notice_seen = current_notice
 		_notice_until_ms = Time.get_ticks_msec()+NOTICE_MS
 	notice_panel.visible = current_notice != "" and Time.get_ticks_msec() < _notice_until_ms
+	var event_text := _event_notice()
+	if event_text != "":
+		notices.text = event_text
+		notice_panel.visible = true
 	pause_button.disabled = not can_pause()
 	_update_dev_label()
 	if tip != null and _debug_pinned_tip != "":

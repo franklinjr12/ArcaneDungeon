@@ -17,7 +17,8 @@ func execute_attack(enemy, session) -> void:
 	var step := float(param(enemy,"spread_step_degrees",0.0))
 	for i in shots:
 		session.spawn_enemy_projectile(enemy.target.id,enemy.target.position,direction,float(param(enemy,"damage")),
-			float(param(enemy,"projectile_speed")),float(param(enemy,"spread_degrees",0))+(float(i)-float(shots-1)*0.5)*step)
+			float(param(enemy,"projectile_speed")),float(param(enemy,"spread_degrees",0))+(float(i)-float(shots-1)*0.5)*step,
+			str(params.get("channel","physical")))
 
 func active_ticks(enemy) -> int:
 	var shots := int(param(enemy,"burst_shots",1))
