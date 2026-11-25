@@ -21,6 +21,7 @@ func run(t) -> void:
 	test_ad_239_c_never_on_bosses(t)
 	test_ad_239_d_affix_discovered_in_meta(t)
 	test_ad_239_e_readability_data(t)
+	test_ad_239_e_overlay_helper(t)
 
 func _data() -> Dictionary:
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(DATA))
@@ -342,3 +343,15 @@ func test_ad_239_e_readability_data(t) -> void:
 		t.check(A.definitions().keys().size() == 6,"AD-239 readability: Affixes.definitions lists six")
 		for id in IDS:
 			t.equal(A.outline_color(id),Color.html(str(_def(id).get("outline_color",""))),"AD-239 readability: %s outline_color matches data" % id)
+
+func test_ad_239_e_overlay_helper(t) -> void:
+	var Art = load("res://ui/pixel_art_renderer.gd")
+	var A = _affixes()
+	t.check(Art.affix_overlay({"affix":""}).is_empty(),"AD-239 overlay: no affix yields no overlay pass")
+	t.check(Art.affix_overlay(null).is_empty(),"AD-239 overlay: null enemy yields no overlay pass")
+	if A == null:
+		return
+	for id in IDS:
+		var o: Dictionary = Art.affix_overlay({"affix":id})
+		t.equal(o.get("outline"),A.outline_color(id),"AD-239 overlay: %s outline colour" % id)
+		t.equal(o.get("icon"),str(_def(id).get("icon","")),"AD-239 overlay: %s icon id" % id)

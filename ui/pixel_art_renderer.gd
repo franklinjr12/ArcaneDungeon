@@ -1,4 +1,5 @@
 extends RefCounted
+const AffixesData = preload("res://world/affixes.gd")
 ## Presentation only: the reference-matched pixel assets never own collision, damage or spells.
 const TILE = preload("res://assets/pixel/dungeon_tiles.png")
 const PROPS = preload("res://assets/pixel/dungeon_props.png")
@@ -1362,9 +1363,32 @@ static func placeholder_modulate(kind: String, color: Color, intangible: bool, w
 	out.a = 0.4 if intangible else (0.7 if warning_flicker else 1.0)
 	return out
 
+## AD-239 readability: {outline: Color, icon: String} for an affixed enemy, {} otherwise. Pure; the outline is static
+## (no flashing), so it needs no reduce-motion branch.
+static func affix_overlay(enemy) -> Dictionary:
+	var id: String = str(enemy.get("affix")) if enemy != null and enemy.get("affix") != null else ""
+	if id == "" or not AffixesData.is_known(id):
+		return {}
+	return {"outline": AffixesData.outline_color(id), "icon": str(AffixesData.param(id, "icon", ""))}
+
+## AD-239 placeholder overlay: one 2 px ring in the affix colour and a small coloured diamond glyph above the enemy
+## (no atlas cell exists for the affix icon ids yet).
+static func draw_affix_overlay(canvas: CanvasItem, enemy, at: Vector2) -> void:
+	var overlay := affix_overlay(enemy)
+	if overlay.is_empty() or not enemy.target.alive():
+		return
+	var colour: Color = overlay["outline"]
+	var r: float = enemy.target.radius
+	canvas.draw_arc(at, r + 2.0, 0.0, TAU, 32, colour, 2.0)
+	var c := at + Vector2(0.0, -r - 10.0)
+	var pts := PackedVector2Array([c + Vector2(0, -5), c + Vector2(5, 0), c + Vector2(0, 5), c + Vector2(-5, 0)])
+	canvas.draw_colored_polygon(pts, colour)
+	canvas.draw_polyline(PackedVector2Array([pts[0], pts[1], pts[2], pts[3], pts[0]]), Color(0.05, 0.05, 0.08, 0.9), 1.0)
+
 ## AD-137 telegraph markers (presentation only; read flags/session state, never write them).
 static func draw_enemy_markers(canvas: CanvasItem, enemy, at: Vector2, tick: int, offset: Vector2) -> void:
 	var target = enemy.target
+	draw_affix_overlay(canvas, enemy, at)
 	if target.alive():
 		for behaviour in enemy.tuning.get("behaviours",[]):
 			if behaviour["id"] == "shield_front" and not enemy.shield_broken:
