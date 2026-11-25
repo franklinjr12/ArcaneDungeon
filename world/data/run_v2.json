@@ -975,7 +975,11 @@
         "cistern_p07",
         "cistern_p08",
         "cistern_p09",
-        "cistern_p10"
+        "cistern_p10",
+        "cistern_p11",
+        "cistern_p12",
+        "cistern_p13",
+        "cistern_p14"
       ],
       "optional_room": "cistern_challenge_v1",
       "boss_room": "cistern_boss",

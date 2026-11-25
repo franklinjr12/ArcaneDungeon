@@ -6,7 +6,7 @@
   "player_radius": 22,
   "spawn_radius": 20,
   "grid_step": 20,
-  "pool_size": 10
+  "pool_size": 14
  },
  "pool": [
   "cistern_p01",
@@ -18,7 +18,11 @@
   "cistern_p07",
   "cistern_p08",
   "cistern_p09",
-  "cistern_p10"
+  "cistern_p10",
+  "cistern_p11",
+  "cistern_p12",
+  "cistern_p13",
+  "cistern_p14"
  ],
  "treasure_room": "cistern_treasure_v1",
  "challenge_room": "cistern_challenge_v1",
@@ -1800,6 +1804,642 @@
       [
        "riptide_leaper",
        500,
+       200
+      ]
+     ]
+    }
+   ]
+  },
+  "cistern_p11": {
+   "id": "cistern_p11",
+   "stage": 1,
+   "room": 0,
+   "type": "combat",
+   "shape": "flooded_arena",
+   "room_affix": "dark",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "arena_walls": false,
+    "env_props": [
+     {
+      "id": "p11_crate",
+      "kind": "crate",
+      "rect": [
+       1000,
+       780,
+       40,
+       40
+      ]
+     },
+     {
+      "id": "p11_puddle",
+      "kind": "puddle",
+      "rect": [
+       300,
+       420,
+       120,
+       60
+      ]
+     }
+    ],
+    "walls": [
+     [
+      640,
+      200,
+      128,
+      18
+     ],
+     [
+      640,
+      680,
+      128,
+      18
+     ]
+    ],
+    "props": [
+     [
+      "pipe",
+      672,
+      209
+     ],
+     [
+      "pipe",
+      736,
+      209
+     ],
+     [
+      "pipe",
+      672,
+      689
+     ],
+     [
+      "pipe",
+      736,
+      689
+     ]
+    ],
+    "water": [
+     {
+      "kind": "shallow",
+      "rect": [
+       420,
+       320,
+       240,
+       260
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       800,
+       100,
+       260,
+       140
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       800,
+       660,
+       260,
+       140
+      ]
+     }
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "tide_siphon",
+       1100,
+       450
+      ],
+      [
+       "cistern_slime",
+       1000,
+       250
+      ],
+      [
+       "drowned_acolyte",
+       1000,
+       680
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 45,
+     "enemies": [
+      [
+       "lamprey",
+       700,
+       330
+      ],
+      [
+       "lamprey",
+       700,
+       570
+      ],
+      [
+       "grave_hound",
+       1100,
+       450
+      ]
+     ]
+    }
+   ]
+  },
+  "cistern_p12": {
+   "id": "cistern_p12",
+   "stage": 1,
+   "room": 0,
+   "type": "combat",
+   "shape": "split_bridges",
+   "room_affix": "unstable",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "arena_walls": false,
+    "env_props": [
+     {
+      "id": "p12_crate",
+      "kind": "crate",
+      "rect": [
+       1000,
+       780,
+       40,
+       40
+      ]
+     },
+     {
+      "id": "p12_puddle",
+      "kind": "puddle",
+      "rect": [
+       300,
+       420,
+       120,
+       60
+      ]
+     }
+    ],
+    "walls": [
+     [
+      340,
+      430,
+      128,
+      18
+     ],
+     [
+      960,
+      430,
+      128,
+      18
+     ]
+    ],
+    "props": [
+     [
+      "pipe",
+      372,
+      439
+     ],
+     [
+      "pipe",
+      436,
+      439
+     ],
+     [
+      "pipe",
+      992,
+      439
+     ],
+     [
+      "pipe",
+      1056,
+      439
+     ]
+    ],
+    "cracked_tiles": [
+     [
+      680,
+      190,
+      100,
+      100
+     ]
+    ],
+    "water": [
+     {
+      "kind": "deep",
+      "rect": [
+       680,
+       0,
+       100,
+       160
+      ]
+     },
+     {
+      "kind": "deep",
+      "rect": [
+       680,
+       320,
+       100,
+       260
+      ]
+     },
+     {
+      "kind": "deep",
+      "rect": [
+       680,
+       760,
+       100,
+       140
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       680,
+       580,
+       100,
+       180
+      ]
+     }
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "tide_siphon",
+       1100,
+       200
+      ],
+      [
+       "bone_thrall",
+       450,
+       700
+      ],
+      [
+       "fallen_adept",
+       1100,
+       700
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 45,
+     "enemies": [
+      [
+       "lamprey",
+       420,
+       200
+      ],
+      [
+       "lamprey",
+       420,
+       700
+      ],
+      [
+       "rust_golem",
+       1050,
+       230
+      ]
+     ]
+    }
+   ]
+  },
+  "cistern_p13": {
+   "id": "cistern_p13",
+   "stage": 1,
+   "room": 0,
+   "type": "combat",
+   "shape": "pillared_hall",
+   "room_affix": "haunted",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "arena_walls": false,
+    "env_props": [
+     {
+      "id": "p13_crate",
+      "kind": "crate",
+      "rect": [
+       1000,
+       780,
+       40,
+       40
+      ]
+     },
+     {
+      "id": "p13_puddle",
+      "kind": "puddle",
+      "rect": [
+       300,
+       420,
+       120,
+       60
+      ]
+     },
+     {
+      "id": "p13_urn",
+      "kind": "urn",
+      "position": [
+       700,
+       780
+      ]
+     }
+    ],
+    "walls": [
+     [
+      560,
+      300,
+      128,
+      18
+     ],
+     [
+      560,
+      600,
+      128,
+      18
+     ]
+    ],
+    "props": [
+     [
+      "pipe",
+      592,
+      309
+     ],
+     [
+      "pipe",
+      656,
+      309
+     ],
+     [
+      "pipe",
+      592,
+      609
+     ],
+     [
+      "pipe",
+      656,
+      609
+     ]
+    ],
+    "water": [
+     {
+      "kind": "shallow",
+      "rect": [
+       860,
+       380,
+       200,
+       140
+      ]
+     },
+     {
+      "kind": "deep",
+      "rect": [
+       400,
+       760,
+       300,
+       140
+      ]
+     }
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "lantern_wisp",
+       1050,
+       500
+      ],
+      [
+       "tide_siphon",
+       1100,
+       200
+      ],
+      [
+       "cistern_slime",
+       1000,
+       700
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 45,
+     "enemies": [
+      [
+       "lamprey",
+       800,
+       250
+      ],
+      [
+       "lamprey",
+       800,
+       650
+      ],
+      [
+       "rust_golem",
+       1100,
+       450
+      ]
+     ]
+    }
+   ]
+  },
+  "cistern_p14": {
+   "id": "cistern_p14",
+   "stage": 1,
+   "room": 0,
+   "type": "combat",
+   "shape": "cross_hall",
+   "room_affix": "dark",
+   "scene": "res://scenes/run.tscn",
+   "entrance": [
+    185,
+    450
+   ],
+   "exit": [
+    1220,
+    450
+   ],
+   "reward": [
+    1150,
+    450
+   ],
+   "layout": {
+    "arena_walls": false,
+    "env_props": [
+     {
+      "id": "p14_crate",
+      "kind": "crate",
+      "rect": [
+       1000,
+       780,
+       40,
+       40
+      ]
+     },
+     {
+      "id": "p14_puddle",
+      "kind": "puddle",
+      "rect": [
+       300,
+       420,
+       120,
+       60
+      ]
+     }
+    ],
+    "walls": [
+     [
+      700,
+      140,
+      128,
+      18
+     ],
+     [
+      700,
+      740,
+      128,
+      18
+     ]
+    ],
+    "props": [
+     [
+      "pipe",
+      732,
+      149
+     ],
+     [
+      "pipe",
+      796,
+      149
+     ],
+     [
+      "pipe",
+      732,
+      749
+     ],
+     [
+      "pipe",
+      796,
+      749
+     ]
+    ],
+    "water": [
+     {
+      "kind": "deep",
+      "rect": [
+       480,
+       20,
+       100,
+       160
+      ]
+     },
+     {
+      "kind": "deep",
+      "rect": [
+       480,
+       720,
+       100,
+       160
+      ]
+     },
+     {
+      "kind": "shallow",
+      "rect": [
+       900,
+       420,
+       160,
+       100
+      ]
+     }
+    ]
+   },
+   "waves": [
+    {
+     "trigger": "start",
+     "delay_ticks": 0,
+     "enemies": [
+      [
+       "tide_siphon",
+       1100,
+       450
+      ],
+      [
+       "storm_crystal",
+       1000,
+       200
+      ],
+      [
+       "drowned_acolyte",
+       1000,
+       700
+      ]
+     ]
+    },
+    {
+     "trigger": "on_clear",
+     "delay_ticks": 45,
+     "enemies": [
+      [
+       "lamprey",
+       700,
+       330
+      ],
+      [
+       "lamprey",
+       700,
+       570
+      ],
+      [
+       "grave_hound",
+       1100,
        200
       ]
      ]

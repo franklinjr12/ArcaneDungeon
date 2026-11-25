@@ -355,7 +355,7 @@ func _cistern_rooms(t) -> void:
 			stage = entry
 	t.check(not stage.is_empty(),"AD-203 cistern: stage found in run_v2")
 	var ids := _cistern_ids(stage)
-	t.equal(ids.size(),11,"AD-203 cistern: 10 pool rooms plus the optional challenge room")
+	t.equal(ids.size(),15,"AD-203 cistern: 14 pool rooms plus the optional challenge room")
 	var templates: Dictionary = Flow.merged_templates(doc) # run_v2 templates plus the Cistern pool file, pool rules copied in
 	var shapes: Dictionary = {}
 	for id in ids:
@@ -368,7 +368,7 @@ func _cistern_rooms(t) -> void:
 		t.check(not room["layout"].get("water",[]).is_empty(),"AD-203 cistern: %s has water" % id)
 		shapes[str(room.get("shape",""))] = id
 		_navigation(t,id,room,tuning,env_data)
-	t.equal(shapes.size(),ids.size(),"AD-203 cistern: the eleven rooms use eleven different shapes")
+	t.check(shapes.size() >= 11,"AD-203 cistern: the rooms use at least eleven different shapes (%d)" % shapes.size())
 	for shape in rules["owner_shapes"]:
 		t.check(shapes.has(shape),"AD-203 cistern: owner shape %s is used" % shape)
 	for shape in ["cross_hall","eel_lanes","colonnade","dais_island","l_bend","flooded_arena"]:

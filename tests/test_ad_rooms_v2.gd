@@ -33,6 +33,7 @@ func run(t) -> void:
 	test_ad_241_haunted_respawn(t)
 	test_ad_241_none_room_unchanged(t)
 	test_ad_241_ruins_pool(t)
+	test_ad_241_cistern_pool(t)
 
 func test_ad_241_room_affix_data(t) -> void:
 	var run: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://world/data/run_v2.json"))
@@ -254,3 +255,57 @@ func test_ad_241_ruins_pool(t) -> void:
 	for k in ["dark","unstable","haunted"]:
 		t.check(affixes.has(k),"AD-241 ruins has a %s room" % k)
 	t.check(not doc["room_templates"][stage["boss_room"]].has("room_affix"),"AD-241 ruins boss room has no affix")
+
+const Flow = preload("res://world/run_flow.gd")
+
+func test_ad_241_cistern_pool(t) -> void:
+	var doc := _run_doc()
+	var tuning := _tuning()
+	var env_data = load("res://world/env_props.gd").load_data()
+	var stage: Dictionary = doc["stages"][1]
+	var file: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://world/data/rooms_cistern_v1.json"))
+	var pool: Array = stage["pool"]
+	t.equal(pool.size(),14,"AD-241 cistern pool has 14 rooms")
+	t.check(pool == file["pool"] and int(file["rules"]["pool_size"]) == 14,"AD-241 stage pool matches the rooms file pool")
+	var templates := Flow.merged_templates(doc)
+	var kinds: Dictionary = {}
+	var affixes: Dictionary = {}
+	var affixed := 0
+	for id in pool + [stage["optional_room"],stage["boss_room"]]:
+		t.check(templates.has(id),"AD-241 cistern template %s exists" % id)
+		var room: Dictionary = templates[id]
+		var verdict := Room.new().initialize(room,tuning["arena"],tuning["enemies"].keys())
+		t.check(bool(verdict["ok"]),"AD-241 %s validates (%s)" % [id,str(verdict["issues"])])
+		if id in pool:
+			var report := Room.rule_report(room,tuning["arena"],env_data,doc["room_rules"])
+			t.check(bool(report["ok"]),"AD-241 %s passes rule_report (%s)" % [id,str(report["issues"])])
+			for wave in room["waves"]:
+				t.check((wave["enemies"] as Array).size() <= int(doc["max_active_enemies"]),"AD-241 %s wave within the active cap" % id)
+				for e in wave["enemies"]:
+					kinds[e[0]] = true
+			var affix := str(room.get("room_affix","none"))
+			if affix != "none":
+				affixed += 1
+				affixes[affix] = true
+		else:
+			t.check(str(room.get("room_affix","none")) == "none","AD-241 %s has no room affix" % id)
+	t.check(templates["workshop"].get("room_affix","none") == "none","AD-241 workshop has no room affix")
+	for k in ["tide_siphon","lamprey"]:
+		t.check(kinds.has(k),"AD-241 cistern uses %s" % k)
+	t.check(kinds.size() >= 7,"AD-241 cistern pool spawns >= 7 enemy kinds (%s)" % str(kinds.keys()))
+	var share := float(affixed)/float(pool.size())
+	t.check(share >= 0.25 and share <= 0.40,"AD-241 cistern affix share %.2f within 0.25-0.40" % share)
+	for k in ["dark","unstable","haunted"]:
+		t.check(affixes.has(k),"AD-241 cistern has a %s room" % k)
+	for seed_value in [1,2,3,7,42,99,1234]:
+		var seq: Array = Flow.build_sequence(doc,seed_value)
+		var types: Array = []
+		var seen: Dictionary = {}
+		for r in seq:
+			if int(r["stage"]) == 1:
+				types.append(str(r["id"]))
+				t.check(not seen.has(r["id"]) or str(r["id"]) == "workshop","AD-241 seed %d: no repeated cistern room %s" % [seed_value,r["id"]])
+				seen[r["id"]] = true
+		var combat := types.filter(func(i): return i in pool)
+		t.equal(combat.size(),3,"AD-241 seed %d: 3 cistern combat rooms" % seed_value)
+		t.check(types.size() == 6 and types[3] == stage["optional_room"] and types[4] == "workshop" and types[5] == stage["boss_room"],"AD-241 seed %d: optional, workshop, boss follow (%s)" % [seed_value,str(types)])
