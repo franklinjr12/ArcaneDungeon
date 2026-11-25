@@ -6,10 +6,10 @@ Regenerate: `python3 tools/asset_status.py` (scans the repo; rules in tools/asse
 
 | type | files | final | placeholder | third-party | unknown | flagged |
 |---|---|---|---|---|---|---|
-| art | 411 | 44 | 367 | 0 | 0 | 0 |
+| art | 427 | 44 | 383 | 0 | 0 | 0 |
 | font | 2 | 0 | 0 | 2 | 0 | 0 |
 | audio | 30 | 0 | 30 | 0 | 0 | 0 |
-| total | 443 | 44 | 397 | 2 | 0 | 0 |
+| total | 459 | 44 | 413 | 2 | 0 | 0 |
 
 ## Flagged: needs licence or origin
 
@@ -22,9 +22,9 @@ None
 | art/export/actors | 54 | 47 | 7 | 0 | 0 |
 | art/export/bos | 1 | 1 | 0 | 0 | 0 |
 | art/export/chr | 1 | 1 | 0 | 0 | 0 |
-| art/export/enm | 4 | 0 | 4 | 0 | 0 |
+| art/export/enm | 18 | 14 | 4 | 0 | 0 |
 | art/export/fnt | 2 | 0 | 0 | 2 | 0 |
-| art/export/ico | 13 | 13 | 0 | 0 | 0 |
+| art/export/ico | 15 | 15 | 0 | 0 | 0 |
 | art/export/npc | 3 | 3 | 0 | 0 | 0 |
 | art/export/por | 1 | 1 | 0 | 0 | 0 |
 | art/export/prp | 66 | 40 | 26 | 0 | 0 |
@@ -99,12 +99,28 @@ Missing audio cues are tracked in docs/demo/AUDIO_STATUS.md (AD-188).
 | art/export/actors/ad_fx_homing_skull_left.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/bos/ad_bos_ossuary_warden.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/chr/ad_chr_mage.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/enm/ad_enm_ash_censer.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/enm/ad_enm_ash_censer_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/enm/ad_enm_ash_censer_left.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/enm/ad_enm_ash_censer_left_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/enm/ad_enm_bone_thrall.png | art | final | Project-original (Arcane Studio) | AD-244/245/246 approved |
 | art/export/enm/ad_enm_fallen_adept.png | art | final | Project-original (Arcane Studio) | AD-244/245/246 approved |
 | art/export/enm/ad_enm_ghoul_stalker.png | art | final | Project-original (Arcane Studio) | AD-244/245/246 approved |
 | art/export/enm/ad_enm_grave_hound.png | art | final | Project-original (Arcane Studio) | AD-244/245/246 approved |
+| art/export/enm/ad_enm_grave_mite.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/enm/ad_enm_grave_mite_left.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/enm/ad_enm_lamprey.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/enm/ad_enm_lamprey_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/enm/ad_enm_lamprey_left.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/enm/ad_enm_lamprey_left_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/enm/ad_enm_rune_sentry.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/enm/ad_enm_rune_sentry_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/enm/ad_enm_tide_siphon.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/enm/ad_enm_tide_siphon_left.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/fnt/arc_fnt_m5x7.png | font | third-party | CC0 (recorded in assets/ui/ad_ui_kit.json, AD-029) | m5x7 font |
 | art/export/fnt/arc_fnt_silkscreen.png | font | third-party | OFL 1.1 (recorded in assets/ui/ad_ui_kit.json, AD-029) | Silkscreen font |
+| art/export/ico/ad_ico_affix_atlas_16.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
+| art/export/ico/ad_ico_affix_atlas_8.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/ico/ad_ico_artifacts_atlas_16.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/ico/ad_ico_artifacts_atlas_16_glow.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
 | art/export/ico/ad_ico_artifacts_atlas_32_card.png | art | placeholder | Project-original (Arcane Studio) | first art pass, owner approval pending (docs/ART_IMPLEMENTATION.md) |
