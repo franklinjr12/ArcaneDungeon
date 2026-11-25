@@ -388,7 +388,7 @@ func _windup_ok(t, kind: String, ticks: int, label: String) -> void:
 func _renderer(t) -> void:
 	for k in REAL_KINDS:
 		t.equal(ART.resolve_kind(k), k, "AD-154 resolve_kind own entry: " + k)
-	t.equal(ART.PLACEHOLDER_KIND.keys(), ["ghoul_stalker", "riptide_leaper", "rune_sentry"], "AD-237 only the pounce enemies and the Rune sentry borrow sprites")
+	t.equal(ART.PLACEHOLDER_KIND.keys(), ["ghoul_stalker", "riptide_leaper", "rune_sentry", "grave_mite"], "AD-237 only the pounce enemies, the Rune sentry and the Grave mite borrow sprites")
 	var spirit := ART.placeholder_modulate("wailing_spirit", Color.RED, true, false)
 	t.check(is_equal_approx(spirit.a, 0.4), "AD-154 intangible alpha kept")
 	t.check(spirit.r == 1.0 and spirit.g == 1.0 and spirit.b == 1.0, "AD-154 real art has no tint")

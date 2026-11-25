@@ -136,6 +136,25 @@
       "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
       "behaviours": [{"id": "keep_distance", "approach_margin": 35, "retreat_margin": 50, "approach_weight": 0.75, "retreat_weight": 0.75}, {"id": "ranged_attack", "burst_shots": 2, "burst_interval_ticks": 10}]
     },
+    "grave_mite": {
+      "_note": "AD-237 PROPOSED numbers. Swarm of 6 tiny fast biters (hp 12 = ~1 bolt hit each, <15% of a bone thrall) that fan out via a deterministic id-based weave. Weak to fire (-0.5): burst/field forms hit the whole pack at once. 12-tick telegraph before each bite; full pack damage 6 x 3 = 18 = one grave_hound burst.",
+      "display_name": "Grave mite",
+      "hp": 12,
+      "radius": 10,
+      "move_speed": 190,
+      "perception_radius": 1250,
+      "preferred_range": 6,
+      "attack_range": 26,
+      "telegraph_ticks": 12,
+      "recovery_ticks": 22,
+      "cooldown_ticks": 30,
+      "damage": 3,
+      "attack_kind": "melee",
+      "color": "#d9c27a",
+      "channel_resistances": {"fire": -0.5},
+      "enemy_ai": {"blocked_move_ratio": 0.06, "separation_padding": 2.0, "separation_push": 3.0},
+      "behaviours": [{"id": "swarm_chase", "weave_degrees": 12}, {"id": "melee_attack"}]
+    },
     "ossuary_shieldbearer": {
       "_note": "AD-137 PROPOSED numbers (not approved design). Counters: flank (turn rate 2.5 deg/tick) or Force knockback (break_impulse_speed).",
       "display_name": "Ossuary shieldbearer",
@@ -445,6 +464,41 @@
           "rune_sentry",
           700,
           455
+        ]
+      ]
+    },
+    "grave_mites": {
+      "name": "Grave Mites",
+      "enemies": [
+        [
+          "grave_mite",
+          1150,
+          250
+        ],
+        [
+          "grave_mite",
+          1150,
+          330
+        ],
+        [
+          "grave_mite",
+          1150,
+          410
+        ],
+        [
+          "grave_mite",
+          1150,
+          490
+        ],
+        [
+          "grave_mite",
+          1150,
+          570
+        ],
+        [
+          "grave_mite",
+          1150,
+          650
         ]
       ]
     },

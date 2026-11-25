@@ -1,5 +1,5 @@
 extends RefCounted
-## AD-237: new Ruins enemies. Step 1: Rune Sentry (rotating telegraphed beam).
+## AD-237: new Ruins enemies. Step 1: Rune Sentry (rotating telegraphed beam). Step 2: Grave Mites (swarm).
 const Session = preload("res://combat/combat_session.gd")
 const Registry = preload("res://combat/enemy_behaviours/registry.gd")
 
@@ -12,6 +12,13 @@ func run(t) -> void:
 	_sentry_static(t)
 	_sentry_scenario(t)
 	_sentry_deterministic(t)
+	_mite_config(t)
+	_mite_validate(t)
+	_mite_scenario(t)
+	_mite_stats(t)
+	_mite_bite_windup(t)
+	_mite_burst_vs_bolt(t)
+	_mite_deterministic(t)
 
 func _sentry_session() -> Array:
 	var s = Session.new(237,"empty",0)
@@ -152,3 +159,81 @@ func _sentry_deterministic(t) -> void:
 	var a := _sentry_run()
 	var b := _sentry_run()
 	t.check(a == b and a[2] == "attack","AD-237 sentry run deterministic (hp, beam direction, state)")
+
+func _mite_config(t) -> void:
+	var s = Session.new(237,"empty",0)
+	var cfg: Dictionary = s.data["enemies"].get("grave_mite",{})
+	t.check(not cfg.is_empty() and Registry.validate_enemy(cfg).is_empty(),"AD-237 grave_mite config validates")
+	t.check(int(cfg["telegraph_ticks"]) >= 12,"AD-237 grave_mite bite telegraph >= 12 ticks (%d)" % int(cfg["telegraph_ticks"]))
+	var negatives: Array = []
+	for channel in cfg["channel_resistances"]:
+		if float(cfg["channel_resistances"][channel]) < 0.0:
+			negatives.append(channel)
+	t.check(negatives == ["fire"],"AD-237 grave_mite has exactly one weakness: fire (%s)" % str(negatives))
+	t.check(float(cfg["damage"])*6.0 <= float(s.data["enemies"]["grave_hound"]["damage"])*2.0*1.25,"AD-237 whole pack bite damage stays near one grave_hound burst")
+
+func _mite_validate(t) -> void:
+	var script = Registry.SCRIPTS["swarm_chase"]
+	t.check(script.validate({"id":"swarm_chase","weave_degrees":12}).is_empty(),"AD-237 valid swarm_chase accepted")
+	t.check(not script.validate({"id":"swarm_chase","weave_degrees":-1}).is_empty(),"AD-237 negative weave_degrees rejected")
+	t.check(not script.validate({"id":"swarm_chase","weave_degrees":"x"}).is_empty(),"AD-237 non-numeric weave_degrees rejected")
+
+func _mite_scenario(t) -> void:
+	var s = Session.new(237,"grave_mites",0)
+	var kinds: Array = s.enemies.map(func(e): return e.kind)
+	var live: Array = s.enemies.filter(func(e): return e.target.alive())
+	t.check(kinds.size() == 6 and kinds.all(func(k): return k == "grave_mite") and live.size() == 6,"AD-237 scenario grave_mites spawns exactly 6 live grave_mite (%s)" % str(kinds))
+	t.check(kinds.size() >= 5 and kinds.size() <= 6,"AD-237 swarm count within 5..6")
+	t.check(str(s.data["scenarios"]["grave_mites"]["name"]) == "Grave Mites","AD-237 scenario is named Grave Mites")
+
+func _mite_stats(t) -> void:
+	var e = Session.new(237,"empty",0).data["enemies"]
+	t.check(float(e["grave_mite"]["move_speed"]) > float(e["grave_hound"]["move_speed"]),"AD-237 mites are faster than grave_hound")
+	t.check(float(e["grave_mite"]["hp"]) <= float(e["bone_thrall"]["hp"])*0.15,"AD-237 mite hp %s <= 15%% of bone_thrall" % e["grave_mite"]["hp"])
+
+func _mite_bite_windup(t) -> void:
+	var s = Session.new(237,"empty",0)
+	var player = s.sim.actor
+	var mite = s.spawn_enemy("grave_mite",player.position+Vector2(120,0))
+	var telegraph := int(mite.tuning["telegraph_ticks"])
+	var hp0: float = player.health.current
+	var guard := 0
+	while mite.state != "windup" and guard < 400:
+		s.step()
+		guard += 1
+	t.check(mite.state == "windup","AD-237 mite reaches a bite windup")
+	var windup_ticks := 0
+	var damaged := false
+	while mite.state == "windup" and windup_ticks < 100:
+		if player.health.current < hp0:
+			damaged = true
+		windup_ticks += 1
+		s.step()
+	t.check(not damaged and windup_ticks == telegraph,"AD-237 no bite damage before telegraph_ticks elapse (%d vs %d)" % [windup_ticks,telegraph])
+	guard = 0
+	while player.health.current == hp0 and guard < 100:
+		s.step()
+		guard += 1
+	t.check(player.health.current < hp0,"AD-237 the bite lands after the windup")
+
+func _mite_burst_vs_bolt(t) -> void:
+	var s = Session.new(237,"grave_mites",0)
+	var mites: Array = s.enemies.duplicate()
+	var bolt := 10.0
+	mites[0].target.receive_damage(bolt,"neutral",0,1.0)
+	var dead: int = mites.filter(func(m): return not m.target.alive()).size()
+	t.check(dead <= 1,"AD-237 one bolt-sized neutral hit kills at most one mite (%d)" % dead)
+	var s2 = Session.new(237,"grave_mites",0)
+	for m in s2.enemies:
+		m.target.receive_damage(15.0,"fire",0,1.0)
+	var alive: int = s2.enemies.filter(func(m): return m.target.alive()).size()
+	t.check(alive == 0,"AD-237 one fire burst on every mite kills the whole pack (%d alive)" % alive)
+
+func _mite_run() -> Array:
+	var s = Session.new(237,"grave_mites",0)
+	for i in 120:
+		s.step()
+	return [s.sim.actor.health.current,s.enemies.map(func(e): return [e.target.position,e.state])]
+
+func _mite_deterministic(t) -> void:
+	t.check(_mite_run() == _mite_run(),"AD-237 mite swarm run deterministic")
