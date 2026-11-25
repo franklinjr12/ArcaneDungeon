@@ -1,6 +1,7 @@
 extends RefCounted
 ## TASK-037: pending waves guard against early clear; state has exactly one clear transition.
 const Difficulty = preload("res://game/core/difficulty.gd")
+const Affixes = preload("res://world/affixes.gd")
 var room
 var session
 var schedule: Array = []
@@ -11,8 +12,15 @@ var clear_triggered := false
 var cleared_wave_tick := 0
 var log: Array = []
 var cap := 8
+## AD-239: elites get at most one affix; room_index is 1-based within the stage. Defaults keep old callers affix-free.
+var room_index := 0
+var optional_room := false
+var run_seed := 0
 
-func initialize(template, battle, maximum: int) -> void:
+func initialize(template, battle, maximum: int, depth: int = 0, optional: bool = false, seed_value: int = 0) -> void:
+	room_index = depth
+	optional_room = optional
+	run_seed = seed_value
 	room = template
 	session = battle
 	cap = Difficulty.scale_i(maximum,"spawn_density")
@@ -43,8 +51,15 @@ func advance() -> void:
 		if session.alive_enemies() + wave["enemies"].size() + (1 if has_boss else 0) > cap:
 			continue
 		launched[idx] = now
-		for spawn in wave["enemies"]:
-			session.spawn_enemy(str(spawn[0]),Vector2(float(spawn[1]),float(spawn[2])))
+		var elite := Affixes.elite_slot()
+		for i in wave["enemies"].size():
+			var spawn: Array = wave["enemies"][i]
+			var enemy = session.spawn_enemy(str(spawn[0]),Vector2(float(spawn[1]),float(spawn[2])))
+			if enemy != null and idx == elite[0] and i == elite[1] and room_index > 0:
+				var id := Affixes.roll(Affixes.room_seed(run_seed,str(room.values.get("id",""))),room_index,optional_room)
+				if id != "":
+					Affixes.apply(session,enemy,id)
+					log.append({"event":"affix","id":id,"kind":str(spawn[0])})
 		log.append({"event":"wave_spawn","index":idx,"tick":now})
 		if has_boss:
 			var pos: Array = slot["position"]

@@ -62,7 +62,8 @@ func resolve(hit: Variant, target, target_store, tick: int) -> Dictionary:
 		outcome["reactions"].append({"id":"chill_freeze","target_id":target.id,"bonus_damage":0.0,"affected_ids":[]})
 	var knockback := float(rule.get("knockback_force",0))
 	if knockback > 0.0:
-		var immune := false
+		# AD-239: anchored elites carry the knockback_immune tag.
+		var immune: bool = target.tags.has("knockback_immune")
 		for tag in reactions.get("knockback_immune_tags",[]):
 			if target.tags.has(tag):
 				immune = true

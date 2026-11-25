@@ -640,3 +640,16 @@ run.reward.artifact_tag.reaction,Reaction tag
 run.reward.artifact_tag.form,Form tag
 run.reward.artifact_tag.trigger,Trigger tag
 run.reward.artifact_tag.defence,Defence tag
+compendium.section.affixes,Affixes
+affix.volatile.name,Volatile
+affix.volatile.desc,Dies in a telegraphed blast.
+affix.warded.name,Warded
+affix.warded.desc,Immune to one essence and weak to its counter.
+affix.hasted.name,Hasted
+affix.hasted.desc,Moves 30% faster.
+affix.splitting.name,Splitting
+affix.splitting.desc,Splits into two smaller foes on death.
+affix.shielded.name,Shielded
+affix.shielded.desc,A frontal ward blocks most projectiles.
+affix.anchored.name,Anchored
+affix.anchored.desc,Cannot be knocked back and moves slower.

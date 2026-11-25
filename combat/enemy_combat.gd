@@ -12,6 +12,14 @@ var state_tick := 0
 var cooldown := 0
 var intent
 var death_announced := false
+## AD-239: elite affix id ("" = none); never set on bosses.
+var affix := ""
+## AD-239: essence a warded elite is immune to ("" otherwise).
+var affix_essence := ""
+## AD-239: persistent affix move multiplier (hasted/anchored); unlike speed_scale it is not reset in begin_tick.
+var affix_speed_scale := 1.0
+## AD-239: shield_front component instance for a shielded elite (null otherwise); ticked by Affixes.tick.
+var affix_shield = null
 var transitions: Array = []
 var heading := Vector2.LEFT
 var behaviours: Array = []
@@ -115,6 +123,8 @@ func _move(session, desired: Vector2) -> void:
 	var speed := float(tuning["move_speed"])
 	if speed_scale != 1.0:
 		speed *= speed_scale
+	if affix_speed_scale != 1.0:
+		speed *= affix_speed_scale
 	if target.status.has("chilled",session.sim.clock.tick):
 		speed *= float(session.sim.settings["statuses"]["chilled"].get("move_scale",1.0))
 	var displacement := desired.normalized()*speed/float(session.sim.clock.tick_rate)

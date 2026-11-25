@@ -122,7 +122,7 @@ func _discoveries(t) -> void:
 		copy.sort()
 		sorted_ok = sorted_ok and copy == da[key]
 	t.equal(sorted_ok, true, "AD-145 discoveries sorted")
-	t.equal(da.keys().size(), 4, "AD-145 discoveries has four categories")
+	t.equal(da.keys().size(), 5, "AD-145 discoveries has five categories (AD-239 adds affixes)")
 	t.equal(a.summary().has("discovered"), false, "AD-145 summary excludes discoveries")
 
 func _profile(t) -> void:

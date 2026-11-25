@@ -15,7 +15,7 @@ static func load_config() -> Dictionary:
 	return _cache
 
 static func categories() -> Array:
-	return load_config().get("categories", ["runes", "reactions", "enemies", "artifacts"])
+	return load_config().get("categories", ["runes", "reactions", "enemies", "artifacts", "affixes"])
 
 static func milestones() -> Array:
 	return load_config().get("milestones", [])
@@ -49,6 +49,8 @@ static func valid_meta(m) -> bool:
 		return false
 	var d: Dictionary = m["discovered"]
 	for cat in categories():
+		if not d.has(cat) and cat == "affixes":
+			d[cat] = []  # AD-239: profiles saved before affixes existed
 		if typeof(d.get(cat)) != TYPE_ARRAY:
 			return false
 		for id in d[cat]:
@@ -137,6 +139,8 @@ static func merge(meta: Dictionary, discoveries: Dictionary) -> Dictionary:
 	var d: Dictionary = meta["discovered"]
 	for cat in categories():
 		added[cat] = []
+		if not d.has(cat):
+			d[cat] = []
 		var list: Array = d[cat]
 		var incoming = discoveries.get(cat, [])
 		if typeof(incoming) != TYPE_ARRAY:
@@ -153,7 +157,7 @@ static func merge(meta: Dictionary, discoveries: Dictionary) -> Dictionary:
 static func counts(meta: Dictionary) -> Dictionary:
 	var out := {}
 	for cat in categories():
-		out[cat] = (meta["discovered"][cat] as Array).size()
+		out[cat] = (meta["discovered"].get(cat, []) as Array).size()
 	return out
 
 static func milestones_met(meta: Dictionary) -> Array:

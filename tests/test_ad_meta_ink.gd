@@ -80,7 +80,7 @@ func _migration(t) -> void:
 	var svc = Service.new()
 	svc.set_base_dir(DIR)
 	svc.load_profile()
-	t.equal([svc.profile["schema_version"], svc.ink(), svc.meta()["discovered"]], [3, 0, disc], "AD-233 v2 file loads as v3")
+	t.equal([svc.profile["schema_version"], svc.ink(), svc.meta()["discovered"]], [3, 0, disc.merged({"affixes": []})], "AD-233 v2 file loads as v3")
 	_write("profile.json", JSON.stringify({"schema_version": 3, "stats": stats, "meta": {"discovered": disc, "ink": -2}}))
 	svc.load_profile()
 	t.equal(_corrupt_count(), 1, "AD-233 negative ink quarantined")
