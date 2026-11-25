@@ -584,6 +584,9 @@ func _finish_combat() -> void:
 		boss_defeated_events += 1
 		_credit_ink("boss")
 		_post_boss_heal()
+	elif event_id != "" and config.get("events",{}).get(event_id,{}).get("reward",{}).has("ink"):
+		# AD-242: the event's data ink replaces the generic clear credit so the room total is exact.
+		ink_earned += int(config["events"][event_id]["reward"]["ink"])
 	elif room.values.has("mini_boss_slot"):
 		# Mini-boss rooms are exactly the ones that own a mini_boss_slot (rooms_*_v1.json).
 		_credit_ink("mini_boss")
@@ -606,9 +609,33 @@ func _finish_combat() -> void:
 		_cue("sfx.pickup.currency",session.sim.actor.position)
 		reward_collected = true
 	else:
-		reward_options = rewards.choices(run,str(room.values["id"]),false,resonant_clear)
+		reward_options = _event_reward_options()
+		if reward_options.is_empty():
+			reward_options = rewards.choices(run,str(room.values["id"]),false,resonant_clear)
 	experiment.record("room_clear",{"room_index":run.sequence_index})
 	logs.append({"kind":"combat_clear","id":room.values["id"]})
+
+## AD-242: event rooms offer only artifact cards (reward.artifact_choices from data); empty = not an event room.
+func _event_reward_options() -> Array:
+	var reward: Dictionary = config.get("events",{}).get(event_id,{}).get("reward",{}) if event_id != "" else {}
+	var wanted := int(reward.get("artifact_choices",0))
+	if wanted <= 0:
+		return []
+	var key := "%d:%s:event_reward" % [run.seed,str(room.values["id"])]
+	var hash_value := 2166136261
+	for c in key.to_utf8_buffer():
+		hash_value = ((hash_value ^ int(c))*16777619) & 0x7fffffff
+	var excluded: Array = rewards.excluded_artifacts.duplicate()
+	var options: Array = []
+	for attempt in wanted:
+		var card: Dictionary = Reward.artifact_choice(run,hash_value+attempt*7919,true,excluded)
+		if card.is_empty():
+			break
+		excluded.append(str(card["id"]))
+		options.append(card)
+	if options.is_empty():
+		return [{"kind":"currency","amount":Difficulty.scale_i(int(config["room_reward_currency"]),"coin_rate",0)}]
+	return options
 
 func _death_cause() -> Dictionary:
 	var kind := "unknown"
