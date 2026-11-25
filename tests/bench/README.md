@@ -109,3 +109,21 @@ Top reactions: weak `water_extinguish` 384; typical `water_extinguish` 128, `wet
 ```
 /usr/local/bin/godot --headless --path . --script res://tests/bench/warden_bench.gd -- --meta=full | grep WARDEN_BENCH_SUMMARY
 ```
+
+## AD-241 room pool 12/14 + affixes
+
+Command (all 20 seeds x 3 builds, results in a scratch folder, not committed):
+`for r in 0..4 5..9 10..14 15..19; do G --seeds=$r --jobs=2 --results=$TMPDIR/b241; done`, then read `run.total_seconds` of every `won` result file.
+
+Outcomes: weak 11/20 won, typical 9/20, skilled 4/20 (60 runs, 24 wins).
+
+Full successful runs, minutes (`total_seconds / 60`):
+
+| build | wins | median | min | max |
+|---|---|---|---|---|
+| weak | 11 | 2.3 | 2.1 | 2.7 |
+| typical | 9 | 3.1 | 2.7 | 3.8 |
+| skilled | 4 | 3.1 | 3.1 | 3.1 |
+| all | 24 | 2.8 | 2.1 | 3.8 |
+
+**Not in the 18-25 min target.** The scripted player clears rooms in seconds (see the AD-2xx note in `docs/benchmarks/ad_demo_bench.md`: bench runs are 2-5 min, not 30-40), so adding 8 rooms and affixes does not move the bot's run length into 18-25 min. No room data was tuned: enemy HP is not stretched (no HP sponges) and the boss numbers and feel bands are frozen. The 18-25 min figure needs a human playtest, not this bot.

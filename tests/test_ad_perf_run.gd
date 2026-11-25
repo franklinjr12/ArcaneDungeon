@@ -18,7 +18,7 @@ func _report(cfg: Dictionary, p95: float = 10.0) -> Dictionary:
 
 func run(t) -> void:
 	var cfg := PerfRun.config()
-	t.check(cfg.get("rooms", []) == ["ruins_c07", "cistern_p10", "ruins_boss", "cistern_boss"], "AD-187 config has the four rooms")
+	t.check(cfg.get("rooms", []) == ["ruins_c11", "cistern_p14", "ruins_boss", "cistern_boss"], "AD-187 config has the four rooms")
 	for id in cfg["rooms"]:
 		var flow = Flow.new(int(cfg["seed"]), Flow.CONFIG_V2)
 		var prep: Dictionary = PerfRun.prepare_room(flow, str(id), cfg)

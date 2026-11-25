@@ -227,7 +227,7 @@ func _rooms_and_compendium(t) -> void:
 	var pool: Dictionary = _json("res://world/data/rooms_cistern_v1.json")
 	var tuning: Dictionary = _json("res://combat/combat_tuning_v1.json")
 	var cistern: Dictionary = pool["room_templates"]
-	t.check(_rooms_with(ruins,"ghoul_stalker") == ["ruins_c04","ruins_c05","ruins_c06"],"AD-197 ghoul stalker is in exactly ruins_c04/c05/c06")
+	t.check(_rooms_with(ruins,"ghoul_stalker") == ["ruins_c04","ruins_c05","ruins_c06","ruins_c11"],"AD-197 ghoul stalker is in exactly ruins_c04/c05/c06/c11")
 	t.check(_rooms_with(cistern,"riptide_leaper") == ["cistern_p03","cistern_p04","cistern_p10"],"AD-197 riptide leaper is in exactly cistern_p03/p04/p10")
 	var spots := {"ruins_c04":[1080,255],"ruins_c05":[1120,640],"ruins_c06":[1050,500]}
 	for id in spots:
