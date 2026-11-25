@@ -15,6 +15,8 @@ const ARENA_TAG := "boss_arena"
 ## AD-200: a blink never lands on an anchor within this many px of the boss, so it always really moves.
 const BLINK_MIN_MOVE := 8.0
 var target
+## AD-239: always "" (affixes never apply to bosses); lets callers read .affix uniformly.
+var affix := ""
 var kind := "undead_warden"
 var tuning: Dictionary
 var state := "acquire"

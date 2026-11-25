@@ -69,6 +69,8 @@ var meta_locked_artifacts: Array = []
 ## AD-234: Scriptorium bonuses (max_hp, max_mana, mana_regen_mult) applied at run start.
 var meta_bonuses: Dictionary = {}
 var _seen_enemies: Dictionary = {}
+## AD-239: affix ids seen on elites this run.
+var _seen_affixes: Dictionary = {}
 ## AD-194: newest-8 first-sighting log [{kind,tick}] for the HUD popup. Presentation only, never saved or snapshotted.
 var first_encounters: Array = []
 var _seen_reactions: Dictionary = {}
@@ -178,7 +180,7 @@ func set_meta_bonuses(bonuses: Dictionary) -> void:
 func discoveries() -> Dictionary:
 	var seen_runes: Array = run.unlocked.duplicate() if run != null else []
 	var seen_artifacts: Array = run.artifacts.duplicate() if run != null else []
-	var out := {"runes":[],"reactions":_seen_reactions.keys(),"enemies":_seen_enemies.keys(),"artifacts":[]}
+	var out := {"runes":[],"reactions":_seen_reactions.keys(),"enemies":_seen_enemies.keys(),"artifacts":[],"affixes":_seen_affixes.keys()}
 	for id in seen_runes:
 		if str(id) not in out["runes"]:
 			out["runes"].append(str(id))
@@ -197,9 +199,12 @@ func _track_enemies() -> void:
 				while first_encounters.size() > 8:
 					first_encounters.pop_front()
 			_seen_enemies[str(enemy.kind)] = true
+		if str(enemy.affix) != "":
+			_seen_affixes[str(enemy.affix)] = true
 
 func start_new(run_seed: int) -> void:
 	_seen_enemies.clear()
+	_seen_affixes.clear()
 	first_encounters.clear()
 	_seen_reactions.clear()
 	run = State.new()

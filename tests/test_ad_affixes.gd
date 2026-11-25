@@ -256,7 +256,7 @@ func test_ad_239_c_never_on_bosses(t) -> void:
 	var mini = s.spawn_mini_boss("ruins_adept_elite",Vector2(700,300))
 	var boss = s.spawn_boss({"kind":"test_warden","hp":300,"radius":30,"recovery_ticks":10,"min_telegraph_ticks":36,"shot_speed":300,
 		"shot_spread":0,"shot_damage":10,"radial_shots":4,"radial_damage":6,"fan_shots":3,"fan_arc_degrees":40,"telegraph_radius":190,
-		"anchors":[[400,200],[1000,200],[700,750]],"phases":[{"threshold":1.0,"windup_ticks":40,"patterns":["fan"]}]},Vector2(900,500))
+		"anchors":[[400,200],[1000,200],[700,750]],"phases":[{"threshold":1.0,"windup_ticks":40,"patterns":["fan"]}]},Vector2(700,500))
 	t.check(mini != null and boss != null,"AD-239 bosses: mini-boss and boss spawn")
 	for e in [mini,boss]:
 		if e != null:

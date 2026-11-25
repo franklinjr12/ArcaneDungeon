@@ -12,6 +12,8 @@ var state_tick := 0
 var cooldown := 0
 var intent
 var death_announced := false
+## AD-239: elite affix id ("" = none); never set on bosses.
+var affix := ""
 var transitions: Array = []
 var heading := Vector2.LEFT
 var behaviours: Array = []

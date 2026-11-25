@@ -12,6 +12,7 @@ const SkinA = preload("res://ui/skin_a.gd")
 const SettingsScreen = preload("res://ui/settings_screen.gd")
 const MetaProgress = preload("res://world/meta_progress.gd")
 const Artifacts = preload("res://world/artifacts.gd")
+const Affixes = preload("res://world/affixes.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
 const EnemyAffinity = preload("res://ui/enemy_affinity.gd")
 const RUN_PATH := "res://world/data/run_v2.json"
@@ -491,9 +492,11 @@ static func catalogs_by_category() -> Dictionary:
 	rune_ids.sort()
 	var artifact_ids := Artifacts.definitions().keys()
 	artifact_ids.sort()
+	var affix_ids := Affixes.ids()
 	return {
 		"runes": rune_ids,
 		"reactions": compendium.get("reactions", []),
 		"enemies": compendium.get("enemies", []),
 		"artifacts": artifact_ids,
+		"affixes": affix_ids,
 	}
