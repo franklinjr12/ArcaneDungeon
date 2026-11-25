@@ -51,11 +51,11 @@ func advance() -> void:
 		if session.alive_enemies() + wave["enemies"].size() + (1 if has_boss else 0) > cap:
 			continue
 		launched[idx] = now
-		var slot := Affixes.elite_slot()
+		var elite := Affixes.elite_slot()
 		for i in wave["enemies"].size():
 			var spawn: Array = wave["enemies"][i]
 			var enemy = session.spawn_enemy(str(spawn[0]),Vector2(float(spawn[1]),float(spawn[2])))
-			if enemy != null and idx == slot[0] and i == slot[1] and room_index > 0:
+			if enemy != null and idx == elite[0] and i == elite[1] and room_index > 0:
 				var id := Affixes.roll(Affixes.room_seed(run_seed,str(room.values.get("id",""))),room_index,optional_room)
 				if id != "":
 					Affixes.apply(session,enemy,id)

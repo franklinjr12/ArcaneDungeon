@@ -13,6 +13,7 @@ const Projectile = preload("res://magic/runtime/projectile_effect.gd")
 const Difficulty = preload("res://game/core/difficulty.gd")
 const AudioDirector = preload("res://game/audio/audio_director.gd")
 const LampreyPair = preload("res://combat/enemy_behaviours/lamprey_pair.gd")
+const Affixes = preload("res://world/affixes.gd")
 const TUNING_FILE := "res://combat/combat_tuning_v1.json"
 ## Test-only path override (TestContext.with_frozen_balance); empty means TUNING_FILE.
 static var tuning_override := ""
@@ -194,6 +195,12 @@ func _step_hazards() -> void:
 		hazard["age"] = int(hazard["age"])+1
 		var age: int = hazard["age"]
 		if age <= int(hazard["duration_ticks"]):
+			# AD-239 volatile: a telegraphed blast damages the player once, when its warning ends.
+			if hazard.has("blast_age") and age == int(hazard["blast_age"]):
+				hazard["telegraph"] = false
+				if sim.actor.alive() and hazard["position"].distance_to(sim.actor.position) <= float(hazard["radius"])+sim.actor.radius:
+					damage_player(int(hazard["source_id"]),float(hazard["blast_damage"]),str(hazard["blast_channel"]),-1,true)
+				notify_blast(hazard["position"])
 			if (age-1) % int(hazard["interval_ticks"]) == 0 and statuses.has(str(hazard["status"])):
 				var victims: Array = []
 				for enemy in enemies:
@@ -366,6 +373,7 @@ func step() -> void:
 	for enemy in enemies:
 		if enemy is Enemy:
 			enemy.begin_tick()
+			Affixes.tick(self,enemy)
 	for enemy in enemies:
 		enemy.advance(self)
 	_flush_pending_spawns()
@@ -524,6 +532,7 @@ func on_enemy_death(enemy) -> void:
 	if "boss" in enemy.target.tags:
 		_cue("sfx.boss.death",enemy.target.position)
 	ai_transitions.append_array(enemy.transitions.duplicate(true))
+	Affixes.on_death(self,enemy)
 	_notify("%s DOWN" % enemy.kind.to_upper(),enemy.target.position)
 
 func spawn_enemy_projectile(source_id: int, origin: Vector2, direction: Vector2, amount: float, speed: float, spread: float = 0.0, channel: String = "physical") -> void:
