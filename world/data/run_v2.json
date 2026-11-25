@@ -979,6 +979,12 @@
       "workshop_after": false
     }
   ],
+  "room_affixes": {
+    "ids": ["dark", "unstable", "haunted"],
+    "dark": {"light_radius": 220},
+    "unstable": {"collapse_delay_ticks": 120, "telegraph_ticks": 30},
+    "haunted": {"respawn_kind": "lantern_wisp", "respawns": 1}
+  },
   "room_rules": {
     "min_obstacles": 2,
     "max_obstacles": 5,
