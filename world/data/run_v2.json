@@ -982,8 +982,8 @@
   "room_affixes": {
     "ids": ["dark", "unstable", "haunted"],
     "dark": {"light_radius": 220},
-    "unstable": {"collapse_delay_ticks": 120, "telegraph_ticks": 30},
-    "haunted": {"respawn_kind": "lantern_wisp", "respawns": 1}
+    "unstable": {"collapse_delay_ticks": 120, "telegraph_ticks": 30, "collapse_anim_ticks": 20},
+    "haunted": {"respawn_kind": "lantern_wisp", "respawns": 1, "respawn_delay_ticks": 90}
   },
   "room_rules": {
     "min_obstacles": 2,

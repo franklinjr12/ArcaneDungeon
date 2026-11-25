@@ -39,6 +39,8 @@ var water_shock := {}
 var env_props = null
 ## AD-202: layout.pits rects (walking blockers only), kept for rendering.
 var pits: Array = []
+## AD-241: world/room_affixes.gd instance set by EncounterDirector, or null. Unstable tiles step here; dark is read by the renderer.
+var room_affix = null
 var feedback: Array = []
 var damage_events: Array = []
 var ai_transitions: Array = []
@@ -98,6 +100,7 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	water = null
 	env_props = null
 	pits = []
+	room_affix = null
 	sim.actor.health.maximum = Difficulty.scale_f(float(data["player"]["max_hp"]),"player_hp")
 	sim.actor.health.reset()
 	sim.actor.radius = float(data["player"]["radius"])
@@ -388,6 +391,8 @@ func step() -> void:
 	if audio_sink.is_valid():
 		_audio_step(audio_before)
 	advance_enemy_projectiles()
+	if room_affix != null:
+		room_affix.step(self)
 	if not sim.actor.alive() and state == "playing":
 		state = "dead"
 		if not _audio_dead:
@@ -462,6 +467,10 @@ func _audio_step(before: Array) -> void:
 				_event_cue("telegraph:" + enemy.kind,at,"sfx.tele." + enemy.kind)
 		if enemy.get("phase") != null and int(enemy.get("phase")) == 2 and int(before[index][1]) == 1:
 			_event_cue("phase:" + enemy.kind,at,"sfx.boss.phase")
+
+## AD-241 dark room: light radius around the player in world units; 0 = unlimited.
+func light_radius() -> float:
+	return room_affix.light_radius() if room_affix != null else 0.0
 
 func alive_enemies() -> int:
 	var count := 0

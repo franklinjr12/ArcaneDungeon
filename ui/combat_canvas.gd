@@ -119,6 +119,7 @@ func _draw() -> void:
 		return
 	_draw_frame(Rect2(arena.position-offset,arena.size))
 	Art.pits(self,session.pits,offset)
+	Art.cracked_tiles(self,session,offset,tick,ReduceMotion.flashes_reduced(settings,session))
 	Art.walls(self,session.world.walls,offset)
 	Art.decorations(self,offset,environment_id)
 	draw_rect(Rect2(arena.position-offset,arena.size),Color("#b48b52",0.55),false,2)
@@ -209,6 +210,7 @@ func _draw() -> void:
 	for fx in fx_list:
 		var fp := ReduceMotion.fx_draw_params(reduced,fx["event"],fx["age"])
 		Art.draw_fx(self,fx["event"],fx["at"]-offset,fp["age"],fx["rotation"],fx["length"],fp["modulate"],fx["slot"],fx.get("uniform",0.0),int(fx.get("window",0)),float(fx.get("arc_degrees",0.0)))
+	Art.darkness(self,session.sim.actor.position-offset,session.light_radius(),view_size())
 	_draw_floating_text(offset,tick)
 	_draw_death_banner()
 	if show_debug:
