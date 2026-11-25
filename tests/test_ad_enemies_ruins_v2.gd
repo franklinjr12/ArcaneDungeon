@@ -27,6 +27,7 @@ func run(t) -> void:
 	_censer_wet(t)
 	_censer_death(t)
 	_censer_deterministic(t)
+	_final_cross_cutting(t)
 
 func _sentry_session() -> Array:
 	var s = Session.new(237,"empty",0)
@@ -384,3 +385,24 @@ func _censer_run() -> Array:
 
 func _censer_deterministic(t) -> void:
 	t.check(_censer_run() == _censer_run(),"AD-237 censer run deterministic")
+
+## Step 4: cross-cutting checks over all three new kinds and scenarios.
+func _final_cross_cutting(t) -> void:
+	var expected := {"rune_sentry":["rune_sentry",1],"grave_mites":["grave_mite",6],"ash_censer":["ash_censer",1]}
+	for scenario in expected:
+		var s = Session.new(237,scenario,0)
+		var kinds: Array = s.enemies.map(func(e): return e.kind)
+		t.equal(kinds.count(expected[scenario][0]),expected[scenario][1],"AD-237 final: scenario %s spawns expected %s count" % [scenario,expected[scenario][0]])
+		for i in 120:
+			s.step()
+		t.check(s.sim.actor != null,"AD-237 final: scenario %s steps 120 ticks without error" % scenario)
+	var meta = JSON.parse_string(FileAccess.get_file_as_string("res://world/data/meta_v1.json"))
+	var comp: Array = meta["compendium"]["enemies"]
+	var cfgs: Dictionary = Session.new(237,"empty",0).data["enemies"]
+	for kind in ["rune_sentry","grave_mite","ash_censer"]:
+		t.check(comp.has(kind),"AD-237 final: %s listed in meta compendium.enemies" % kind)
+		var negatives := 0
+		for channel in cfgs[kind]["channel_resistances"]:
+			if float(cfgs[kind]["channel_resistances"][channel]) < 0.0:
+				negatives += 1
+		t.equal(negatives,1,"AD-237 final: %s has exactly one negative channel resistance" % kind)
