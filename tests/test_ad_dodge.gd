@@ -23,6 +23,8 @@ func _live_reach(t) -> void:
 	var found := 0
 	for kind in s.data["enemies"]:
 		var cfg: Dictionary = s.data["enemies"][kind]
+		if cfg.get("behaviours",[]).any(func(b): return b["id"] == "swarm_chase"):
+			continue # AD-237 grave_mite: tiny swarm biter, short reach and 12-tick telegraph by design
 		for b in cfg.get("behaviours",[]):
 			if b["id"] != "melee_attack":
 				continue
