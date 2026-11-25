@@ -189,6 +189,7 @@ func _draw() -> void:
 			if enemy_flash > 0.0:
 				flash_entries.append({"kind":art_kind,"at":enemy_at,"tick":tick,"motion":movement,"anim":enemy_anim,"strength":enemy_flash})
 		_draw_wisp_shield(enemy,enemy_at,tick,reduced)
+		_draw_shield_fx(enemy,enemy_at,tick,reduced,offset)
 		Art.draw_enemy_markers(self,enemy,enemy_at,tick,offset)
 		if target.alive():
 			_health_bar(enemy_at,target.radius+12,target.health.current/target.health.maximum,Color("#dc7060"))
@@ -282,6 +283,74 @@ func _draw_book_page(enemy, at: Vector2, tick: int, dissolved: int, reduced: boo
 	var dead_age := -1 if target.alive() else maxi(0,tick-dissolved)
 	Art.draw_page(self,at,tick,target.status.has("burning",tick),dead_age,reduced)
 	return not Art.extra_sheet(Art.BOOK_PAGE).is_empty()
+
+const BOSS_FX_FILE := "res://world/data/boss_fx.json"
+const FX_TICKS_PER_S := 60.0
+static var _boss_fx_cache: Dictionary = {}
+var _shield_fx_memo: Dictionary = {}
+
+## AD-253: wisp_shield block of boss_fx.json, loaded once.
+static func boss_fx() -> Dictionary:
+	if _boss_fx_cache.is_empty() and FileAccess.file_exists(BOSS_FX_FILE):
+		var doc = JSON.parse_string(FileAccess.get_file_as_string(BOSS_FX_FILE))
+		if doc is Dictionary and doc.get("wisp_shield",null) is Dictionary:
+			_boss_fx_cache = doc["wisp_shield"]
+	return _boss_fx_cache
+
+## AD-253: pure render-state step for the shield tint, wisp tethers and break flash. `memo` carries the previous shielded flag and flash start.
+## Returns {tint_alpha, tethers (wisp positions), flash_alpha}; tint/tethers are empty the same step `shielded` is false.
+static func shield_fx_step(memo: Dictionary, shielded: bool, wisp_positions: Array, tick: int, fx: Dictionary) -> Dictionary:
+	var flash_ticks := maxf(1.0,ceilf(float(fx.get("break_flash_s",0.1))*FX_TICKS_PER_S))
+	var min_gap := FX_TICKS_PER_S/maxf(0.001,float(fx.get("max_flashes_per_s",3)))
+	var was: bool = bool(memo.get("shielded",false))
+	if was and not shielded:
+		var last = memo.get("flash_start",null)
+		if last == null or float(tick-int(last)) >= min_gap:
+			memo["flash_start"] = tick
+	memo["shielded"] = shielded
+	var tint := 0.0
+	var tethers := []
+	if shielded:
+		var lo := float(fx.get("tint_alpha_min",0.0))
+		var hi := float(fx.get("tint_alpha_max",0.0))
+		var period := maxf(1.0,float(fx.get("pulse_period_s",1.0))*FX_TICKS_PER_S)
+		tint = lo+(hi-lo)*0.5*(1.0+sin(TAU*float(tick)/period))
+		tethers = wisp_positions.duplicate()
+	var flash := 0.0
+	if not shielded and memo.get("flash_start",null) != null:
+		var age := float(tick-int(memo["flash_start"]))
+		if age >= 0.0 and age < flash_ticks:
+			flash = 1.0-age/flash_ticks
+	return {"tint_alpha":tint,"tethers":tethers,"flash_alpha":flash}
+
+## AD-253: render-only; reads live wisps the same way Archivist.live_wisps counts them. Reduced motion: constant mid alpha, no flash.
+func _draw_shield_fx(enemy, at: Vector2, tick: int, reduced: bool, offset: Vector2) -> void:
+	if not enemy.tuning.has("wisp_shield"):
+		return
+	var fx := boss_fx()
+	if fx.is_empty():
+		return
+	var shielded: bool = enemy.get("shielded") == true
+	var positions := []
+	if shielded:
+		var wisp := str(enemy.tuning.get("wisp_kind","lantern_wisp"))
+		for other in session.enemies:
+			if other.kind == wisp and other.summoner_id == enemy.target.id and other.target.alive():
+				positions.append(other.target.position-offset)
+	var memo: Dictionary = _shield_fx_memo.get(enemy.target.id,{})
+	var r := shield_fx_step(memo,shielded,positions,tick,fx)
+	_shield_fx_memo[enemy.target.id] = memo
+	var tc: Array = fx["tint_color"]
+	var kc: Array = fx["tether_color"]
+	var tint_alpha: float = float(r["tint_alpha"])
+	if reduced and shielded:
+		tint_alpha = (float(fx["tint_alpha_min"])+float(fx["tint_alpha_max"]))*0.5
+	if tint_alpha > 0.0:
+		draw_circle(at,float(enemy.target.radius)+6.0,Color(float(tc[0]),float(tc[1]),float(tc[2]),tint_alpha))
+	for wisp_at in r["tethers"]:
+		draw_line(at,wisp_at,Color(float(kc[0]),float(kc[1]),float(kc[2]),float(fx["tether_alpha"])),float(fx["tether_width"]))
+	if not reduced and float(r["flash_alpha"]) > 0.0:
+		draw_circle(at,float(enemy.target.radius)+10.0,Color(0.85,0.95,1.0,float(r["flash_alpha"])))
 
 ## AD-201: wisp shield bubble while the boss is `shielded`; the break plays once when the shield drops.
 func _draw_wisp_shield(enemy, at: Vector2, tick: int, reduced: bool) -> void:

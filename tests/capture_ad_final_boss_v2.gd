@@ -7,7 +7,9 @@ const Art = preload("res://ui/pixel_art_renderer.gd")
 const SEED := 20261110
 const POOLS := [Vector2(510, 215), Vector2(510, 685), Vector2(775, 450)]
 const EXPECTED := ["phase1_pool_ripple", "phase1_emerge_splash", "phase1_book_pages", "phase2_tide_wave_gap", "phase2_freeze_stun",
-	"phase3_electrified_water", "phase3_wisp_shield", "arena_phase1", "arena_phase2", "arena_phase3"]
+	"phase3_electrified_water", "phase3_wisp_shield", "arena_phase1", "arena_phase2", "arena_phase3",
+	"ad253_shield_up_720p", "ad253_shield_up_1080p", "ad253_shield_break_720p", "ad253_shield_break_1080p"]
+const SIZES := {"720p": Vector2i(1280, 720), "1080p": Vector2i(1920, 1080)}
 var out_dir := "res://docs/rooms/archivist_v2"
 var control
 var flow
@@ -34,6 +36,15 @@ func _shot(name: String) -> void:
 	var err := root.get_texture().get_image().save_png(_path(name))
 	saved[name] = err == OK
 	print("CAPTURE ", name, " ", "ok" if err == OK else "ERR %d" % err)
+
+## AD-253: the same sim frame at each resolution; the sim does not advance, so the shield state is identical.
+func _shot_sizes(base: String) -> void:
+	for label in SIZES:
+		root.size = SIZES[label]
+		await process_frame
+		await _shot("%s_%s" % [base, label])
+	root.size = SIZES["720p"]
+	await process_frame
 
 func _tick() -> void:
 	var actor = flow.session.sim.actor
@@ -99,7 +110,26 @@ func _pages() -> Array:
 func _wisps() -> Array:
 	return flow.session.enemies.filter(func(e): return e.kind == "lantern_wisp" and e.target.alive())
 
+## AD-253: shield up (tint + tethers), then the frame right after the last wisp dies (break flash, <= 0.05 s = 3 ticks).
+func _ad253_shield() -> void:
+	await _stage()
+	await _to_phase(0.5)
+	await _to_phase(0.2)
+	_only("summon_wisps")
+	_place_player(Vector2(900, 450))
+	if await _until(func(): return boss.shielded and _wisps().size() >= 2, 15):
+		await _shot_sizes("ad253_shield_up")
+		for w in _wisps():
+			w.target.health.current = 0.0
+		if await _until(func(): return not boss.shielded):
+			await _shot_sizes("ad253_shield_break")
+
 func _run() -> void:
+	if OS.get_cmdline_user_args().has("--ad253-only"):
+		await _ad253_shield()
+		print("CAPTURED: ", saved.keys())
+		quit(0)
+		return
 	# Phase 1: dive; the ripple at the exit pool, then the splash ring just after the emerge.
 	await _stage()
 	_only("submerge")
@@ -161,6 +191,7 @@ func _run() -> void:
 	await _to_phase(0.3)
 	_place_player(Vector2(900, 450))
 	await _shot("arena_phase3")
+	await _ad253_shield()
 	var missing: Array = EXPECTED.filter(func(n): return not saved.get(n, false))
 	print("CAPTURED: ", saved.keys(), " MISSING: ", missing)
 	quit(0)
