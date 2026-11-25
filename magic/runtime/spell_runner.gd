@@ -161,8 +161,9 @@ func try_cast(slot: int, origin: Vector2, direction: Vector2, target_point = nul
 	if int(plan["complexity"]) > limits.get_limit("max_complexity"):
 		return _reject(ctx,"COMPLEXITY_EXCEEDED")
 	var cost := float(plan["mana_cost"])
-	var free_cast := _art("momentum_rune") and int(artifacts.state.get("momentum",0)) > 0
-	if free_cast:
+	var overcharge_free := _overcharge_due()
+	var free_cast := not overcharge_free and _art("momentum_rune") and int(artifacts.state.get("momentum",0)) > 0
+	if free_cast or overcharge_free:
 		cost = 0.0
 	if mana + 0.00001 < cost:
 		return _reject(ctx,"INSUFFICIENT_MANA")
@@ -183,11 +184,19 @@ func try_cast(slot: int, origin: Vector2, direction: Vector2, target_point = nul
 	mana = maxf(0.0,mana-cost)
 	if free_cast:
 		artifacts.state["momentum"] = int(artifacts.state["momentum"])-1
+	if _art("overcharge"):
+		artifacts.state["overcharge_casts"] = int(artifacts.state.get("overcharge_casts",0))+1
 	loadout.slots[slot]["cooldown"] = int(plan["cooldown_ticks"])
 	trace.record("cost_paid",{"cast_id":cast_id,"root_cast_id":cast_id,"formula_id":formula_id,"amount":int(cost),"tick":clock.tick})
 	var base := {"cast_id":cast_id,"root_cast_id":cast_id,"caster_id":actor.id,"team":actor.team,
 		"formula_id":formula_id,"parent_effect_id":0,"depth":0}
-	_spawn_root(plan,origin,direction.normalized(),base,target_point)
+	var spawn_plan := plan
+	if _art("quicksilver_ink") and bool(artifacts.state.get("quicksilver",false)):
+		artifacts.state["quicksilver"] = false
+		spawn_plan = plan.duplicate(true)
+		var ink_params: Dictionary = spawn_plan["root"]["params"]
+		ink_params["base_damage"] = float(ink_params["base_damage"])*(1.0+float(artifacts.param("quicksilver_ink","damage_scale",0.25)))
+	_spawn_root(spawn_plan,origin,direction.normalized(),base,target_point)
 	if _art("echo_chamber"):
 		_echo_cast(slot,plan,kind,origin,direction.normalized(),formula_id,target_point)
 	return {"accepted":true,"reason":"CAST","cast_id":cast_id}
@@ -200,6 +209,14 @@ func _art(id: String) -> bool:
 func artifact_dash() -> void:
 	if _art("momentum_rune"):
 		artifacts.state["momentum"] = int(artifacts.param("momentum_rune","free_casts",1))
+	if _art("quicksilver_ink"):
+		artifacts.state["quicksilver"] = true
+
+## AD-240 Overcharge: every `every`-th accepted cast of the run costs no mana (counted in artifacts.state, cleared per run).
+func _overcharge_due() -> bool:
+	if not _art("overcharge"):
+		return false
+	return (int(artifacts.state.get("overcharge_casts",0))+1) % maxi(1,int(artifacts.param("overcharge","every",3))) == 0
 
 ## AD-143 on-kill hooks (Shatterheart, Ember Heart); runs before the dead target's status is cleared.
 ## `ctx` is the killing hit's context or the DOT's status source. Blasts it spawns carry `artifact_kill`, so they never recurse.
@@ -382,13 +399,15 @@ func _spawn_root(plan: Dictionary, origin: Vector2, aim: Vector2, context: Dicti
 		spec["root"] = root
 		spec["position"] = origin
 		spec["direction"] = aim
+		if _art("mirror_glyph"):
+			spec["reflects"] = int(artifacts.param("mirror_glyph","reflects",1))
 		var beam = Beam.new(spec)
 		active.append(_entry("beam",beam,context,plan["on_hit"]))
 		_trace_spawn(context,beam.id,origin)
 	elif kind == "form.field":
 		var spec: Dictionary = context.duplicate()
 		spec["effect_id"] = clock.next_id("effect")
-		spec["root"] = root
+		spec["root"] = _fractured(root)
 		spec["position"] = _field_center(root["params"],origin,aim,target_point)
 		var field = Field.new(spec)
 		active.append(_entry("field",field,context,plan["on_hit"]))
@@ -421,7 +440,19 @@ func _field_center(params: Dictionary, origin: Vector2, aim: Vector2, target_poi
 	center = origin.lerp(center,along)
 	return Vector2(clampf(center.x,bounds.position.x,bounds.end.x),clampf(center.y,bounds.position.y,bounds.end.y))
 
+## AD-240 Fracture Lens: area forms grow by size_scale and hit for damage_scale less. Artifact-spawned blasts are exempt.
+func _fractured(plan: Dictionary, context: Dictionary = {}) -> Dictionary:
+	if not _art("fracture_lens") or bool(context.get("artifact_kill",false)):
+		return plan
+	var scaled: Dictionary = plan.duplicate(true)
+	var params: Dictionary = scaled["params"]
+	var key := "burst_radius" if params.has("burst_radius") else "field_radius"
+	params[key] = float(params[key])*(1.0+float(artifacts.param("fracture_lens","size_scale",0.2)))
+	params["base_damage"] = float(params["base_damage"])*(1.0+float(artifacts.param("fracture_lens","damage_scale",-0.1)))
+	return scaled
+
 func _spawn_burst(effect_plan: Dictionary, origin: Vector2, context: Dictionary, already_reserved: bool = false, attached_trigger: Dictionary = {}) -> bool:
+	effect_plan = _fractured(effect_plan,context)
 	if not already_reserved and not queue.reserve_effect(int(context["root_cast_id"]),1,
 			int(context["cast_id"]),str(context["formula_id"])):
 		return false
@@ -510,8 +541,11 @@ func advance_one_tick() -> void:
 			var pulse: Dictionary = effect.advance(clock.tick,actor,targets,bounds,collision_walls,
 				limits.get_limit("max_targets_per_pulse"))
 			hits = _charge_pulse(entry,pulse)
-			visuals.append({"kind":"beam","from":actor.position,"to":effect.end_point,
+			visuals.append({"kind":"beam","from":actor.position,"to":effect.end_point if effect.path.size() <= 2 else effect.path[1],
 				"essence":str(effect.root["essence"]["id"]),"until":clock.tick+1})
+			for leg in range(2,effect.path.size()):
+				visuals.append({"kind":"beam","from":effect.path[leg-1],"to":effect.path[leg],
+					"essence":str(effect.root["essence"]["id"]),"until":clock.tick+1})
 		elif entry["kind"] == "field":
 			hits = _charge_pulse(entry,effect.advance(clock.tick,targets,limits.get_limit("max_targets_per_pulse")))
 			if not effect.expired:
@@ -574,6 +608,18 @@ func _gravity_pull(target_id: int) -> void:
 	var toward: Vector2 = actor.position-target.position
 	if not toward.is_zero_approx():
 		target.impulse += toward.normalized()*float(artifacts.param("gravity_lens","pull_force",160))
+
+## AD-240 Undertow: a hit on a wet enemy drags it pull_distance toward the caster (impulse sized so the decaying
+## knockback travels that far; never past the caster).
+func _undertow_pull(target) -> void:
+	if not target.alive():
+		return
+	var toward: Vector2 = actor.position-target.position
+	if toward.is_zero_approx():
+		return
+	var distance := minf(float(artifacts.param("undertow","pull_distance",40)),toward.length())
+	var decay := float(settings["combat"]["knockback_decay_per_tick"])
+	target.impulse += toward.normalized()*distance*(1.0-decay)*float(clock.tick_rate)
 
 ## Where an On Expire / Timer payload lands: beams end at their end point, everything else at its position.
 func _trigger_location(entry: Dictionary) -> Vector2:
@@ -670,9 +716,12 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 	var hit = HitPayload.new(payload,settings["channels"])
 	var was_alive: bool = target.alive()
 	var conduit_ready: bool = _art("conduit_coil") and str(effect_plan["essence"]["id"]) == "essence.lightning" and target.status.has("burning",clock.tick)
+	var undertow_ready: bool = _art("undertow") and target.status.has("wet",clock.tick)
 	var result: Dictionary = resolver.resolve(hit,target,targets,clock.tick)
 	if not result["accepted"]:
 		return
+	if undertow_ready:
+		_undertow_pull(target)
 	if conduit_ready and target.alive():
 		_conduit_overload(target,ctx)
 	if was_alive and not target.alive():

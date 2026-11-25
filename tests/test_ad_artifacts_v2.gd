@@ -19,6 +19,11 @@ func run(t) -> void:
 	test_frostbrand(t)
 	test_kindling(t)
 	test_conduit_coil(t)
+	test_undertow(t)
+	test_overcharge(t)
+	test_quicksilver_ink(t)
+	test_mirror_glyph(t)
+	test_fracture_lens(t)
 
 func _csv_keys() -> Dictionary:
 	var keys := {}
@@ -126,12 +131,12 @@ func _meta_unlocks(t) -> void:
 ## --- Step 2: reaction artifacts (thunderhead, frostbrand, kindling, conduit_coil) ---------------------
 
 ## Sim with no mana regen; `ids` null means no holder at all.
-func _sim(essence: String, ids):
+func _sim(essence: String, ids, form: String = "form.projectile"):
 	var r = Runner.new(143)
 	r.settings["combat"]["regen_mana_per_tick"] = 0.0
 	r.mana = float(r.settings["combat"]["player_max_mana"])
 	var formula := {"schema_version":2,"formula_id":"test.ad240","display_name":"t",
-		"root":{"essence_id":essence,"manifestation_id":"form.projectile","modifier_ids":[],"params":{}}}
+		"root":{"essence_id":essence,"manifestation_id":form,"modifier_ids":[],"params":{}}}
 	var equipped: Dictionary = r.equip(0,formula)
 	if not equipped["ok"]:
 		printerr("equip failed: ",equipped)
@@ -264,3 +269,127 @@ func test_conduit_coil(t) -> void:
 	for step_more in 60:
 		held[0].step()
 	t.equal(held[0].trace.filter_records(-1,"","artifact").filter(func(e): return e["reason"] == "artifact.conduit_coil").size(),1,"AD-240 conduit coil: the overload never recurses")
+
+
+## --- Step 3: trigger and form artifacts (undertow, overcharge, quicksilver_ink, mirror_glyph, fracture_lens) ---
+
+func _pulled(ids, wet: bool) -> float:
+	var r = _sim("essence.lightning",ids)
+	var target = r.add_target(Vector2(300,340),Vector2.ZERO,100000.0)
+	if wet:
+		_status(r,target,"wet")
+	var before: float = target.position.distance_to(r.actor.position)
+	_fire(r,60)
+	return before-target.position.distance_to(r.actor.position)
+
+func test_undertow(t) -> void:
+	var distance := float(Artifacts.new(["undertow"]).param("undertow","pull_distance"))
+	var plain := _pulled(null,true)
+	var held := _pulled(["undertow"],true)
+	t.check(absf((held-plain)-distance) < 2.0,"AD-240 undertow: a wet enemy is pulled pull_distance (%.1f) toward the caster" % (held-plain))
+	t.equal(_pulled(["undertow"],false),_pulled(null,false),"AD-240 undertow: dry enemies are not pulled")
+
+func _spend(r) -> float:
+	r.mana = float(r.settings["combat"]["player_max_mana"])
+	var before: float = r.mana
+	var result: Dictionary = r.try_cast(0,r.actor.position,Vector2.RIGHT)
+	for i in 120:
+		r.step()
+	return before-r.mana if result["accepted"] else -1.0
+
+func test_overcharge(t) -> void:
+	var every := int(Artifacts.new(["overcharge"]).param("overcharge","every"))
+	var plain = _sim("essence.fire",null)
+	var held = _sim("essence.fire",["overcharge"])
+	for i in every*2:
+		var paid_plain := _spend(plain)
+		var paid_held := _spend(held)
+		var third := (i+1) % every == 0
+		t.check(paid_plain > 0.0,"AD-240 overcharge: cast %d costs mana without it" % (i+1))
+		t.check((paid_held == 0.0) == third and (third or paid_held == paid_plain),"AD-240 overcharge: cast %d is free only when every %dth" % [i+1,every])
+	var both = _sim("essence.fire",["overcharge","momentum_rune"])
+	for i in every-1:
+		_spend(both)
+	both.artifact_dash()
+	t.equal(_spend(both),0.0,"AD-240 overcharge: due cast is free with momentum armed")
+	t.check(_spend(both) == 0.0,"AD-240 overcharge: momentum free cast is kept for the next cast")
+	t.check(_spend(both) > 0.0,"AD-240 overcharge: the cycle resumes afterwards")
+	both.artifacts.state.clear()
+	t.check(_spend(both) > 0.0,"AD-240 overcharge: the counter is per run state")
+
+func _ink_hits(ids, dash: bool) -> Array:
+	var r = _sim("essence.lightning",ids)
+	r.add_target(Vector2(300,340),Vector2.ZERO,100000.0)
+	r.add_target(Vector2(300,500),Vector2.ZERO,100000.0)
+	if dash:
+		r.artifact_dash()
+	var amounts: Array = []
+	for aim in [Vector2.RIGHT,Vector2(1.0,1.0)]:
+		r.mana = float(r.settings["combat"]["player_max_mana"])
+		r.try_cast(0,r.actor.position,aim)
+		for i in 120:
+			r.step()
+	for entry in r.trace.filter_records(-1,"","hit"):
+		amounts.append(int(entry["amount"]))
+	return amounts
+
+func test_quicksilver_ink(t) -> void:
+	var scale := float(Artifacts.new(["quicksilver_ink"]).param("quicksilver_ink","damage_scale"))
+	var plain := _ink_hits(null,true)
+	var held := _ink_hits(["quicksilver_ink"],true)
+	var idle := _ink_hits(["quicksilver_ink"],false)
+	t.equal(plain.size(),2,"AD-240 quicksilver ink: both casts connect")
+	t.equal(held[0],roundi(float(plain[0])*(1.0+scale)),"AD-240 quicksilver ink: the cast after a dash deals +damage_scale")
+	t.equal(held[1],plain[1],"AD-240 quicksilver ink: the bonus is consumed by that cast")
+	t.equal(idle,plain,"AD-240 quicksilver ink: without a dash nothing changes")
+
+func _mirror_scene(ids) -> Array:
+	var r = _sim("essence.lightning",ids,"form.beam")
+	var origin: Vector2 = r.actor.position
+	r.collision_walls = [Rect2(origin.x+100.0,origin.y-250.0,20.0,600.0)]
+	var behind = r.add_target(Vector2(origin.x+40.0,origin.y+160.0),Vector2.ZERO,100000.0)
+	r.try_cast(0,origin,Vector2(1,1))
+	for i in 20:
+		r.step()
+	return [r,behind]
+
+func test_mirror_glyph(t) -> void:
+	var plain: Array = _mirror_scene(null)
+	var held: Array = _mirror_scene(["mirror_glyph"])
+	t.equal(plain[1].health.current,plain[1].health.maximum,"AD-240 mirror glyph: without it the beam stops at the wall")
+	t.check(held[1].health.current < held[1].health.maximum,"AD-240 mirror glyph: the beam reflects off the wall and hits the enemy")
+	var reflects := int(held[0].artifacts.param("mirror_glyph","reflects"))
+	var beams: Array = held[0].active.filter(func(e): return e["kind"] == "beam")
+	t.check(not beams.is_empty() and beams[0]["effect"].path.size() == 2+reflects,"AD-240 mirror glyph: path has `reflects` extra legs, not more")
+
+func _blast(ids, form: String) -> Array:
+	var r = _sim("essence.fire",ids,form)
+	var radius_key := "burst_radius" if form == "form.burst" else "field_radius"
+	var params: Dictionary = r.loadout.get_plan(0).snapshot()["root"]["params"]
+	var base_radius := float(params[radius_key])
+	var inner = r.add_target(r.actor.position+Vector2(10,0),Vector2.ZERO,100000.0)
+	var ring = r.add_target(r.actor.position+Vector2(0,base_radius+inner.radius+base_radius*0.1),Vector2.ZERO,100000.0)
+	r.try_cast(0,r.actor.position,Vector2.RIGHT,r.actor.position)
+	for i in 3:
+		r.step()
+	return [r,inner,ring]
+
+func test_fracture_lens(t) -> void:
+	var held_scale := Artifacts.new(["fracture_lens"])
+	var size := float(held_scale.param("fracture_lens","size_scale"))
+	var damage := float(held_scale.param("fracture_lens","damage_scale"))
+	for form in ["form.burst","form.field"]:
+		var plain: Array = _blast(null,form)
+		var held: Array = _blast(["fracture_lens"],form)
+		t.equal(plain[2].health.current,plain[2].health.maximum,"AD-240 fracture lens %s: outside the base radius is untouched" % form)
+		t.check(held[2].health.current < held[2].health.maximum,"AD-240 fracture lens %s: the larger radius reaches the ring enemy" % form)
+		var dealt_plain: float = plain[1].health.maximum-plain[1].health.current
+		var dealt_held: float = held[1].health.maximum-held[1].health.current
+		t.check(dealt_plain > 0.0 and absf(dealt_held/dealt_plain-(1.0+damage)) < 0.1,"AD-240 fracture lens %s: damage scaled by damage_scale" % form)
+	var bolt = _sim("essence.fire",["fracture_lens"])
+	var plain_bolt = _sim("essence.fire",null)
+	for r in [bolt,plain_bolt]:
+		r.add_target(Vector2(300,340),Vector2.ZERO,100000.0)
+		_fire(r)
+	t.equal(bolt.trace.filter_records(-1,"","hit")[0]["amount"],plain_bolt.trace.filter_records(-1,"","hit")[0]["amount"],"AD-240 fracture lens: projectile damage is unchanged")
+	t.check(size > 0.0 and damage < 0.0,"AD-240 fracture lens: tunables read from data")
