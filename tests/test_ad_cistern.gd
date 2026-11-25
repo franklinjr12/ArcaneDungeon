@@ -220,7 +220,7 @@ func _sequence(t) -> void:
 	for run_seed in range(1,21):
 		var combat_ids := 0
 		for entry in Flow.build_sequence(cfg,run_seed):
-			if int(entry["stage"]) == 1 and entry["type"] == "combat":
+			if int(entry["stage"]) == 1 and entry["type"] == "combat" and str(entry["id"]) != "cistern_flood_gate": # AD-242 event room
 				combat_ids += 1
 				ok = ok and str(entry["id"]) in doc["pool"]
 		ok = ok and combat_ids == 3

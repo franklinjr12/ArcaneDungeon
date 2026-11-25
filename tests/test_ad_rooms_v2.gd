@@ -302,7 +302,7 @@ func test_ad_241_cistern_pool(t) -> void:
 		var types: Array = []
 		var seen: Dictionary = {}
 		for r in seq:
-			if int(r["stage"]) == 1:
+			if int(r["stage"]) == 1 and str(r["id"]) != "cistern_flood_gate": # AD-242 event room
 				types.append(str(r["id"]))
 				t.check(not seen.has(r["id"]) or str(r["id"]) == "workshop","AD-241 seed %d: no repeated cistern room %s" % [seed_value,r["id"]])
 				seen[r["id"]] = true

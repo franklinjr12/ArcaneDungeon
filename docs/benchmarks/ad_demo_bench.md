@@ -998,3 +998,7 @@ Measured (tests/test_ad_resonance.gd, 1800 ticks, 3 dummies, seed 193):
 - Fire spam: first INSUFFICIENT_MANA at tick 416 (6.9 s); steady accept rate 0.685.
 - Mono 30 s damage: fire 2364, water 1764, lightning 1617, force 1390, cold 1344.
 - Alternation cold+fire: 2868 (1.21x best mono, threshold 1.15x).
+
+## AD-242 recheck (boss-adjacent events)
+
+`--seeds=0..1 --builds=typical`: both seeds die at the stage-2 boss after 3.16 and 4.40 min of sim (9 rooms cleared, 0 script errors), the same 3-5 min / 0 wins range as the AD-241 reference above. The task bullet "bench run length 18-25 min" is NOT MET and cannot be measured with this scripted player, which never wins; the event data (`events.flood_gate.wave_interval_seconds`/`duration_seconds`) was left untouched. Fixed on the way: `run_flow._track_enemies` read `enemy.affix` on elite minions, which have no such property (script error in the bench).
