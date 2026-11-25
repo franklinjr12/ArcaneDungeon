@@ -7,7 +7,7 @@ const Art = preload("res://ui/pixel_art_renderer.gd")
 const SEED := 20261110
 const POOLS := [Vector2(510, 215), Vector2(510, 685), Vector2(775, 450)]
 const EXPECTED := ["phase1_pool_ripple", "phase1_emerge_splash", "phase1_book_pages", "phase2_tide_wave_gap", "phase2_freeze_stun",
-	"phase3_electrified_water", "phase3_wisp_shield"]
+	"phase3_electrified_water", "phase3_wisp_shield", "arena_phase1", "arena_phase2", "arena_phase3"]
 var out_dir := "res://docs/rooms/archivist_v2"
 var control
 var flow
@@ -77,7 +77,7 @@ func _to_phase(fraction: float) -> void:
 	boss.target.health.current = boss.target.health.maximum * fraction
 	for i in 400:
 		await _tick()
-		if boss.state != "roar" and boss.phase >= (2 if fraction > 0.25 else 3) and i > 5:
+		if boss.state != "roar" and boss.phase >= (2 if fraction > 0.33 else 3) and i > 5:
 			break
 
 ## Ticks until `cond` holds (max 1500), then `extra` more ticks.
@@ -148,6 +148,19 @@ func _run() -> void:
 	_place_player(Vector2(900, 450))
 	if await _until(func(): return boss.shielded and _wisps().size() >= 2, 15):
 		await _shot("phase3_wisp_shield")
+	# Arena flood sets: shallow water added at the 0.66 and 0.33 transitions.
+	await _stage()
+	_place_player(Vector2(900, 450))
+	await _shot("arena_phase1")
+	await _stage()
+	await _to_phase(0.6)
+	_place_player(Vector2(900, 450))
+	await _shot("arena_phase2")
+	await _stage()
+	await _to_phase(0.6)
+	await _to_phase(0.3)
+	_place_player(Vector2(900, 450))
+	await _shot("arena_phase3")
 	var missing: Array = EXPECTED.filter(func(n): return not saved.get(n, false))
 	print("CAPTURED: ", saved.keys(), " MISSING: ", missing)
 	quit(0)
