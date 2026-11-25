@@ -28,12 +28,40 @@ static func cast_slot_for_mouse_button(button: int) -> int:
 const REBINDABLE := ["move_up","move_down","move_left","move_right","cast_slot_1","cast_slot_2",
 	"cast_slot_3","cast_slot_4","dash","interact","pause","report","toggle_fullscreen"]
 
+const GAMEPAD_FILE := "res://game/data/gamepad_v1.json"
+static var _gamepad_cache: Dictionary = {}
+static var _gamepad_loaded := false
+
+## AD-254: default pad data (bindings, aim deadzone); empty when the file is missing or invalid.
+static func gamepad_data() -> Dictionary:
+	if _gamepad_loaded:
+		return _gamepad_cache
+	_gamepad_loaded = true
+	var file := FileAccess.open(GAMEPAD_FILE, FileAccess.READ)
+	var parsed = JSON.parse_string(file.get_as_text()) if file != null else null
+	if typeof(parsed) == TYPE_DICTIONARY:
+		_gamepad_cache = parsed
+	return _gamepad_cache
+
+## Keyboard/mouse defaults from the project settings plus the data-driven pad defaults.
 static func default_events(action: String) -> Array:
 	var out: Array = []
 	var setting = ProjectSettings.get_setting("input/" + action, null)
 	if typeof(setting) == TYPE_DICTIONARY:
 		for ev in setting.get("events", []):
 			out.append(ev.duplicate())
+	var pad = gamepad_data().get("bindings", {})
+	var list = pad.get(action, []) if typeof(pad) == TYPE_DICTIONARY else []
+	if typeof(list) == TYPE_ARRAY:
+		for d in list:
+			var ev := dict_to_event(d)
+			if ev == null or not (ev is InputEventJoypadButton or ev is InputEventJoypadMotion):
+				continue
+			var dup := false
+			for have in out:
+				dup = dup or events_equal(have, ev)
+			if not dup:
+				out.append(ev)
 	return out
 
 static func _with_alt(d: Dictionary, ev: InputEventKey) -> Dictionary:
@@ -171,6 +199,10 @@ static func event_text(ev) -> String:
 	if ev is InputEventKey and ev.physical_keycode != 0:
 		var code: int = ev.physical_keycode if DisplayServer.get_name() == "headless" else DisplayServer.keyboard_get_keycode_from_physical(ev.physical_keycode)
 		return OS.get_keycode_string(code if code != KEY_NONE else ev.physical_keycode)
+	if ev is InputEventJoypadButton:
+		return TranslationServer.translate("settings.controls.pad_button") % ev.button_index
+	if ev is InputEventJoypadMotion:
+		return TranslationServer.translate("settings.controls.pad_axis") % [ev.axis, "-" if ev.axis_value < 0.0 else "+"]
 	return ev.as_text()
 
 ## First bound event of an action as display text (follows rebinding).
