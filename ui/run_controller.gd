@@ -12,7 +12,8 @@ const Artifacts = preload("res://world/artifacts.gd")
 const Prompts = preload("res://ui/onboarding_prompts.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
 const InputActions = preload("res://ui/input_actions.gd")
-var aim_source = InputActions.default_aim_source()
+var aim_source = InputActions.stick_aim_source()
+var _pad_cast_poll := InputActions.PadAxisCastPoll.new()
 const PauseMenu = preload("res://ui/pause_menu.gd")
 const FeedbackSnapshot = preload("res://ui/feedback_snapshot.gd")
 const LoadoutView = preload("res://ui/loadout_view.gd")
@@ -675,7 +676,7 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled() # swallow gameplay keys; clicks must reach the Close/Continue buttons
 		return
 	var fighting: bool = flow.state == "fighting"
-	var slot := InputActions.cast_slot_for_event(event)
+	var slot := -1 if event is InputEventJoypadMotion else InputActions.cast_slot_for_event(event) # trigger casts: _pad_cast_poll
 	if slot >= 0 and not event is InputEventMouseButton and fighting:
 		cursor = aim_source.world_point(arena_canvas,flow.session.sim.actor.position)
 		cast_pending = slot
@@ -738,7 +739,14 @@ func _physics_process(_delta: float) -> void:
 		cast_pending = -1
 		return
 	var sim_start := Time.get_ticks_usec()
+	var pad_slot := _pad_cast_poll.poll()
 	if not editor_open:
+		if pad_slot >= 0 and not is_loadout_view_open():
+			if flow.state == "fighting":
+				cursor = aim_source.world_point(arena_canvas,flow.session.sim.actor.position)
+				cast_pending = pad_slot
+			elif flow.state == "workshop" and flow.range_sim != null:
+				_test_cast_slot(pad_slot,aim_source.world_point(test_canvas,flow.range_sim.actor.position))
 		if flow.state == "fighting":
 			var dir := Input.get_vector("move_left","move_right","move_up","move_down")
 			var aim: Vector2 = (aim_source.world_point(arena_canvas,flow.session.sim.actor.position)-flow.session.sim.actor.position).normalized()

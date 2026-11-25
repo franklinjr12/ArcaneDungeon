@@ -13,6 +13,8 @@ var status_line: Label
 var tips: Label
 var overlay: ColorRect
 var pending_cast := -1
+var aim_source = InputActions.default_aim_source()
+var _pad_cast_poll := InputActions.PadAxisCastPoll.new()
 var target_point := Vector2(400,400)
 var seed := 5160
 var scenario := "single"
@@ -99,11 +101,11 @@ func _click(point: Vector2, button: int) -> void:
 func _input(event: InputEvent) -> void:
 	if not event.is_pressed() or event.is_echo():
 		return
-	var slot := InputActions.cast_slot_for_event(event)
+	var slot := -1 if event is InputEventJoypadMotion else InputActions.cast_slot_for_event(event) # trigger casts: _pad_cast_poll
 	if slot >= 2:
 		if session.state == "playing" and not session.sim.clock.paused:
 			pending_cast = slot
-			target_point = canvas.world_from_local(canvas.get_local_mouse_position())
+			target_point = aim_source.world_point(canvas,session.sim.actor.position)
 	elif event.is_action_pressed("pause"):
 		_command("pause")
 	elif event is InputEventKey:
@@ -150,7 +152,11 @@ func _physics_process(_dt: float) -> void:
 	if session == null or not session.initialized:
 		return
 	var direction := Input.get_vector("move_left","move_right","move_up","move_down")
-	var aiming: Vector2 = (canvas.world_from_local(canvas.get_local_mouse_position())-session.sim.actor.position).normalized()
+	var pad_slot := _pad_cast_poll.poll()
+	if pad_slot >= 0 and session.state == "playing" and not session.sim.clock.paused:
+		pending_cast = pad_slot
+		target_point = aim_source.world_point(canvas,session.sim.actor.position)
+	var aiming: Vector2 = (aim_source.world_point(canvas,session.sim.actor.position)-session.sim.actor.position).normalized()
 	if aiming.is_zero_approx():
 		aiming = session.player.facing
 	var command := {"move":direction,"aim":aiming,"cast":pending_cast,
