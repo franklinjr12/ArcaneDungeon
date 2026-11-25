@@ -228,6 +228,35 @@ func _on_target_died(target, ctx: Dictionary) -> void:
 			trace.record("status",{"cast_id":base["cast_id"],"root_cast_id":base["root_cast_id"],"formula_id":base["formula_id"],
 				"target_id":neighbour.id,"reason":"burning:applied","tick":clock.tick})
 
+	if _art("kindling") and target.status.has("burning",clock.tick):
+		var burning: Dictionary = settings["statuses"]["burning"].duplicate(true)
+		burning["duration_ticks"] = int(artifacts.param("kindling","duration_ticks",180))
+		for neighbour in targets.query(target.position,float(artifacts.param("kindling","radius",80)),actor.team,[target.id],"",clock.tick):
+			neighbour.status.apply("burning",clock.tick,burning,
+				{"cast_id":base["cast_id"],"root_cast_id":base["root_cast_id"],"formula_id":base["formula_id"],"team":actor.team})
+			trace.record("status",{"cast_id":base["cast_id"],"root_cast_id":base["root_cast_id"],"formula_id":base["formula_id"],
+				"target_id":neighbour.id,"reason":"burning:applied","tick":clock.tick})
+
+## AD-240 Conduit Coil: lightning damage landing on a Burning target sets off one overload burst, once per target per root cast.
+## The burst carries `artifact_kill` (like the on-kill blasts), so its own lightning hits can never trigger another one.
+func _conduit_overload(target, ctx: Dictionary) -> void:
+	if bool(ctx.get("artifact_kill",false)):
+		return
+	var seen: Dictionary = artifacts.state.get("conduit_seen",{})
+	artifacts.state["conduit_seen"] = seen
+	var key := "%d:%d" % [int(ctx.get("root_cast_id",0)),target.id]
+	if seen.has(key):
+		return
+	seen[key] = true
+	var base := {"cast_id":int(ctx["cast_id"]),"root_cast_id":int(ctx["root_cast_id"]),"formula_id":str(ctx["formula_id"]),
+		"caster_id":actor.id,"team":actor.team,"parent_effect_id":0,"depth":1,"artifact_kill":true}
+	trace.record("artifact",{"cast_id":base["cast_id"],"root_cast_id":base["root_cast_id"],"formula_id":base["formula_id"],
+		"target_id":target.id,"reason":"artifact.conduit_coil","tick":clock.tick})
+	var blast := {"essence":{"id":"essence.lightning"},"modifiers":[],"params":{
+		"burst_radius":float(artifacts.param("conduit_coil","radius",60)),
+		"base_damage":float(artifacts.param("conduit_coil","damage",8))}}
+	_spawn_burst(blast,target.position,base)
+
 ## AD-143 Archivist's Quill: counts the `threshold` fractions of max HP a boss/mini-boss has lost; true when a new step was crossed.
 func _quill_crossed(target) -> bool:
 	if not _art("archivists_quill") or not ("boss" in target.tags or "mini_boss" in target.tags):
@@ -640,9 +669,12 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 		payload["ignite"] = true
 	var hit = HitPayload.new(payload,settings["channels"])
 	var was_alive: bool = target.alive()
+	var conduit_ready: bool = _art("conduit_coil") and str(effect_plan["essence"]["id"]) == "essence.lightning" and target.status.has("burning",clock.tick)
 	var result: Dictionary = resolver.resolve(hit,target,targets,clock.tick)
 	if not result["accepted"]:
 		return
+	if conduit_ready and target.alive():
+		_conduit_overload(target,ctx)
 	if was_alive and not target.alive():
 		_on_target_died(target,ctx)
 	var quill_step: bool = target.alive() and _quill_crossed(target)
@@ -754,9 +786,12 @@ func _react(event: Dictionary, detail: Dictionary) -> void:
 	if selected == null or source == null:
 		return
 	var arc_was_alive: bool = selected.alive()
+	var conduit_ready: bool = _art("conduit_coil") and selected.status.has("burning",clock.tick)
 	var dealt: float = resolver.resolve_arc(arc,selected)
 	if dealt <= 0:
 		return
+	if conduit_ready and selected.alive():
+		_conduit_overload(selected,detail["context"])
 	if arc_was_alive and not selected.alive():
 		_on_target_died(selected,detail["context"])
 	total_hit_count += 1
