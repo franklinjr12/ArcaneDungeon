@@ -1,5 +1,19 @@
 extends RefCounted
 ## Input-map helpers shared by the arena and run controllers.
+## AD-255: true while the last meaningful input came from a gamepad (menus then set focus on open).
+static var pad_last_used := false
+
+## Returns true when this event flipped the last-used device to the pad.
+static func note_device(event: InputEvent) -> bool:
+	var pad: bool = (event is InputEventJoypadButton and event.pressed) or (event is InputEventJoypadMotion and absf(event.axis_value) >= 0.5)
+	var other: bool = (event is InputEventKey and event.pressed) or (event is InputEventMouseButton and event.pressed)
+	if pad and not pad_last_used:
+		pad_last_used = true
+		return true
+	if other:
+		pad_last_used = false
+	return false
+
 const CAST_ACTIONS := ["cast_slot_1","cast_slot_2","cast_slot_3","cast_slot_4"]
 
 static func cast_slot_for_event(event: InputEvent) -> int:
@@ -124,7 +138,26 @@ static func events_equal(a, b) -> bool:
 	var da := event_to_dict(a)
 	return not da.is_empty() and da == event_to_dict(b)
 
+## AD-255: menu confirm/back on the pad. Adds the data-driven pad events to the built-in ui_* actions (idempotent).
+static func apply_ui_pad_bindings() -> void:
+	var ui = gamepad_data().get("ui_bindings", {})
+	if typeof(ui) != TYPE_DICTIONARY:
+		return
+	for action in ui:
+		if not InputMap.has_action(action) or typeof(ui[action]) != TYPE_ARRAY:
+			continue
+		for d in ui[action]:
+			var ev := dict_to_event(d)
+			if ev == null:
+				continue
+			var have := false
+			for existing in InputMap.action_get_events(action):
+				have = have or events_equal(existing, ev)
+			if not have:
+				InputMap.action_add_event(action, ev)
+
 static func apply_bindings(overrides: Dictionary) -> void:
+	apply_ui_pad_bindings()
 	for action in REBINDABLE:
 		if not InputMap.has_action(action):
 			continue
