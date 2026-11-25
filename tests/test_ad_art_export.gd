@@ -87,6 +87,7 @@ func run(t) -> void:
 	_engine_map(t, assets)
 	_actors(t)
 	_renderer(t)
+	_map1_art(t)
 	_env_props(t)
 	_elites_art(t)
 
@@ -388,7 +389,7 @@ func _windup_ok(t, kind: String, ticks: int, label: String) -> void:
 func _renderer(t) -> void:
 	for k in REAL_KINDS:
 		t.equal(ART.resolve_kind(k), k, "AD-154 resolve_kind own entry: " + k)
-	t.equal(ART.PLACEHOLDER_KIND.keys(), ["ghoul_stalker", "riptide_leaper", "rune_sentry", "grave_mite", "ash_censer", "tide_siphon", "lamprey"], "AD-237/238 only the pounce enemies, Ruins v2 and Cistern v2 enemies borrow sprites")
+	t.equal(ART.PLACEHOLDER_KIND.keys(), ["riptide_leaper", "rune_sentry", "grave_mite", "ash_censer", "tide_siphon", "lamprey"], "AD-249/237/238 only riptide_leaper, Ruins v2 and Cistern v2 enemies borrow sprites")
 	var spirit := ART.placeholder_modulate("wailing_spirit", Color.RED, true, false)
 	t.check(is_equal_approx(spirit.a, 0.4), "AD-154 intangible alpha kept")
 	t.check(spirit.r == 1.0 and spirit.g == 1.0 and spirit.b == 1.0, "AD-154 real art has no tint")
@@ -428,6 +429,28 @@ func _env_props(t) -> void:
 	t.equal(ART.env_prop_frame("brazier", "intact", false, 2, 0)["tag"], "unlit", "AD-154 unlit brazier")
 	t.equal(ART.env_prop_frame("crate", "burning", false, 0, 7)["tag"], "burning", "AD-154 burning crate")
 	t.check(ART.env_prop_frame("crate", "destroyed", false, 0, 0).is_empty(), "AD-154 destroyed crate skipped")
+
+## AD-249 map 1 art wiring: ruins walls/props/backdrop/vignette resolve to the AD-244/245 stems.
+func _map1_art(t) -> void:
+	var man: Dictionary = ART.export_manifest()
+	for stem in ["ad_til_ruins_floor", "ad_til_ruins_wall", "ad_til_ruins_wall_mass", "ad_prp_cracked_pillar_ruins", "ad_prp_broken_wall_ruins", "ad_bgd_ruins_depth", "ad_fx_vignette_ruins"]:
+		t.check(man.has(stem), "AD-249 manifest has " + stem)
+	t.check(ART.actor_manifest().has("ghoul_stalker") and ART.actor_has_tag("ghoul_stalker", "idle_side"), "AD-249 ghoul_stalker has its own actor sheet")
+	var pillar := ART.env_prop_frame("cracked_pillar", "intact", false, 0, 0)
+	t.equal(pillar.get("stem", ""), "ad_prp_cracked_pillar_ruins", "AD-249 cracked_pillar own stem")
+	var wall := ART.env_prop_frame("broken_wall", "intact", false, 0, 0)
+	t.equal(wall.get("stem", ""), "ad_prp_broken_wall_ruins", "AD-249 broken_wall own stem")
+	for fr in [pillar, wall]:
+		t.check(not fr.is_empty() and man[fr["stem"]]["tags"].has(fr["tag"]), "AD-249 ruins cover prop tag exists")
+	var src := FileAccess.get_file_as_string("res://ui/pixel_art_renderer.gd")
+	var at := src.find("static func _walls_ruins")
+	var body := src.substr(at, src.find("\nstatic func ", at + 10) - at)
+	t.check(at >= 0 and body.find("TILE") == -1 and body.find("RUINS_WALL_MASS") != -1, "AD-249 ruins walls do not use the old brick atlas")
+	t.check(ART.ruins_art_ready(), "AD-249 ruins art ready")
+	var pres := ART.ruins_presentation()
+	for key in ["enabled", "backdrop_stem", "backdrop_alpha", "vignette_stem", "vignette_alpha"]:
+		t.check(pres.has(key), "AD-249 presentation key " + key)
+	t.check(man.has(str(pres.get("backdrop_stem", ""))) and man.has(str(pres.get("vignette_stem", ""))), "AD-249 presentation stems exist in manifest")
 
 const AD200_ART_KINDS := ["mini_fallen_adept", "mini_fallen_adept_decoy", "homing_skull", "storm_crystal_elite", "storm_crystal_small"]
 

@@ -120,7 +120,7 @@ func _draw() -> void:
 	_draw_frame(Rect2(arena.position-offset,arena.size))
 	Art.pits(self,session.pits,offset)
 	Art.cracked_tiles(self,session,offset,tick,ReduceMotion.flashes_reduced(settings,session))
-	Art.walls(self,session.world.walls,offset)
+	Art.walls(self,session.world.walls,offset,environment_id)
 	Art.decorations(self,offset,environment_id)
 	draw_rect(Rect2(arena.position-offset,arena.size),Color("#b48b52",0.55),false,2)
 	if _anim_session != session:
@@ -215,6 +215,7 @@ func _draw() -> void:
 	_draw_death_banner()
 	if show_debug:
 		_label(Vector2(18,20),tr("combat.debug_geometry"),Color("#d6edf7"))
+	Art.draw_ruins_vignette(self,view_size(),environment_id)
 	lighting.sync(self,session,settings,lighting_stage,lighting_room_type,lighting_props)
 	vfx.sync(self,session,settings,fx_list,tick)
 	hit_flash.set_entries(flash_entries)
