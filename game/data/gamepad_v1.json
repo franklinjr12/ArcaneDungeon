@@ -2,6 +2,7 @@
   "_comment": "AD-254 default gamepad bindings (Xbox layout). Events use InputActions.event_to_dict shape. Axes: 0/1 left stick, 4 left trigger, 5 right trigger; buttons: 0 A, 6 Start, 9 left shoulder, 10 right shoulder, 2 X. No 'swap' action exists in the input map; Y (3) is left unbound. loadout_view keeps button 4 (Back).",
   "schema_version": 1,
   "aim_deadzone": 0.25,
+  "aim_reach": 200,
   "bindings": {
     "move_left": [{"type": "joy_axis", "axis": 0, "value": -1}],
     "move_right": [{"type": "joy_axis", "axis": 0, "value": 1}],
