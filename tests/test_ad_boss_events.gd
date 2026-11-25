@@ -55,13 +55,14 @@ func test_ad_242_a_event_roll_seeded(t) -> void:
 	var flood_ok := true
 	var clean_ok := true
 	var flood_cfg := _with_chance(cfg,FLOOD,1.0)
+	var herald_cfg := _with_chance(cfg,FLOOD,0.0) # flood gate chance is 1.0 in data; isolate the herald roll
 	for i in SEEDS:
 		var seed_value := FIRST_SEED+i
-		var a: Array = Flow.build_sequence(cfg,seed_value)
-		var b: Array = Flow.build_sequence(cfg,seed_value)
+		var a: Array = Flow.build_sequence(herald_cfg,seed_value)
+		var b: Array = Flow.build_sequence(herald_cfg,seed_value)
 		if a != b:
 			deterministic = false
-		var base: Array = Flow.build_sequence(_with_chance(cfg,HERALD,0.0),seed_value)
+		var base: Array = Flow.build_sequence(_with_chance(herald_cfg,HERALD,0.0),seed_value)
 		var herald_idx := _tagged(a,HERALD)
 		if herald_idx.size() > 1:
 			herald_ok = false

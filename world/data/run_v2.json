@@ -1004,6 +1004,38 @@
     "dead_corner_step": 40,
     "player_radius": 22
   },
+  "events": {
+    "herald_of_the_warden": {
+      "stage": "ruins",
+      "after_room": 2,
+      "chance": 0.5,
+      "seed_salt": 24201,
+      "mini_boss": "ruins_adept_elite",
+      "mini_boss_position": [
+        1030,
+        450
+      ],
+      "reward": {
+        "artifact_choices": 3,
+        "ink": 8
+      },
+      "title_key": "event.herald.title",
+      "subtitle_key": "event.herald.subtitle"
+    },
+    "flood_gate": {
+      "stage": "cistern",
+      "chance": 1.0,
+      "seed_salt": 24202,
+      "duration_seconds": 40,
+      "wave_interval_seconds": 8,
+      "template": "cistern_flood_gate",
+      "reward": {
+        "artifact_choices": 3
+      },
+      "title_key": "event.flood_gate.title",
+      "subtitle_key": "event.flood_gate.subtitle"
+    }
+  },
   "room_template_files": [
     "res://world/data/rooms_cistern_v1.json"
   ],
@@ -2655,6 +2687,79 @@
           }
         ]
       }
+    },
+    "cistern_flood_gate": {
+      "id": "cistern_flood_gate",
+      "stage": 1,
+      "room": 0,
+      "type": "combat",
+      "scene": "res://scenes/run.tscn",
+      "entrance": [
+        185,
+        450
+      ],
+      "exit": [
+        1220,
+        450
+      ],
+      "reward": [
+        1150,
+        450
+      ],
+      "waves": [
+        {
+          "trigger": "start",
+          "delay_ticks": 0,
+          "enemies": [
+            [
+              "bone_thrall",
+              460,
+              240
+            ]
+          ]
+        }
+      ],
+      "layout": {
+        "water": [
+          {
+            "kind": "shallow",
+            "rect": [
+              380,
+              130,
+              260,
+              170
+            ]
+          },
+          {
+            "kind": "shallow",
+            "rect": [
+              380,
+              600,
+              260,
+              170
+            ]
+          },
+          {
+            "kind": "shallow",
+            "rect": [
+              700,
+              360,
+              150,
+              180
+            ]
+          },
+          {
+            "kind": "deep",
+            "rect": [
+              520,
+              20,
+              120,
+              80
+            ]
+          }
+        ]
+      },
+      "shape": "open_hall"
     },
     "workshop": {
       "id": "workshop",

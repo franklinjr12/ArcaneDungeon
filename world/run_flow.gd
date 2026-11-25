@@ -144,7 +144,7 @@ static func build_sequence(cfg: Dictionary, run_seed: int) -> Array:
 		ids.append(stage["boss_room"])
 		if bool(stage.get("workshop_after",false)):
 			ids.append("workshop")
-		var in_stage := 0
+		var stage_entries: Array = []
 		for id in ids:
 			if not templates.has(str(id)):
 				push_error("Room template missing: %s" % id)
@@ -152,12 +152,52 @@ static func build_sequence(cfg: Dictionary, run_seed: int) -> Array:
 			var entry: Dictionary = templates[str(id)].duplicate(true)
 			if str(id) == str(stage["optional_room"]):
 				entry["optional"] = true
+			stage_entries.append(entry)
+		if not _apply_events(cfg,templates,str(stage["id"]),run_seed,stage_entries):
+			return []
+		var in_stage := 0
+		for entry in stage_entries:
 			entry["stage"] = stage_index
 			entry["room"] = in_stage
 			in_stage += 1
 			out.append(entry)
 		stage_index += 1
 	return out
+
+## AD-242: seeded boss-adjacent events for one stage. Own RNG per event so the stage shuffle (and old room orders) is untouched.
+static func _apply_events(cfg: Dictionary, templates: Dictionary, stage_id: String, run_seed: int, entries: Array) -> bool:
+	var events: Dictionary = cfg.get("events",{})
+	for event_id in events:
+		var event: Dictionary = events[event_id]
+		if str(event.get("stage","")) != stage_id:
+			continue
+		var rng := RandomNumberGenerator.new()
+		var hash_value := 2166136261
+		for c in ("%d:%s:event" % [run_seed,str(event_id)]).to_utf8_buffer():
+			hash_value = ((hash_value ^ int(c))*16777619) & 0x7fffffff
+		rng.seed = hash_value ^ int(event.get("seed_salt",0))
+		if rng.randf() >= float(event.get("chance",0.0)):
+			continue
+		if event.has("after_room"):
+			var at := int(event["after_room"])
+			if at >= entries.size() or str(entries[at].get("type","")) != "combat":
+				push_error("Event %s target room is not a combat room" % event_id)
+				return false
+			entries[at]["event"] = str(event_id)
+		else:
+			var template_id := str(event.get("template",""))
+			if not templates.has(template_id):
+				push_error("Event %s template missing: %s" % [event_id,template_id])
+				return false
+			var flood: Dictionary = templates[template_id].duplicate(true)
+			flood["event"] = str(event_id)
+			var before := entries.size()-1
+			for i in entries.size():
+				if str(entries[i].get("type","")) == "workshop":
+					before = i
+					break
+			entries.insert(before,flood)
+	return true
 
 func _cue(id: String, at = null) -> void:
 	if audio_sink.is_valid():
