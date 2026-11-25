@@ -1,0 +1,13 @@
+{
+	"wisp_shield": {
+		"tint_color": [0.45, 0.8, 1.0],
+		"tint_alpha_min": 0.18,
+		"tint_alpha_max": 0.42,
+		"pulse_period_s": 1.2,
+		"tether_color": [0.55, 0.9, 1.0],
+		"tether_width": 3.0,
+		"tether_alpha": 0.75,
+		"break_flash_s": 0.1,
+		"max_flashes_per_s": 3
+	}
+}
