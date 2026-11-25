@@ -636,7 +636,7 @@ artifact.grave_salt.name,Grave Salt
 artifact.grave_salt.desc,"Kills during a reaction drop a mote that heals 3 HP."
 artifact.fracture_lens.name,Fracture Lens
 artifact.fracture_lens.desc,"Area and field forms are 20% larger but deal 10% less damage."
-run.reward.artifact_tag_reaction,Reaction tag
-run.reward.artifact_tag_form,Form tag
-run.reward.artifact_tag_trigger,Trigger tag
-run.reward.artifact_tag_defence,Defence tag
+run.reward.artifact_tag.reaction,Reaction tag
+run.reward.artifact_tag.form,Form tag
+run.reward.artifact_tag.trigger,Trigger tag
+run.reward.artifact_tag.defence,Defence tag

@@ -67,7 +67,7 @@ func _data(t) -> void:
 		t.check(defs.has(id),"AD-240 new artifact present: "+id)
 	t.equal(Artifacts.tag_of("nope"),"","AD-240 tag_of unknown is empty")
 	for tag in TAGS:
-		t.check(keys.has("run.reward.artifact_tag_"+tag),"AD-240 tag label key exists: "+tag)
+		t.check(keys.has("run.reward.artifact_tag."+tag),"AD-240 tag label key exists: "+tag)
 	t.equal(float(Artifacts.config().get("tag_bias",0.0)),0.4,"AD-240 tag_bias comes from data")
 
 func _offered(seed_value: int, held: Array) -> String:
@@ -113,7 +113,7 @@ func _card_tag(t) -> void:
 		var card: Dictionary = Reward.artifact_choice(_run(i,[]),i+100,true)
 		t.check(card.has("tag") and card["tag"] in TAGS,"AD-240 artifact card %d carries a tag" % i)
 		t.equal(card["tag"],Artifacts.tag_of(str(card["id"])),"AD-240 card tag matches data %d" % i)
-		t.check(keys.has("run.reward.artifact_tag_"+str(card["tag"])),"AD-240 card tag has a UI string %d" % i)
+		t.check(keys.has("run.reward.artifact_tag."+str(card["tag"])),"AD-240 card tag has a UI string %d" % i)
 
 func _meta_unlocks(t) -> void:
 	var locked: Array = Meta.locked_artifacts(Meta.empty_meta())

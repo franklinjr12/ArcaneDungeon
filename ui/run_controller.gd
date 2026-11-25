@@ -964,7 +964,7 @@ func _build_reward_panel() -> void:
 			tag_key = "run.reward.tag_"+kind
 			art = _rune_art(str(item["id"])) if kind == "rune" else SkinA.icon_or_mvp("upgrade")
 			if kind == "artifact" and str(item.get("tag","")) != "":
-				desc += "\n"+tr("run.reward.artifact_tag_"+str(item["tag"]))
+				desc += "\n"+tr("run.reward.artifact_tag."+str(item["tag"]))
 		var card := _kit_card(o,"card_1","card_%d" % (i+1),dx,kind,rarity,card_name,art)
 		reward_cards.append(card)
 		var tip_w := minf(160.0,step-8.0)
