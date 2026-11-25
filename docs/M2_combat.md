@@ -155,6 +155,17 @@ Three new Ruins kinds in `combat/combat_tuning_v1.json` (all numbers [PROPOSED F
 
 Not yet in `rooms_ruins_v1.json` waves (sandbox scenarios and compendium only). Tests: `tests/test_ad_enemies_ruins_v2.gd`.
 
+### Cistern v2 enemies (AD-238)
+
+Two new Cistern kinds in `combat/combat_tuning_v1.json` (all numbers [PROPOSED FOR PROTOTYPE]); each has one Lightning weakness. Placeholder art borrows existing sprites (`PLACEHOLDER_KIND`).
+
+| enemy | components / params | scenario | counter |
+| --- | --- | --- | --- |
+| Tide Siphon (hp 55, Lightning -0.5) | `keep_distance` + `ranged_attack` (lightning) + `tide_siphon`: Wet puddle (`puddle_radius` 70, 360 ticks, max 3) every 180 ticks; lightning on a Wet player x1.5. Puddles wet everyone, so the player can use them too | `tide_siphon` | Kill it or lightning its wet neighbours |
+| Lamprey (hp 40, Lightning -0.5) | `chase` + `lamprey_pair`: two eels linked by a tether (6 damage per 30 ticks on contact, `tether_max_length` 320); cutting it with a beam/pierce shot or killing one stuns the other `stun_ticks` 120 | `lamprey_pair` | Beam or piercing shot through the tether |
+
+Tests: `tests/test_ad_enemies_cistern_v2.gd`.
+
 ## Boundaries and owner decisions
 
 The arena is *not* M3 room progression, boss design, loot, a spell editor, a production sprite pipeline or gamepad integration. Player motion, dodge timings, enemy archetypes/HP and attack damage, Burst range/LOS, fixed arena obstacles, accessible flash treatment, two loadout slots, initial seed, and encounter recipes are **PROPOSED FOR PROTOTYPE**, not locked design. A later human playtest should verify warning legibility, pacing, actual 60-FPS rendering, camera comfort and combat feel before treating M2 as polished.

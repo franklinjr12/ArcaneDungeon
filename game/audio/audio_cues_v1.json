@@ -686,6 +686,8 @@
   "telegraph:rune_sentry": "sfx.tele.bone_thrall",
   "telegraph:grave_mite": "sfx.tele.bone_thrall",
   "telegraph:ash_censer": "sfx.tele.bone_thrall",
+  "telegraph:tide_siphon": "sfx.tele.bone_thrall",
+  "telegraph:lamprey": "sfx.tele.bone_thrall",
   "telegraph:fallen_adept:a": "sfx.boss.tele_a",
   "telegraph:fallen_adept:b": "sfx.boss.tele_b",
   "telegraph:storm_crystal:a": "sfx.boss.tele_a",
