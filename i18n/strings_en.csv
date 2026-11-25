@@ -612,3 +612,31 @@ meta_shop.next.max_hp,Next: +%d max HP (total +%d)
 meta_shop.next.max_mana,Next: +%d max mana (total +%d)
 meta_shop.next.mana_regen,Next: +%d%% mana regeneration (total +%d%%)
 meta_shop.next.done,Fully upgraded: +%s
+artifact.thunderhead.name,Thunderhead
+artifact.thunderhead.desc,"Wet lightning arcs chain to one more target."
+artifact.frostbrand.name,Frostbrand
+artifact.frostbrand.desc,"Frozen enemies take 40% more force damage."
+artifact.kindling.name,Kindling
+artifact.kindling.desc,"Burning enemies spread burn to nearby foes when they die."
+artifact.undertow.name,Undertow
+artifact.undertow.desc,"Wet enemies you hit are pulled 40 units toward your orb."
+artifact.overcharge.name,Overcharge
+artifact.overcharge.desc,"Every 3rd cast costs no mana."
+artifact.shard_mail.name,Shard Mail
+artifact.shard_mail.desc,"Shattering a frozen enemy grants 1 s of 30% damage reduction."
+artifact.quicksilver_ink.name,Quicksilver Ink
+artifact.quicksilver_ink.desc,"After a dash, your next cast deals 25% more damage."
+artifact.conduit_coil.name,Conduit Coil
+artifact.conduit_coil.desc,"Lightning hitting a burning enemy triggers an overload burst."
+artifact.tidecaller_shell.name,Tidecaller Shell
+artifact.tidecaller_shell.desc,"Standing in water restores 2 mana per second."
+artifact.mirror_glyph.name,Mirror Glyph
+artifact.mirror_glyph.desc,"Beams reflect once off walls."
+artifact.grave_salt.name,Grave Salt
+artifact.grave_salt.desc,"Kills during a reaction drop a mote that heals 3 HP."
+artifact.fracture_lens.name,Fracture Lens
+artifact.fracture_lens.desc,"Area and field forms are 20% larger but deal 10% less damage."
+run.reward.artifact_tag_reaction,Reaction tag
+run.reward.artifact_tag_form,Form tag
+run.reward.artifact_tag_trigger,Trigger tag
+run.reward.artifact_tag_defence,Defence tag
