@@ -37,7 +37,11 @@ func _phase_water(boss: Dictionary, phase_index: int) -> Array:
 func _area(water: Array) -> float:
 	var total := 0.0
 	for entry in water:
-		total += float(entry["rect"][2]) * float(entry["rect"][3])
+		var rect = entry["rect"]
+		if rect is Rect2:
+			total += rect.size.x * rect.size.y
+		else:
+			total += float(rect[2]) * float(rect[3])
 	return total
 
 func _rect_valid(entry: Variant) -> bool:
