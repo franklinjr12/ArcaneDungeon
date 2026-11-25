@@ -32,6 +32,7 @@ func run(t) -> void:
 	test_ad_241_unstable_tiles(t)
 	test_ad_241_haunted_respawn(t)
 	test_ad_241_none_room_unchanged(t)
+	test_ad_241_ruins_pool(t)
 
 func test_ad_241_room_affix_data(t) -> void:
 	var run: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://world/data/run_v2.json"))
@@ -214,3 +215,42 @@ func test_ad_241_none_room_unchanged(t) -> void:
 		t.check(pair[1].light_radius() == 0.0 and pair[0].room_affix.tiles.is_empty(),"AD-241 affix '%s' room has no darkness or cracked tiles" % affix)
 		logs.append(pair[1].log)
 	t.check(logs[0] == logs[1],"AD-241 room_affix none logs the same as a room without the field")
+
+func _run_doc() -> Dictionary:
+	return JSON.parse_string(FileAccess.get_file_as_string("res://world/data/run_v2.json"))
+
+## Combat rooms of a stage pool plus their affix list; the boss room never carries one.
+func test_ad_241_ruins_pool(t) -> void:
+	var doc := _run_doc()
+	var tuning := _tuning()
+	var env_data = load("res://world/env_props.gd").load_data()
+	var stage: Dictionary = doc["stages"][0]
+	var pool: Array = stage["pool"]
+	t.equal(pool.size(),12,"AD-241 ruins pool has 12 rooms")
+	var kinds: Dictionary = {}
+	var affixes: Dictionary = {}
+	var affixed := 0
+	for id in pool + [stage["optional_room"],stage["boss_room"]]:
+		t.check(doc["room_templates"].has(id),"AD-241 ruins template %s exists" % id)
+		var room: Dictionary = doc["room_templates"][id]
+		var verdict := Room.new().initialize(room,tuning["arena"],tuning["enemies"].keys())
+		t.check(bool(verdict["ok"]),"AD-241 %s validates (%s)" % [id,str(verdict["issues"])])
+		if str(room["type"]) == "combat":
+			var report := Room.rule_report(room,tuning["arena"],env_data,doc["room_rules"])
+			t.check(bool(report["ok"]),"AD-241 %s passes rule_report (%s)" % [id,str(report["issues"])])
+		for wave in room.get("waves",[]):
+			t.check((wave["enemies"] as Array).size() <= int(doc["max_active_enemies"]),"AD-241 %s wave within the active cap" % id)
+			for e in wave["enemies"]:
+				kinds[e[0]] = true
+		var affix := str(room.get("room_affix","none"))
+		if id in pool and affix != "none":
+			affixed += 1
+			affixes[affix] = true
+	t.check(kinds.size() >= 7,"AD-241 ruins pool spawns >= 7 enemy kinds (%s)" % str(kinds.keys()))
+	for k in ["rune_sentry","grave_mite","ash_censer","lantern_wisp"]:
+		t.check(kinds.has(k),"AD-241 ruins uses %s" % k)
+	var share := float(affixed)/float(pool.size())
+	t.check(share >= 0.25 and share <= 0.40,"AD-241 ruins affix share %.2f within 0.25-0.40" % share)
+	for k in ["dark","unstable","haunted"]:
+		t.check(affixes.has(k),"AD-241 ruins has a %s room" % k)
+	t.check(not doc["room_templates"][stage["boss_room"]].has("room_affix"),"AD-241 ruins boss room has no affix")

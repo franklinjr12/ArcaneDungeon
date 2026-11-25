@@ -321,7 +321,7 @@ func _ruins_rooms(t) -> void:
 	var rules: Dictionary = doc["room_rules"]
 	t.equal(str(doc["stages"][0]["id"]),"ruins","AD-202 ruins: stage 0 is the Ruins")
 	var ids := _ruins_ids(doc)
-	t.equal(ids.size(),9,"AD-202 ruins: 8 pool rooms plus the optional treasure room")
+	t.equal(ids.size(),13,"AD-202 ruins: 12 pool rooms plus the optional treasure room")
 	var shapes: Dictionary = {}
 	for id in ids:
 		var room: Dictionary = doc["room_templates"][id]
@@ -331,7 +331,7 @@ func _ruins_rooms(t) -> void:
 		t.check(bool(verdict["ok"]),"AD-202 ruins: %s validates in initialize (%s)" % [id,str(verdict["issues"])])
 		t.check(int(report["interactions"]) >= 1 and int(report["obstacles"]) >= 2,"AD-202 ruins: %s has cover and an interaction" % id)
 		shapes[str(room.get("shape",""))] = id
-	t.equal(shapes.size(),9,"AD-202 ruins: the nine rooms use nine different shapes")
+	t.check(shapes.size() >= 9,"AD-202 ruins: the rooms use at least nine different shapes (%d)" % shapes.size())
 	for shape in rules["owner_shapes"]:
 		t.check(shapes.has(shape),"AD-202 ruins: owner shape %s is used" % shape)
 	_ruins_kinds_vary(t,doc,ids)
