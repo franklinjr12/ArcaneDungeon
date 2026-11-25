@@ -105,6 +105,7 @@ func test_ad_238_b_puddle_reactions_both_ways(t) -> void:
 	t.check(foe.target.status.has("wet",s.sim.clock.tick) and other.target.status.has("wet",s.sim.clock.tick),"AD-238 enemies in the puddle are Wet")
 	# Player lightning on a Wet enemy in a puddle reacts (arc to the other Wet enemy).
 	var formula = s.samples["sample.lightning_shot"]
+	s.sim.loadout.allow_edit = true
 	var equipped: Dictionary = s.sim.loadout.equip(1,formula)
 	t.check(bool(equipped.get("ok",false)),"AD-238 player lightning spell equips (%s)" % str(equipped.get("reason","")))
 	var hp_other: float = other.target.health.current
@@ -204,6 +205,7 @@ func test_ad_238_d_tether_cut_stuns_partner(t) -> void:
 		var dir: Vector2 = (seg["to"]-seg["from"]).orthogonal().normalized()
 		var p = s2.sim.actor
 		p.position = mid-dir*160.0
+		s2.sim.loadout.allow_edit = true
 		t.check(bool(s2.sim.loadout.equip(1,s2.samples[formula_id]).get("ok",false)),"AD-238 %s equips" % formula_id)
 		for i in 30:
 			s2.issue({"move":Vector2.ZERO,"aim":dir,"cursor":mid,"cast":1 if i == 0 else -1,"dash":false})
@@ -223,6 +225,7 @@ func test_ad_238_d_tether_cut_stuns_partner(t) -> void:
 	var mid3: Vector2 = (seg3["from"]+seg3["to"])*0.5
 	var dir3: Vector2 = (seg3["to"]-seg3["from"]).orthogonal().normalized()
 	s3.sim.actor.position = mid3-dir3*160.0
+	s3.sim.loadout.allow_edit = true
 	s3.sim.loadout.equip(1,s3.samples["sample.fire_shot"])
 	for i in 30:
 		s3.issue({"move":Vector2.ZERO,"aim":dir3,"cursor":mid3,"cast":1 if i == 0 else -1,"dash":false})
