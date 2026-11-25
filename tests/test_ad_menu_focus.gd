@@ -110,6 +110,7 @@ func _check_stick_actions(t) -> void:
 		t.check(ev.is_action_pressed(entry[0]), "AD-255 pad button %d drives %s" % [entry[1], entry[0]])
 
 func run(t) -> void:
+	preload("res://ui/input_actions.gd").pad_last_used = false
 	var root := (Engine.get_main_loop() as SceneTree).root
 	var save = root.get_node("SaveService")
 	save.set_base_dir(DIR)
@@ -187,6 +188,7 @@ func _run_screens(t) -> void:
 	vp = _viewport()
 	scene = _run_scene(vp)
 	t.check(scene.apply_debug_shot_state("workshop"), "AD-255 workshop: debug state reached")
+	_pad_button(vp, JOY_BUTTON_Y) # unbound pad press: marks the pad as the last-used device
 	var f := _focus(vp)
 	t.check(f != null and f.is_visible_in_tree(), "AD-255 workshop: initial focus set")
 	if f != null:

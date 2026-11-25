@@ -172,6 +172,7 @@ func _build_chrome() -> void:
 		tab_buttons[t].focus_neighbor_right = tab_buttons[t].get_path_to(tab_buttons[TABS[(i + 1) % TABS.size()]])
 		tab_buttons[t].focus_neighbor_bottom = tab_buttons[t].get_path_to(back_button)
 	back_button.focus_neighbor_top = back_button.get_path_to(tab_buttons["runes"])
+	back_button.focus_neighbor_bottom = back_button.get_path_to(tab_buttons["runes"])
 
 func _cell_ids(tab: String) -> Array:
 	var out := []
@@ -248,6 +249,7 @@ func _build_page(tab: String, page: Control) -> void:
 		up.pressed.connect(_page_step.bind(tab, -1))
 		down.pressed.connect(_page_step.bind(tab, 1))
 	_fill_page(tab)
+	_wire_page_focus(tab)
 
 func _divider_suffix(tab: String) -> String:
 	for id in layout_by_tab[tab]:
@@ -326,6 +328,42 @@ func _fill_page(tab: String) -> void:
 			a.queue_redraw()
 	selected[tab] = clampi(selected[tab], 0, maxi(0, list.size() - 1))
 	_select(tab, selected[tab])
+	_wire_page_focus(tab)
+
+## AD-255: pad/keyboard route Tabs -> entry grid -> page arrows -> Back -> Tabs, so the grid is never skipped or a trap.
+## Inside the grid Godot's geometric neighbours apply; only the entry/exit edges are explicit.
+func _wire_page_focus(tab: String) -> void:
+	if not cells.has(tab) or back_button == null:
+		return
+	var vis: Array = cells[tab].filter(func(c): return c.visible)
+	var exit: Array = []
+	if _arrows.has(tab):
+		for key in ["up", "down"]:
+			if _arrows[tab][key].visible:
+				exit.append(_arrows[tab][key])
+	exit.append(back_button)
+	var tab_button: Control = tab_buttons[tab]
+	for c in vis:
+		var r: Rect2 = c.get_rect()
+		var top_row := true
+		var bottom_row := true
+		for o in vis:
+			if o == c:
+				continue
+			var q: Rect2 = o.get_rect()
+			var overlap: bool = q.position.x < r.end.x and q.end.x > r.position.x
+			if overlap and q.end.y <= r.position.y + 1.0:
+				top_row = false
+			if overlap and q.position.y >= r.end.y - 1.0:
+				bottom_row = false
+		c.focus_neighbor_top = c.get_path_to(tab_button) if top_row else NodePath()
+		c.focus_neighbor_bottom = c.get_path_to(exit[0]) if bottom_row else NodePath()
+	for i in exit.size():
+		exit[i].focus_neighbor_top = exit[i].get_path_to(vis[vis.size() - 1] if i == 0 and not vis.is_empty() else (exit[i - 1] if i > 0 else tab_button))
+		exit[i].focus_neighbor_bottom = exit[i].get_path_to(exit[i + 1] if i + 1 < exit.size() else tab_button)
+	for t in TABS:
+		tab_buttons[t].focus_neighbor_bottom = tab_buttons[t].get_path_to(vis[0] if t == tab and not vis.is_empty() else back_button)
+	back_button.focus_neighbor_bottom = back_button.get_path_to(tab_button)
 
 func _style_cell(tab: String, c: Cell, extras: Array) -> void:
 	var id := c.entry_id
@@ -434,6 +472,7 @@ func select_tab(id: String) -> void:
 		tab_buttons[t].active = t == id
 		tab_buttons[t].queue_redraw()
 	_relayout()
+	_wire_page_focus(id)
 	var owner := get_viewport().gui_get_focus_owner() if is_inside_tree() else null
 	if owner == null or not owner.is_visible_in_tree() or owner in tab_buttons.values():
 		tab_buttons[id].grab_focus()
