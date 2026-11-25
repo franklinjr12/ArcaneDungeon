@@ -73,7 +73,7 @@ None. No data file was changed in this step (before = after for `combat_tuning_v
 
 ## Targets
 - Boss 1 numbers and behaviour frozen: MET (`test_ad_boss1_frozen.gd` green, nothing in boss 1 data touched).
-- Feel bands green, fresh and full: MET (`test_ad_feel_bands.gd` green; the bands read live data, meta never touches enemy HP).
+- Feel bands green, fresh and full: MET (`test_ad_feel_bands.gd` green; the bands read live data, meta never touches enemy HP). The suite now also runs standalone (`godot --headless --path . --script res://tests/test_ad_feel_bands.gd` prints `PASS`, exit 0); bands unchanged.
 - Full meta reaches boss 2 and is not a free win: MET for the bot. Full meta wins 75% (vs 23% fresh); 14 of 15 full-meta deaths are at boss 2.
 - Run length 18-25 min for a full successful run: NOT DONE. The bot's won runs take 2.7-4.0 min (median 3.5 full, 3.3 fresh). The scripted player clears each room in seconds, so no density, affix or artifact number moves it into 18-25 min without HP sponges (forbidden by the plan and the feel bands). This needs a human playtest for the real figure (same conclusion as AD-241).
 - Fresh profile likely dies on or before boss 1: NOT DONE. Fresh bots die in 46 of 60 runs, but only 2 of those on or before boss 1; 41 die at boss 2. The bot wins boss 1 8/8 even on a fresh profile (warden bench), because it dodges every telegraph 70% of the time, which a first-run human does not. Boss 1 cannot change, and raising Ruins room lethality until this bot dies there would overshoot badly for humans (Franklin's playtest already reports dying to bosses), so no number was tuned to the bot. Re-check with human fresh-profile runs.

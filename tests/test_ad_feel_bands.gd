@@ -1,6 +1,7 @@
-extends RefCounted
+extends SceneTree
 ## AD-182: feel-band guardrail. Run length must come from rooms/density/content, never from HP sponges:
 ## hits-to-kill with the basic neutral bolt (raw hp / raw bolt damage, no channel resistance) stays inside fixed bands on LIVE data.
+const TestContext = preload("res://tests/test_context.gd")
 const TUNING := "res://combat/combat_tuning_v1.json"
 const RUN := "res://world/data/run_v2.json"
 const Meta = preload("res://world/meta_progress.gd")
@@ -10,6 +11,17 @@ const HEAVY_LIMIT := 30
 const LIGHT_LIMIT := 15
 const MINI_BOSS_LIMIT := 70
 const BOSS_LIMIT := 320
+
+## Discovered by run_tests.gd (run(t)) and also runnable directly: --script res://tests/test_ad_feel_bands.gd
+func _initialize() -> void:
+	var t := TestContext.new()
+	run(t)
+	print("TEST SUMMARY: %d passed / %d failed" % [t.passed, t.failed])
+	for failure in t.failures:
+		printerr("FAILED: ", failure)
+	if t.failed == 0:
+		print("PASS")
+	quit(1 if t.failed > 0 else 0)
 
 func run(t) -> void:
 	var tuning = JSON.parse_string(FileAccess.get_file_as_string(TUNING))
