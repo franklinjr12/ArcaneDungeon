@@ -18,6 +18,7 @@ const LIVE_BENCH_TICKS := 12000
 const LIVE_STILL_LIMIT := 120
 const Minion = preload("res://combat/boss_moves/elite_minion.gd")
 const ART = preload("res://ui/pixel_art_renderer.gd")
+const Elite = preload("res://combat/boss_moves/elite_patterns.gd")
 const MANIFEST := "res://art/export/actors/actors_manifest.json"
 const PAGES := {"hp":6,"radius":14,"speed":150,"turn_deg_per_tick":2,"lifetime_ticks":300,"damage":7,"cap":5,"count":3,"spread_degrees":40}
 const CONDUCT := {"duration_ticks":200,"damage":6,"interval_ticks":10}
@@ -62,6 +63,9 @@ func run(t) -> void:
 	_live_tide(t)
 	_art(t)
 	_live_movement_bench(t)
+	test_ad_256_a_electrify_full_cistern_frame_budget(t)
+	test_ad_256_b_simplified_visual(t)
+	test_ad_256_c_damage_ticks_unchanged(t)
 
 func _move(extra: Dictionary = {}) -> Dictionary:
 	return {"mode":"submerge","exit":"pool","telegraph_ticks":40,"submerged_ticks":60,"emerge_telegraph_ticks":40,"radius":110,"damage":MOVE_DAMAGE}.merged(extra,true)
@@ -1028,3 +1032,96 @@ func _art(t) -> void:
 	t.check(float(tiles[0]["x"]) <= 0.0 and float(tiles[tiles.size()-1]["x"])+128.0 >= 1000.0,"AD-201 tide tiles cover the arena width")
 	for i in range(1,tiles.size()):
 		t.equal(float(tiles[i]["x"])-float(tiles[i-1]["x"]),128.0,"AD-201 tide tiles butt edge to edge (%d)" % i)
+
+# ---- AD-256 lightning-on-water freeze: frame budget, one shared visual, same damage ----
+
+const AD256_FRAME_MAX_US := 33000
+const AD256_FRAME_AVG_US := 16700
+
+func _ad256_frame_data(s) -> void:
+	if s.water.has_method("electrified_rects"):
+		s.water.electrified_rects()
+	else:
+		s.water.state_view()
+
+## Steps `ticks` frames (step + renderer data path); returns {max,avg} in microseconds.
+func _ad256_measure(s, ticks: int, electrify_each_tick: bool) -> Dictionary:
+	var worst := 0
+	var total := 0
+	for i in ticks:
+		var t0 := Time.get_ticks_usec()
+		if electrify_each_tick:
+			s.water.electrify_all(s.sim.clock.tick+120)
+		s.step()
+		_ad256_frame_data(s)
+		var dt := Time.get_ticks_usec()-t0
+		worst = maxi(worst,dt)
+		total += dt
+	return {"max":worst,"avg":float(total)/float(ticks)}
+
+func test_ad_256_a_electrify_full_cistern_frame_budget(t) -> void:
+	var cfg := _live()
+	var pair := _live_fresh(cfg,Vector2(150,450))
+	var s = pair[0]
+	Elite.electrify_water(pair[1],s,cfg["storm_conduct"])
+	var m := _ad256_measure(s,300,false)
+	t.check(int(m["max"]) < AD256_FRAME_MAX_US,"AD-256 test_ad_256_a_electrify_full_cistern_frame_budget: no frame after electrify takes >= 33 ms (max %d us)" % int(m["max"]))
+	t.check(float(m["avg"]) <= float(AD256_FRAME_AVG_US),"AD-256 test_ad_256_a_electrify_full_cistern_frame_budget: average frame after electrify stays within 16.7 ms (avg %.0f us)" % float(m["avg"]))
+	var pair2 := _live_fresh(cfg,Vector2(150,450))
+	var every := _ad256_measure(pair2[0],120,true)
+	t.check(int(every["max"]) < AD256_FRAME_MAX_US,"AD-256 test_ad_256_a_electrify_full_cistern_frame_budget: electrify_all every tick: no frame >= 33 ms (max %d us)" % int(every["max"]))
+	t.check(float(every["avg"]) <= float(AD256_FRAME_AVG_US),"AD-256 test_ad_256_a_electrify_full_cistern_frame_budget: electrify_all every tick: average within 16.7 ms (avg %.0f us)" % float(every["avg"]))
+
+func test_ad_256_b_simplified_visual(t) -> void:
+	var cfg := _live()
+	var pair := _live_fresh(cfg,Vector2(150,450))
+	var s = pair[0]
+	var has_rects: bool = s.water.has_method("electrified_rects")
+	t.check(has_rects,"AD-256 test_ad_256_b_simplified_visual: WaterTiles.electrified_rects() exists")
+	if has_rects:
+		Elite.electrify_water(pair[1],s,cfg["storm_conduct"])
+		var rects: Array = s.water.electrified_rects()
+		t.check(not rects.is_empty() and rects.size() <= _live_water().size(),"AD-256 test_ad_256_b_simplified_visual: electrified rects are merged spans, not per-cell (%d rects for %d water entries)" % [rects.size(),_live_water().size()])
+		var covered := true
+		for w in _live_water():
+			var c := Vector2(float(w["rect"][0])+float(w["rect"][2])*0.5,float(w["rect"][1])+float(w["rect"][3])*0.5)
+			if s.water.is_electrified(c):
+				covered = covered and rects.any(func(r): return r.has_point(c))
+		t.check(covered,"AD-256 test_ad_256_b_simplified_visual: every electrified point lies inside an electrified rect")
+	var art_script: Script = ART
+	var has_sparks: bool = art_script.get_script_method_list().any(func(m): return m["name"] == "water_electric_sparks")
+	t.check(has_sparks,"AD-256 test_ad_256_b_simplified_visual: ART.water_electric_sparks exists")
+	if has_sparks:
+		var many: Array = []
+		for i in 40:
+			many.append(Rect2(float(i*50),float(i*20),200.0,32.0))
+		for cap in [6,2]:
+			var a: Array = art_script.call("water_electric_sparks",many,17,cap)
+			var b: Array = art_script.call("water_electric_sparks",many,17,cap)
+			t.check(a.size() <= cap and a.size() > 0,"AD-256 test_ad_256_b_simplified_visual: sparks respect cap %d (got %d)" % [cap,a.size()])
+			t.equal(a,b,"AD-256 test_ad_256_b_simplified_visual: sparks are deterministic for the same rects and tick (cap %d)" % cap)
+	t.check(int(cfg["storm_conduct"].get("spark_cap",0)) > 0,"AD-256 test_ad_256_b_simplified_visual: live storm_conduct has spark_cap > 0")
+	var bad := _live()
+	bad["storm_conduct"]["spark_cap"] = 0
+	t.check(BossCombat.validate(bad).any(func(i): return i["code"] == "BOSS_ELITE_PARAM"),"AD-256 test_ad_256_b_simplified_visual: spark_cap 0 is rejected with BOSS_ELITE_PARAM")
+
+func test_ad_256_c_damage_ticks_unchanged(t) -> void:
+	var cfg := _live()
+	var spot := Vector2.ZERO
+	for w in _live_water():
+		if w["kind"] == "shallow":
+			spot = Vector2(float(w["rect"][0])+float(w["rect"][2])*0.5,float(w["rect"][1])+float(w["rect"][3])*0.5)
+			break
+	var pair := _live_fresh(cfg,spot)
+	var s = pair[0]
+	s.sim.actor.position = spot
+	Elite.electrify_water(pair[1],s,cfg["storm_conduct"])
+	var shock: Dictionary = s.water_shock
+	var dmg := Difficulty.scale_f(5.0,"enemy_damage")
+	t.check(shock.get("channel","") == "lightning" and int(shock.get("interval_ticks",0)) == 20 and is_equal_approx(float(shock.get("damage",0.0)),dmg),"AD-256 test_ad_256_c_damage_ticks_unchanged: water_shock keeps lightning channel, interval 20 and scaled damage 5")
+	var start: int = s.sim.clock.tick
+	var expected := 0
+	for tick in range(start+1,start+101):
+		expected += 1 if tick%20 == 0 else 0
+	var loss := _shock_loss(s,100)
+	t.check(expected >= 4 and is_equal_approx(loss,float(expected)*dmg),"AD-256 test_ad_256_c_damage_ticks_unchanged: player in water loses %d x %.2f over 100 ticks (lost %.2f)" % [expected,dmg,loss])
