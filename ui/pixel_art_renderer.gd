@@ -460,21 +460,59 @@ static func water_state_tag(state: String, deep: bool, cell: Vector2i, tick: int
 		return {}
 	return {"tag": tag, "index": 0 if reduced else (loop_index(ms, tick) + int(ch["offset"])) % ms.size()}
 
-## AD-200: session.water.state_view() cells (electrified / frozen) over the base water. Skipped quietly without the sheet.
+const ELEC_TINT := Color(0.55, 0.85, 1.0)
+const ELEC_SPARK := Color(1.0, 0.95, 0.5)
+const ELEC_SPARK_CAP := 6
+
+## Pure: at most `cap` spark points (world space) over the merged electrified rects. Integer hash of rect index, spark slot and
+## tick/4 (no RNG), so equal input gives an equal array; at least one spark when rects is non-empty and cap > 0.
+static func water_electric_sparks(rects: Array, tick: int, cap: int) -> Array:
+	var out: Array = []
+	if rects.is_empty() or cap <= 0:
+		return out
+	var n := mini(cap, maxi(1, rects.size() * 2))
+	var step := tick / 4
+	for k in n:
+		var ri := (k * 7 + step) % rects.size()
+		var r: Rect2 = rects[ri]
+		var h: int = ((ri + 1) * 73856093 ^ (k + 1) * 19349663 ^ (step + 1) * 83492791) & 0x7fffffff
+		out.append(r.position + Vector2(float(h % 1000) / 1000.0 * r.size.x, float((h / 1000) % 1000) / 1000.0 * r.size.y))
+	return out
+
+## AD-256: electrified water = one flicker tint per merged rect + a few capped sparks (no per-cell draws or glows).
+## AD-200: frozen cells still use the state sheet, with frame lookups cached per call. Skipped quietly without the sheet.
 static func _draw_water_states(canvas: CanvasItem, session, offset: Vector2, tick: int, reduced: bool) -> void:
-	if extra_sheet(WATER_STATES).is_empty():
+	var rects: Array = session.water.electrified_rects()
+	if not rects.is_empty():
+		var flick := 0.0 if reduced else 0.5 + 0.5 * sin(float(tick) * 0.35)
+		var tint := ELEC_TINT
+		tint.a = 0.34 if reduced else 0.28 + 0.14 * flick
+		for r in rects:
+			canvas.draw_rect(Rect2(r.position - offset, r.size), tint)
+		var cap: int = int(session.water_shock.get("spark_cap", ELEC_SPARK_CAP)) if not session.water_shock.is_empty() else ELEC_SPARK_CAP
+		for pt in water_electric_sparks(rects, 0 if reduced else tick, cap):
+			var p: Vector2 = pt - offset
+			canvas.draw_line(p + Vector2(-6, -4), p + Vector2(0, 1), ELEC_SPARK, 2.0)
+			canvas.draw_line(p + Vector2(0, 1), p + Vector2(6, -3), ELEC_SPARK, 2.0)
+	if extra_sheet(WATER_STATES).is_empty() or session.water._frozen.is_empty():
 		return
 	var deeps: Array[Rect2] = session.water.deep_rects()
+	var frames := {}
 	for item in session.water.state_view():
+		if str(item["state"]) != "frozen":
+			continue
 		var rect: Rect2 = item["cell_rect"]
 		var cell := Vector2i(floori(rect.position.x / 32.0), floori(rect.position.y / 32.0))
 		var deep := false
 		for d in deeps:
 			deep = deep or d.has_point(rect.get_center())
-		var pick := water_state_tag(str(item["state"]), deep, cell, tick, reduced)
+		var pick := water_state_tag("frozen", deep, cell, tick, reduced)
 		if pick.is_empty():
 			continue
-		var fr := extra_sheet_frame(WATER_STATES, pick["tag"], int(pick["index"]))
+		var key := "%s:%d" % [pick["tag"], int(pick["index"])]
+		if not frames.has(key):
+			frames[key] = extra_sheet_frame(WATER_STATES, pick["tag"], int(pick["index"]))
+		var fr: Dictionary = frames[key]
 		if fr.is_empty():
 			continue
 		var dest := Rect2(rect.position - offset, fr["region"].size * _actor_scale)
