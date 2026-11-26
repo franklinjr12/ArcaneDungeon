@@ -48,6 +48,7 @@ func _mask_of(cells: Dictionary, cell: Vector2i) -> int:
 	return mask
 
 func test_ad_261_a_bitmask_frame_mapping(t) -> void:
+	print("AD-261 test_ad_261_a_bitmask_frame_mapping")
 	var ok := _has("edge_indices")
 	t.check(ok, "AD-261 test_ad_261_a_bitmask_frame_mapping: WaterTiles.edge_indices exists")
 	ok = ok and _has("edge_index") and _has("canon_mask")
@@ -104,6 +105,7 @@ func _ring_without(missing: Vector2i) -> Dictionary:
 	return cells
 
 func test_ad_261_a2_edges_computed_once_per_room_load(t) -> void:
+	print("AD-261 test_ad_261_a2_edges_computed_once_per_room_load")
 	var entries := [{"kind":"shallow","rect":[0,0,192,192]},{"kind":"deep","rect":[64,64,64,64],"tag":"extra"}]
 	var w = WaterTiles.new(entries)
 	var ok: bool = w.has_method("edge_cache") and "edge_builds" in w
