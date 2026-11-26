@@ -182,3 +182,5 @@ Command: `xvfb-run -a -s "-screen 0 1920x1080x24" godot --path . --script res://
 | script | prints |
 |---|---|
 | `ad257_combo_bench.gd` (headless, seeds 257001..257003, 600 ticks, 4 dummies) | `AD257_BENCH seed=.. single_dps=.. combo_dps=.. ratio=..`: best single-skill spam vs best combo rotation, same sim as `test_ad_257_d_combo_dps_bar` (bar: ratio >= `combos.balance.min_ratio` 1.6) |
+
+Step 5 verified result: ratio 2.089 on all three seeds (single 81.60 vs combo 170.50 DPS). Multipliers remain OPEN pending the next playtest.
