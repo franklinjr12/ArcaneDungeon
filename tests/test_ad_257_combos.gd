@@ -31,7 +31,7 @@ func _need(t, combos: Dictionary, path: String) -> bool:
 	var node: Variant = combos
 	for key in path.split("."):
 		if typeof(node) != TYPE_DICTIONARY or not node.has(key):
-			t.check(false,"AD-257 %s: combat_tuning_v1.json combos.%s exists" % [_current,path])
+			t.check(false,"%s: combat_tuning_v1.json combos.%s exists" % [_current,path])
 			return false
 		node = node[key]
 	return true
@@ -69,16 +69,16 @@ func test_ad_257_a_lightning_on_wet_extra_ticks(t) -> void:
 	if not _need(t,combos,"conduct.extra_ticks"):
 		return
 	var extra_ticks := int(_val(combos,"conduct.extra_ticks"))
-	t.equal(extra_ticks,3,"AD-257 a conduct.extra_ticks is 3")
+	t.equal(extra_ticks,3,"test_ad_257_a_lightning_on_wet_extra_ticks: conduct.extra_ticks is 3")
 	var dry = _single_hit(257001,"","essence.lightning")
 	var wet = _single_hit(257001,"wet","essence.lightning")
 	var dry_total: float = dry[1].total_received
 	var wet_total: float = wet[1].total_received
-	t.check(dry_total > 0.0,"AD-257 a dry lightning hit deals damage (%.2f)" % dry_total)
-	t.check(wet_total > dry_total,"AD-257 lightning on Wet deals more total damage (%.2f vs %.2f)" % [wet_total,dry_total])
+	t.check(dry_total > 0.0,"test_ad_257_a_lightning_on_wet_extra_ticks: dry lightning hit deals damage (%.2f)" % dry_total)
+	t.check(wet_total > dry_total,"test_ad_257_a_lightning_on_wet_extra_ticks: lightning on Wet deals more total damage (%.2f vs %.2f)" % [wet_total,dry_total])
 	var tick_damage: float = float(dry[1].damage_log[0]["amount"]) if not dry[1].damage_log.is_empty() and dry[1].damage_log[0].has("amount") else dry_total
 	t.check(absf((wet_total-dry_total) - extra_ticks*tick_damage) < 0.01*maxf(1.0,tick_damage),
-		"AD-257 a wet-lightning extra damage == %d ticks of the hit damage (extra %.2f, tick %.2f)" % [extra_ticks,wet_total-dry_total,tick_damage])
+		"test_ad_257_a_lightning_on_wet_extra_ticks: wet-lightning extra damage == %d ticks of the hit damage (extra %.2f, tick %.2f)" % [extra_ticks,wet_total-dry_total,tick_damage])
 
 ## Session with one frozen enemy 200 px in front of the player; returns [session, enemy].
 func _frozen_enemy_session(seed_value: int, kind: String = "bone_thrall"):
@@ -114,49 +114,49 @@ func test_ad_257_b_shatter_stun_and_immunity(t) -> void:
 			return
 	var stun_ticks := int(_val(combos,"shatter.stun_ticks"))
 	var immunity := int(_val(combos,"shatter.stun_immunity_ticks"))
-	t.equal(stun_ticks,60,"AD-257 b shatter stun is 60 ticks (1.0 s)")
-	t.equal(immunity,360,"AD-257 b stun immunity is 360 ticks (6 s)")
+	t.equal(stun_ticks,60,"test_ad_257_b_shatter_stun_and_immunity: shatter stun is 60 ticks (1.0 s)")
+	t.equal(immunity,360,"test_ad_257_b_shatter_stun_and_immunity: stun immunity is 360 ticks (6 s)")
 	var pair = _frozen_enemy_session(257002)
 	var s = pair[0]
 	var enemy = pair[1]
 	var other = s.spawn_enemy("bone_thrall",s.sim.actor.position+Vector2(200,120))
-	t.check(enemy != null and other != null,"AD-257 b enemies spawned")
+	t.check(enemy != null and other != null,"test_ad_257_b_shatter_stun_and_immunity: enemies spawned")
 	if enemy == null or other == null:
 		return
 	_freeze(s,enemy)
 	var hp0: float = enemy.target.health.current if "current" in enemy.target.health else 0.0
 	_force_hit(s,enemy)
-	t.check(not enemy.target.status.has("frozen",s.sim.clock.tick),"AD-257 b shatter removes Frozen")
+	t.check(not enemy.target.status.has("frozen",s.sim.clock.tick),"test_ad_257_b_shatter_stun_and_immunity: shatter removes Frozen")
 	var stuns := _stuns(enemy)
-	t.equal(stuns.size(),1,"AD-257 b shatter stuns the frozen enemy once")
+	t.equal(stuns.size(),1,"test_ad_257_b_shatter_stun_and_immunity: shatter stuns the frozen enemy once")
 	if stuns.is_empty():
 		return
 	var landed: int = stuns[0]["tick"]
-	t.equal(enemy.stun_until,landed+stun_ticks-1,"AD-257 b stun lasts combos.shatter.stun_ticks")
+	t.equal(enemy.stun_until,landed+stun_ticks-1,"test_ad_257_b_shatter_stun_and_immunity: stun lasts combos.shatter.stun_ticks")
 	var plain = Session.new(257002,"empty",0)
 	var dummy = plain.spawn_enemy("bone_thrall",plain.sim.actor.position+Vector2(200,0))
 	_force_hit(plain,dummy)
 	var big: float = enemy.target.total_received
 	t.check(big >= dummy.target.total_received + dummy.target.total_received*float(_val(combos,"shatter.bonus_damage_scale")) - 0.01,
-		"AD-257 b shatter hit >= plain force hit * (1 + bonus scale) (%.2f vs %.2f)" % [big,dummy.target.total_received])
+		"test_ad_257_b_shatter_stun_and_immunity: shatter hit >= plain force hit * (1 + bonus scale) (%.2f vs %.2f)" % [big,dummy.target.total_received])
 	# Re-freeze and re-shatter inside the immunity window: damaged but not stunned again.
 	for i in stun_ticks+10:
 		s.step()
 	var received: float = enemy.target.total_received
 	_freeze(s,enemy)
 	_force_hit(s,enemy)
-	t.equal(_stuns(enemy).size(),1,"AD-257 b no second stun inside the immunity window")
-	t.check(enemy.target.total_received > received,"AD-257 b the immune re-shatter still hits")
+	t.equal(_stuns(enemy).size(),1,"test_ad_257_b_shatter_stun_and_immunity: no second stun inside the immunity window")
+	t.check(enemy.target.total_received > received,"test_ad_257_b_shatter_stun_and_immunity: the immune re-shatter still hits")
 	# Immunity is per target: a second enemy still stuns.
 	_freeze(s,other)
 	_force_hit(s,other)
-	t.equal(_stuns(other).size(),1,"AD-257 b a second enemy still stuns while the first is immune")
+	t.equal(_stuns(other).size(),1,"test_ad_257_b_shatter_stun_and_immunity: a second enemy still stuns while the first is immune")
 	# After the window the first enemy stuns again.
 	while s.sim.clock.tick < landed+immunity+1:
 		s.step()
 	_freeze(s,enemy)
 	_force_hit(s,enemy)
-	t.equal(_stuns(enemy).size(),2,"AD-257 b stuns again after combos.shatter.stun_immunity_ticks")
+	t.equal(_stuns(enemy).size(),2,"test_ad_257_b_shatter_stun_and_immunity: stuns again after combos.shatter.stun_immunity_ticks")
 
 # c) Fire on Frozen melts into Wet + burst; Cold on Wet freezes instantly.
 func test_ad_257_c_melt_and_instant_freeze(t) -> void:
@@ -165,20 +165,20 @@ func test_ad_257_c_melt_and_instant_freeze(t) -> void:
 	for key in ["melt.bonus_damage_scale","melt.apply","freeze.label"]:
 		if not _need(t,combos,key):
 			return
-	t.check(float(_val(combos,"melt.bonus_damage_scale")) > 0.0,"AD-257 c melt.bonus_damage_scale > 0")
-	t.equal(_val(combos,"melt.apply"),"wet","AD-257 c melt applies wet")
+	t.check(float(_val(combos,"melt.bonus_damage_scale")) > 0.0,"test_ad_257_c_melt_and_instant_freeze: melt.bonus_damage_scale > 0")
+	t.equal(_val(combos,"melt.apply"),"wet","test_ad_257_c_melt_and_instant_freeze: melt applies wet")
 	var melt = _single_hit(257003,"frozen","essence.fire")
 	var plain = _single_hit(257003,"","essence.fire")
-	t.check(not melt[1].status.has("frozen",melt[0].clock.tick),"AD-257 c fire removes Frozen")
-	t.check(melt[1].status.has("wet",melt[0].clock.tick),"AD-257 c fire on Frozen leaves the target Wet")
+	t.check(not melt[1].status.has("frozen",melt[0].clock.tick),"test_ad_257_c_melt_and_instant_freeze: fire removes Frozen")
+	t.check(melt[1].status.has("wet",melt[0].clock.tick),"test_ad_257_c_melt_and_instant_freeze: fire on Frozen leaves the target Wet")
 	t.check(melt[1].total_received > plain[1].total_received*(1.0+0.99*float(_val(combos,"melt.bonus_damage_scale"))),
-		"AD-257 c melt deals a bonus burst (%.2f vs %.2f)" % [melt[1].total_received,plain[1].total_received])
+		"test_ad_257_c_melt_and_instant_freeze: melt deals a bonus burst (%.2f vs %.2f)" % [melt[1].total_received,plain[1].total_received])
 	var cold = _single_hit(257003,"wet","essence.cold")
 	t.check(cold[1].status.has("frozen",cold[0].clock.tick) or cold[0].trace.filter_records(-1,"","reaction").any(func(e): return e["reason"] == "wet_cold_freeze"),
-		"AD-257 c cold on Wet freezes instantly")
+		"test_ad_257_c_melt_and_instant_freeze: cold on Wet freezes instantly")
 	var rules: Array = cold[0].settings["reactions"].get("rules",[])
 	var rule = rules.filter(func(x): return x.get("id") == "wet_cold_freeze")
-	t.check(rule.size() == 1 and rule[0].has("bonus_damage_scale"),"AD-257 c wet_cold_freeze scale comes from data")
+	t.check(rule.size() == 1 and rule[0].has("bonus_damage_scale"),"test_ad_257_c_melt_and_instant_freeze: wet_cold_freeze scale comes from data")
 
 ## Damage dealt over WINDOW_TICKS to a pack of 4 stationary dummies by cycling `rotation` essences every CADENCE ticks.
 func _pack_damage(seed_value: int, rotation: Array) -> float:
@@ -207,7 +207,7 @@ func test_ad_257_d_combo_dps_bar(t) -> void:
 	if not _need(t,combos,"balance.min_ratio"):
 		return
 	var min_ratio := float(_val(combos,"balance.min_ratio"))
-	t.equal(min_ratio,1.6,"AD-257 d balance.min_ratio is 1.6")
+	t.equal(min_ratio,1.6,"test_ad_257_d_combo_dps_bar: balance.min_ratio is 1.6")
 	var seconds := float(WINDOW_TICKS)/60.0
 	for seed_value in SEEDS:
 		var best_single := 0.0
@@ -217,9 +217,9 @@ func test_ad_257_d_combo_dps_bar(t) -> void:
 		for rot in [["essence.water","essence.lightning"],["essence.water","essence.cold","essence.force"]]:
 			best_combo = maxf(best_combo,_pack_damage(seed_value,rot)/seconds)
 		print("AD-257 seed %d single %.2f combo %.2f" % [seed_value,best_single,best_combo])
-		t.check(best_single > 0.0,"AD-257 d seed %d spamming deals damage" % seed_value)
-		t.check(best_combo > best_single,"AD-257 d seed %d combo beats spam" % seed_value)
-		t.check(best_combo >= min_ratio*best_single,"AD-257 d seed %d combo DPS >= %.1fx spam (%.2f vs %.2f)" % [seed_value,min_ratio,best_combo,best_single])
+		t.check(best_single > 0.0,"test_ad_257_d_combo_dps_bar: seed %d spamming deals damage" % seed_value)
+		t.check(best_combo > best_single,"test_ad_257_d_combo_dps_bar: seed %d combo beats spam" % seed_value)
+		t.check(best_combo >= min_ratio*best_single,"test_ad_257_d_combo_dps_bar: seed %d combo DPS >= %.1fx spam (%.2f vs %.2f)" % [seed_value,min_ratio,best_combo,best_single])
 
 # e) Named popup + hit stop per combo; popups expire.
 func test_ad_257_e_popup_and_hit_stop(t) -> void:
@@ -235,18 +235,18 @@ func test_ad_257_e_popup_and_hit_stop(t) -> void:
 			continue
 		var ms := int(_val(combos,id+".hit_stop_ms"))
 		var label := str(_val(combos,id+".label"))
-		t.check(ms >= 50 and ms <= 100,"AD-257 e %s hit stop %d ms within 50..100" % [id,ms])
-		t.check(label != "" and label.ends_with("!"),"AD-257 e %s label '%s' non-empty and ends with '!'" % [id,label])
+		t.check(ms >= 50 and ms <= 100,"test_ad_257_e_popup_and_hit_stop: %s hit stop %d ms within 50..100" % [id,ms])
+		t.check(label != "" and label.ends_with("!"),"test_ad_257_e_popup_and_hit_stop: %s label '%s' non-empty and ends with '!'" % [id,label])
 		var hit = _single_hit(257001,c[1],c[2])
 		var r = hit[0]
 		var popups: Array = r.get("combo_popups") if r.get("combo_popups") != null else []
 		var mine: Array = popups.filter(func(p): return p["id"] == id)
-		t.check(mine.size() >= 1,"AD-257 e %s emits a combo popup" % id)
+		t.check(mine.size() >= 1,"test_ad_257_e_popup_and_hit_stop: %s emits a combo popup" % id)
 		if mine.size() >= 1:
-			t.equal(mine[0]["label"],label,"AD-257 e %s popup label from data" % id)
-		t.equal(r.get("hit_stop_ms"),ms,"AD-257 e %s sets sim.hit_stop_ms" % id)
+			t.equal(mine[0]["label"],label,"test_ad_257_e_popup_and_hit_stop: %s popup label from data" % id)
+		t.equal(r.get("hit_stop_ms"),ms,"test_ad_257_e_popup_and_hit_stop: %s sets sim.hit_stop_ms" % id)
 		# Popups expire after popup_ticks.
 		var fresh = _single_hit(257001,c[1],c[2])
 		for i in int(_val(combos,"popup_ticks"))+5:
 			fresh[0].step()
-		t.check((fresh[0].get("combo_popups") if fresh[0].get("combo_popups") != null else []).is_empty(),"AD-257 e %s popup expires after popup_ticks" % id)
+		t.check((fresh[0].get("combo_popups") if fresh[0].get("combo_popups") != null else []).is_empty(),"test_ad_257_e_popup_and_hit_stop: %s popup expires after popup_ticks" % id)
