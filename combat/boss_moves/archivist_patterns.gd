@@ -4,7 +4,7 @@ extends RefCounted
 ## `freeze_stun` {ticks,radius} (emerging into a frozen pool stuns the boss; needs `water_freeze` and `stagger`).
 ## AD-201 step 2: `book_pages` {hp,radius,speed,turn_deg_per_tick,lifetime_ticks,damage,cap,count,spread_degrees} for the `page_throw` pattern
 ## (phase key `page_speed_scale`), `wisp_shield` {damage_taken_multiplier} (BossCombat: shielded while a wisp of the boss lives) and
-## `storm_conduct` {duration_ticks,damage,interval_ticks} (the storm pulse also electrifies the water).
+## `storm_conduct` {duration_ticks,damage,interval_ticks,spark_cap?} (the storm pulse also electrifies the water; `spark_cap` = max sparks drawn over it, a positive int when present).
 ## A `submerge` move with `"exit":"pool"` surfaces at another pool (a ripple telegraph shows where) and may carry a `shockwave` splash ring.
 const Warden = preload("res://combat/boss_moves/warden_patterns.gd")
 const Elite = preload("res://combat/boss_moves/elite_patterns.gd")
@@ -119,6 +119,9 @@ static func validate(settings: Dictionary) -> Array:
 		_positive(settings["book_pages"],PAGE_KEYS,"book_pages",issues)
 	if settings.has("storm_conduct"):
 		_positive(settings["storm_conduct"],CONDUCT_KEYS,"storm_conduct",issues)
+		var conduct = settings["storm_conduct"]
+		if typeof(conduct) == TYPE_DICTIONARY and conduct.has("spark_cap") and not (_num(conduct["spark_cap"]) and float(conduct["spark_cap"]) >= 1.0 and is_equal_approx(float(conduct["spark_cap"]),roundf(float(conduct["spark_cap"])))):
+			issues.append({"code":"BOSS_ELITE_PARAM","path":"storm_conduct.spark_cap","message":"spark_cap must be an integer > 0"})
 	if settings.has("wisp_shield"):
 		var shield = settings["wisp_shield"]
 		var multiplier = shield.get("damage_taken_multiplier") if typeof(shield) == TYPE_DICTIONARY else null
