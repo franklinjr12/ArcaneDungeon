@@ -763,7 +763,29 @@
           "threshold": 0.66,
           "windup_ticks": 44,
           "transition": {
-            "roar_ticks": 90
+            "roar_ticks": 90,
+            "arena_change": {
+              "water": [
+                {
+                  "kind": "shallow",
+                  "rect": [
+                    620,
+                    120,
+                    180,
+                    120
+                  ]
+                },
+                {
+                  "kind": "shallow",
+                  "rect": [
+                    620,
+                    660,
+                    180,
+                    120
+                  ]
+                }
+              ]
+            }
           },
           "movement": {
             "mode": "float_path",
@@ -857,7 +879,56 @@
           "threshold": 0.33,
           "windup_ticks": 40,
           "transition": {
-            "roar_ticks": 90
+            "roar_ticks": 90,
+            "arena_change": {
+              "water": [
+                {
+                  "kind": "shallow",
+                  "rect": [
+                    620,
+                    120,
+                    180,
+                    120
+                  ]
+                },
+                {
+                  "kind": "shallow",
+                  "rect": [
+                    620,
+                    660,
+                    180,
+                    120
+                  ]
+                },
+                {
+                  "kind": "shallow",
+                  "rect": [
+                    850,
+                    300,
+                    160,
+                    100
+                  ]
+                },
+                {
+                  "kind": "shallow",
+                  "rect": [
+                    850,
+                    500,
+                    160,
+                    100
+                  ]
+                },
+                {
+                  "kind": "shallow",
+                  "rect": [
+                    300,
+                    330,
+                    150,
+                    240
+                  ]
+                }
+              ]
+            }
           },
           "page_speed_scale": 1.5,
           "movement": {

@@ -1,0 +1,23 @@
+{
+  "_comment": "AD-254 default gamepad bindings (Xbox layout). Events use InputActions.event_to_dict shape. Axes: 0/1 left stick, 4 left trigger, 5 right trigger; buttons: 0 A, 6 Start, 9 left shoulder, 10 right shoulder, 2 X. No 'swap' action exists in the input map; Y (3) is left unbound. loadout_view keeps button 4 (Back).",
+  "schema_version": 1,
+  "aim_deadzone": 0.25,
+  "aim_reach": 200,
+  "ui_bindings": {
+    "ui_accept": [{"type": "joy_button", "button_index": 0}],
+    "ui_cancel": [{"type": "joy_button", "button_index": 1}]
+  },
+  "bindings": {
+    "move_left": [{"type": "joy_axis", "axis": 0, "value": -1}],
+    "move_right": [{"type": "joy_axis", "axis": 0, "value": 1}],
+    "move_up": [{"type": "joy_axis", "axis": 1, "value": -1}],
+    "move_down": [{"type": "joy_axis", "axis": 1, "value": 1}],
+    "cast_slot_1": [{"type": "joy_axis", "axis": 5, "value": 1}],
+    "cast_slot_2": [{"type": "joy_axis", "axis": 4, "value": 1}],
+    "cast_slot_3": [{"type": "joy_button", "button_index": 10}],
+    "cast_slot_4": [{"type": "joy_button", "button_index": 9}],
+    "dash": [{"type": "joy_button", "button_index": 0}],
+    "interact": [{"type": "joy_button", "button_index": 2}],
+    "pause": [{"type": "joy_button", "button_index": 6}]
+  }
+}

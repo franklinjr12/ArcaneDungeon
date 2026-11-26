@@ -12,7 +12,8 @@ const Artifacts = preload("res://world/artifacts.gd")
 const Prompts = preload("res://ui/onboarding_prompts.gd")
 const Art = preload("res://ui/pixel_art_renderer.gd")
 const InputActions = preload("res://ui/input_actions.gd")
-var aim_source = InputActions.default_aim_source()
+var aim_source = InputActions.stick_aim_source()
+var _pad_cast_poll := InputActions.PadAxisCastPoll.new()
 const PauseMenu = preload("res://ui/pause_menu.gd")
 const FeedbackSnapshot = preload("res://ui/feedback_snapshot.gd")
 const LoadoutView = preload("res://ui/loadout_view.gd")
@@ -646,7 +647,36 @@ func _reset_test_range() -> void:
 	current_notice = tr("run.notice.range_reset")
 	_update_labels()
 
+func _workshop_focusables() -> Array:
+	var out := []
+	if workshop_column == null:
+		return out
+	for c in workshop_column.find_children("*","BaseButton",true,false):
+		if c.focus_mode != Control.FOCUS_NONE and not c.disabled and c.is_visible_in_tree():
+			out.append(c)
+	return out
+
+## AD-255: with a pad in hand the workshop panel and the spell editor take focus, so d-pad/A/B work there.
+func _ensure_pad_focus() -> void:
+	if not InputActions.pad_last_used or is_paused() or flow == null:
+		return
+	var owner := get_viewport().gui_get_focus_owner()
+	var host: Control = null
+	if editor_open and editor_dock != null and editor_dock.visible:
+		host = editor_dock
+	elif workshop_holder != null and workshop_holder.visible:
+		host = workshop_holder
+		_chain_vertical(_workshop_focusables())
+	if host == null or (owner != null and host.is_ancestor_of(owner) and owner.is_visible_in_tree()):
+		return
+	for c in host.find_children("*","Button",true,false):
+		if c.focus_mode != Control.FOCUS_NONE and not c.disabled and c.is_visible_in_tree():
+			c.grab_focus()
+			return
+
 func _input(event: InputEvent) -> void:
+	if InputActions.note_device(event):
+		_ensure_pad_focus()
 	if feedback_snapshot != null and feedback_snapshot.is_open():
 		if event.is_action_pressed("pause") and not event.is_echo():
 			feedback_snapshot.cancel()
@@ -660,6 +690,20 @@ func _input(event: InputEvent) -> void:
 		if event.is_action_pressed("pause") and not event.is_echo():
 			pause_menu.handle_cancel()
 			get_viewport().set_input_as_handled()
+		return
+	var pad_back: bool = event is InputEventJoypadButton and event.is_action_pressed("ui_cancel")
+	if pad_back and editor_open:
+		_close_editor(false)
+		get_viewport().set_input_as_handled()
+		return
+	if pad_back and shop_overlay.visible:
+		_set_shop_open(false)
+		get_viewport().set_input_as_handled()
+		return
+	var holder_focus := workshop_holder != null and workshop_holder.visible and get_viewport().gui_get_focus_owner() != null \
+			and workshop_holder.is_ancestor_of(get_viewport().gui_get_focus_owner())
+	if event.is_action_pressed("dash") and not event is InputEventJoypadButton and holder_focus:
+		get_viewport().set_input_as_handled() # Space on a focused workshop button must not also dash
 		return
 	if event.is_action_pressed("dash") and (reward_overlay.has_button_focus() or shop_overlay.has_button_focus()):
 		get_viewport().set_input_as_handled() # Space is the dash key and also "accept": never let it press a focused offer
@@ -675,7 +719,7 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled() # swallow gameplay keys; clicks must reach the Close/Continue buttons
 		return
 	var fighting: bool = flow.state == "fighting"
-	var slot := InputActions.cast_slot_for_event(event)
+	var slot := -1 if event is InputEventJoypadMotion else InputActions.cast_slot_for_event(event) # trigger casts: _pad_cast_poll
 	if slot >= 0 and not event is InputEventMouseButton and fighting:
 		cursor = aim_source.world_point(arena_canvas,flow.session.sim.actor.position)
 		cast_pending = slot
@@ -738,7 +782,14 @@ func _physics_process(_delta: float) -> void:
 		cast_pending = -1
 		return
 	var sim_start := Time.get_ticks_usec()
+	var pad_slot := _pad_cast_poll.poll()
 	if not editor_open:
+		if pad_slot >= 0 and not is_loadout_view_open():
+			if flow.state == "fighting":
+				cursor = aim_source.world_point(arena_canvas,flow.session.sim.actor.position)
+				cast_pending = pad_slot
+			elif flow.state == "workshop" and flow.range_sim != null:
+				_test_cast_slot(pad_slot,aim_source.world_point(test_canvas,flow.range_sim.actor.position))
 		if flow.state == "fighting":
 			var dir := Input.get_vector("move_left","move_right","move_up","move_down")
 			var aim: Vector2 = (aim_source.world_point(arena_canvas,flow.session.sim.actor.position)-flow.session.sim.actor.position).normalized()
@@ -912,6 +963,8 @@ func _redraw_panel() -> void:
 		shop_open = false
 	_sync_shop()
 	reward_overlay.focus_default()
+	_chain_vertical(_workshop_focusables())
+	_ensure_pad_focus()
 	_update_labels()
 
 ## AD-153: kit card art per kind (rune / artifact / upgrade); falls back to the common frame when a rarity has none.
@@ -1049,6 +1102,7 @@ func _sync_shop() -> void:
 		workshop_holder.visible = flow.state == "workshop" and not editor_open and not (shop_overlay != null and shop_overlay.visible)
 	if editor_dock != null:
 		editor_dock.visible = editor_open
+		_ensure_pad_focus()
 		_fit_editor_panel()
 		_fit_test_canvas.call_deferred()
 
@@ -1625,12 +1679,40 @@ func _open_editor(index: int) -> void:
 
 func _editor_rebuild() -> void:
 	var keep := editor_scroll.scroll_vertical
+	var focus_index := _focus_index(_editor_focusables())
 	_clear(editor_controls)
 	_clear(editor_buttons)
 	editor_view.build(editor_controls,editor_buttons,flow.editor,{"rebuild":_editor_rebuild,"loadout":flow.range_sim.loadout if flow.range_sim != null else null,
 		"apply":func(): _close_editor(true),"cancel":func(): _close_editor(false)},_director)
 	editor_preview = editor_view.preview
 	editor_scroll.set_deferred("scroll_vertical",keep) # a rebuild keeps the player's place in the column
+	var chain := _editor_focusables()
+	_chain_vertical(chain)
+	if InputActions.pad_last_used and editor_open and not chain.is_empty() and focus_index >= 0:
+		chain[mini(focus_index,chain.size()-1)].grab_focus() # keep the pad cursor where the edit happened
+	else:
+		_ensure_pad_focus()
+
+func _editor_focusables() -> Array:
+	var out := []
+	if editor_controls == null:
+		return out
+	for host in [editor_controls,editor_buttons]:
+		for c in host.find_children("*","BaseButton",true,false):
+			if c.focus_mode != Control.FOCUS_NONE and not c.disabled:
+				out.append(c)
+	return out
+
+func _focus_index(list: Array) -> int:
+	var owner := get_viewport().gui_get_focus_owner() if is_inside_tree() else null
+	return list.find(owner) if owner != null else -1
+
+## AD-255: explicit up/down order (wrapping) so d-pad focus never depends on layout or scroll position.
+func _chain_vertical(list: Array) -> void:
+	for i in list.size():
+		var c: Control = list[i]
+		c.focus_neighbor_top = c.get_path_to(list[(i+list.size()-1)%list.size()])
+		c.focus_neighbor_bottom = c.get_path_to(list[(i+1)%list.size()])
 
 func _close_visual_editor() -> void:
 	editor_open = false

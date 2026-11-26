@@ -276,6 +276,8 @@ var ui_scale_label: Label
 var binding_buttons := {}
 var alt_buttons := {}
 var conflict_labels := {}
+## AD-254: read-only default-pad hint per action, shown when the pad event is not in a visible slot.
+var pad_labels := {}
 var conflicts := {}
 var reset_button: Button
 var reset_keys_button: Button
@@ -745,6 +747,11 @@ func _build_controls(page: Control) -> void:
 		clabel.visible = false
 		clabel.clip_text = true
 		conflict_labels[action] = clabel
+		var plabel := _text(_holder, "", {"x": name_rect["x"], "y": p_rect["y"] + p_rect["h"] - 7, "w": p_rect["x"] - name_rect["x"] - 4, "h": 10}, HORIZONTAL_ALIGNMENT_LEFT, true)
+		plabel.add_theme_color_override("font_color", SkinA.label_color("selected"))
+		plabel.visible = false
+		plabel.clip_text = true
+		pad_labels[action] = plabel
 	var cp := _w(tab, "conflict_panel")
 	_conflict_group.append(_box(_holder, "ad_ui_panel_tooltip", cp, false, true))
 	_conflict_text = _text(_holder, "", {"x": cp["x"] + 8, "y": cp["y"] + 4, "w": cp["w"] - 16, "h": 22}, HORIZONTAL_ALIGNMENT_LEFT, true, true)
@@ -991,6 +998,14 @@ func refresh_bindings() -> void:
 					clash = clash or list[slot] in eff[other]
 			b.mark = "listening" if listening else ("conflict" if clash else "")
 			b.queue_redraw()
+		var pad_label: Label = pad_labels[action]
+		pad_label.text = ""
+		for i in range(2, list.size()):
+			var pev = InputActions.dict_to_event(list[i])
+			if pev is InputEventJoypadButton or pev is InputEventJoypadMotion:
+				pad_label.text = _event_text(pev)
+				break
+		pad_label.visible = pad_label.text != "" and not conflicts.has(action)
 		var label: Label = conflict_labels[action]
 		if conflicts.has(action):
 			var names := []

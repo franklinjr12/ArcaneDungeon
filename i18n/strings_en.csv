@@ -519,6 +519,8 @@ settings.access.status_icons,Status icons
 settings.controls.primary,Primary
 settings.controls.alt,Alt
 settings.controls.reset_keys,Reset keys
+settings.controls.pad_button,Pad button %d
+settings.controls.pad_axis,Pad axis %d%s
 settings.controls.listen_hint,"Listening: press a key, Esc cancels"
 settings.controls.conflict_panel,%s is already used by %s. Swap or cancel?
 settings.help.master,Overall loudness of the game.

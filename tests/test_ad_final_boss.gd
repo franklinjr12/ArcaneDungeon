@@ -117,7 +117,7 @@ func _phase_two(t, cfg: Dictionary) -> void:
 	t.check(boss.transitions.any(func(x): return x["from"] == "phase1" and x["to"] == "phase2"),"AD-142 phase 1->2 transition recorded")
 	for name in ["flood","wet_zone","water_bolt"]:
 		t.check(_patterns(cfg,2).has(name),"AD-201 phase 2 pool holds %s" % name)
-	t.check(s.water == null,"AD-142 no water before the flood")
+	t.check(s.water == null or s.water.view().filter(func(e): return e.get("tag","") == "archivist_flood").is_empty(),"AD-142 no flood water before the flood")
 	t.check(_until_windup(boss,s,"flood"),"AD-201 phase 2 reaches a flood windup")
 	var intent: Dictionary = boss.intent.snapshot()
 	t.check(cfg["flood_sets"].any(func(set): return set.map(func(e): return e["rect"]) == intent["rects"]),"AD-142 flood telegraph carries one of the flood_sets rects")
