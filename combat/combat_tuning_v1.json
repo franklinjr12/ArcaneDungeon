@@ -671,5 +671,13 @@
          ]}
       ]
     }
+  },
+  "combos": {
+    "popup_ticks": 60,
+    "conduct": {"label": "CONDUCT!", "extra_ticks": 3, "hit_stop_ms": 60},
+    "shatter": {"label": "SHATTER!", "reaction": "frozen_force_shatter", "bonus_damage_scale": 1.0, "stun_ticks": 60, "stun_immunity_ticks": 360, "hit_stop_ms": 80},
+    "melt": {"label": "MELT!", "reaction": "fire_thaw_steam", "apply": "wet", "bonus_damage_scale": 1.0, "hit_stop_ms": 60},
+    "freeze": {"label": "FREEZE!", "reaction": "wet_cold_freeze", "hit_stop_ms": 50},
+    "balance": {"min_ratio": 1.6}
   }
 }

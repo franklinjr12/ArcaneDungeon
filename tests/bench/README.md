@@ -176,3 +176,11 @@ Hot spot (AD-264 rendered bench, 1920x1080, 169 electrified cistern cells): `Art
 Replaced by: `WaterTiles.electrified_rects()` (merged rects, cached between state changes), one shared flicker tint `draw_rect` per merged rect (alpha from tick only, constant under reduced motion) and at most `spark_cap` (6) deterministic sparks from `Art.water_electric_sparks`. Frozen cells keep the sheet path but cache frames per call and skip entirely when nothing is frozen.
 
 Command: `xvfb-run -a -s "-screen 0 1920x1080x24" godot --path . --script res://tests/bench/archivist_storm_render_bench.gd -- --size=1920x1080 --frames=60 --budget-ms=33` (software GL llvmpipe, 2 CPUs). Result `ok=true`: `electrified_cpu` mean 9.65 ms, p95 18.94 ms, max 29.84 ms, 0 frames over 33 ms (the bench's own `_draw_water_states` timer: 0.018 ms mean). The bench's per-cell "loop:" and COUNTS lines still replay the old per-cell path for comparison and are not the current draw cost.
+
+## AD-257 combo DPS bench
+
+| script | prints |
+|---|---|
+| `ad257_combo_bench.gd` (headless, seeds 257001..257003, 600 ticks, 4 dummies) | `AD257_BENCH seed=.. single_dps=.. combo_dps=.. ratio=..`: best single-skill spam vs best combo rotation, same sim as `test_ad_257_d_combo_dps_bar` (bar: ratio >= `combos.balance.min_ratio` 1.6) |
+
+Step 5 verified result: ratio 2.089 on all three seeds (single 81.60 vs combo 170.50 DPS). Multipliers remain OPEN pending the next playtest.

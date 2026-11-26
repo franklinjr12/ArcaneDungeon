@@ -477,6 +477,16 @@ func _draw_floating_text(offset: Vector2, tick: int) -> void:
 		var at: Vector2 = item["position"]-offset+Vector2(-24,-30-age*.38)
 		items.append({"kind":"label","text":text,"color":Color("#ffdf95"),"anchor":at-Vector2(0,font.get_ascent(12)),"size":size,"group":_group_near(item["position"]),"order":order})
 		order += 1
+	var combo_life := int(session.sim.settings.get("combos",{}).get("popup_ticks",60))
+	for popup in session.sim.combo_popups:
+		var age: float = float(tick-int(popup["tick"]))
+		var text := str(popup["label"])
+		var size := font.get_string_size(text,HORIZONTAL_ALIGNMENT_LEFT,-1,12)
+		var at: Vector2 = popup["position"]-offset+Vector2(-size.x/2.0,-46-age*.3)
+		var col := Color("#fff3b0")
+		col.a = clampf(1.0-age/float(maxi(1,combo_life)),0.0,1.0)
+		items.append({"kind":"label","text":text,"color":col,"anchor":at-Vector2(0,font.get_ascent(12)),"size":size,"group":_group_near(popup["position"]),"order":order})
+		order += 1
 	var rects := DamageNumbers.stack_layout(items)
 	for i in items.size():
 		var item: Dictionary = items[i]
