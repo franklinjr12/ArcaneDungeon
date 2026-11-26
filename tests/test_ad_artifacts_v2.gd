@@ -212,7 +212,9 @@ func test_frostbrand(t) -> void:
 		if entry["id"] == "frozen_force_shatter":
 			rule = entry
 	var direct := _frozen_force(null,false)
-	var expected := (float(rule["bonus_damage_scale"])+scale)/float(rule["bonus_damage_scale"])
+	# AD-257: the shatter combo adds combos.shatter.bonus_damage_scale to the rule's own scale.
+	var shatter := float(cfg["combos"].get("shatter",{}).get("bonus_damage_scale",0.0))+float(rule["bonus_damage_scale"])
+	var expected := (shatter+scale)/shatter
 	t.check(absf((held-direct)/maxf(0.001,(plain-direct))-expected) < 0.05,"AD-240 frostbrand: bonus is the shatter scale plus force_scale from data")
 	t.equal(_frozen_force(["frostbrand"],false),direct,"AD-240 frostbrand: unfrozen targets take unchanged damage")
 

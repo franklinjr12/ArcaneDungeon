@@ -18,6 +18,8 @@ const Field = preload("res://magic/runtime/field_effect.gd")
 const Compiler = preload("res://magic/compile/spell_compiler.gd")
 const Loadout = preload("res://magic/runtime/spell_loadout.gd")
 const CONFIG := "res://magic/data/magic_balance_v1.json"
+## AD-257: elemental combo numbers live in the combat tuning "combos" block (next to CONFIG overrides in tests).
+const COMBOS_FILE := "res://combat/combat_tuning_v1.json"
 ## Test-only path override (TestContext.with_frozen_balance); empty means CONFIG.
 static var config_override := ""
 
@@ -47,6 +49,10 @@ var run_seed_value := 12345
 var initialized := false
 ## AD-143: target ids whose death already ran the on-kill artifact hooks (once per target).
 var _kill_seen: Dictionary = {}
+## AD-257: Callable(target_id, ticks) -> bool set by CombatSession; true when the target was stunned.
+var stun_hook: Callable
+## AD-257: target id -> first tick a shatter may stun it again.
+var _stun_immune_until: Dictionary = {}
 const ARTIFACT_COLD_ESSENCE := "essence.cold"
 const GRAVE_SALT_STATUSES := ["wet","burning","frozen"]
 ## AD-143: held artifacts (world/artifacts.gd instance) or null; null keeps behaviour unchanged.
@@ -66,6 +72,7 @@ func _init(run_seed: int = 12345, record_trace: bool = true) -> void:
 		printerr("Invalid M1 balance configuration")
 		return
 	settings = parsed
+	settings["combos"] = _load_combos()
 	if Difficulty.mult("player_mana") != 1.0:
 		settings["combat"]["player_max_mana"] = Difficulty.scale_f(float(settings["combat"]["player_max_mana"]),"player_mana")
 	registry = Registry.new()
@@ -105,9 +112,18 @@ func reset(run_seed: int = -1) -> void:
 	_contexts.clear()
 	_chain_seen.clear()
 	_kill_seen.clear()
+	_stun_immune_until.clear()
 	collision_walls.clear()
 	last_rejection = ""
 	total_hit_count = 0
+
+## AD-257: combos from the combat tuning beside the active config; {} (no combo behaviour) when absent.
+static func _load_combos() -> Dictionary:
+	var path := COMBOS_FILE if config_override.is_empty() else config_override.get_base_dir().path_join("combat_tuning_v1.json")
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path)) if FileAccess.file_exists(path) else null
+	if typeof(parsed) != TYPE_DICTIONARY or typeof(parsed.get("combos")) != TYPE_DICTIONARY:
+		return {}
+	return parsed["combos"]
 
 func add_target(where: Vector2, motion: Vector2 = Vector2.ZERO, hp: float = -1.0):
 	var t = Target.new(clock.next_id("target"),int(settings["combat"]["enemy_team"]),where,
@@ -740,9 +756,15 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 	var was_alive: bool = target.alive()
 	var conduit_ready: bool = _art("conduit_coil") and str(effect_plan["essence"]["id"]) == "essence.lightning" and target.status.has("burning",clock.tick)
 	var undertow_ready: bool = _art("undertow") and target.status.has("wet",clock.tick)
+	var combos: Dictionary = settings.get("combos",{})
+	var conduct_ready: bool = combos.has("conduct") and str(effect_plan["essence"]["id"]) == "essence.lightning" and target.status.has("wet",clock.tick)
+	var brittle_mult: float = float(settings["statuses"]["brittle"].get("damage_taken_mult",1.0)) if target.status.has("brittle",clock.tick) else 1.0
+	resolver.combos = combos
 	var result: Dictionary = resolver.resolve(hit,target,targets,clock.tick)
 	if not result["accepted"]:
 		return
+	if conduct_ready and target.alive():
+		_conduct(target,float(payload["damage"])*brittle_mult,ctx,combos["conduct"])
 	if undertow_ready:
 		_undertow_pull(target)
 	if conduit_ready and target.alive():
@@ -766,6 +788,9 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 		_resonance(str(entry["id"]),int(ctx["team"]))
 		if str(entry["id"]) == "frozen_force_shatter" and _art("shard_mail"):
 			artifacts.state["shard_mail_until"] = clock.tick+int(artifacts.param("shard_mail","duration_ticks",60))
+		var combo: Dictionary = combos.get(str(entry.get("combo","")),{})
+		if combo.has("stun_ticks") and target.alive():
+			_combo_stun(target,combo)
 		var bonus := float(entry["bonus_damage"])
 		if bonus > 0.0:
 			_track_damage(bonus)
@@ -803,6 +828,28 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 	# PROPOSED limits: kills from Burning DOT, lightning arcs and chain jumps do not fire On Kill.
 	elif trigger_id == "trigger.on_kill" and was_alive and not target.alive() and not bool(detail.get("chained",false)):
 		_fire_trigger(trigger,ctx,int(detail["effect_id"]),target.id,target.position)
+
+## AD-257 CONDUCT: lightning on a Wet target lands extra_ticks more ticks of the hit's own damage.
+func _conduct(target, amount: float, ctx: Dictionary, combo: Dictionary) -> void:
+	var dealt := 0.0
+	for i in int(combo.get("extra_ticks",0)):
+		if not target.alive():
+			break
+		dealt += target.receive_damage(amount,"lightning",int(ctx["team"]),float(settings["combat"]["armor_scale"]))
+	if dealt <= 0.0:
+		return
+	# No trace record: reaction counts/goldens stay keyed on rule reactions and arcs.
+	total_hit_count += 1
+	_track_damage(dealt)
+	if not target.alive():
+		_on_target_died(target,ctx)
+
+## AD-257 SHATTER: stun through the session hook; a stunned target is immune to the next shatter stun for stun_immunity_ticks.
+func _combo_stun(target, combo: Dictionary) -> void:
+	if not stun_hook.is_valid() or int(combo["stun_ticks"]) <= 0 or clock.tick < int(_stun_immune_until.get(target.id,-1)):
+		return
+	if bool(stun_hook.call(target.id,int(combo["stun_ticks"]))):
+		_stun_immune_until[target.id] = clock.tick+int(combo.get("stun_immunity_ticks",0))
 
 ## Enqueues one trigger payload through the bounded queue (depth and per-root event budgets live there).
 func _fire_trigger(trigger_plan: Dictionary, ctx: Dictionary, parent_effect_id: int, target_id: int, location: Vector2) -> bool:

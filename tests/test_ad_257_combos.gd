@@ -92,11 +92,14 @@ func _freeze(s, enemy) -> void:
 ## Casts Force at `enemy` (already Frozen) and steps until it was hit or 90 ticks pass.
 func _force_hit(s, enemy) -> void:
 	s.sim.loadout.allow_edit = true
-	s.sim.equip(0,_shot("essence.force"))
-	s.sim.loadout.slots[0]["cooldown"] = 0
+	# Slot 0 holds the session's locked basic bolt, so Force goes in slot 1.
+	s.sim.equip(1,_shot("essence.force"))
+	s.sim.loadout.slots[1]["cooldown"] = 0
 	s.sim.mana = 120.0
 	var before: int = enemy.target.hit_count
-	s.sim.try_cast(0,s.sim.actor.position,(enemy.target.position-s.sim.actor.position).normalized())
+	# Cast from just in front of `enemy` so another enemy walking into the line cannot take the hit.
+	var aim: Vector2 = (enemy.target.position-s.sim.actor.position).normalized()
+	s.sim.try_cast(1,enemy.target.position-aim*(enemy.target.radius+16.0),aim)
 	for i in 90:
 		s.step()
 		if enemy.target.hit_count > before:
@@ -123,6 +126,10 @@ func test_ad_257_b_shatter_stun_and_immunity(t) -> void:
 	t.check(enemy != null and other != null,"test_ad_257_b_shatter_stun_and_immunity: enemies spawned")
 	if enemy == null or other == null:
 		return
+	# Three shatter "big hits" would kill a 95 HP thrall before the last stun check, so the shattered pair is sturdy.
+	for foe in [enemy,other]:
+		foe.target.health.maximum = 100000.0
+		foe.target.health.reset()
 	_freeze(s,enemy)
 	var hp0: float = enemy.target.health.current if "current" in enemy.target.health else 0.0
 	_force_hit(s,enemy)

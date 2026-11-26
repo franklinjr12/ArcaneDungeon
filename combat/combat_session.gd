@@ -94,6 +94,9 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 		scenario = "single"
 	loadout_index = posmod(loadout_index,data["starter_loadouts"].size())
 	sim = Runner.new(seed)
+	# AD-257: the session's tuning is the combo source of truth (also under tuning overrides).
+	sim.settings["combos"] = data.get("combos",{})
+	sim.stun_hook = _combo_stun
 	world = Geometry.new(data["arena"])
 	sim.bounds = world.bounds
 	sim.collision_walls = world.walls.duplicate()
@@ -135,6 +138,14 @@ func restart(run_seed: int = -1, scenario_id: String = "", starter_index: int = 
 	sim.loadout.allow_edit = false
 	for spec in data["scenarios"][scenario]["enemies"]:
 		spawn_enemy(str(spec[0]),Vector2(float(spec[1]),float(spec[2])))
+
+## AD-257: shatter stun for regular enemies only (bosses and minions keep their own rules). True when stunned.
+func _combo_stun(target_id: int, ticks: int) -> bool:
+	for enemy in enemies:
+		if enemy is Enemy and enemy.target.id == target_id and enemy.target.alive() and not enemy.target.tags.has("boss"):
+			enemy.stun(self,ticks)
+			return true
+	return false
 
 func spawn_enemy(kind: String, at: Vector2):
 	if not data["enemies"].has(kind) or not world.valid_position(at,float(data["enemies"][kind]["radius"])):
