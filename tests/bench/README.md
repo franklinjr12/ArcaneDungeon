@@ -127,3 +127,44 @@ Full successful runs, minutes (`total_seconds / 60`):
 | all | 24 | 2.8 | 2.1 | 3.8 |
 
 **Not in the 18-25 min target.** The scripted player clears rooms in seconds (see the AD-2xx note in `docs/benchmarks/ad_demo_bench.md`: bench runs are 2-5 min, not 30-40), so adding 8 rooms and affixes does not move the bot's run length into 18-25 min. No room data was tuned: enemy HP is not stretched (no HP sponges) and the boss numbers and feel bands are frozen. The 18-25 min figure needs a human playtest, not this bot.
+
+## AD-264 Archivist storm_conduct rendered frame-time bench
+
+`archivist_storm_render_bench.gd` opens the real `run.tscn` on `cistern_boss` (live data), steps it with `run_controller.perf_step` and measures frames before and after the boss's own `_fire_storm_pulse` runs `storm_conduct` on the full cistern (re-fired whenever the water goes dark). Needs a display; under `--headless` it prints `AD264_RENDER_BENCH_SKIP` and exits 2.
+
+```
+xvfb-run -a -s "-screen 0 1920x1080x24" /usr/local/bin/godot --path . --script res://tests/bench/archivist_storm_render_bench.gd -- --size=1920x1080 --frames=60 --budget-ms=33
+```
+
+Per phase (`calm`, `electrified`) it prints two lines: `_wall` = frame to frame including GPU raster (vsync off); `_cpu` = `perf_step` through every canvas `_draw` up to `RenderingServer.frame_pre_draw` (raster excluded). Then a probe canvas times the water draw path piece by piece (`AD264_RENDER_BENCH_PROFILE`) and prints per-frame call counts (`AD264_RENDER_BENCH_COUNTS`). **Exit 1 when any `electrified_cpu` frame is over `--budget-ms`** (default 33): this is the gate AD-256 a) should turn green. About 3 min per run on the VM.
+
+### INFO 2026-11-26: VM results (diagnosis, no fix)
+
+VM: Xvfb, `opengl3` on `llvmpipe (LLVM 21.1.8)` software GL, 2 CPUs, Godot 4.7.1, `gl_compatibility`, project viewport 1280x720 `canvas_items`/`expand`, `use_art_export=false` (default). Cistern: 4 water rects, `storm_conduct` = 120 ticks / 5 dmg / 20-tick interval; one pulse electrifies **169 cells**.
+
+| size | phase | cpu mean | cpu p95 | cpu max | cpu frames > 33 ms | wall mean |
+|---|---|---|---|---|---|---|
+| 1920x1080 | calm | 15.5 ms | 24.0 | 25.7 | 0/60 | 1102 ms |
+| 1920x1080 | electrified | 36.2 ms | 51.6 | 81.7 | 43/60 | 1239 ms |
+| 1280x720 | calm | 26.5 ms* | 64.1 | 73.9 | 17/60 | 728 ms |
+| 1280x720 | electrified | 36.6 ms | 54.7 | 66.5 | 45/60 | 582 ms |
+
+\* 720p calm had VM noise spikes (p50 20.6 ms). An earlier 1080p run gave calm 13.9 / electrified 42.5 ms mean (max 69, 55/60 over). Sim time stays < 1 ms mean (max ~5 ms) in both phases, which is why the headless AD-256 test passes. The **wall** numbers (0.6-1.3 s per frame even when calm) are llvmpipe software raster and say nothing about a real GPU; only the `_cpu` lines are comparable to Franklin's machine.
+
+**It reproduces on the CPU side: electrifying the cistern adds ~20-28 ms of main-thread time per frame**, pushing 70-90 % of frames past 33 ms.
+
+Hot spot, per frame while electrified (probe means, 1080p run, 1 call each per frame unless noted):
+
+| function | mean ms | per-frame call counts |
+|---|---|---|
+| `ui/pixel_art_renderer.gd` `draw_water` (total) | 15.9 | 1 |
+| of which `_draw_water_states` (line ~464) | 15.7 | 1; loops 169 cells; 169 `draw_texture_rect_region` + 169 `_queue_glow` |
+| `extra_sheet_frame` (line ~346), called per cell | 9.0 | **169** calls; each does `FileAccess.file_exists(json)` + `ResourceLoader.exists(png)` + `ResourceLoader.exists(glow_png)` = **507 filesystem checks/frame** (5.4 ms of the 9.0) plus dictionary/Rect2 building |
+| `world/water_tiles.gd` `state_view` (line ~187) | 2.0 | 1; `sort_custom` with a GDScript lambda (~906 comparator calls) + 169 dict `map` |
+| deep-rect test + `water_state_tag` loop | 2.2 | 169 `water_state_tag`, 169 `Rect2.has_point` (1 deep rect) |
+| `draw_actor_glows` (the 169 water glows, vfx layer) | 0.4 | 1; 169 additive quads |
+| base water `_draw_water_cells` | ~0.2 | 150 cell draws (unchanged by electrify) |
+
+Named hot spot: **`pixel_art_renderer._draw_water_states` → per-cell `extra_sheet_frame` (507 filesystem `exists` checks per frame) and the per-frame `WaterTiles.state_view` lambda sort**. The probe accounts for ~16 ms of the ~21-28 ms delta; the remaining ~5-12 ms is not attributed by the probe (likely contention between the main thread and llvmpipe raster threads on 2 cores, plus GPU-side cost of the 2 x 169 extra quads), so expect a smaller delta on a real GPU.
+
+What differs from Franklin's machine: real GPU vs llvmpipe software raster (wall times not comparable); 2 VM cores shared with raster threads; Xvfb window instead of a desktop window/fullscreen; the bench sets vsync off and `Engine.max_fps = 0`; filesystem `exists` cost depends on disk and OS (not measured on Windows; if it is slower there, the freeze would be worse). Not measured: an exported build (`res://` from a .pck instead of the filesystem).
