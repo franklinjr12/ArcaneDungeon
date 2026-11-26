@@ -37,6 +37,9 @@ var bounds := Rect2(0.0,0.0,920.0,680.0)
 var collision_walls: Array = []
 var mana := 0.0
 var resonance_popups: Array = []
+## AD-257: named combo popups {id,label,tick,position}; hit_stop_ms is the latest combo's UI-only freeze request (sim never reads it).
+var combo_popups: Array = []
+var hit_stop_ms := 0
 var active: Array = []
 var visuals: Array = []
 var recent_damage: Array = []
@@ -105,6 +108,8 @@ func reset(run_seed: int = -1) -> void:
 	bounds = Rect2(Vector2.ZERO,Vector2(float(settings["sandbox"]["width"]),float(settings["sandbox"]["height"])))
 	mana = float(settings["combat"]["player_max_mana"])
 	resonance_popups.clear()
+	combo_popups.clear()
+	hit_stop_ms = 0
 	active.clear()
 	visuals.clear()
 	recent_damage.clear()
@@ -560,6 +565,8 @@ func advance_one_tick() -> void:
 	mana = minf(float(settings["combat"]["player_max_mana"]),mana+float(settings["combat"]["regen_mana_per_tick"]))
 	var popup_ticks := int(settings["reactions"].get("resonance",{}).get("popup_ticks",60))
 	resonance_popups = resonance_popups.filter(func(p): return clock.tick-int(p["tick"]) <= popup_ticks)
+	var combo_popup_ticks := int(settings.get("combos",{}).get("popup_ticks",60))
+	combo_popups = combo_popups.filter(func(p): return clock.tick-int(p["tick"]) <= combo_popup_ticks)
 	var dt := 1.0/float(clock.tick_rate)
 	targets.advance_movers(dt,bounds)
 	_advance_knockback()
@@ -765,6 +772,7 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 		return
 	if conduct_ready and target.alive():
 		_conduct(target,float(payload["damage"])*brittle_mult,ctx,combos["conduct"])
+		_combo_popup("conduct",target.position)
 	if undertow_ready:
 		_undertow_pull(target)
 	if conduit_ready and target.alive():
@@ -789,6 +797,8 @@ func _hit(event: Dictionary, detail: Dictionary) -> void:
 		if str(entry["id"]) == "frozen_force_shatter" and _art("shard_mail"):
 			artifacts.state["shard_mail_until"] = clock.tick+int(artifacts.param("shard_mail","duration_ticks",60))
 		var combo: Dictionary = combos.get(str(entry.get("combo","")),{})
+		if not combo.is_empty() and int(ctx["team"]) == actor.team:
+			_combo_popup(str(entry["combo"]),target.position)
 		if combo.has("stun_ticks") and target.alive():
 			_combo_stun(target,combo)
 		var bonus := float(entry["bonus_damage"])
@@ -843,6 +853,14 @@ func _conduct(target, amount: float, ctx: Dictionary, combo: Dictionary) -> void
 	_track_damage(dealt)
 	if not target.alive():
 		_on_target_died(target,ctx)
+
+## AD-257: queue the named popup and the UI hit-stop request for combo `id` (player-cast combos only).
+func _combo_popup(id: String, at: Vector2) -> void:
+	var combo: Dictionary = settings.get("combos",{}).get(id,{})
+	if combo.is_empty() or not combo.has("label"):
+		return
+	combo_popups.append({"id":id,"label":str(combo["label"]),"tick":clock.tick,"position":at})
+	hit_stop_ms = int(combo.get("hit_stop_ms",0))
 
 ## AD-257 SHATTER: stun through the session hook; a stunned target is immune to the next shatter stun for stun_immunity_ticks.
 func _combo_stun(target, combo: Dictionary) -> void:

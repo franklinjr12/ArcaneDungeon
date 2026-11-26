@@ -773,6 +773,9 @@ func perf_step(command: Dictionary) -> void:
 	if refresh_counter%7 == 0:
 		_update_labels()
 
+## AD-257: UI-only hit stop; the sim keeps its tick results, we just delay the next fixed step in real time.
+var _hit_stop_until_usec := 0
+
 func _physics_process(_delta: float) -> void:
 	if perf_seed != null:
 		return
@@ -782,6 +785,9 @@ func _physics_process(_delta: float) -> void:
 		cast_pending = -1
 		return
 	var sim_start := Time.get_ticks_usec()
+	if flow.state == "fighting" and sim_start < _hit_stop_until_usec:
+		arena_canvas.queue_redraw()
+		return
 	var pad_slot := _pad_cast_poll.poll()
 	if not editor_open:
 		if pad_slot >= 0 and not is_loadout_view_open():
@@ -798,6 +804,7 @@ func _physics_process(_delta: float) -> void:
 			var command := {"move":dir,"aim":aim,"cast":cast_pending,"cursor":cursor,
 				"dash":Input.is_action_just_pressed("dash")}
 			flow.step(command)
+			_consume_hit_stop()
 		elif flow.state in ["cleared","workshop"]:
 			flow.move_after_clear({"move":Input.get_vector("move_left","move_right","move_up","move_down"),
 				"aim":flow.session.player.facing})
@@ -1839,3 +1846,11 @@ func _debug_shot_entry() -> void:
 	var error := image.save_png(path)
 	print("AD_UI_SHOT saved %s %dx%d" % [path, image.get_width(), image.get_height()])
 	get_tree().quit(0 if error == OK else 1)
+
+## Converts the sim's pending combo hit_stop_ms into a real-time pause; skipped when flashes are reduced.
+func _consume_hit_stop() -> void:
+	var sim = flow.session.sim
+	var ms: int = sim.hit_stop_ms
+	sim.hit_stop_ms = 0
+	if ms > 0 and not ReduceMotion.flashes_reduced(_settings,flow.session):
+		_hit_stop_until_usec = Time.get_ticks_usec()+ms*1000
