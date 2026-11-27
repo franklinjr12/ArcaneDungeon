@@ -642,7 +642,7 @@
         "duration_ticks": 120,
         "damage": 5,
         "interval_ticks": 20,
-        "spark_cap": 6
+        "spark_cap": 48
       },
       "water_bolt_shots": 5,
       "water_bolt_arc_degrees": 40,
