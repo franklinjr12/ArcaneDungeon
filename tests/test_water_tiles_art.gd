@@ -2,6 +2,7 @@ extends RefCounted
 ## AD-261 step 1: cistern water edge autotile mapping (neighbour bitmask -> frame) and once-per-room-load edge cache.
 const WaterTiles = preload("res://world/water_tiles.gd")
 var _wt: GDScript = WaterTiles
+var ART: GDScript = preload("res://ui/pixel_art_renderer.gd")
 const CANON := [0,1,2,4,5,8,9,10,16,17,18,20,21,32,33,34,36,37,40,41,42,64,65,66,68,69,72,73,74,80,81,82,84,85,128,130,132,136,138,144,146,148,160,162,164,168,170]
 const N := 1
 const NE := 2
@@ -17,6 +18,8 @@ func run(t) -> void:
 	test_ad_261_a_bitmask_frame_mapping(t)
 	test_ad_261_a2_edges_computed_once_per_room_load(t)
 	test_ad_261_a3_renderer_edge_frames(t)
+	test_ad_268_a_overlay_full_opacity(t)
+	test_ad_268_b_spark_count_rule(t)
 
 ## Reference: canonical mask by the README rule, then its position in the sorted list.
 func _expect(mask: int) -> int:
@@ -152,3 +155,41 @@ func test_ad_261_a3_renderer_edge_frames(t) -> void:
 			for cell in w.edge_cache()[tag]:
 				PAR.water_edge_region(tag, int(w.edge_cache()[tag][cell]))
 	t.check(w.edge_builds == before and w.edge_cache() == edges, "AD-261 a3: draw lookups do not rebuild the edge cache")
+
+func test_ad_268_a_overlay_full_opacity(t) -> void:
+	print("AD-268 test_ad_268_a_overlay_full_opacity")
+	t.equal(float(ART.get_script_constant_map().get("ELEC_OVERLAY_ALPHA", -1.0)), 1.0, "AD-268 electrified overlay alpha is 1.0")
+	var has_fn: bool = ART.has_method("water_electric_cells")
+	t.check(has_fn, "AD-268 renderer has static water_electric_cells")
+	if has_fn:
+		var items := [{"state":"electrified","cell_rect":Rect2(0,0,32,32)},{"state":"frozen","cell_rect":Rect2(32,0,32,32)}]
+		t.equal(ART.call("water_electric_cells", items).size(), 1, "AD-268 only electrified cells are returned")
+
+func _find_key(node, key: String):
+	if node is Dictionary:
+		if node.has(key):
+			return node[key]
+		for v in node.values():
+			var r = _find_key(v, key)
+			if r != null:
+				return r
+	elif node is Array:
+		for v in node:
+			var r = _find_key(v, key)
+			if r != null:
+				return r
+	return null
+
+func test_ad_268_b_spark_count_rule(t) -> void:
+	print("AD-268 test_ad_268_b_spark_count_rule")
+	var has_count: bool = ART.has_method("water_electric_spark_count")
+	t.check(has_count, "AD-268 renderer has static water_electric_spark_count")
+	if has_count:
+		for c in [[1,48,1],[10,48,5],[11,48,6],[200,48,48],[200,6,6],[0,48,0]]:
+			t.equal(int(ART.call("water_electric_spark_count", c[0], c[1])), c[2], "AD-268 spark count cells=%d cap=%d" % [c[0], c[1]])
+		var pts: Array = ART.call("water_electric_sparks", [Rect2(0,0,320,32)], 7, 48, 10)
+		t.equal(pts.size(), 5, "AD-268 sparks follow 1 per 2 cells for 10 cells")
+	var doc = JSON.parse_string(FileAccess.get_file_as_string("res://world/data/run_v2.json"))
+	var sc = _find_key(doc, "storm_conduct")
+	var cap: int = int(sc.get("spark_cap", 0)) if sc is Dictionary else 0
+	t.check(cap >= 48, "AD-268 live storm_conduct.spark_cap >= 48 (got %d)" % cap)

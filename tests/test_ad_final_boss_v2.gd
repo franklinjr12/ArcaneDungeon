@@ -73,6 +73,10 @@ func run(t) -> void:
 	test_ad_258_c_telegraphs_readable(t)
 	test_ad_258_d_fight_length(t)
 	test_ad_258_guard_rest_scale(t)
+	test_ad_265_a_bench_outcomes(t)
+	test_ad_265_b_fight_length_levers(t)
+	test_ad_265_c_every_damage_source_telegraphed(t)
+	test_ad_265_d_weakened_flag_restored(t)
 
 func _move(extra: Dictionary = {}) -> Dictionary:
 	return {"mode":"submerge","exit":"pool","telegraph_ticks":40,"submerged_ticks":60,"emerge_telegraph_ticks":40,"radius":110,"damage":MOVE_DAMAGE}.merged(extra,true)
@@ -888,7 +892,7 @@ func _live_data(t) -> void:
 	t.equal(int(cfg["hp"]),2400,"AD-201 live cistern_boss keeps 2400 hp")
 	t.equal(BossCombat.validate(cfg),[],"AD-201 live cistern_boss validates")
 	t.equal(cfg["phases"].map(func(p): return float(p["threshold"])),[1.0,0.66,0.33],"AD-201 live phase thresholds are 100/66/33 percent")
-	t.check(cfg["pools"].size() == 3 and cfg["freeze_stun"]["ticks"] == 120 and cfg["stagger"]["ticks"] == 60,"AD-201 live data has 3 pools and a 2 s freeze-stun (AD-258: 1 s big-entry stagger)")
+	t.check(cfg["pools"].size() == 3 and cfg["freeze_stun"]["ticks"] == 120 and cfg["stagger"]["ticks"] == 120,"AD-201 live data has 3 pools and a 2 s freeze-stun (AD-265 TEST-WEAKENED review: stagger.ticks 120 restored)")
 	t.check(cfg["phases"].all(func(p): return p["pool"].filter(func(e): return e.has("pattern")).size() >= 3),"AD-201 every live pool keeps 3+ distinct patterns")
 	t.check(not bool(_live_dive_move(1).get("big",false)),"AD-201 the phase 2 dive is not a big move (the freeze is its stagger window)")
 
@@ -912,8 +916,8 @@ func _live_dive(t) -> void:
 	var boss = pair[1]
 	var first := _dive(s,boss)
 	t.check(first["to"] != first["from"] and _live()["pools"].any(func(p): return Vector2(p[0],p[1]) == first["to"]),"AD-201 the live P1 dive emerges at a pool away from where it dove")
-	t.equal(first["telegraph"],36,"AD-201 the live emerge ripple telegraph is 36 ticks (AD-258: 0.3-0.6 s)")
-	t.check(first["ripple"] == true and first["ticks"] == 36 and first["landing"] == first["to"],"AD-201 the live emerge windup carries the ripple at the exit pool")
+	t.equal(first["telegraph"],40,"AD-201 the live emerge ripple telegraph is 40 ticks (AD-265 TEST-WEAKENED review: restored)")
+	t.check(first["ripple"] == true and first["ticks"] == 40 and first["landing"] == first["to"],"AD-201 the live emerge windup carries the ripple at the exit pool")
 	var second := _dive(s,boss)
 	t.check(second["to"] != second["from"],"AD-201 the live boss surfaces at a different pool on its next dive (%s -> %s)" % [str(second["from"]),str(second["to"])])
 
@@ -963,7 +967,7 @@ func _live_shield(t) -> void:
 func _live_tide(t) -> void:
 	var cfg := _live()
 	var spec: Dictionary = cfg["phases"][1]["hazards"][0]
-	t.check(spec["type"] == "tide_wave" and int(spec["gap_width"]) == 96 and float(spec["thickness"]) <= 80.0 and _ad258_readable(int(spec["warn_ticks"])),"AD-201 live tide wave: gap 96, thickness <= 80, warning 18..36 ticks (AD-258)")
+	t.check(spec["type"] == "tide_wave" and int(spec["gap_width"]) == 96 and float(spec["thickness"]) <= 80.0 and int(spec["warn_ticks"]) >= 40 and int(spec["warn_ticks"]) <= AD258_TELEGRAPH_MAX,"AD-201 live tide wave: gap 96, thickness <= 80, warning exactly 40 ticks (AD-265 restored; AD-258 range 18..40)")
 	var pair := _live_fresh(_live_with_pool(1,[{"pattern":"water_bolt"}],true),Vector2(300,800))
 	var s = pair[0]
 	var boss = pair[1]
@@ -1180,12 +1184,12 @@ func test_ad_256_c_damage_ticks_unchanged(t) -> void:
 
 # ---- AD-258 Archivist rebalance: threat, not HP. Bots: tests/bench/ad258_archivist_bots.gd (live data, fixed seeds). ----
 
-## 0.3-0.6 s at 60 ticks/s. Final thresholds: never weaken.
+## 0.3-0.67 s at 60 ticks/s (AD-265 design call: max 36 -> 40, fight floor 90 s -> 60 s). Final thresholds: never weaken.
 const AD258_TELEGRAPH_MIN := 18
-const AD258_TELEGRAPH_MAX := 36
+const AD258_TELEGRAPH_MAX := 40
 const AD258_AVERAGE_DEATH_RATE := 0.8
 const AD258_SKILLED_WIN_RATE := 0.5
-const AD258_FIGHT_MIN_TICKS := 5400
+const AD258_FIGHT_MIN_TICKS := 3600
 const AD258_FIGHT_MAX_TICKS := 10800
 
 func _ad258_has_flood(entry: Dictionary) -> bool:
@@ -1286,7 +1290,7 @@ func test_ad_258_c_telegraphs_readable(t) -> void:
 				declared.append(["phase %d %s warn_ticks" % [i+1,str(hazard["type"])],int(hazard["warn_ticks"])])
 	print("INFO AD258_C engine telegraphs=%s" % str(declared))
 	for d in declared:
-		t.check(_ad258_readable(int(d[1])),"AD-258 test_ad_258_c_telegraphs_readable: %s is %d ticks, must be 18..36 (0.3-0.6 s)" % [d[0],d[1]])
+		t.check(_ad258_readable(int(d[1])),"AD-258 test_ad_258_c_telegraphs_readable: %s is %d ticks, must be 18..40 (0.3-0.67 s)" % [d[0],d[1]])
 	# Measured intent telegraphs and tide warnings in the bot runs.
 	var by_kind := {}
 	var bad := {}
@@ -1303,8 +1307,8 @@ func test_ad_258_c_telegraphs_readable(t) -> void:
 				tide.append(int(w["warn"]))
 	print("INFO AD258_C measured telegraph ticks min/max by kind=%s tide_warns=%s" % [str(by_kind),str(tide)])
 	t.check(not by_kind.is_empty(),"AD-258 test_ad_258_c_telegraphs_readable: the bot runs measured boss telegraphs")
-	t.check(bad.is_empty(),"AD-258 test_ad_258_c_telegraphs_readable: every measured Archivist telegraph lasts 18..36 ticks (out of range: %s)" % str(bad.keys()))
-	t.check(tide.all(func(w): return _ad258_readable(w)),"AD-258 test_ad_258_c_telegraphs_readable: every measured tide wave warning lasts 18..36 ticks (%s)" % str(tide))
+	t.check(bad.is_empty(),"AD-258 test_ad_258_c_telegraphs_readable: every measured Archivist telegraph lasts 18..40 ticks (out of range: %s)" % str(bad.keys()))
+	t.check(tide.all(func(w): return _ad258_readable(w)),"AD-258 test_ad_258_c_telegraphs_readable: every measured tide wave warning lasts 18..40 ticks (%s)" % str(tide))
 	var unavoidable: Array = []
 	for r in Bots.run_all("skilled"):
 		unavoidable.append_array(r["unavoidable"].map(func(e): return "seed %d %s@%d warn %d" % [r["seed"],e["source"],e["tick"],e["warn_ticks"]]))
@@ -1318,7 +1322,7 @@ func test_ad_258_d_fight_length(t) -> void:
 			ticks.append(roundi(float(r["seconds"])*60.0))
 	var med: float = Bots.median(ticks)
 	print("INFO AD258_D skilled winning fight ticks=%s median=%.0f (%.1f s)" % [str(ticks),med,med/60.0])
-	t.check(not ticks.is_empty() and med >= AD258_FIGHT_MIN_TICKS and med <= AD258_FIGHT_MAX_TICKS,"AD-258 test_ad_258_d_fight_length: skilled winning fights median 90-180 s / 5400-10800 ticks (%d wins, median %.1f s)" % [ticks.size(),med/60.0])
+	t.check(not ticks.is_empty() and med >= AD258_FIGHT_MIN_TICKS and med <= AD258_FIGHT_MAX_TICKS,"AD-258 test_ad_258_d_fight_length: skilled winning fights median 60-180 s / 3600-10800 ticks (%d wins, median %.1f s)" % [ticks.size(),med/60.0])
 
 ## AD-258 guard: the live boss rests at guard.damage_taken_multiplier, takes the stagger 1.5x in a punish window, then returns to the guard.
 func test_ad_258_guard_rest_scale(t) -> void:
@@ -1343,3 +1347,80 @@ func test_ad_258_guard_rest_scale(t) -> void:
 		var bad := _live()
 		bad["guard"]["damage_taken_multiplier"] = bad_value
 		t.check(BossCombat.validate(bad).any(func(i): return i["path"] == "guard.damage_taken_multiplier"),"AD-258 test_ad_258_guard_rest_scale: guard %.1f is rejected" % bad_value)
+
+# ---- AD-265: Boss 2 must kill average players and last 60-180 s without an HP sponge. ----
+
+func test_ad_265_a_bench_outcomes(t) -> void:
+	var died := 0
+	for r in Bots.run_all("average"):
+		died += 1 if bool(r["died"]) else 0
+	var won := 0
+	for r in Bots.run_all("skilled"):
+		won += 1 if bool(r["won"]) else 0
+	print("INFO AD265_A average died=%d/10 skilled won=%d/10" % [died,won])
+	t.check(died >= 8,"AD-265 test_ad_265_a_bench_outcomes: the average bot dies in >= 8/10 seeded runs (%d/10)" % died)
+	t.check(won >= 5,"AD-265 test_ad_265_a_bench_outcomes: the skilled bot wins >= 5/10 seeded runs (%d/10)" % won)
+
+func test_ad_265_b_fight_length_levers(t) -> void:
+	var ticks: Array = []
+	for r in Bots.run_all("skilled"):
+		if bool(r["won"]):
+			ticks.append(roundi(float(r["seconds"])*60.0))
+	var med: float = Bots.median(ticks)
+	print("INFO AD265_B skilled winning ticks=%s median=%.0f (%.1f s)" % [str(ticks),med,med/60.0])
+	t.check(not ticks.is_empty() and med >= 3600.0 and med <= 10800.0,"AD-265 test_ad_265_b_fight_length_levers: skilled winning-fight median 60-180 s / 3600-10800 ticks (%d wins, %.1f s)" % [ticks.size(),med/60.0])
+	var cfg := _live()
+	t.check(int(cfg["hp"]) <= 3000,"AD-265 test_ad_265_b_fight_length_levers: no raw HP sponge, hp <= 3000 = 2400 * 1.25 (%d)" % int(cfg["hp"]))
+	var roars: Array = []
+	if cfg.has("transition"):
+		roars.append(int(cfg["transition"].get("roar_ticks",0)))
+	for phase in cfg["phases"]:
+		if phase.has("transition"):
+			roars.append(int(phase["transition"].get("roar_ticks",0)))
+		if phase.has("roar_ticks"):
+			roars.append(int(phase["roar_ticks"]))
+	t.check(roars.all(func(r): return r <= 180),"AD-265 test_ad_265_b_fight_length_levers: every invulnerable phase transition lasts <= 180 ticks (3 s) (%s)" % str(roars))
+
+func test_ad_265_c_every_damage_source_telegraphed(t) -> void:
+	var cfg := _live()
+	var declared: Array = []
+	for i in cfg["phases"].size():
+		var entry: Dictionary = cfg["phases"][i]
+		declared.append(["phase %d windup_ticks" % (i+1),int(entry["windup_ticks"])])
+		for pooled in entry.get("pool",[]):
+			if pooled.has("move"):
+				for key in ["telegraph_ticks","emerge_telegraph_ticks"]:
+					if pooled["move"].has(key):
+						declared.append(["phase %d move %s" % [i+1,key],int(pooled["move"][key])])
+		for hazard in entry.get("hazards",[]):
+			if hazard.has("warn_ticks"):
+				declared.append(["phase %d %s warn_ticks" % [i+1,str(hazard["type"])],int(hazard["warn_ticks"])])
+	for d in declared:
+		t.check(d[1] >= 18 and d[1] <= 40,"AD-265 test_ad_265_c_every_damage_source_telegraphed: %s is %d ticks, must be 18..40" % [d[0],d[1]])
+	var events := 0
+	var short: Array = []
+	var skilled_unavoidable := 0
+	for policy in ["average","skilled"]:
+		for r in Bots.run_all(policy):
+			for e in r["damage_log"]:
+				events += 1
+				if int(e["warn_ticks"]) < 18 and str(e["source"]) != "unknown":
+					short.append("%s seed %d %s@%d warn %d" % [policy,r["seed"],e["source"],e["tick"],e["warn_ticks"]])
+			if policy == "skilled":
+				skilled_unavoidable += r["unavoidable"].size()
+	print("INFO AD265_C damage events=%d short=%d skilled_unavoidable=%d %s" % [events,short.size(),skilled_unavoidable,str(short.slice(0,6))])
+	t.check(events > 0,"AD-265 test_ad_265_c_every_damage_source_telegraphed: the bench logged damage events (%d)" % events)
+	t.check(short.is_empty(),"AD-265 test_ad_265_c_every_damage_source_telegraphed: every damage event source has warn_ticks >= 18 (%d short: %s)" % [short.size(),str(short.slice(0,4))])
+	t.check(skilled_unavoidable == 0,"AD-265 test_ad_265_c_every_damage_source_telegraphed: the skilled bot takes 0 unavoidable damage events (%d)" % skilled_unavoidable)
+
+## AD-265 TEST-WEAKENED review (AD-258 diff, 3 lines): stagger 60 -> restored 120; emerge telegraph 36 -> restored 40; tide warn >= 40 -> restored (exactly 40).
+func test_ad_265_d_weakened_flag_restored(t) -> void:
+	var cfg := _live()
+	t.equal(int(cfg["stagger"]["ticks"]),120,"AD-265 test_ad_265_d_weakened_flag_restored: stagger.ticks is 120 (restored)")
+	t.equal(int(cfg["freeze_stun"]["ticks"]),120,"AD-265 test_ad_265_d_weakened_flag_restored: freeze_stun.ticks is 120")
+	var entry := _live_dive_move(0).duplicate(true)
+	entry.erase("weight")
+	var pair := _live_fresh(_live_with_pool(0,[entry]),Vector2(150,450))
+	var first := _dive(pair[0],pair[1])
+	t.equal(int(first["telegraph"]),40,"AD-265 test_ad_265_d_weakened_flag_restored: live emerge telegraph is 40 (restored)")
+	t.equal(int(cfg["phases"][1]["hazards"][0]["warn_ticks"]),40,"AD-265 test_ad_265_d_weakened_flag_restored: tide warn_ticks is 40 (restored)")

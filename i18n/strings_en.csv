@@ -4,7 +4,7 @@ onboarding.room1,"{move} move, mouse aims, {cast} casts, {dash} dashes (i-frames
 onboarding.telegraph,That marker is an enemy attack winding up. {dash} dashes you clear.
 onboarding.spells_are_runes,Spells are built from runes. Open a slot at the Sigil Desk to craft one.
 onboarding.first_reward,3 cards: pick 1. Each card adds a new behaviour to your spells.
-onboarding.first_workshop,"Edit slot 4, test it in the range. Invalid spells show why."
+onboarding.first_workshop,"Visit the shrine altar to choose a new spell. Edit slot 4; invalid spells show why."
 room.s1_r1,Uncatalogued Ruins I
 room.s1_r2,Uncatalogued Ruins II
 room.s1_r3,Uncatalogued Ruins III
@@ -18,7 +18,7 @@ merchant.greeting.2,Pick what you need. The Guild keeps the ledger.
 merchant.purchase.0,Logged. The Guild thanks you for the coin.
 merchant.purchase.1,Done. Mind the rift on the way out.
 onboarding.workshop_empty_slot,Put a rune into an empty slot: open it to edit.
-onboarding.test_on_dummy,Test on the dummy
+onboarding.test_on_dummy,Practice on the idol.
 onboarding.wet_try_lightning,Water makes enemies Wet. Try Lightning.
 rune.essence.fire.desc,Deals fire damage and applies Burning to the target.
 rune.essence.water.desc,"Deals water damage, applies Wet and puts out Burning."
