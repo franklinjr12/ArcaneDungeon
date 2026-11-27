@@ -1463,11 +1463,48 @@ static func _shot(shots: Array, event: String, at: Vector2, tick: int, rotation:
 	shots.append({"event": event, "at": at, "tick": tick, "rotation": rotation, "length": length})
 
 
-## AD-259: placeholder for in-world shrine objects. Art keys come from data; the final sprites arrive under the same keys.
-## A key with no registered sprite falls back to a plinth tinted from the key, never an error.
+## AD-259: in-world shrine objects. Art keys come from data (shrine.*); SHRINE_ART points each key at its AD-262 sprite
+## (key map: docs/ART_IMPLEMENTATION.md, AD-263). A key with no sprite falls back to a plinth tinted from the key, never an error.
+const SHRINE_ART := {"shrine.room":"ad_til_shrine_mosaic","shrine.altar":"ad_prp_shrine_altar",
+	"shrine.statue":"ad_npc_divine_statue","shrine.idol":"ad_npc_practice_idol"}
 const SHRINE_ICON_BY_TAIL := {"altar":"book","statue":"shop","idol":"staff"}
+## AD-263: a damage 'hit' visual lives this many ticks (spell_runner hit visual); the idol's hit tag plays over that window.
+const SHRINE_HIT_TICKS := 9
 
-static func shrine_object(canvas: CanvasItem, art_key: String, at: Vector2, tick: int) -> void:
+## AD-263 pure lookup: {stem, tag, index, region, pivot} of the AD-262 frame for a shrine key, or {} when it has no sprite.
+## 'interact' is the in-range tag; 'hit' plays once over `age` ticks; any other or missing tag falls back to 'idle'.
+static func shrine_frame(art_key: String, state: String, tick: int, age: int = 0) -> Dictionary:
+	_export_data()
+	var stem: String = SHRINE_ART.get(art_key, "")
+	if not _manifest.has(stem):
+		return {}
+	var entry: Dictionary = _manifest[stem]
+	var tags: Dictionary = entry["tags"]
+	var tag := state if tags.has(state) else "idle"
+	var tg: Dictionary = tags[tag]
+	var ms: Array = tg["ms"]
+	var index := _once_index(ms, age) if tag == "hit" else loop_index(ms, tick)
+	var f: Dictionary = _export_json(stem)["frames"][int(tg["from"]) + index]["frame"]
+	var piv: Array = entry["pivot"]
+	return {"stem": stem, "tag": tag, "index": index, "region": Rect2(f["x"], f["y"], f["w"], f["h"]), "pivot": Vector2(piv[0], piv[1])}
+
+## Frame index of a non-looping tag after `age` ticks; holds the last frame once the tag has finished.
+static func _once_index(ms: Array, age: int) -> int:
+	var elapsed := age * 1000 / 60
+	var acc := 0
+	for i in ms.size():
+		acc += int(ms[i])
+		if elapsed < acc:
+			return i
+	return ms.size() - 1
+
+static func shrine_object(canvas: CanvasItem, art_key: String, at: Vector2, tick: int, state: String = "idle", age: int = 0) -> void:
+	var fr := shrine_frame(art_key, state, tick, age)
+	if not fr.is_empty():
+		var region: Rect2 = fr["region"]
+		var pv: Vector2 = fr["pivot"]
+		canvas.draw_texture_rect_region(_texs[fr["stem"]], Rect2(at - pv * 2.0, region.size * 2.0), region)
+		return
 	var tint := Color.from_hsv(float(art_key.hash()%360)/360.0,0.35,0.85)
 	canvas.draw_rect(Rect2(at+Vector2(-22,-6),Vector2(44,28)),Color("#0d1823"))
 	canvas.draw_rect(Rect2(at+Vector2(-20,-4),Vector2(40,24)),tint.darkened(0.35))
@@ -1477,6 +1514,38 @@ static func shrine_object(canvas: CanvasItem, art_key: String, at: Vector2, tick
 	var icon_name: String = SHRINE_ICON_BY_TAIL.get(art_key.get_slice(".",art_key.get_slice_count(".")-1),"")
 	if icon_name != "" and ICONS.has(icon_name):
 		icon(canvas,icon_name,at+Vector2(-11,-30),Vector2(22,22))
+
+## AD-263: the AD-262 mosaic as the room floor medallion, 5x5 tiles at scale 2 centred on `at`: corners, edges, then the 3x3 centre.
+static func shrine_room(canvas: CanvasItem, art_key: String, at: Vector2) -> void:
+	_export_data()
+	var stem: String = SHRINE_ART.get(art_key, "")
+	if not _manifest.has(stem):
+		return
+	var tags: Dictionary = _manifest[stem]["tags"]
+	var frames: Array = _export_json(stem)["frames"]
+	var tile := 16.0 * 2.0
+	var origin := at - Vector2(2.5, 2.5) * tile
+	for r in 5:
+		for c in 5:
+			var pick := _mosaic_tile(r, c)
+			var f: Dictionary = frames[int(tags[pick[0]]["from"]) + int(pick[1])]["frame"]
+			canvas.draw_texture_rect_region(_texs[stem], Rect2(origin + Vector2(c, r) * tile, Vector2(tile, tile)),
+				Rect2(f["x"], f["y"], f["w"], f["h"]))
+
+## AD-263: [tag, index] of the mosaic tile at row r, column c of the 5x5 room layout (tags as in the AD-262 README).
+static func _mosaic_tile(r: int, c: int) -> Array:
+	var last := 4
+	if r in [0, last] and c in [0, last]:
+		return ["corner", 0 if r == 0 and c == 0 else (1 if r == 0 else (2 if c == last else 3))]
+	if r == 0:
+		return ["edge", 0]
+	if c == last:
+		return ["edge", 1]
+	if r == last:
+		return ["edge", 2]
+	if c == 0:
+		return ["edge", 3]
+	return ["centre", (r - 1) * 3 + (c - 1)]
 
 static func portal(canvas: CanvasItem, at: Vector2, open: bool, tick: int) -> void:
 	var shade := Color("#5edfc3") if open else Color("#bd5366")

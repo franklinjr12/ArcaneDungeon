@@ -813,6 +813,7 @@ func _pick_reward(i: int) -> void:
 func _sync_shrine_canvas() -> void:
 	var objects: Array = flow.shrine_objects() if flow != null else []
 	test_canvas.shrine_objects = objects
+	test_canvas.shrine_room_key = str(flow.config.get("shrine",{}).get("room_art_key","")) if flow != null else ""
 	test_canvas.shrine_prompt = ""
 	test_canvas.shrine_prompt_at = Vector2.INF
 	if objects.is_empty() or altar_open or shop_open or editor_open:

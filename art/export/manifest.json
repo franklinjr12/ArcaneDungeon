@@ -3218,6 +3218,77 @@
     }
    }
   },
+  "ad_npc_divine_statue": {
+   "canvas": [
+    32,
+    48
+   ],
+   "category": "npc",
+   "glow": "res://art/export/npc/ad_npc_divine_statue_glow.png",
+   "id": "AD-262-ad_npc_divine_statue",
+   "json": "res://art/export/npc/ad_npc_divine_statue.json",
+   "pivot": [
+    16,
+    46
+   ],
+   "png": "res://art/export/npc/ad_npc_divine_statue.png",
+   "row": "AD-262",
+   "slices": {
+    "hurtbox": {
+     "h": 33,
+     "w": 24,
+     "x": 4,
+     "y": 14
+    },
+    "interact_zone": {
+     "h": 28,
+     "w": 44,
+     "x": -6,
+     "y": 20
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 46
+    }
+   },
+   "tags": {
+    "idle": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      220,
+      220,
+      220,
+      220
+     ],
+     "to": 3
+    },
+    "interact": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      160,
+      160,
+      160,
+      160
+     ],
+     "to": 7
+    },
+    "offering": {
+     "frames": 4,
+     "from": 8,
+     "ms": [
+      100,
+      100,
+      140,
+      200
+     ],
+     "to": 11
+    }
+   }
+  },
   "ad_npc_guild_factor": {
    "canvas": [
     32,
@@ -3268,6 +3339,67 @@
       120
      ],
      "to": 7
+    }
+   }
+  },
+  "ad_npc_practice_idol": {
+   "canvas": [
+    16,
+    32
+   ],
+   "category": "npc",
+   "glow": "res://art/export/npc/ad_npc_practice_idol_glow.png",
+   "id": "AD-262-ad_npc_practice_idol",
+   "json": "res://art/export/npc/ad_npc_practice_idol.json",
+   "pivot": [
+    8,
+    30
+   ],
+   "png": "res://art/export/npc/ad_npc_practice_idol.png",
+   "row": "AD-262",
+   "slices": {
+    "hurtbox": {
+     "h": 22,
+     "w": 14,
+     "x": 1,
+     "y": 8
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 30
+    }
+   },
+   "tags": {
+    "hit": {
+     "frames": 3,
+     "from": 5,
+     "ms": [
+      70,
+      70,
+      100
+     ],
+     "to": 7
+    },
+    "idle": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      1000
+     ],
+     "to": 0
+    },
+    "interact": {
+     "frames": 4,
+     "from": 1,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 4
     }
    }
   },
@@ -5388,6 +5520,216 @@
     }
    }
   },
+  "ad_prp_shrine_altar": {
+   "canvas": [
+    32,
+    32
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_shrine_altar_glow.png",
+   "id": "AD-262-ad_prp_shrine_altar",
+   "json": "res://art/export/prp/ad_prp_shrine_altar.json",
+   "pivot": [
+    16,
+    30
+   ],
+   "png": "res://art/export/prp/ad_prp_shrine_altar.png",
+   "row": "AD-262",
+   "slices": {
+    "hurtbox": {
+     "h": 17,
+     "w": 24,
+     "x": 4,
+     "y": 14
+    },
+    "interact_zone": {
+     "h": 28,
+     "w": 40,
+     "x": -4,
+     "y": 12
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 16,
+     "y": 30
+    }
+   },
+   "tags": {
+    "idle": {
+     "frames": 4,
+     "from": 0,
+     "ms": [
+      150,
+      150,
+      150,
+      150
+     ],
+     "to": 3
+    },
+    "interact": {
+     "frames": 4,
+     "from": 4,
+     "ms": [
+      120,
+      120,
+      120,
+      120
+     ],
+     "to": 7
+    }
+   }
+  },
+  "ad_prp_shrine_banner_a": {
+   "canvas": [
+    16,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-262-ad_prp_shrine_banner_a",
+   "json": "res://art/export/prp/ad_prp_shrine_banner_a.json",
+   "pivot": [
+    8,
+    31
+   ],
+   "png": "res://art/export/prp/ad_prp_shrine_banner_a.png",
+   "row": "AD-262",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 31
+    }
+   },
+   "tags": {
+    "idle": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      1000
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_shrine_banner_b": {
+   "canvas": [
+    16,
+    32
+   ],
+   "category": "prp",
+   "id": "AD-262-ad_prp_shrine_banner_b",
+   "json": "res://art/export/prp/ad_prp_shrine_banner_b.json",
+   "pivot": [
+    8,
+    31
+   ],
+   "png": "res://art/export/prp/ad_prp_shrine_banner_b.png",
+   "row": "AD-262",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 31
+    }
+   },
+   "tags": {
+    "idle": {
+     "frames": 1,
+     "from": 0,
+     "ms": [
+      1000
+     ],
+     "to": 0
+    }
+   }
+  },
+  "ad_prp_shrine_candle_a": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_shrine_candle_a_glow.png",
+   "id": "AD-262-ad_prp_shrine_candle_a",
+   "json": "res://art/export/prp/ad_prp_shrine_candle_a.json",
+   "pivot": [
+    8,
+    14
+   ],
+   "png": "res://art/export/prp/ad_prp_shrine_candle_a.png",
+   "row": "AD-262",
+   "slices": {
+    "hurtbox": {
+     "h": 12,
+     "w": 10,
+     "x": 3,
+     "y": 3
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 14
+    }
+   },
+   "tags": {
+    "loop": {
+     "frames": 3,
+     "from": 0,
+     "ms": [
+      120,
+      120,
+      120
+     ],
+     "to": 2
+    }
+   }
+  },
+  "ad_prp_shrine_candle_b": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "prp",
+   "glow": "res://art/export/prp/ad_prp_shrine_candle_b_glow.png",
+   "id": "AD-262-ad_prp_shrine_candle_b",
+   "json": "res://art/export/prp/ad_prp_shrine_candle_b.json",
+   "pivot": [
+    8,
+    14
+   ],
+   "png": "res://art/export/prp/ad_prp_shrine_candle_b.png",
+   "row": "AD-262",
+   "slices": {
+    "hurtbox": {
+     "h": 13,
+     "w": 8,
+     "x": 4,
+     "y": 2
+    },
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 8,
+     "y": 14
+    }
+   },
+   "tags": {
+    "loop": {
+     "frames": 3,
+     "from": 0,
+     "ms": [
+      120,
+      120,
+      120
+     ],
+     "to": 2
+    }
+   }
+  },
   "ad_prp_spell_lectern": {
    "canvas": [
     32,
@@ -6659,6 +7001,69 @@
       1000
      ],
      "to": 15
+    }
+   }
+  },
+  "ad_til_shrine_mosaic": {
+   "canvas": [
+    16,
+    16
+   ],
+   "category": "til",
+   "id": "AD-262-ad_til_shrine_mosaic",
+   "json": "res://art/export/til/ad_til_shrine_mosaic.json",
+   "pivot": [
+    0,
+    0
+   ],
+   "png": "res://art/export/til/ad_til_shrine_mosaic.png",
+   "row": "AD-262",
+   "slices": {
+    "pivot": {
+     "h": 1,
+     "w": 1,
+     "x": 0,
+     "y": 0
+    }
+   },
+   "tags": {
+    "centre": {
+     "frames": 9,
+     "from": 0,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 8
+    },
+    "corner": {
+     "frames": 4,
+     "from": 13,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 16
+    },
+    "edge": {
+     "frames": 4,
+     "from": 9,
+     "ms": [
+      1000,
+      1000,
+      1000,
+      1000
+     ],
+     "to": 12
     }
    }
   },
@@ -10222,7 +10627,8 @@
   "AD-245",
   "AD-246",
   "AD-247",
-  "AD-248"
+  "AD-248",
+  "AD-262"
  ],
  "version": 1
 }
