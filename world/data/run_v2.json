@@ -716,10 +716,12 @@
             ],
             "prefer": "toward"
           },
+          "punish_cycle": true,
           "pool": [
             {
               "pattern": "water_bolt",
-              "weight": 3
+              "weight": 3,
+              "big": true
             },
             {
               "pattern": "page_throw",
@@ -753,7 +755,9 @@
         },
         {
           "threshold": 0.66,
-          "windup_ticks": 44,
+          "windup_ticks": 36,
+          "recovery_ticks": 30,
+          "punish_cycle": true,
           "transition": {
             "roar_ticks": 90,
             "arena_change": {
@@ -835,7 +839,7 @@
           "pool": [
             {
               "pattern": "flood",
-              "weight": 2
+              "weight": 3
             },
             {
               "pattern": "wet_zone",
@@ -843,7 +847,8 @@
             },
             {
               "pattern": "water_bolt",
-              "weight": 3
+              "weight": 3,
+              "big": true
             },
             {
               "move": {
@@ -869,7 +874,9 @@
         },
         {
           "threshold": 0.33,
-          "windup_ticks": 40,
+          "windup_ticks": 36,
+          "recovery_ticks": 18,
+          "punish_cycle": true,
           "transition": {
             "roar_ticks": 90,
             "arena_change": {
@@ -962,14 +969,34 @@
             ],
             "prefer": "toward"
           },
+          "hazards": [
+            {
+              "type": "tide_wave",
+              "speed": 260,
+              "thickness": 64,
+              "gap_width": 96,
+              "damage": 10,
+              "channel": "water",
+              "status": "wet",
+              "warn_ticks": 60,
+              "first_ticks": 300,
+              "every_ticks": 900
+            }
+          ],
           "pool": [
+            {
+              "pattern": "flood",
+              "weight": 2,
+              "max_range": 4000
+            },
             {
               "pattern": "summon_wisps",
               "weight": 2
             },
             {
               "pattern": "storm_pulse",
-              "weight": 3
+              "weight": 3,
+              "big": true
             },
             {
               "pattern": "page_throw",

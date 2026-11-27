@@ -36,6 +36,8 @@ var _rng: RandomNumberGenerator
 var _last_key := ""
 var _combo_queue: Array = []
 var _combo_gap := 0
+## AD-258: pool picks since the phase's `big` entry last fired (phase key `punish_cycle`).
+var _since_big := 0
 var _current_entry: Dictionary = {}
 ## AD-198 movement: `submerged` is a sim + presentation flag (the renderer hides the boss); the rest is the move in progress.
 var submerged := false
@@ -250,7 +252,7 @@ func advance(session) -> void:
 				_start_windup(session)
 		"recover":
 			_walk(session)
-			var wait := _combo_gap if not _combo_queue.is_empty() else int(tuning["recovery_ticks"])
+			var wait := _combo_gap if not _combo_queue.is_empty() else _recovery_ticks()
 			if state_tick >= wait:
 				_start_windup(session)
 	if tuning.has("wisp_shield"):
@@ -311,6 +313,7 @@ func _update_phase(hp_fraction: float, tick: int, session) -> void:
 	phase = reached
 	_summon_age = 0
 	_combo_queue.clear()
+	_since_big = 0
 	_last_key = ""
 	_current_entry = {}
 	_pending_roar = false
@@ -426,6 +429,12 @@ func _after_move_or_attack(session) -> void:
 	else:
 		_state("recover",session.sim.clock.tick)
 
+## AD-258: a pool phase may override the boss-wide recovery_ticks.
+func _recovery_ticks() -> int:
+	if tuning.has("phases"):
+		return int(tuning["phases"][phase-1].get("recovery_ticks",tuning["recovery_ticks"]))
+	return int(tuning["recovery_ticks"])
+
 func _range_key(attack: String) -> String:
 	match attack:
 		"pulse":
@@ -446,7 +455,12 @@ func _pool_attack(session) -> String:
 	for entry in pool:
 		if (entry.has("max_range") and distance > float(entry["max_range"])) or (entry.has("min_range") and distance < float(entry["min_range"])):
 			blocked.append(Pool.entry_key(entry))
+	if bool(tuning["phases"][phase-1].get("punish_cycle",false)) and _since_big >= pool.size()-1:
+		for entry in pool:
+			if not bool(entry.get("big",false)):
+				blocked.append(Pool.entry_key(entry))
 	_current_entry = Pool.pick(pool,_last_key,blocked,rng(session))
+	_since_big = 0 if bool(_current_entry.get("big",false)) else _since_big+1
 	if _current_entry.has("move"):
 		return Pool.entry_key(_current_entry)
 	if not _current_entry.has("combo"):

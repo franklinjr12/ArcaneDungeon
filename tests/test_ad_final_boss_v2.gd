@@ -38,6 +38,7 @@ func run(t) -> void:
 	_unfrozen_pool_no_stun(t)
 	_legacy_submerge_unchanged(t)
 	_validate(t)
+	_ad258_punish_cycle(t)
 	_page_throw_queues(t)
 	_page_cap(t)
 	_page_flight_and_hit(t)
@@ -323,6 +324,51 @@ func _validate(t) -> void:
 	var no_anchors: Dictionary = good.duplicate(true)
 	no_anchors.erase("anchors")
 	t.check(not codes.call(no_anchors).has("BOSS_MOVE_ANCHORS"),"AD-201 a pool exit does not need anchors")
+	var phase_keys := func(extra: Dictionary, big: bool = true) -> Dictionary:
+		var cfg: Dictionary = good.duplicate(true)
+		cfg["phases"][0].merge(extra,true)
+		cfg["phases"][0]["pool"][1]["big"] = big
+		return cfg
+	t.equal(BossCombat.validate(phase_keys.call({"recovery_ticks":30,"punish_cycle":true})),[],"AD-258 phase recovery_ticks and punish_cycle with one big entry validate")
+	t.check(codes.call(phase_keys.call({"recovery_ticks":0})).has("BOSS_ARCHIVIST_PARAM"),"AD-258 a phase recovery_ticks below 1 is rejected")
+	t.check(codes.call(phase_keys.call({"recovery_ticks":2.5})).has("BOSS_ARCHIVIST_PARAM"),"AD-258 a fractional phase recovery_ticks is rejected")
+	t.check(codes.call(phase_keys.call({"punish_cycle":1})).has("BOSS_ARCHIVIST_PARAM"),"AD-258 a non-bool punish_cycle is rejected")
+	t.check(codes.call(phase_keys.call({"punish_cycle":true},false)).has("BOSS_ARCHIVIST_PARAM"),"AD-258 punish_cycle without a big entry is rejected")
+	var no_stagger_cycle: Dictionary = phase_keys.call({"punish_cycle":true})
+	no_stagger_cycle.erase("stagger")
+	no_stagger_cycle.erase("freeze_stun")
+	t.check(codes.call(no_stagger_cycle).has("BOSS_ARCHIVIST_PARAM"),"AD-258 punish_cycle without a stagger block is rejected")
+
+## AD-258: punish_cycle forces the single big entry at the latest every pool-size picks; a phase recovery_ticks overrides the boss one.
+func _ad258_punish_cycle(t) -> void:
+	var pool := [{"pattern":"radial","big":true,"weight":1},{"pattern":"fan","weight":1000},{"pattern":"targeted","weight":1000}]
+	var cfg := _cfg({},{"recovery_ticks":50,"phases":[{"threshold":1.0,"windup_ticks":40,"recovery_ticks":12,"punish_cycle":true,"pool":pool}]})
+	t.equal(BossCombat.validate(cfg),[],"AD-258 punish-cycle test config validates")
+	var pair := _fresh(cfg,Vector2(150,450),false)
+	var s = pair[0]
+	var boss = pair[1]
+	var picks := 0
+	var since := 0
+	var worst := 0
+	var staggers := 0
+	var last: String = boss.state
+	for i in 4000:
+		s.step()
+		if boss.state != last:
+			if boss.state == "windup":
+				picks += 1
+				since += 1
+			if boss.state == "stagger":
+				staggers += 1
+				worst = maxi(worst,since)
+				since = 0
+			last = boss.state
+	t.check(picks >= 9 and staggers >= picks/3 and worst <= 3,"AD-258 punish_cycle: a stagger at least every 3 picks of a 3-entry pool (%d picks, %d staggers, worst %d)" % [picks,staggers,worst])
+	var waits: Array = []
+	for tr in boss.transitions.filter(func(x): return x["from"] == "recover"):
+		var into: Array = boss.transitions.filter(func(x): return x["to"] == "recover" and x["tick"] < tr["tick"])
+		waits.append(int(tr["tick"])-int(into.back()["tick"]))
+	t.check(not waits.is_empty() and waits.all(func(w): return w == 12),"AD-258 the phase recovery_ticks (12) overrides the boss-wide one (waits %s)" % str(waits))
 
 # --- step 2: book pages, wisp shield, conducting storm pulse ---
 

@@ -725,10 +725,12 @@
             ],
             "prefer": "toward"
           },
+          "punish_cycle": false,
           "pool": [
             {
               "pattern": "water_bolt",
-              "weight": 3
+              "weight": 3,
+              "big": false
             },
             {
               "pattern": "page_throw",
@@ -763,6 +765,8 @@
         {
           "threshold": 0.66,
           "windup_ticks": 44,
+          "recovery_ticks": 50,
+          "punish_cycle": false,
           "transition": {
             "roar_ticks": 90,
             "arena_change": {
@@ -852,7 +856,8 @@
             },
             {
               "pattern": "water_bolt",
-              "weight": 3
+              "weight": 3,
+              "big": false
             },
             {
               "move": {
@@ -879,6 +884,8 @@
         {
           "threshold": 0.33,
           "windup_ticks": 40,
+          "recovery_ticks": 50,
+          "punish_cycle": false,
           "transition": {
             "roar_ticks": 90,
             "arena_change": {
@@ -971,14 +978,34 @@
             ],
             "prefer": "toward"
           },
+          "hazards": [
+            {
+              "type": "tide_wave",
+              "speed": 260,
+              "thickness": 64,
+              "gap_width": 96,
+              "damage": 0,
+              "channel": "water",
+              "status": "wet",
+              "warn_ticks": 60,
+              "first_ticks": 100000000,
+              "every_ticks": 900
+            }
+          ],
           "pool": [
+            {
+              "pattern": "flood",
+              "weight": 1,
+              "max_range": 0
+            },
             {
               "pattern": "summon_wisps",
               "weight": 2
             },
             {
               "pattern": "storm_pulse",
-              "weight": 3
+              "weight": 3,
+              "big": false
             },
             {
               "pattern": "page_throw",

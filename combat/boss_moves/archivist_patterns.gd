@@ -96,6 +96,8 @@ static func _positive(spec, keys: Array, path: String, issues: Array) -> void:
 
 ## BOSS_ARCHIVIST_PARAM for bad `pools`, `emerge_status`, `freeze_stun`, a pool-exit submerge without 2+ pools,
 ## missing or non-positive `book_pages` / `storm_conduct` keys, a `wisp_shield` multiplier outside 0..1, `page_throw` without `book_pages` and a bad `page_speed_scale`.
+## AD-258 phase keys: `recovery_ticks` (integer >= 1, overrides the boss-wide one) and `punish_cycle` (bool; true forces the phase's single
+## `big` entry at the latest every pool-size picks, so each cycle has exactly one stagger punish window; needs one big entry and `stagger`).
 static func validate(settings: Dictionary) -> Array:
 	var issues: Array = []
 	var pools = settings.get("pools")
@@ -132,6 +134,14 @@ static func validate(settings: Dictionary) -> Array:
 		if typeof(phases[p]) == TYPE_DICTIONARY:
 			if phases[p].has("page_speed_scale") and not (_num(phases[p]["page_speed_scale"]) and float(phases[p]["page_speed_scale"]) > 0.0):
 				issues.append({"code":"BOSS_ARCHIVIST_PARAM","path":"phases[%d].page_speed_scale" % p,"message":"page_speed_scale must be a number > 0"})
+			if phases[p].has("recovery_ticks") and not (_num(phases[p]["recovery_ticks"]) and float(phases[p]["recovery_ticks"]) >= 1.0 and is_equal_approx(float(phases[p]["recovery_ticks"]),roundf(float(phases[p]["recovery_ticks"])))):
+				issues.append({"code":"BOSS_ARCHIVIST_PARAM","path":"phases[%d].recovery_ticks" % p,"message":"recovery_ticks must be an integer >= 1"})
+			if phases[p].has("punish_cycle"):
+				var bigs: int = (phases[p].get("pool",[]) as Array).filter(func(e): return typeof(e) == TYPE_DICTIONARY and bool(e.get("big",false))).size() if typeof(phases[p].get("pool")) == TYPE_ARRAY else 0
+				if typeof(phases[p]["punish_cycle"]) != TYPE_BOOL:
+					issues.append({"code":"BOSS_ARCHIVIST_PARAM","path":"phases[%d].punish_cycle" % p,"message":"punish_cycle must be a bool"})
+				elif bool(phases[p]["punish_cycle"]) and (bigs != 1 or not settings.has("stagger")):
+					issues.append({"code":"BOSS_ARCHIVIST_PARAM","path":"phases[%d].punish_cycle" % p,"message":"punish_cycle needs exactly one big pool entry and a stagger block"})
 			if not settings.has("book_pages") and Elite._lists(phases[p],"page_throw"):
 				issues.append({"code":"BOSS_ARCHIVIST_PARAM","path":"phases[%d]" % p,"message":"the page_throw pattern needs a book_pages block"})
 		var pool = phases[p].get("pool",[]) if typeof(phases[p]) == TYPE_DICTIONARY else []
