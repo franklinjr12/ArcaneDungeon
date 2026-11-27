@@ -13,6 +13,13 @@ func run(t) -> void:
 	t.check(str(p.tips["room1"]).contains("Space") and str(p.tips["room1"]).contains("i-frames"), "AD-042 room1 text")
 	t.check(str(p.tips["first_reward"]).contains("3 cards"), "AD-042 first_reward text")
 	t.check(str(p.tips["first_workshop"]).contains("slot 4"), "AD-042 first_workshop text")
+	# AD-266: onboarding tips use shrine wording (the old test area is gone).
+	t.check(str(p.tips["first_workshop"]).contains("shrine altar"), "AD-266 first_workshop points at the shrine altar")
+	t.check(not str(p.tips["first_workshop"]).containsn("range"), "AD-266 first_workshop no longer mentions the range")
+	t.check(str(p.tips["test_on_dummy"]).contains("Practice on the idol"), "AD-266 test_on_dummy resolves to idol wording")
+	t.check(not str(p.tips["test_on_dummy"]).containsn("dummy"), "AD-266 test_on_dummy no longer mentions the dummy")
+	t.equal(TranslationServer.translate("onboarding.test_on_dummy"), "Practice on the idol.", "AD-266 test_on_dummy csv key")
+	t.equal(TranslationServer.translate("onboarding.first_workshop"), "Visit the shrine altar to choose a new spell. Edit slot 4; invalid spells show why.", "AD-266 first_workshop csv key")
 	t.equal(p.trigger("room1"), p.tips["room1"], "AD-042 first trigger returns text")
 	t.equal(p.trigger("room1"), "", "AD-042 second trigger empty")
 	p.trigger("first_reward")
