@@ -199,6 +199,36 @@
     "shot_spread": 0,
     "telegraph_radius": 190
   },
+  "shrine": {
+    "enabled": false,
+    "interact_radius": 0,
+    "room_art_key": "",
+    "altar": {
+      "art_key": "",
+      "prompt": "",
+      "position": [
+        0,
+        0
+      ]
+    },
+    "statue": {
+      "art_key": "",
+      "prompt": "",
+      "position": [
+        0,
+        0
+      ]
+    },
+    "practice_idol": {
+      "art_key": "",
+      "prompt": "",
+      "position": [
+        0,
+        0
+      ],
+      "optional": false
+    }
+  },
   "merchant": {
     "rune_price": 40,
     "max_hp_upgrade_price": 35,
