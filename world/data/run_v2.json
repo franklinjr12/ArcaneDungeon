@@ -548,7 +548,7 @@
       ]
     },
     "cistern_boss": {
-      "_note": "AD-142 PROPOSED numbers (Demo Plan default 'Drowned Archivist', pending Franklin). AD-201 PROPOSED redesign: pool dive + ripple, pages, tide wave, wisp shield, conducting storm pulse; hp unchanged at 2400, no HP raised. Bot bench is INFO only. AD-258 PROPOSED threat rebalance (hp still 2400): telegraphs 36 ticks, ~2.5x hit damage, 3 pages, guard 0.12 outside punish windows, one big entry per cycle (weight 1), 1 s stagger at 1.5x, lightning weakness -0.05; gated by tests/bench/ad258_archivist_bots.gd.",
+      "_note": "AD-142 PROPOSED numbers (Demo Plan default 'Drowned Archivist', pending Franklin). AD-201 PROPOSED redesign: pool dive + ripple, pages, tide wave, wisp shield, conducting storm pulse; hp unchanged at 2400, no HP raised. Bot bench is INFO only. AD-258 PROPOSED threat rebalance (hp still 2400): telegraphs 36 ticks, ~2.5x hit damage, 3 pages, guard 0.12 outside punish windows, one big entry per cycle (weight 1), 1 s stagger at 1.5x, lightning weakness -0.05; gated by tests/bench/ad258_archivist_bots.gd. AD-265 PROPOSED: AD-201 pins restored (stagger 120 ticks, dive/emerge telegraphs and tide warning 40 ticks); emerge splash ring faster per phase (360/480/540 px/s, max radius 380/360/300) so it lands inside each phase recovery and adds pressure.",
       "kind": "drowned_archivist",
       "display_name": "Drowned Archivist",
       "hp": 2400,
@@ -609,7 +609,7 @@
         ]
       ],
       "stagger": {
-        "ticks": 60,
+        "ticks": 120,
         "damage_taken_multiplier": 1.5
       },
       "guard": {
@@ -768,14 +768,14 @@
               "move": {
                 "mode": "submerge",
                 "exit": "pool",
-                "telegraph_ticks": 36,
+                "telegraph_ticks": 40,
                 "submerged_ticks": 45,
-                "emerge_telegraph_ticks": 36,
+                "emerge_telegraph_ticks": 40,
                 "radius": 110,
                 "damage": 26,
                 "anchor_pick": "farthest",
                 "shockwave": {
-                  "speed": 300,
+                  "speed": 360,
                   "width": 36,
                   "max_radius": 380,
                   "damage": 16
@@ -864,7 +864,7 @@
               "damage": 24,
               "channel": "water",
               "status": "wet",
-              "warn_ticks": 36,
+              "warn_ticks": 40,
               "first_ticks": 420,
               "every_ticks": 900
             }
@@ -887,16 +887,16 @@
               "move": {
                 "mode": "submerge",
                 "exit": "pool",
-                "telegraph_ticks": 36,
+                "telegraph_ticks": 40,
                 "submerged_ticks": 45,
-                "emerge_telegraph_ticks": 36,
+                "emerge_telegraph_ticks": 40,
                 "radius": 110,
                 "damage": 26,
                 "anchor_pick": "farthest",
                 "shockwave": {
-                  "speed": 300,
+                  "speed": 480,
                   "width": 36,
-                  "max_radius": 380,
+                  "max_radius": 360,
                   "damage": 16
                 }
               },
@@ -1011,7 +1011,7 @@
               "damage": 24,
               "channel": "water",
               "status": "wet",
-              "warn_ticks": 36,
+              "warn_ticks": 40,
               "first_ticks": 300,
               "every_ticks": 900
             }
@@ -1043,16 +1043,16 @@
               "move": {
                 "mode": "submerge",
                 "exit": "pool",
-                "telegraph_ticks": 36,
+                "telegraph_ticks": 40,
                 "submerged_ticks": 45,
-                "emerge_telegraph_ticks": 36,
+                "emerge_telegraph_ticks": 40,
                 "radius": 110,
                 "damage": 26,
                 "anchor_pick": "farthest",
                 "shockwave": {
-                  "speed": 300,
+                  "speed": 540,
                   "width": 36,
-                  "max_radius": 380,
+                  "max_radius": 300,
                   "damage": 16
                 }
               },
