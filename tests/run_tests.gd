@@ -34,5 +34,6 @@ func _run_all() -> void:
 		context.check(suite_count > 0, "at least one test suite discovered")
 	print("TEST SUMMARY: %d passed / %d failed / %d suites" % [context.passed, context.failed, suite_count])
 	for failure in context.failures:
-		printerr("FAILED: ", failure)
+		# The negative probe's injected failure is expected; keep "FAILED:" greppable for real failures only.
+		printerr("EXPECTED_FAILURE: " if self_test else "FAILED: ", failure)
 	quit(1 if context.failed > 0 else 0)
