@@ -45,6 +45,9 @@ var shop_cards: Array = [] ## offer_N sprite nodes, one per stock item
 var shop_buy_buttons: Array = []
 var _shop_detail: Array = [] ## [title, tag, desc] labels of the merchant detail panel
 var shop_open := false
+## AD-259: the shrine altar's choice screen (reuses the reward overlay) and the in-world UI flag.
+const shrine_ui_in_world := true
+var altar_open := false
 var _shop_offered := false
 var shop_reopen_button: Button
 var desk_skip_button: Button
@@ -696,6 +699,10 @@ func _input(event: InputEvent) -> void:
 		_close_editor(false)
 		get_viewport().set_input_as_handled()
 		return
+	if pad_back and altar_open:
+		_set_altar_open(false)
+		get_viewport().set_input_as_handled()
+		return
 	if pad_back and shop_overlay.visible:
 		_set_shop_open(false)
 		get_viewport().set_input_as_handled()
@@ -730,8 +737,17 @@ func _input(event: InputEvent) -> void:
 		_choose_reward(_reward_index(event))
 	elif event.is_action_pressed("loadout_view"):
 		open_loadout_view()
+	elif _reward_index(event) >= 0 and altar_open and _reward_index(event) < flow.altar_options.size():
+		_pick_reward(_reward_index(event))
 	elif event.is_action_pressed("interact"):
-		_exit()
+		if altar_open:
+			_set_altar_open(false)
+		elif _shrine_prompt_text() != "":
+			_shrine_interact()
+		else:
+			_exit()
+	elif event.is_action_pressed("pause") and altar_open:
+		_set_altar_open(false)
 	elif event.is_action_pressed("pause") and shop_overlay.visible:
 		_set_shop_open(false)
 	elif event.is_action_pressed("pause"):
@@ -746,6 +762,67 @@ func _input(event: InputEvent) -> void:
 		if dev_tools_enabled(): toggle_dev_overlay()
 	elif event.is_action_pressed("dev_art_export"):
 		if dev_tools_enabled(): Art.toggle_art_export(); arena_canvas.queue_redraw()
+
+## AD-259: the in-world prompt for the shrine object nearest the mage: the bound interact key plus the data text.
+func _shrine_prompt_text() -> String:
+	if flow == null or flow.range_sim == null:
+		return ""
+	var id: String = flow.shrine_nearest(flow.range_sim.actor.position)
+	for obj in flow.shrine_objects():
+		if str(obj["id"]) == id:
+			return "[%s] %s" % [InputActions.action_text("interact"),str(obj["prompt"])]
+	return ""
+
+func _shrine_interact() -> void:
+	var id: String = flow.shrine_nearest(flow.range_sim.actor.position)
+	var result: Dictionary = flow.shrine_interact(id,flow.range_sim.actor.position)
+	if not bool(result.get("ok",false)):
+		return
+	match str(result["kind"]):
+		"altar":
+			if bool(result["taken"]) or (result["options"] as Array).is_empty():
+				return
+			_set_altar_open(true)
+		"statue":
+			_set_shop_open(true)
+		"idol":
+			var slot := 0
+			var point: Vector2 = flow.range_sim.actor.position
+			for obj in flow.shrine_objects():
+				if str(obj["id"]) == "idol":
+					point = obj["position"]
+			var aim: Vector2 = (point-flow.range_sim.actor.position)
+			_test_cast_slot(slot,flow.range_sim.actor.position+(aim if aim.length() > 1.0 else Vector2.RIGHT))
+
+func _set_altar_open(on: bool) -> void:
+	altar_open = on
+	_redraw_panel()
+
+func _pick_reward(i: int) -> void:
+	if altar_open:
+		var result: Dictionary = flow.choose_altar(i)
+		current_notice = tr("run.notice.reward") % str(result.get("kind",result.get("reason","")))
+		if bool(result.get("ok",false)):
+			altar_open = false
+			_autosave()
+		_redraw_panel()
+	else:
+		_choose_reward(i)
+
+## Pushes the shrine objects and the nearest-object prompt to the range canvas.
+func _sync_shrine_canvas() -> void:
+	var objects: Array = flow.shrine_objects() if flow != null else []
+	test_canvas.shrine_objects = objects
+	test_canvas.shrine_room_key = str(flow.config.get("shrine",{}).get("room_art_key","")) if flow != null else ""
+	test_canvas.shrine_prompt = ""
+	test_canvas.shrine_prompt_at = Vector2.INF
+	if objects.is_empty() or altar_open or shop_open or editor_open:
+		return
+	var id: String = flow.shrine_nearest(flow.range_sim.actor.position)
+	for obj in objects:
+		if str(obj["id"]) == id:
+			test_canvas.shrine_prompt = _shrine_prompt_text()
+			test_canvas.shrine_prompt_at = obj["position"]
 
 func _reward_index(event: InputEvent) -> int:
 	for i in 9:
@@ -768,10 +845,14 @@ func perf_step(command: Dictionary) -> void:
 	last_sim_usec = Time.get_ticks_usec() - sim_start
 	arena_canvas.queue_redraw()
 	portrait_hud.queue_redraw()
+	_sync_shrine_canvas()
 	test_canvas.queue_redraw()
 	refresh_counter += 1
 	if refresh_counter%7 == 0:
 		_update_labels()
+
+## AD-257: UI-only hit stop; the sim keeps its tick results, we just delay the next fixed step in real time.
+var _hit_stop_until_usec := 0
 
 func _physics_process(_delta: float) -> void:
 	if perf_seed != null:
@@ -782,6 +863,9 @@ func _physics_process(_delta: float) -> void:
 		cast_pending = -1
 		return
 	var sim_start := Time.get_ticks_usec()
+	if flow.state == "fighting" and sim_start < _hit_stop_until_usec:
+		arena_canvas.queue_redraw()
+		return
 	var pad_slot := _pad_cast_poll.poll()
 	if not editor_open:
 		if pad_slot >= 0 and not is_loadout_view_open():
@@ -798,6 +882,7 @@ func _physics_process(_delta: float) -> void:
 			var command := {"move":dir,"aim":aim,"cast":cast_pending,"cursor":cursor,
 				"dash":Input.is_action_just_pressed("dash")}
 			flow.step(command)
+			_consume_hit_stop()
 		elif flow.state in ["cleared","workshop"]:
 			flow.move_after_clear({"move":Input.get_vector("move_left","move_right","move_up","move_down"),
 				"aim":flow.session.player.facing})
@@ -809,6 +894,7 @@ func _physics_process(_delta: float) -> void:
 	cast_pending = -1
 	arena_canvas.queue_redraw()
 	portrait_hud.queue_redraw()
+	_sync_shrine_canvas()
 	test_canvas.queue_redraw()
 	refresh_counter += 1
 	if refresh_counter%7 == 0:
@@ -927,21 +1013,26 @@ func _redraw_panel() -> void:
 	var in_summary: bool = flow.state in ["dead","won"]
 	var reward_choice: bool = flow.state == "cleared" and flow.room.values["type"] != "boss" and not flow.reward_collected
 	var in_workshop: bool = flow.state == "workshop"
-	workshop_holder.visible = in_workshop and not editor_open
-	reward_overlay.visible = reward_choice
+	workshop_holder.visible = in_workshop and not editor_open and not altar_open
+	var shrine_room: bool = in_workshop and not flow.shrine_objects().is_empty()
+	if not shrine_room or flow.altar_taken:
+		altar_open = false
+	reward_overlay.visible = reward_choice or altar_open
 	summary_overlay.visible = in_summary and not (scriptorium_screen != null and scriptorium_screen.visible)
 	_place_context(workshop_column)
 	if in_summary:
 		_build_summary_panel()
 	elif flow.state == "error":
 		_heading(context,tr("run.error.run_data"))
-	elif reward_choice:
+	elif reward_choice or altar_open:
 		_build_reward_panel()
 	elif flow.state == "cleared" and flow.next_is_optional():
 		_button(context,tr("run.btn.door_optional"),func(): _exit(true))
 		_button(context,tr("run.btn.door_skip"),func(): _exit(false))
 	elif in_workshop and flow.prelude:
 		_build_desk_panel()
+	elif shrine_room:
+		_button(context,tr("run.btn.continue_stage2"),func(): _exit())
 	elif in_workshop:
 		shop_reopen_button = _button(context,tr("run.btn.open_merchant"),func(): _set_shop_open(true))
 		_heading(context,tr("run.range.heading"))
@@ -956,7 +1047,7 @@ func _redraw_panel() -> void:
 	if in_workshop and not flow.prelude:
 		if not _shop_offered:
 			_shop_offered = true
-			shop_open = true
+			shop_open = not shrine_room # the shrine statue opens the merchant in-world
 		_build_shop_panel()
 	else:
 		_shop_offered = false
@@ -1004,24 +1095,31 @@ func _kit_card(o: Overlay, template: String, node_id: String, dx: float, kind: S
 ## AD-153: reward pick per ad_ui_screen_reward_layout.json. Offers, order and keys 1-N come from the flow unchanged.
 func _build_reward_panel() -> void:
 	var o: Overlay = reward_overlay
+	var options: Array = flow.altar_options if altar_open else flow.reward_options
 	o.begin("reward")
 	reward_cards.clear()
 	reward_take_buttons.clear()
 	o.picture("title_header",SkinA.region("ad_ui_header"),o.rect_of("title_header"))
 	o.text("title",tr("run.reward.title"),_band(o,"title_header","title"),"selected",HORIZONTAL_ALIGNMENT_CENTER)
 	var room_number := int(flow.room.values.get("room",flow.run.sequence_index))+1
-	if flow.resonant_clear:
+	if altar_open:
+		var altar_text := ""
+		for obj in flow.shrine_objects():
+			if str(obj["id"]) == "altar":
+				altar_text = str(obj["prompt"])
+		o.text("subtitle",altar_text,{"x":0.0,"y":o.rect_of("subtitle")["y"],"w":SkinA.CANVAS.x,"h":7.0},"normal",HORIZONTAL_ALIGNMENT_CENTER)
+	elif flow.resonant_clear:
 		o.text("subtitle",tr("run.reward.resonant_banner"),{"x":0.0,"y":o.rect_of("subtitle")["y"],"w":SkinA.CANVAS.x,"h":7.0},"selected",HORIZONTAL_ALIGNMENT_CENTER)
 	else:
 		o.text("subtitle",tr("run.reward.subtitle") % room_number,{"x":0.0,"y":o.rect_of("subtitle")["y"],"w":SkinA.CANVAS.x,"h":7.0},"normal",HORIZONTAL_ALIGNMENT_CENTER)
 	o.picture("ico_coin",SkinA.icon_or_mvp("coin"),{"x":520.0,"y":11.0,"w":16.0,"h":16.0})
 	o.text("coins_txt",tr("run.reward.coins") % flow.run.currency,{"x":540.0,"y":o.rect_of("coins_txt")["y"],"w":76.0,"h":7.0},"selected",HORIZONTAL_ALIGNMENT_RIGHT)
-	var count: int = flow.reward_options.size()
+	var count: int = options.size()
 	var step := 200.0 if count <= 3 else floorf(448.0/float(count-1))
 	var card_one: Dictionary = o.rect_of("card_1")
 	var order: Array = []
 	for i in count:
-		var item: Dictionary = flow.reward_options[i]
+		var item: Dictionary = options[i]
 		var centre := SkinA.CANVAS.x*0.5+(float(i)-float(count-1)*0.5)*step
 		var dx: float = centre-(card_one["x"]+card_one["w"]*0.5)
 		var kind := "upgrade"
@@ -1057,7 +1155,7 @@ func _build_reward_panel() -> void:
 		var rule: Dictionary = o.rect_of("divider_11")
 		o.rule("divider_%d" % (i+1),"ad_ui_divider_plain",{"x":inner_x,"y":rule["y"],"w":inner_w,"h":rule["h"]})
 		o.text("info_%d_desc" % (i+1),desc.to_upper(),{"x":inner_x,"y":o.rect_of("info_1_desc_0")["y"],"w":inner_w,"h":40.0},"normal",HORIZONTAL_ALIGNMENT_LEFT,4)
-		var take := o.button("btn_take_%d" % (i+1),tr("run.reward.take"),_choose_reward.bind(i),o.rect_of("btn_take_1",dx))
+		var take := o.button("btn_take_%d" % (i+1),tr("run.reward.take"),_pick_reward.bind(i),o.rect_of("btn_take_1",dx))
 		reward_take_buttons.append(take)
 		order.append("btn_take_%d" % (i+1))
 	var hint_y: float = o.rect_of("hint")["y"]
@@ -1099,7 +1197,7 @@ func _sync_shop() -> void:
 		shop_overlay.visible = shop_open and flow != null and flow.state == "workshop" and not editor_open
 		shop_overlay.focus_default()
 	if workshop_holder != null and flow != null:
-		workshop_holder.visible = flow.state == "workshop" and not editor_open and not (shop_overlay != null and shop_overlay.visible)
+		workshop_holder.visible = flow.state == "workshop" and not editor_open and not altar_open and not (shop_overlay != null and shop_overlay.visible)
 	if editor_dock != null:
 		editor_dock.visible = editor_open
 		_ensure_pad_focus()
@@ -1262,7 +1360,7 @@ func _update_labels() -> void:
 		return
 	_update_objective()
 	var test_text := ""
-	if flow.mode == "workshop" and flow.range_sim != null:
+	if flow.mode == "workshop" and flow.range_sim != null and flow.shrine_objects().is_empty(): # AD-259: no test readouts in the shrine
 		var trace = flow.range_sim.trace
 		var reactions: int = trace.filter_records(-1,"","reaction").size()
 		var triggers: int = trace.filter_records(-1,"","trigger").size()
@@ -1839,3 +1937,11 @@ func _debug_shot_entry() -> void:
 	var error := image.save_png(path)
 	print("AD_UI_SHOT saved %s %dx%d" % [path, image.get_width(), image.get_height()])
 	get_tree().quit(0 if error == OK else 1)
+
+## Converts the sim's pending combo hit_stop_ms into a real-time pause; skipped when flashes are reduced.
+func _consume_hit_stop() -> void:
+	var sim = flow.session.sim
+	var ms: int = sim.hit_stop_ms
+	sim.hit_stop_ms = 0
+	if ms > 0 and not ReduceMotion.flashes_reduced(_settings,flow.session):
+		_hit_stop_until_usec = Time.get_ticks_usec()+ms*1000

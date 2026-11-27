@@ -8,6 +8,12 @@ var selected_id := -1
 ## Optional exit door (Sigil Desk); Vector2.INF hides it.
 var door_at := Vector2.INF
 var door_open := true
+## AD-259: in-world shrine objects [{art_key, position}] and the interact prompt above the nearest one.
+var shrine_objects: Array = []
+## AD-263: the shrine room's art key (data room_art_key), drawn as the floor medallion under the objects.
+var shrine_room_key := ""
+var shrine_prompt := ""
+var shrine_prompt_at := Vector2.INF
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -30,6 +36,25 @@ func _draw() -> void:
 	if door_at != Vector2.INF:
 		Art.portal(self,door_at,door_open,tick)
 		_label(door_at+Vector2(-30,-39),tr("hud.exit_door") if door_open else tr("hud.exit_locked"),Color.WHITE,14)
+	if shrine_room_key != "" and not shrine_objects.is_empty():
+		var centre := Vector2.ZERO
+		for obj in shrine_objects:
+			centre += obj["position"]
+		Art.shrine_room(self,shrine_room_key,centre/float(shrine_objects.size()))
+	for obj in shrine_objects:
+		# AD-263: 'interact' while the mage is in range (the prompt object), 'hit' while a damage visual lands on the idol.
+		var state := "interact" if shrine_prompt_at != Vector2.INF and obj["position"] == shrine_prompt_at else "idle"
+		var age := 0
+		for v in runner.visuals:
+			if str(obj["id"]) == "idol" and v["kind"] == "hit" and int(v["until"]) > tick and v["position"].distance_to(obj["position"]) <= 40.0:
+				state = "hit"
+				age = tick-(int(v["until"])-Art.SHRINE_HIT_TICKS)
+		Art.shrine_object(self,str(obj["art_key"]),obj["position"],tick,state,age)
+	if shrine_prompt != "" and shrine_prompt_at != Vector2.INF:
+		var width := ThemeDB.fallback_font.get_string_size(shrine_prompt,HORIZONTAL_ALIGNMENT_LEFT,-1,13).x
+		var at := shrine_prompt_at+Vector2(-width*0.5,-58)
+		draw_rect(Rect2(at+Vector2(-6,-14),Vector2(width+12,19)),Color("#0d1823",0.85))
+		_label(at,shrine_prompt,Color("#fbe1a9"),13)
 	draw_line(runner.actor.position,hover,Color("#6fe1fa",0.18),1)
 	Art.entity(self,"mage",runner.actor.position,tick,Vector2.ZERO,(runner.active.size()>0 or runner.is_channelling()) and tick%14<5)
 	_label(runner.actor.position+Vector2(-19,-46),tr("combat.mage_label"),Color("#fbe1a9"),11)

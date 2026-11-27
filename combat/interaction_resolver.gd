@@ -6,6 +6,9 @@ var settings: Dictionary = {}
 var water = null
 ## AD-143: world/artifacts.gd holder or null (set by the runner); null keeps every arc rule unchanged.
 var artifacts = null
+## AD-257: combat tuning "combos" block (set by the runner); an entry whose "reaction" names a rule adds its
+## bonus_damage_scale burst on top of the rule's own bonus and applies its "apply" status. {} leaves rules unchanged.
+var combos: Dictionary = {}
 
 func _init(balance: Dictionary) -> void:
 	settings = balance.duplicate(true)
@@ -133,8 +136,14 @@ func _apply_reaction(rule: Dictionary, payload: Dictionary, target, target_store
 	for status_id in rule.get("apply",[]):
 		target.status.apply(str(status_id),tick,statuses[str(status_id)],context)
 		outcome["status_events"].append({"state":str(status_id),"action":"applied"})
+	var combo_id := _combo_for(str(rule.get("id","")))
+	var combo: Dictionary = combos.get(combo_id,{})
+	var combo_apply := str(combo.get("apply",""))
+	if not combo_apply.is_empty() and statuses.has(combo_apply):
+		target.status.apply(combo_apply,tick,statuses[combo_apply],context)
+		outcome["status_events"].append({"state":combo_apply,"action":"applied"})
 	var bonus := 0.0
-	var scale := float(rule.get("bonus_damage_scale",0))
+	var scale := float(rule.get("bonus_damage_scale",0))+float(combo.get("bonus_damage_scale",0))
 	# AD-240 Frostbrand: frozen targets take extra force damage on the shatter reaction.
 	if scale > 0.0 and str(rule.get("id","")) == "frozen_force_shatter" and artifacts != null and artifacts.has("frostbrand"):
 		scale += float(artifacts.param("frostbrand","force_scale",0.4))
@@ -155,7 +164,19 @@ func _apply_reaction(rule: Dictionary, payload: Dictionary, target, target_store
 			var node = target if id == target.id else target_store.get_target(id)
 			node.status.apply(area_status,tick,statuses[area_status],context)
 			affected.append(id)
-	outcome["reactions"].append({"id":str(rule["id"]),"target_id":target.id,"bonus_damage":bonus,"affected_ids":affected})
+	var entry := {"id":str(rule["id"]),"target_id":target.id,"bonus_damage":bonus,"affected_ids":affected}
+	if not combo_id.is_empty():
+		entry["combo"] = combo_id
+	outcome["reactions"].append(entry)
+
+## Combo key whose "reaction" is `rule_id` (sorted keys for a stable pick), or "".
+func _combo_for(rule_id: String) -> String:
+	var keys: Array = combos.keys()
+	keys.sort()
+	for key in keys:
+		if typeof(combos[key]) == TYPE_DICTIONARY and str(combos[key].get("reaction","")) == rule_id:
+			return str(key)
+	return ""
 
 func resolve_arc(arc: Dictionary, target) -> float:
 	if not target.eligible(int(arc["team"])):
