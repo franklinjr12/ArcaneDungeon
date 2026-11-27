@@ -1463,6 +1463,21 @@ static func _shot(shots: Array, event: String, at: Vector2, tick: int, rotation:
 	shots.append({"event": event, "at": at, "tick": tick, "rotation": rotation, "length": length})
 
 
+## AD-259: placeholder for in-world shrine objects. Art keys come from data; the final sprites arrive under the same keys.
+## A key with no registered sprite falls back to a plinth tinted from the key, never an error.
+const SHRINE_ICON_BY_TAIL := {"altar":"book","statue":"shop","idol":"staff"}
+
+static func shrine_object(canvas: CanvasItem, art_key: String, at: Vector2, tick: int) -> void:
+	var tint := Color.from_hsv(float(art_key.hash()%360)/360.0,0.35,0.85)
+	canvas.draw_rect(Rect2(at+Vector2(-22,-6),Vector2(44,28)),Color("#0d1823"))
+	canvas.draw_rect(Rect2(at+Vector2(-20,-4),Vector2(40,24)),tint.darkened(0.35))
+	canvas.draw_rect(Rect2(at+Vector2(-20,-4),Vector2(40,5)),tint)
+	var glow := 0.18+0.08*sin(float(tick)*0.08)
+	canvas.draw_circle(at+Vector2(0,-18),14,Color(tint.r,tint.g,tint.b,glow))
+	var icon_name: String = SHRINE_ICON_BY_TAIL.get(art_key.get_slice(".",art_key.get_slice_count(".")-1),"")
+	if icon_name != "" and ICONS.has(icon_name):
+		icon(canvas,icon_name,at+Vector2(-11,-30),Vector2(22,22))
+
 static func portal(canvas: CanvasItem, at: Vector2, open: bool, tick: int) -> void:
 	var shade := Color("#5edfc3") if open else Color("#bd5366")
 	canvas.draw_arc(at,27,PI,TAU,16,Color("#0d1823"),9)
