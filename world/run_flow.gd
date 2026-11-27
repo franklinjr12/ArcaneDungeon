@@ -38,6 +38,8 @@ var editor
 var range_sim
 var state := "uninitialized"
 var reward_options: Array = []
+var altar_options: Array = []
+var altar_taken := false
 var reward_collected := false
 var boss_defeated_events := 0
 ## AD-235: HP restored by the last boss kill (0 after other clears, or when already at max). Read by the UI toast.
@@ -344,6 +346,8 @@ func _build_room(entry: Dictionary) -> Dictionary:
 		return {"ok":false,"reason":"RUN_LOADOUT_INVALID","issues":result["issues"]}
 	session.sim.loadout.allow_edit = false
 	reward_options.clear()
+	altar_options.clear()
+	altar_taken = false
 	reward_collected = false
 	_counted_kills.clear()
 	editor = Editor.new(run,session.sim.registry,session.sim.loadout.slots.size()-PRESET_SLOT_OFFSET)
@@ -392,6 +396,8 @@ func _enter_current() -> Dictionary:
 		merchant.excluded_artifacts = meta_locked_artifacts.duplicate()
 		merchant.build(run,session.sim.registry.get_ids(),meta_locked_runes)
 		enter_test_range()
+		# AD-259: the shrine altar offers one choice per visit; not saved, regenerated deterministically on resume.
+		altar_options = rewards.choices(run,str(room.values["id"]),true)
 	elif room.values["type"] == "treasure":
 		# Optional reward room: no enemies, the reward cards are available immediately.
 		session.state = "cleared"
@@ -699,6 +705,77 @@ func choose_reward(index: int) -> Dictionary:
 	_cue("sfx.pickup.rune" if outcome.get("kind","") == "unlock" else "sfx.pickup.currency")
 	experiment.record("rune_choice",{"room_index":run.sequence_index,"rune_index":index})
 	logs.append({"kind":"reward","room":id,"item":option.duplicate(true)})
+	return outcome
+
+## AD-259: in-world shrine objects (altar, statue, practice idol) in real between-floor workshop rooms.
+func shrine_objects() -> Array:
+	var shrine: Dictionary = config.get("shrine",{})
+	if not bool(shrine.get("enabled",false)) or state != "workshop" or mode != "workshop" or prelude:
+		return []
+	var objects: Array = []
+	for pair in [["altar","altar"],["statue","statue"],["idol","practice_idol"]]:
+		var block: Dictionary = shrine.get(pair[1],{})
+		if block.is_empty():
+			continue
+		objects.append({"id":pair[0],"art_key":str(block["art_key"]),"prompt":str(block["prompt"]),
+			"position":Vector2(float(block["position"][0]),float(block["position"][1]))})
+	return objects
+
+func shrine_nearest(pos: Vector2) -> String:
+	var radius := float(config.get("shrine",{}).get("interact_radius",64.0))
+	var best := ""
+	var best_distance := radius
+	for obj in shrine_objects():
+		var distance: float = pos.distance_to(obj["position"])
+		if distance <= best_distance:
+			best_distance = distance
+			best = str(obj["id"])
+	return best
+
+func shrine_interact(id: String, pos: Vector2) -> Dictionary:
+	for obj in shrine_objects():
+		if str(obj["id"]) != id:
+			continue
+		if pos.distance_to(obj["position"]) > float(config["shrine"].get("interact_radius",64.0)):
+			return {"ok":false,"reason":"TOO_FAR"}
+		if id == "altar":
+			return {"ok":true,"kind":"altar","options":altar_options,"taken":altar_taken}
+		if id == "statue":
+			return {"ok":true,"kind":"statue","stock":merchant.stock}
+		return {"ok":true,"kind":"idol"}
+	return {"ok":false,"reason":"SHRINE_OBJECT_MISSING"}
+
+func choose_altar(index: int) -> Dictionary:
+	if state != "workshop" or prelude or altar_taken:
+		return {"ok":false,"reason":"REWARD_NOT_AVAILABLE"}
+	if index < 0 or index >= altar_options.size():
+		return {"ok":false,"reason":"REWARD_INDEX_INVALID"}
+	var option: Dictionary = altar_options[index]
+	var outcome: Dictionary
+	if option["kind"] == "rune":
+		outcome = run.unlock(str(option["id"]),Difficulty.scale_i(int(config["duplicate_reward_currency"]),"coin_rate",0))
+	elif option["kind"] == "artifact":
+		var added: Dictionary = run.add_artifact(str(option["id"]))
+		if not added["ok"]:
+			return added
+		outcome = {"ok":true,"kind":"artifact","id":str(option["id"])}
+		_artifact_cue(str(option["id"]))
+		_attach_artifacts()
+	else:
+		run.currency += int(option["amount"])
+		outcome = {"ok":true,"kind":"currency","currency":int(option["amount"])}
+	var bonus := int(option.get("bonus_coins",0))
+	if bonus > 0:
+		run.currency += bonus
+		outcome["bonus_coins"] = bonus
+	altar_taken = true
+	session.sim.loadout.unlocked = run.unlocked.duplicate(true)
+	if range_sim != null:
+		range_sim.loadout.unlocked = run.unlocked.duplicate(true)
+	_cue("ui.reward_pick")
+	_cue("sfx.pickup.rune" if outcome.get("kind","") == "unlock" else "sfx.pickup.currency")
+	experiment.record("rune_choice",{"room_index":run.sequence_index,"rune_index":index})
+	logs.append({"kind":"reward","room":"altar:"+str(room.values["id"]),"item":option.duplicate(true)})
 	return outcome
 
 func move_after_clear(command: Dictionary) -> Dictionary:
