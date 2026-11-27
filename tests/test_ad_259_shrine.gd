@@ -15,10 +15,10 @@ const SEED := 20261022
 const BANNED := ["debug","DEBUG","F1","dev","[test]","interact","choose_reward"]
 
 func run(t) -> void:
-	_a_altar_and_statue(t)
-	_b_practice_idol_optional(t)
-	_c_in_world_prompts(t)
-	_d_placeholder_art_keys(t)
+	test_ad_259_a_altar_and_statue(t)
+	test_ad_259_b_practice_idol_optional(t)
+	test_ad_259_c_in_world_prompts(t)
+	test_ad_259_d_placeholder_art_keys(t)
 
 func _cfg() -> Dictionary:
 	return JSON.parse_string(FileAccess.get_file_as_string(Flow.CONFIG_V2))
@@ -61,7 +61,7 @@ func _object(flow, id: String) -> Dictionary:
 			return obj
 	return {}
 
-func _a_altar_and_statue(t) -> void:
+func test_ad_259_a_altar_and_statue(t) -> void:
 	var cfg: Dictionary = _cfg()
 	var shrine: Dictionary = _shrine_cfg()
 	t.check(not shrine.is_empty() and bool(shrine.get("enabled",false)),"AD-259a data has an enabled shrine block")
@@ -93,7 +93,7 @@ func _a_altar_and_statue(t) -> void:
 	var options: Array = seen.get("options",[])
 	t.check(not options.is_empty(),"AD-259a altar offers choices")
 	t.check("altar_options" in flow and flow.altar_options.size() == options.size(),"AD-259a flow.altar_options stores the choices")
-	var again: Dictionary = flow.shrine_interact("altar",altar_pos)
+	var again: Dictionary = flow.shrine_interact("altar",altar_pos) if flow.has_method("shrine_interact") else {}
 	t.equal(again.get("options",[]),options,"AD-259a choices are generated once per visit")
 	var unlocked_before: int = flow.run.unlocked.size()
 	var picked: Dictionary = flow.choose_altar(0) if flow.has_method("choose_altar") else {}
@@ -132,7 +132,7 @@ func _a_altar_and_statue(t) -> void:
 	t.equal(flow.run.currency,5,"AD-259a purchase spends exactly the price")
 	t.check(flow.run.max_hp > max_before,"AD-259a hp upgrade applied")
 
-func _b_practice_idol_optional(t) -> void:
+func test_ad_259_b_practice_idol_optional(t) -> void:
 	var shrine: Dictionary = _shrine_cfg()
 	t.check(shrine.has("practice_idol") and bool(shrine["practice_idol"].get("optional",false)),"AD-259b practice idol is flagged optional in data")
 	var flow = _shrine_flow()
@@ -163,7 +163,7 @@ func _prompt_ok(t, text: String, label: String) -> void:
 	for word in BANNED:
 		t.check(not text.contains(word),"%s prompt has no '%s'" % [label,word])
 
-func _c_in_world_prompts(t) -> void:
+func test_ad_259_c_in_world_prompts(t) -> void:
 	var shrine: Dictionary = _shrine_cfg()
 	for id in ["altar","statue","practice_idol"]:
 		var block: Dictionary = shrine.get(id,{})
@@ -179,7 +179,7 @@ func _c_in_world_prompts(t) -> void:
 	t.check(source.contains("func _shrine_prompt_text"),"AD-259c controller has _shrine_prompt_text")
 	t.check(source.contains("const shrine_ui_in_world") and source.contains("shrine_ui_in_world := true"),"AD-259c controller declares shrine_ui_in_world == true")
 
-func _d_placeholder_art_keys(t) -> void:
+func test_ad_259_d_placeholder_art_keys(t) -> void:
 	var shrine: Dictionary = _shrine_cfg()
 	var keys: Array = [str(shrine.get("room_art_key",""))]
 	for id in ["altar","statue","practice_idol"]:
