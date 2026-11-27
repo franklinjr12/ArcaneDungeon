@@ -261,6 +261,9 @@ ACTORS = {
 EXTRA_SHEETS = {
     "storm_beam": (["AD-215"], "AD-215/export/ad_fx_storm_beam", "vfx", "AD-215/export/ad_fx_storm_beam_layout.json"),
     "water_states": (["AD-222"], "AD-222/export/ad_til_cistern_water_states", "til", None),
+    # AD-260 final cistern water: shallow/deep loops, shore/deep_step edge frames (47-frame bitmask table in the layout json), ice
+    "cistern_water": (["AD-260"], "AD-260/export/ad_til_cistern_water", "til", "AD-260/export/ad_til_cistern_water_autotile.json"),
+    "cistern_spark": (["AD-260"], "AD-260/export/ad_fx_cistern_spark", "vfx", None),
     # AD-201 Archivist FX (AD-213 r2; the tide wave is AD-227, which supersedes the AD-213 one)
     "pool_ripple": (["AD-213"], "AD-213/r2/export/ad_fx_pool_ripple_telegraph", "vfx", None),
     "splash_ring": (["AD-213"], "AD-213/r2/export/ad_fx_emerge_splash_ring", "vfx", None),

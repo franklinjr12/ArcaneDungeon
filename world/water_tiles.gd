@@ -17,6 +17,10 @@ var _view_cache: Array = []
 var _cover := {}
 var _all_cells: Array = []
 var _all_cells_ready := false
+## AD-261: edge frame indices per room load. Rebuilt lazily only when the rect set changes, never on state changes.
+var _edge_cache := {}
+var _edge_dirty := true
+var edge_builds := 0
 
 func _init(entries: Array = []) -> void:
 	_append(entries)
@@ -39,11 +43,13 @@ func remove_tag(tag: String) -> int:
 	var removed := _entries.size()-kept_entries.size()
 	_entries = kept_entries
 	_rects = kept_rects
+	_edge_dirty = true
 	_build_bodies()
 	_drop_uncovered()
 	return removed
 
 func _append(entries: Array) -> void:
+	_edge_dirty = true
 	for entry in entries:
 		var dims: Array = entry["rect"]
 		var parsed := {"kind":str(entry["kind"]),"rect":Rect2(float(dims[0]),float(dims[1]),float(dims[2]),float(dims[3]))}
@@ -334,3 +340,61 @@ func _drop_uncovered() -> void:
 			if not _covered(cell):
 				states.erase(cell)
 				_states_dirty = true
+
+## AD-261: neighbour bits (set = that neighbour is NOT water) in AD-260's order; CANON_MASKS is the sorted 47-frame table.
+const BIT_N := 1
+const BIT_NE := 2
+const BIT_E := 4
+const BIT_SE := 8
+const BIT_S := 16
+const BIT_SW := 32
+const BIT_W := 64
+const BIT_NW := 128
+const CANON_MASKS := [0,1,2,4,5,8,9,10,16,17,18,20,21,32,33,34,36,37,40,41,42,64,65,66,68,69,72,73,74,80,81,82,84,85,128,130,132,136,138,144,146,148,160,162,164,168,170]
+const _NEIGHBOURS := {BIT_N:Vector2i(0,-1),BIT_NE:Vector2i(1,-1),BIT_E:Vector2i(1,0),BIT_SE:Vector2i(1,1),BIT_S:Vector2i(0,1),BIT_SW:Vector2i(-1,1),BIT_W:Vector2i(-1,0),BIT_NW:Vector2i(-1,-1)}
+
+## A corner bit only matters when both orthogonal neighbours around it are present; otherwise it is dropped.
+static func canon_mask(mask: int) -> int:
+	var m := mask&255
+	for corner in [[BIT_NE,BIT_N|BIT_E],[BIT_SE,BIT_E|BIT_S],[BIT_SW,BIT_S|BIT_W],[BIT_NW,BIT_W|BIT_N]]:
+		if m&int(corner[1]) != 0:
+			m &= ~int(corner[0])
+	return m
+
+## Frame index 0..46 inside the shore / deep_step tag.
+static func edge_index(mask: int) -> int:
+	return CANON_MASKS.find(canon_mask(mask))
+
+## cells: Vector2i-keyed Dictionary or Array of cells. Returns {cell: frame index} for cells with at least one missing neighbour.
+static func edge_indices(cells) -> Dictionary:
+	var set := {}
+	for cell in cells:
+		set[cell] = true
+	var result := {}
+	for cell in set:
+		var mask := 0
+		for bit in _NEIGHBOURS:
+			if not set.has(cell+_NEIGHBOURS[bit]):
+				mask |= int(bit)
+		if mask != 0:
+			result[cell] = edge_index(mask)
+	return result
+
+## AD-261: {"shore": edges of all water cells, "deep_step": edges of deep cells}. Built once per rect set.
+func edge_cache() -> Dictionary:
+	if _edge_dirty:
+		var water := {}
+		var deep := {}
+		for entry in _entries:
+			var rect: Rect2 = entry["rect"]
+			var first := _cell_of(rect.position)
+			var last := _cell_of(rect.end-Vector2(0.001,0.001))
+			for y in range(first.y,last.y+1):
+				for x in range(first.x,last.x+1):
+					water[Vector2i(x,y)] = true
+					if entry["kind"] == "deep":
+						deep[Vector2i(x,y)] = true
+		_edge_cache = {"shore":edge_indices(water),"deep_step":edge_indices(deep)}
+		_edge_dirty = false
+		edge_builds += 1
+	return _edge_cache

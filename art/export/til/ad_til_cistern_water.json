@@ -1,0 +1,4547 @@
+{
+ "frames": [
+  {
+   "filename": "ad_til_cistern_water_shallow_00",
+   "frame": {
+    "x": 1,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 200
+  },
+  {
+   "filename": "ad_til_cistern_water_shallow_01",
+   "frame": {
+    "x": 19,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 200
+  },
+  {
+   "filename": "ad_til_cistern_water_shallow_02",
+   "frame": {
+    "x": 37,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 200
+  },
+  {
+   "filename": "ad_til_cistern_water_shallow_03",
+   "frame": {
+    "x": 55,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 200
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_00",
+   "frame": {
+    "x": 73,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 220
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_01",
+   "frame": {
+    "x": 91,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 220
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_02",
+   "frame": {
+    "x": 109,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 220
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_03",
+   "frame": {
+    "x": 127,
+    "y": 1,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 220
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_00",
+   "frame": {
+    "x": 1,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_01",
+   "frame": {
+    "x": 19,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_02",
+   "frame": {
+    "x": 37,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_03",
+   "frame": {
+    "x": 55,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_04",
+   "frame": {
+    "x": 73,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_05",
+   "frame": {
+    "x": 91,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_06",
+   "frame": {
+    "x": 109,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_07",
+   "frame": {
+    "x": 127,
+    "y": 19,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_08",
+   "frame": {
+    "x": 1,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_09",
+   "frame": {
+    "x": 19,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_10",
+   "frame": {
+    "x": 37,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_11",
+   "frame": {
+    "x": 55,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_12",
+   "frame": {
+    "x": 73,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_13",
+   "frame": {
+    "x": 91,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_14",
+   "frame": {
+    "x": 109,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_15",
+   "frame": {
+    "x": 127,
+    "y": 37,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_16",
+   "frame": {
+    "x": 1,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_17",
+   "frame": {
+    "x": 19,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_18",
+   "frame": {
+    "x": 37,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_19",
+   "frame": {
+    "x": 55,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_20",
+   "frame": {
+    "x": 73,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_21",
+   "frame": {
+    "x": 91,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_22",
+   "frame": {
+    "x": 109,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_23",
+   "frame": {
+    "x": 127,
+    "y": 55,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_24",
+   "frame": {
+    "x": 1,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_25",
+   "frame": {
+    "x": 19,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_26",
+   "frame": {
+    "x": 37,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_27",
+   "frame": {
+    "x": 55,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_28",
+   "frame": {
+    "x": 73,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_29",
+   "frame": {
+    "x": 91,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_30",
+   "frame": {
+    "x": 109,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_31",
+   "frame": {
+    "x": 127,
+    "y": 73,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_32",
+   "frame": {
+    "x": 1,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_33",
+   "frame": {
+    "x": 19,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_34",
+   "frame": {
+    "x": 37,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_35",
+   "frame": {
+    "x": 55,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_36",
+   "frame": {
+    "x": 73,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_37",
+   "frame": {
+    "x": 91,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_38",
+   "frame": {
+    "x": 109,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_39",
+   "frame": {
+    "x": 127,
+    "y": 91,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_40",
+   "frame": {
+    "x": 1,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_41",
+   "frame": {
+    "x": 19,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_42",
+   "frame": {
+    "x": 37,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_43",
+   "frame": {
+    "x": 55,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_44",
+   "frame": {
+    "x": 73,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_45",
+   "frame": {
+    "x": 91,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_shore_46",
+   "frame": {
+    "x": 109,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_00",
+   "frame": {
+    "x": 127,
+    "y": 109,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_01",
+   "frame": {
+    "x": 1,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_02",
+   "frame": {
+    "x": 19,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_03",
+   "frame": {
+    "x": 37,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_04",
+   "frame": {
+    "x": 55,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_05",
+   "frame": {
+    "x": 73,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_06",
+   "frame": {
+    "x": 91,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_07",
+   "frame": {
+    "x": 109,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_08",
+   "frame": {
+    "x": 127,
+    "y": 127,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_09",
+   "frame": {
+    "x": 1,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_10",
+   "frame": {
+    "x": 19,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_11",
+   "frame": {
+    "x": 37,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_12",
+   "frame": {
+    "x": 55,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_13",
+   "frame": {
+    "x": 73,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_14",
+   "frame": {
+    "x": 91,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_15",
+   "frame": {
+    "x": 109,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_16",
+   "frame": {
+    "x": 127,
+    "y": 145,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_17",
+   "frame": {
+    "x": 1,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_18",
+   "frame": {
+    "x": 19,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_19",
+   "frame": {
+    "x": 37,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_20",
+   "frame": {
+    "x": 55,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_21",
+   "frame": {
+    "x": 73,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_22",
+   "frame": {
+    "x": 91,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_23",
+   "frame": {
+    "x": 109,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_24",
+   "frame": {
+    "x": 127,
+    "y": 163,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_25",
+   "frame": {
+    "x": 1,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_26",
+   "frame": {
+    "x": 19,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_27",
+   "frame": {
+    "x": 37,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_28",
+   "frame": {
+    "x": 55,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_29",
+   "frame": {
+    "x": 73,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_30",
+   "frame": {
+    "x": 91,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_31",
+   "frame": {
+    "x": 109,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_32",
+   "frame": {
+    "x": 127,
+    "y": 181,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_33",
+   "frame": {
+    "x": 1,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_34",
+   "frame": {
+    "x": 19,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_35",
+   "frame": {
+    "x": 37,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_36",
+   "frame": {
+    "x": 55,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_37",
+   "frame": {
+    "x": 73,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_38",
+   "frame": {
+    "x": 91,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_39",
+   "frame": {
+    "x": 109,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_40",
+   "frame": {
+    "x": 127,
+    "y": 199,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_41",
+   "frame": {
+    "x": 1,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_42",
+   "frame": {
+    "x": 19,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_43",
+   "frame": {
+    "x": 37,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_44",
+   "frame": {
+    "x": 55,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_45",
+   "frame": {
+    "x": 73,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_deep_step_46",
+   "frame": {
+    "x": 91,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_00",
+   "frame": {
+    "x": 109,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_01",
+   "frame": {
+    "x": 127,
+    "y": 217,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_00",
+   "frame": {
+    "x": 1,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_01",
+   "frame": {
+    "x": 19,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_00",
+   "frame": {
+    "x": 37,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_01",
+   "frame": {
+    "x": 55,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_02",
+   "frame": {
+    "x": 73,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_03",
+   "frame": {
+    "x": 91,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_04",
+   "frame": {
+    "x": 109,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_05",
+   "frame": {
+    "x": 127,
+    "y": 235,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_06",
+   "frame": {
+    "x": 1,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_07",
+   "frame": {
+    "x": 19,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_08",
+   "frame": {
+    "x": 37,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_09",
+   "frame": {
+    "x": 55,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_10",
+   "frame": {
+    "x": 73,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_11",
+   "frame": {
+    "x": 91,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_12",
+   "frame": {
+    "x": 109,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_13",
+   "frame": {
+    "x": 127,
+    "y": 253,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_14",
+   "frame": {
+    "x": 1,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_15",
+   "frame": {
+    "x": 19,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_16",
+   "frame": {
+    "x": 37,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_17",
+   "frame": {
+    "x": 55,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_18",
+   "frame": {
+    "x": 73,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_19",
+   "frame": {
+    "x": 91,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_20",
+   "frame": {
+    "x": 109,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_21",
+   "frame": {
+    "x": 127,
+    "y": 271,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_22",
+   "frame": {
+    "x": 1,
+    "y": 289,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_23",
+   "frame": {
+    "x": 19,
+    "y": 289,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_24",
+   "frame": {
+    "x": 37,
+    "y": 289,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_25",
+   "frame": {
+    "x": 55,
+    "y": 289,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_26",
+   "frame": {
+    "x": 73,
+    "y": 289,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_27",
+   "frame": {
+    "x": 91,
+    "y": 289,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_28",
+   "frame": {
+    "x": 109,
+    "y": 289,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_29",
+   "frame": {
+    "x": 127,
+    "y": 289,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_30",
+   "frame": {
+    "x": 1,
+    "y": 307,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_31",
+   "frame": {
+    "x": 19,
+    "y": 307,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_32",
+   "frame": {
+    "x": 37,
+    "y": 307,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_33",
+   "frame": {
+    "x": 55,
+    "y": 307,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_34",
+   "frame": {
+    "x": 73,
+    "y": 307,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_35",
+   "frame": {
+    "x": 91,
+    "y": 307,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_36",
+   "frame": {
+    "x": 109,
+    "y": 307,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_37",
+   "frame": {
+    "x": 127,
+    "y": 307,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_38",
+   "frame": {
+    "x": 1,
+    "y": 325,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_39",
+   "frame": {
+    "x": 19,
+    "y": 325,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_40",
+   "frame": {
+    "x": 37,
+    "y": 325,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_41",
+   "frame": {
+    "x": 55,
+    "y": 325,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_42",
+   "frame": {
+    "x": 73,
+    "y": 325,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_43",
+   "frame": {
+    "x": 91,
+    "y": 325,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_44",
+   "frame": {
+    "x": 109,
+    "y": 325,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_45",
+   "frame": {
+    "x": 127,
+    "y": 325,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_shore_46",
+   "frame": {
+    "x": 1,
+    "y": 343,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_00",
+   "frame": {
+    "x": 19,
+    "y": 343,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_01",
+   "frame": {
+    "x": 37,
+    "y": 343,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_02",
+   "frame": {
+    "x": 55,
+    "y": 343,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_03",
+   "frame": {
+    "x": 73,
+    "y": 343,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_04",
+   "frame": {
+    "x": 91,
+    "y": 343,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_05",
+   "frame": {
+    "x": 109,
+    "y": 343,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_06",
+   "frame": {
+    "x": 127,
+    "y": 343,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_07",
+   "frame": {
+    "x": 1,
+    "y": 361,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_08",
+   "frame": {
+    "x": 19,
+    "y": 361,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_09",
+   "frame": {
+    "x": 37,
+    "y": 361,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_10",
+   "frame": {
+    "x": 55,
+    "y": 361,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_11",
+   "frame": {
+    "x": 73,
+    "y": 361,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_12",
+   "frame": {
+    "x": 91,
+    "y": 361,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_13",
+   "frame": {
+    "x": 109,
+    "y": 361,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_14",
+   "frame": {
+    "x": 127,
+    "y": 361,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_15",
+   "frame": {
+    "x": 1,
+    "y": 379,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_16",
+   "frame": {
+    "x": 19,
+    "y": 379,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_17",
+   "frame": {
+    "x": 37,
+    "y": 379,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_18",
+   "frame": {
+    "x": 55,
+    "y": 379,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_19",
+   "frame": {
+    "x": 73,
+    "y": 379,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_20",
+   "frame": {
+    "x": 91,
+    "y": 379,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_21",
+   "frame": {
+    "x": 109,
+    "y": 379,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_22",
+   "frame": {
+    "x": 127,
+    "y": 379,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_23",
+   "frame": {
+    "x": 1,
+    "y": 397,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_24",
+   "frame": {
+    "x": 19,
+    "y": 397,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_25",
+   "frame": {
+    "x": 37,
+    "y": 397,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_26",
+   "frame": {
+    "x": 55,
+    "y": 397,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_27",
+   "frame": {
+    "x": 73,
+    "y": 397,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_28",
+   "frame": {
+    "x": 91,
+    "y": 397,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_29",
+   "frame": {
+    "x": 109,
+    "y": 397,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_30",
+   "frame": {
+    "x": 127,
+    "y": 397,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_31",
+   "frame": {
+    "x": 1,
+    "y": 415,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_32",
+   "frame": {
+    "x": 19,
+    "y": 415,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_33",
+   "frame": {
+    "x": 37,
+    "y": 415,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_34",
+   "frame": {
+    "x": 55,
+    "y": 415,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_35",
+   "frame": {
+    "x": 73,
+    "y": 415,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_36",
+   "frame": {
+    "x": 91,
+    "y": 415,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_37",
+   "frame": {
+    "x": 109,
+    "y": 415,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_38",
+   "frame": {
+    "x": 127,
+    "y": 415,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_39",
+   "frame": {
+    "x": 1,
+    "y": 433,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_40",
+   "frame": {
+    "x": 19,
+    "y": 433,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_41",
+   "frame": {
+    "x": 37,
+    "y": 433,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_42",
+   "frame": {
+    "x": 55,
+    "y": 433,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_43",
+   "frame": {
+    "x": 73,
+    "y": 433,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_44",
+   "frame": {
+    "x": 91,
+    "y": 433,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_45",
+   "frame": {
+    "x": 109,
+    "y": 433,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_ice_deep_step_46",
+   "frame": {
+    "x": 127,
+    "y": 433,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 1000
+  },
+  {
+   "filename": "ad_til_cistern_water_electric_00",
+   "frame": {
+    "x": 1,
+    "y": 451,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 80
+  },
+  {
+   "filename": "ad_til_cistern_water_electric_01",
+   "frame": {
+    "x": 19,
+    "y": 451,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 60
+  },
+  {
+   "filename": "ad_til_cistern_water_electric_02",
+   "frame": {
+    "x": 37,
+    "y": 451,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 100
+  }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3.18.6-dev",
+  "image": "ad_til_cistern_water.png",
+  "format": "I8",
+  "size": {
+   "w": 144,
+   "h": 468
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "shallow",
+    "from": 0,
+    "to": 3,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "deep",
+    "from": 4,
+    "to": 7,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "shore",
+    "from": 8,
+    "to": 54,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "deep_step",
+    "from": 55,
+    "to": 101,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "ice",
+    "from": 102,
+    "to": 103,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "ice_deep",
+    "from": 104,
+    "to": 105,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "ice_shore",
+    "from": 106,
+    "to": 152,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "ice_deep_step",
+    "from": 153,
+    "to": 199,
+    "direction": "forward",
+    "color": "#000000ff"
+   },
+   {
+    "name": "electric",
+    "from": 200,
+    "to": 202,
+    "direction": "forward",
+    "color": "#000000ff"
+   }
+  ],
+  "slices": []
+ }
+}

@@ -463,6 +463,9 @@ static func water_state_tag(state: String, deep: bool, cell: Vector2i, tick: int
 const ELEC_TINT := Color(0.55, 0.85, 1.0)
 const ELEC_SPARK := Color(1.0, 0.95, 0.5)
 const ELEC_SPARK_CAP := 6
+const CISTERN_WATER := "cistern_water"
+const CISTERN_SPARK := "cistern_spark"
+static var _water_regions: Dictionary = {}
 
 ## Pure: at most `cap` spark points (world space) over the merged electrified rects. Integer hash of rect index, spark slot and
 ## tick/4 (no RNG), so equal input gives an equal array; at least one spark when rects is non-empty and cap > 0.
@@ -481,7 +484,8 @@ static func water_electric_sparks(rects: Array, tick: int, cap: int) -> Array:
 
 ## AD-256: electrified water = one flicker tint per merged rect + a few capped sparks (no per-cell draws or glows).
 ## AD-200: frozen cells still use the state sheet, with frame lookups cached per call. Skipped quietly without the sheet.
-static func _draw_water_states(canvas: CanvasItem, session, offset: Vector2, tick: int, reduced: bool) -> void:
+static func _draw_water_states(canvas: CanvasItem, session, offset: Vector2, tick: int, reduced: bool, frozen_done: bool = false) -> void:
+	var spark_ms: Array = extra_sheet(CISTERN_SPARK).get("tags", {}).get("spark", {}).get("ms", [])
 	var rects: Array = session.water.electrified_rects()
 	if not rects.is_empty():
 		var flick := 0.0 if reduced else 0.5 + 0.5 * sin(float(tick) * 0.35)
@@ -492,9 +496,18 @@ static func _draw_water_states(canvas: CanvasItem, session, offset: Vector2, tic
 		var cap: int = int(session.water_shock.get("spark_cap", ELEC_SPARK_CAP)) if not session.water_shock.is_empty() else ELEC_SPARK_CAP
 		for pt in water_electric_sparks(rects, 0 if reduced else tick, cap):
 			var p: Vector2 = pt - offset
-			canvas.draw_line(p + Vector2(-6, -4), p + Vector2(0, 1), ELEC_SPARK, 2.0)
-			canvas.draw_line(p + Vector2(0, 1), p + Vector2(6, -3), ELEC_SPARK, 2.0)
-	if extra_sheet(WATER_STATES).is_empty() or session.water._frozen.is_empty():
+			var sp := {}
+			if not spark_ms.is_empty():
+				sp = extra_sheet_frame(CISTERN_SPARK, "spark", 0 if reduced else loop_index(spark_ms, tick))
+			if sp.is_empty():
+				canvas.draw_line(p + Vector2(-6, -4), p + Vector2(0, 1), ELEC_SPARK, 2.0)
+				canvas.draw_line(p + Vector2(0, 1), p + Vector2(6, -3), ELEC_SPARK, 2.0)
+			else:
+				var ssz: Vector2 = sp["region"].size * 2.0
+				canvas.draw_texture_rect_region(sp["tex"], Rect2(p - ssz * 0.5, ssz), sp["region"])
+	if session.water._frozen.is_empty() or frozen_done:
+		return
+	if extra_sheet(WATER_STATES).is_empty():
 		return
 	var deeps: Array[Rect2] = session.water.deep_rects()
 	var frames := {}
@@ -1552,19 +1565,95 @@ static func draw_enemy_markers(canvas: CanvasItem, enemy, at: Vector2, tick: int
 static func draw_water(canvas: CanvasItem, session, offset: Vector2, reduced: bool = false) -> void:
 	if session.water == null:
 		return
+	var art := water_art_ready()
 	var cistern := _cistern_ready()
-	if cistern:
+	if cistern and not art:
 		_export_json(CISTERN_TILES)
 	var tick: int = session.sim.clock.tick
 	for tile in session.water.view():
 		var rect: Rect2 = tile["rect"]
 		rect.position -= offset
 		var deep: bool = str(tile["kind"]) == "deep"
+		if art:
+			_draw_water_sheet_cells(canvas, rect, "deep" if deep else "shallow", tick, Color(1, 1, 1, 1.0 if deep else 0.85))
+			continue
 		if cistern:
 			_draw_water_cells(canvas, rect, "deep_loop" if deep else "water_loop", tick, Color(1, 1, 1, 1.0 if deep else 0.85))
 			continue
 		canvas.draw_rect(rect,Color(0.08,0.2,0.45,1.0) if deep else Color(0.55,0.78,0.95,0.4))
-	_draw_water_states(canvas, session, offset, tick, reduced)
+	var frozen_done := false
+	if art:
+		var edges: Dictionary = session.water.edge_cache()
+		_draw_water_edges(canvas, edges["shore"], "shore", offset)
+		_draw_water_edges(canvas, edges["deep_step"], "deep_step", offset)
+		frozen_done = _draw_water_ice(canvas, session, edges, offset, tick)
+	_draw_water_states(canvas, session, offset, tick, reduced, frozen_done)
+
+## AD-261: the cistern_water sheet (16 px frames, drawn at 2x onto 32-unit cells) with all tags used by draw_water.
+static func water_art_ready() -> bool:
+	var sh := extra_sheet(CISTERN_WATER)
+	return not sh.is_empty() and not water_edge_region("shore", 1).size.is_zero_approx() and sh.get("tags", {}).has("shallow")
+
+## Cached sheet region of tag frame `index` (clamped); empty Rect2 when the sheet or tag is missing. Pure lookup.
+static func water_edge_region(tag: String, index: int) -> Rect2:
+	var key := "%s:%d" % [tag, index]
+	if not _water_regions.has(key):
+		var fr := extra_sheet_frame(CISTERN_WATER, tag, index)
+		_water_regions[key] = fr["region"] if not fr.is_empty() else Rect2()
+	return _water_regions[key]
+
+static func _water_tex() -> Texture2D:
+	return extra_sheet_frame(CISTERN_WATER, "shallow", 0)["tex"]
+
+static func _draw_water_sheet_cells(canvas: CanvasItem, rect: Rect2, tag: String, tick: int, col: Color) -> void:
+	var ms: Array = extra_sheet(CISTERN_WATER)["tags"][tag]["ms"]
+	var region := water_edge_region(tag, loop_index(ms, tick))
+	var tex := _water_tex()
+	var y := 0.0
+	while y < rect.size.y:
+		var x := 0.0
+		var ch := minf(32.0, rect.size.y - y)
+		while x < rect.size.x:
+			var cw := minf(32.0, rect.size.x - x)
+			canvas.draw_texture_rect_region(tex, Rect2(rect.position + Vector2(x, y), Vector2(cw, ch)),
+				Rect2(region.position, Vector2(cw / 2.0, ch / 2.0)), col)
+			x += 32.0
+		y += 32.0
+
+## Edge overlay for precomputed {cell: frame index}; the dictionary comes from WaterTiles.edge_cache (never rebuilt here).
+static func _draw_water_edges(canvas: CanvasItem, cells: Dictionary, tag: String, offset: Vector2) -> void:
+	var tex := _water_tex()
+	for cell in cells:
+		var region := water_edge_region(tag, int(cells[cell]))
+		if region.has_area():
+			canvas.draw_texture_rect_region(tex, Rect2(Vector2(cell) * 32.0 - offset, Vector2(32, 32)), region)
+
+## Frozen cells: ice fill + ice_shore / ice_deep_step edges from the same edge cache. Returns false (old AD-200 path) without ice tags.
+static func _draw_water_ice(canvas: CanvasItem, session, edges: Dictionary, offset: Vector2, tick: int) -> bool:
+	var tags: Dictionary = extra_sheet(CISTERN_WATER)["tags"]
+	if not (tags.has("ice") and tags.has("ice_deep") and tags.has("ice_shore") and tags.has("ice_deep_step")):
+		return false
+	if session.water._frozen.is_empty():
+		return true
+	var tex := _water_tex()
+	var deeps: Array[Rect2] = session.water.deep_rects()
+	var ice := water_edge_region("ice", loop_index(tags["ice"]["ms"], tick))
+	var ice_deep := water_edge_region("ice_deep", loop_index(tags["ice_deep"]["ms"], tick))
+	for item in session.water.state_view():
+		if str(item["state"]) != "frozen":
+			continue
+		var rect: Rect2 = item["cell_rect"]
+		var cell := Vector2i(floori(rect.position.x / 32.0), floori(rect.position.y / 32.0))
+		var deep := false
+		for d in deeps:
+			deep = deep or d.has_point(rect.get_center())
+		var dest := Rect2(rect.position - offset, Vector2(32, 32))
+		canvas.draw_texture_rect_region(tex, dest, ice_deep if deep else ice)
+		if edges["shore"].has(cell):
+			canvas.draw_texture_rect_region(tex, dest, water_edge_region("ice_shore", int(edges["shore"][cell])))
+		if deep and edges["deep_step"].has(cell):
+			canvas.draw_texture_rect_region(tex, dest, water_edge_region("ice_deep_step", int(edges["deep_step"][cell])))
+	return true
 
 ## Fills rect with 32-unit cells of a looped cistern tag; partial edge cells are clipped by region size.
 ## Shore/deep 47-blob edge autotiling is out of scope here.
