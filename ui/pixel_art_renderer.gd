@@ -462,18 +462,38 @@ static func water_state_tag(state: String, deep: bool, cell: Vector2i, tick: int
 
 const ELEC_TINT := Color(0.55, 0.85, 1.0)
 const ELEC_SPARK := Color(1.0, 0.95, 0.5)
-const ELEC_SPARK_CAP := 6
+const ELEC_SPARK_CAP := 48
+## AD-268: the electrified overlay frames are drawn at full opacity.
+const ELEC_OVERLAY_ALPHA := 1.0
 const CISTERN_WATER := "cistern_water"
 const CISTERN_SPARK := "cistern_spark"
 static var _water_regions: Dictionary = {}
 
+## Pure: cell_rect of every electrified item of a state_view.
+static func water_electric_cells(items: Array) -> Array:
+	var out: Array = []
+	for item in items:
+		if str(item["state"]) == "electrified":
+			out.append(item["cell_rect"])
+	return out
+
+## Pure: sparks for `cells` electrified cells = one per two cells (rounded up), at most `cap`.
+static func water_electric_spark_count(cells: int, cap: int) -> int:
+	if cells <= 0 or cap <= 0:
+		return 0
+	return mini(cap, (cells + 1) / 2)
+
 ## Pure: at most `cap` spark points (world space) over the merged electrified rects. Integer hash of rect index, spark slot and
-## tick/4 (no RNG), so equal input gives an equal array; at least one spark when rects is non-empty and cap > 0.
-static func water_electric_sparks(rects: Array, tick: int, cap: int) -> Array:
+## tick/4 (no RNG), so equal input gives an equal array. With cells >= 0 the count follows water_electric_spark_count.
+static func water_electric_sparks(rects: Array, tick: int, cap: int, cells: int = -1) -> Array:
 	var out: Array = []
 	if rects.is_empty() or cap <= 0:
 		return out
 	var n := mini(cap, maxi(1, rects.size() * 2))
+	if cells >= 0:
+		n = water_electric_spark_count(cells, cap)
+		if n == 0:
+			return out
 	var step := tick / 4
 	for k in n:
 		var ri := (k * 7 + step) % rects.size()
@@ -482,19 +502,46 @@ static func water_electric_sparks(rects: Array, tick: int, cap: int) -> Array:
 		out.append(r.position + Vector2(float(h % 1000) / 1000.0 * r.size.x, float((h / 1000) % 1000) / 1000.0 * r.size.y))
 	return out
 
-## AD-256: electrified water = one flicker tint per merged rect + a few capped sparks (no per-cell draws or glows).
+## AD-268: electrified water = the AD-260 electrified overlay frames on every electrified cell at full opacity (one shared layer
+## from the cached state_view, no per-cell RNG or glows) + sparks at one per two cells, capped. Without the water_states sheet the
+## old merged-rect tint is the fallback.
 ## AD-200: frozen cells still use the state sheet, with frame lookups cached per call. Skipped quietly without the sheet.
 static func _draw_water_states(canvas: CanvasItem, session, offset: Vector2, tick: int, reduced: bool, frozen_done: bool = false) -> void:
 	var spark_ms: Array = extra_sheet(CISTERN_SPARK).get("tags", {}).get("spark", {}).get("ms", [])
 	var rects: Array = session.water.electrified_rects()
 	if not rects.is_empty():
-		var flick := 0.0 if reduced else 0.5 + 0.5 * sin(float(tick) * 0.35)
-		var tint := ELEC_TINT
-		tint.a = 0.34 if reduced else 0.28 + 0.14 * flick
-		for r in rects:
-			canvas.draw_rect(Rect2(r.position - offset, r.size), tint)
+		var items: Array = session.water.state_view()
+		var ecells: Array = water_electric_cells(items)
+		if extra_sheet(WATER_STATES).is_empty():
+			var flick := 0.0 if reduced else 0.5 + 0.5 * sin(float(tick) * 0.35)
+			var tint := ELEC_TINT
+			tint.a = 0.34 if reduced else 0.28 + 0.14 * flick
+			for r in rects:
+				canvas.draw_rect(Rect2(r.position - offset, r.size), tint)
+		else:
+			var edeeps: Array[Rect2] = session.water.deep_rects()
+			var eframes := {}
+			var full := Color(1, 1, 1, ELEC_OVERLAY_ALPHA)
+			for item in items:
+				if str(item["state"]) != "electrified":
+					continue
+				var erect: Rect2 = item["cell_rect"]
+				var ecell := Vector2i(floori(erect.position.x / 32.0), floori(erect.position.y / 32.0))
+				var edeep := false
+				for d in edeeps:
+					edeep = edeep or d.has_point(erect.get_center())
+				var epick := water_state_tag("electrified", edeep, ecell, tick, reduced)
+				if epick.is_empty():
+					continue
+				var ekey := "%s:%d" % [epick["tag"], int(epick["index"])]
+				if not eframes.has(ekey):
+					eframes[ekey] = extra_sheet_frame(WATER_STATES, epick["tag"], int(epick["index"]))
+				var efr: Dictionary = eframes[ekey]
+				if efr.is_empty():
+					continue
+				canvas.draw_texture_rect_region(efr["tex"], Rect2(erect.position - offset, efr["region"].size * _actor_scale), efr["region"], full)
 		var cap: int = int(session.water_shock.get("spark_cap", ELEC_SPARK_CAP)) if not session.water_shock.is_empty() else ELEC_SPARK_CAP
-		for pt in water_electric_sparks(rects, 0 if reduced else tick, cap):
+		for pt in water_electric_sparks(rects, 0 if reduced else tick, cap, ecells.size()):
 			var p: Vector2 = pt - offset
 			var sp := {}
 			if not spark_ms.is_empty():
