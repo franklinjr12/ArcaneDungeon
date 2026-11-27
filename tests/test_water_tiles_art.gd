@@ -16,6 +16,7 @@ const DIRS := {N:Vector2i(0,-1),NE:Vector2i(1,-1),E:Vector2i(1,0),SE:Vector2i(1,
 func run(t) -> void:
 	test_ad_261_a_bitmask_frame_mapping(t)
 	test_ad_261_a2_edges_computed_once_per_room_load(t)
+	test_ad_261_a3_renderer_edge_frames(t)
 
 ## Reference: canonical mask by the README rule, then its position in the sorted list.
 func _expect(mask: int) -> int:
@@ -130,3 +131,24 @@ func test_ad_261_a2_edges_computed_once_per_room_load(t) -> void:
 	w.call("edge_cache")
 	w.call("edge_cache")
 	t.check(w.get("edge_builds") == 3, "AD-261 a2: remove_tag rebuilds once on next call (got %d)" % w.get("edge_builds"))
+
+func test_ad_261_a3_renderer_edge_frames(t) -> void:
+	print("AD-261 test_ad_261_a3_renderer_edge_frames")
+	var PAR = load("res://ui/pixel_art_renderer.gd")
+	t.check(PAR.water_art_ready(), "AD-261 a3: cistern_water sheet is registered and ready")
+	for tag in ["shore", "deep_step", "ice_shore", "ice_deep_step"]:
+		var empty := 0
+		for i in range(1, 47):
+			if not PAR.water_edge_region(tag, i).has_area():
+				empty += 1
+		t.check(empty == 0, "AD-261 a3: %s frames 1..46 resolve to non-empty regions" % tag)
+	t.check(PAR.water_edge_region("shore", 1) != PAR.water_edge_region("shore", 2), "AD-261 a3: distinct shore frames")
+	t.check(PAR.water_edge_region("nope", 0) == Rect2(), "AD-261 a3: unknown tag gives an empty region")
+	var w = WaterTiles.new([{"kind":"shallow","rect":[0,0,192,192]},{"kind":"deep","rect":[64,64,64,64]}])
+	var edges: Dictionary = w.edge_cache()
+	var before: int = w.edge_builds
+	for _draw in 2:
+		for tag in ["shore", "deep_step"]:
+			for cell in w.edge_cache()[tag]:
+				PAR.water_edge_region(tag, int(w.edge_cache()[tag][cell]))
+	t.check(w.edge_builds == before and w.edge_cache() == edges, "AD-261 a3: draw lookups do not rebuild the edge cache")
