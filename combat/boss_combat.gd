@@ -129,6 +129,7 @@ func _init(target_entity, settings: Dictionary) -> void:
 	tuning["color"] = str(settings.get("color","#e8c38b"))
 	tuning["attack_range"] = float(settings["telegraph_radius"])
 	tuning["telegraph_ticks"] = int(tuning["windup_ticks"])
+	target.damage_scale = Archivist.rest_scale(tuning)
 
 ## AD-142: per-phase windups and the new damage keys get the same Difficulty scaling and telegraph floor as the 2-phase path.
 func _init_phases(elite_damage: float, floor_ticks: int) -> void:
@@ -248,7 +249,7 @@ func advance(session) -> void:
 		"stagger":
 			if state_tick >= _stagger_ticks:
 				staggered = false
-				target.damage_scale = 1.0
+				target.damage_scale = Archivist.rest_scale(tuning)
 				_start_windup(session)
 		"recover":
 			_walk(session)
@@ -259,7 +260,7 @@ func advance(session) -> void:
 		_refresh_shield(session)
 
 ## AD-201: once per advance, after the state logic. The shield beats stagger (and the plain 1.0 a finished stagger writes); the roar's 0 stays.
-## When the last wisp dies the multiplier returns to the stagger one if staggered, else 1.0.
+## When the last wisp dies the multiplier returns to the stagger one if staggered, else the AD-258 guard (1.0 without one).
 func _refresh_shield(session) -> void:
 	if state == "roar":
 		return
@@ -268,7 +269,7 @@ func _refresh_shield(session) -> void:
 		target.damage_scale = float(tuning["wisp_shield"]["damage_taken_multiplier"])
 	elif shielded:
 		shielded = false
-		target.damage_scale = float(tuning["stagger"]["damage_taken_multiplier"]) if staggered and tuning.has("stagger") else 1.0
+		target.damage_scale = float(tuning["stagger"]["damage_taken_multiplier"]) if staggered and tuning.has("stagger") else Archivist.rest_scale(tuning)
 
 ## Continuous phase movement; only called from acquire/recover so a telegraph never moves.
 func _walk(session) -> void:
@@ -409,7 +410,7 @@ func _place_props(session, props: Array) -> void:
 			body.position = session.world.nearest_open_point(body.position,anchors,body.radius,body.position)
 
 func _end_roar(session) -> void:
-	target.damage_scale = 1.0
+	target.damage_scale = Archivist.rest_scale(tuning)
 	if _pending_roar:
 		_begin_roar(session,0)
 		return

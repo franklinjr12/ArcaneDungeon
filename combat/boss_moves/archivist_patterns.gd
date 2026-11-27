@@ -5,6 +5,8 @@ extends RefCounted
 ## AD-201 step 2: `book_pages` {hp,radius,speed,turn_deg_per_tick,lifetime_ticks,damage,cap,count,spread_degrees} for the `page_throw` pattern
 ## (phase key `page_speed_scale`), `wisp_shield` {damage_taken_multiplier} (BossCombat: shielded while a wisp of the boss lives) and
 ## `storm_conduct` {duration_ticks,damage,interval_ticks,spark_cap?} (the storm pulse also electrifies the water; `spark_cap` = max sparks drawn over it, a positive int when present).
+## AD-258: `guard` {damage_taken_multiplier} (0 < x <= 1) is the resting damage multiplier outside punish windows; stagger, shield and roar
+## still set their own multipliers, and a finished stagger / shield / roar returns to the guard instead of 1.0.
 ## A `submerge` move with `"exit":"pool"` surfaces at another pool (a ripple telegraph shows where) and may carry a `shockwave` splash ring.
 const Warden = preload("res://combat/boss_moves/warden_patterns.gd")
 const Elite = preload("res://combat/boss_moves/elite_patterns.gd")
@@ -17,6 +19,11 @@ const FREEZE_STUN_KEYS := ["ticks","radius"]
 
 static func _num(value) -> bool:
 	return typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT
+
+## AD-258: the boss's resting target.damage_scale (1.0 without a guard block).
+static func rest_scale(tuning: Dictionary) -> float:
+	var guard = tuning.get("guard")
+	return float(guard["damage_taken_multiplier"]) if typeof(guard) == TYPE_DICTIONARY and _num(guard.get("damage_taken_multiplier")) else 1.0
 
 static func uses_pools(move: Dictionary) -> bool:
 	return str(move.get("exit","")) == "pool"
@@ -129,6 +136,11 @@ static func validate(settings: Dictionary) -> Array:
 		var multiplier = shield.get("damage_taken_multiplier") if typeof(shield) == TYPE_DICTIONARY else null
 		if not _num(multiplier) or float(multiplier) < 0.0 or float(multiplier) >= 1.0:
 			issues.append({"code":"BOSS_ARCHIVIST_PARAM","path":"wisp_shield.damage_taken_multiplier","message":"damage_taken_multiplier must be a number >= 0 and < 1"})
+	if settings.has("guard"):
+		var guard = settings["guard"]
+		var rest = guard.get("damage_taken_multiplier") if typeof(guard) == TYPE_DICTIONARY else null
+		if not _num(rest) or float(rest) <= 0.0 or float(rest) > 1.0:
+			issues.append({"code":"BOSS_ARCHIVIST_PARAM","path":"guard.damage_taken_multiplier","message":"damage_taken_multiplier must be a number > 0 and <= 1"})
 	var phases = settings.get("phases",[])
 	for p in (phases.size() if typeof(phases) == TYPE_ARRAY else 0):
 		if typeof(phases[p]) == TYPE_DICTIONARY:

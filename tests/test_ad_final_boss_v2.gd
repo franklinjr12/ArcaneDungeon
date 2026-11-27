@@ -72,6 +72,7 @@ func run(t) -> void:
 	test_ad_258_b_bench_bots(t)
 	test_ad_258_c_telegraphs_readable(t)
 	test_ad_258_d_fight_length(t)
+	test_ad_258_guard_rest_scale(t)
 
 func _move(extra: Dictionary = {}) -> Dictionary:
 	return {"mode":"submerge","exit":"pool","telegraph_ticks":40,"submerged_ticks":60,"emerge_telegraph_ticks":40,"radius":110,"damage":MOVE_DAMAGE}.merged(extra,true)
@@ -887,7 +888,7 @@ func _live_data(t) -> void:
 	t.equal(int(cfg["hp"]),2400,"AD-201 live cistern_boss keeps 2400 hp")
 	t.equal(BossCombat.validate(cfg),[],"AD-201 live cistern_boss validates")
 	t.equal(cfg["phases"].map(func(p): return float(p["threshold"])),[1.0,0.66,0.33],"AD-201 live phase thresholds are 100/66/33 percent")
-	t.check(cfg["pools"].size() == 3 and cfg["freeze_stun"]["ticks"] == 120 and cfg["stagger"]["ticks"] == 120,"AD-201 live data has 3 pools and a 2 s freeze-stun")
+	t.check(cfg["pools"].size() == 3 and cfg["freeze_stun"]["ticks"] == 120 and cfg["stagger"]["ticks"] == 60,"AD-201 live data has 3 pools and a 2 s freeze-stun (AD-258: 1 s big-entry stagger)")
 	t.check(cfg["phases"].all(func(p): return p["pool"].filter(func(e): return e.has("pattern")).size() >= 3),"AD-201 every live pool keeps 3+ distinct patterns")
 	t.check(not bool(_live_dive_move(1).get("big",false)),"AD-201 the phase 2 dive is not a big move (the freeze is its stagger window)")
 
@@ -911,8 +912,8 @@ func _live_dive(t) -> void:
 	var boss = pair[1]
 	var first := _dive(s,boss)
 	t.check(first["to"] != first["from"] and _live()["pools"].any(func(p): return Vector2(p[0],p[1]) == first["to"]),"AD-201 the live P1 dive emerges at a pool away from where it dove")
-	t.equal(first["telegraph"],40,"AD-201 the live emerge ripple telegraph is 40 ticks")
-	t.check(first["ripple"] == true and first["ticks"] == 40 and first["landing"] == first["to"],"AD-201 the live emerge windup carries the ripple at the exit pool")
+	t.equal(first["telegraph"],36,"AD-201 the live emerge ripple telegraph is 36 ticks (AD-258: 0.3-0.6 s)")
+	t.check(first["ripple"] == true and first["ticks"] == 36 and first["landing"] == first["to"],"AD-201 the live emerge windup carries the ripple at the exit pool")
 	var second := _dive(s,boss)
 	t.check(second["to"] != second["from"],"AD-201 the live boss surfaces at a different pool on its next dive (%s -> %s)" % [str(second["from"]),str(second["to"])])
 
@@ -962,7 +963,7 @@ func _live_shield(t) -> void:
 func _live_tide(t) -> void:
 	var cfg := _live()
 	var spec: Dictionary = cfg["phases"][1]["hazards"][0]
-	t.check(spec["type"] == "tide_wave" and int(spec["gap_width"]) == 96 and float(spec["thickness"]) <= 80.0 and int(spec["warn_ticks"]) >= 40,"AD-201 live tide wave: gap 96, thickness <= 80, warning >= 40 ticks")
+	t.check(spec["type"] == "tide_wave" and int(spec["gap_width"]) == 96 and float(spec["thickness"]) <= 80.0 and _ad258_readable(int(spec["warn_ticks"])),"AD-201 live tide wave: gap 96, thickness <= 80, warning 18..36 ticks (AD-258)")
 	var pair := _live_fresh(_live_with_pool(1,[{"pattern":"water_bolt"}],true),Vector2(300,800))
 	var s = pair[0]
 	var boss = pair[1]
@@ -1318,3 +1319,27 @@ func test_ad_258_d_fight_length(t) -> void:
 	var med: float = Bots.median(ticks)
 	print("INFO AD258_D skilled winning fight ticks=%s median=%.0f (%.1f s)" % [str(ticks),med,med/60.0])
 	t.check(not ticks.is_empty() and med >= AD258_FIGHT_MIN_TICKS and med <= AD258_FIGHT_MAX_TICKS,"AD-258 test_ad_258_d_fight_length: skilled winning fights median 90-180 s / 5400-10800 ticks (%d wins, median %.1f s)" % [ticks.size(),med/60.0])
+
+## AD-258 guard: the live boss rests at guard.damage_taken_multiplier, takes the stagger 1.5x in a punish window, then returns to the guard.
+func test_ad_258_guard_rest_scale(t) -> void:
+	var cfg := _live_with_pool(0,[{"pattern":"water_bolt","big":true}])
+	var guard := float(cfg["guard"]["damage_taken_multiplier"])
+	t.check(guard > 0.0 and guard < 1.0,"AD-258 test_ad_258_guard_rest_scale: live guard is in (0,1) (%.2f)" % guard)
+	var pair := _live_fresh(cfg,Vector2(150,450))
+	var s = pair[0]
+	var boss = pair[1]
+	t.check(is_equal_approx(boss.target.damage_scale,guard),"AD-258 test_ad_258_guard_rest_scale: a fresh boss rests at the guard (%.2f)" % boss.target.damage_scale)
+	var seen_stagger := false
+	for i in 600:
+		boss.advance(s)
+		if boss.staggered:
+			seen_stagger = true
+			t.check(is_equal_approx(boss.target.damage_scale,float(cfg["stagger"]["damage_taken_multiplier"])),"AD-258 test_ad_258_guard_rest_scale: the punish window takes the stagger multiplier")
+			while boss.staggered:
+				boss.advance(s)
+			break
+	t.check(seen_stagger and is_equal_approx(boss.target.damage_scale,guard),"AD-258 test_ad_258_guard_rest_scale: after the stagger the boss returns to the guard (%.2f)" % boss.target.damage_scale)
+	for bad_value in [0.0,1.5]:
+		var bad := _live()
+		bad["guard"]["damage_taken_multiplier"] = bad_value
+		t.check(BossCombat.validate(bad).any(func(i): return i["path"] == "guard.damage_taken_multiplier"),"AD-258 test_ad_258_guard_rest_scale: guard %.1f is rejected" % bad_value)

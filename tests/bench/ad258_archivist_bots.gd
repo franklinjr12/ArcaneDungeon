@@ -76,7 +76,7 @@ static func _fight(policy: String, run_seed: int) -> Dictionary:
 		s.issue(command)
 		s.step()
 		_observe_after(s,boss,mem)
-	_close_intent(boss,mem)
+	_close_intent(boss,mem,true)
 	var out: Dictionary = mem["out"]
 	var unavoidable: Array = out["damage_log"].filter(func(e): return bool(e["unavoidable"]))
 	out["won"] = not boss.target.alive()
@@ -275,10 +275,11 @@ static func _observe_threats(s, boss, mem: Dictionary) -> void:
 		if str(h["kind"]) == "boss_tide_wave" and bool(h.get("telegraph",false)):
 			mem["tide_seen"][int(h["id"])]["warn"] = int(mem["tide_seen"][int(h["id"])]["warn"])+1
 
-static func _close_intent(boss, mem: Dictionary) -> void:
+## `ended`: the fight stopped (player or boss died) while this windup was still running, so it was cut short, not shortened.
+static func _close_intent(boss, mem: Dictionary, ended: bool = false) -> void:
 	if mem["intent"] == null:
 		return
-	var interrupted: bool = boss.state in ["roar","stagger","dead"] and int(mem["intent_ticks"]) < int(mem["intent_declared"])
+	var interrupted: bool = (ended or boss.state in ["roar","stagger","dead"]) and int(mem["intent_ticks"]) < int(mem["intent_declared"])
 	if not interrupted:
 		mem["out"]["telegraphs"].append({"kind":mem["intent_kind"],"phase":mem["intent_phase"],"declared":mem["intent_declared"],"measured":mem["intent_ticks"]})
 	mem["intent"] = null

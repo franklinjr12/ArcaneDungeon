@@ -591,6 +591,9 @@
         "ticks": 120,
         "damage_taken_multiplier": 1.5
       },
+      "guard": {
+        "damage_taken_multiplier": 1.0
+      },
       "freeze_stun": {
         "ticks": 120,
         "radius": 48

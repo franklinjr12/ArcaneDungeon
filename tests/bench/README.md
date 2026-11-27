@@ -184,3 +184,11 @@ Command: `xvfb-run -a -s "-screen 0 1920x1080x24" godot --path . --script res://
 | `ad257_combo_bench.gd` (headless, seeds 257001..257003, 600 ticks, 4 dummies) | `AD257_BENCH seed=.. single_dps=.. combo_dps=.. ratio=..`: best single-skill spam vs best combo rotation, same sim as `test_ad_257_d_combo_dps_bar` (bar: ratio >= `combos.balance.min_ratio` 1.6) |
 
 Step 5 verified result: ratio 2.089 on all three seeds (single 81.60 vs combo 170.50 DPS). Multipliers remain OPEN pending the next playtest.
+
+## AD-258 Archivist bot bench
+
+| script | prints |
+|---|---|
+| `ad258_archivist_bots.gd` (headless, live `cistern_boss`, seeds 25801..25810, max 15000 ticks), run by `test_ad_258_*` in `tests/test_ad_final_boss_v2.gd` | `AD258_BENCH policy=.. seed=.. won=.. died=.. seconds=..` per run, `AD258_BENCH_SUMMARY`, `AD258_D` skilled winning-fight median |
+
+Step 3 measured result (hp 2400 unchanged; telegraphs 36 ticks; hits ~2.5x; Archivist `guard` 0.12 outside punish windows, big entry weight 1 = one punish window per cycle, 1 s stagger at 1.5x, lightning weakness -0.05): 'average' dies 10/10 (100%), 'skilled' wins 10/10 (100%), skilled winning-fight median 103.3 s (54-156 s), 0 unavoidable damage events for 'skilled'. Numbers are PROPOSED pending the next Franklin playtest.

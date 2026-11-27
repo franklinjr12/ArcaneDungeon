@@ -518,14 +518,14 @@
       ]
     },
     "cistern_boss": {
-      "_note": "AD-142 PROPOSED numbers (Demo Plan default 'Drowned Archivist', pending Franklin). AD-201 PROPOSED redesign: pool dive + ripple, pages, tide wave, wisp shield, conducting storm pulse; hp unchanged at 2400, no HP raised. Bot bench is INFO only.",
+      "_note": "AD-142 PROPOSED numbers (Demo Plan default 'Drowned Archivist', pending Franklin). AD-201 PROPOSED redesign: pool dive + ripple, pages, tide wave, wisp shield, conducting storm pulse; hp unchanged at 2400, no HP raised. Bot bench is INFO only. AD-258 PROPOSED threat rebalance (hp still 2400): telegraphs 36 ticks, ~2.5x hit damage, 3 pages, guard 0.12 outside punish windows, one big entry per cycle (weight 1), 1 s stagger at 1.5x, lightning weakness -0.05; gated by tests/bench/ad258_archivist_bots.gd.",
       "kind": "drowned_archivist",
       "display_name": "Drowned Archivist",
       "hp": 2400,
       "channel_resistances": {
         "fire": 0.8,
         "water": -0.2,
-        "lightning": -0.5,
+        "lightning": -0.05,
         "neutral": 0.1
       },
       "radius": 49,
@@ -579,8 +579,11 @@
         ]
       ],
       "stagger": {
-        "ticks": 120,
+        "ticks": 60,
         "damage_taken_multiplier": 1.5
+      },
+      "guard": {
+        "damage_taken_multiplier": 0.12
       },
       "freeze_stun": {
         "ticks": 120,
@@ -597,9 +600,9 @@
         "speed": 110,
         "turn_deg_per_tick": 1.5,
         "lifetime_ticks": 420,
-        "damage": 8,
+        "damage": 18,
         "cap": 4,
-        "count": 2,
+        "count": 3,
         "spread_degrees": 30
       },
       "wisp_shield": {
@@ -613,7 +616,7 @@
       },
       "water_bolt_shots": 5,
       "water_bolt_arc_degrees": 40,
-      "water_bolt_damage": 8,
+      "water_bolt_damage": 20,
       "wet_zone_radius": 90,
       "wet_zone_duration_ticks": 180,
       "wet_zone_interval_ticks": 30,
@@ -672,11 +675,11 @@
       ],
       "wisp_cap": 2,
       "storm_pulse_radius": 220,
-      "storm_pulse_damage": 14,
+      "storm_pulse_damage": 30,
       "phases": [
         {
           "threshold": 1.0,
-          "windup_ticks": 48,
+          "windup_ticks": 36,
           "movement": {
             "mode": "float_path",
             "speed": 50,
@@ -720,7 +723,7 @@
           "pool": [
             {
               "pattern": "water_bolt",
-              "weight": 3,
+              "weight": 1,
               "big": true
             },
             {
@@ -735,17 +738,17 @@
               "move": {
                 "mode": "submerge",
                 "exit": "pool",
-                "telegraph_ticks": 40,
+                "telegraph_ticks": 36,
                 "submerged_ticks": 45,
-                "emerge_telegraph_ticks": 40,
+                "emerge_telegraph_ticks": 36,
                 "radius": 110,
-                "damage": 10,
+                "damage": 26,
                 "anchor_pick": "farthest",
                 "shockwave": {
                   "speed": 300,
                   "width": 36,
                   "max_radius": 380,
-                  "damage": 6
+                  "damage": 16
                 }
               },
               "big": false,
@@ -828,10 +831,10 @@
               "speed": 260,
               "thickness": 64,
               "gap_width": 96,
-              "damage": 10,
+              "damage": 24,
               "channel": "water",
               "status": "wet",
-              "warn_ticks": 60,
+              "warn_ticks": 36,
               "first_ticks": 420,
               "every_ticks": 900
             }
@@ -847,24 +850,24 @@
             },
             {
               "pattern": "water_bolt",
-              "weight": 3,
+              "weight": 1,
               "big": true
             },
             {
               "move": {
                 "mode": "submerge",
                 "exit": "pool",
-                "telegraph_ticks": 40,
+                "telegraph_ticks": 36,
                 "submerged_ticks": 45,
-                "emerge_telegraph_ticks": 40,
+                "emerge_telegraph_ticks": 36,
                 "radius": 110,
-                "damage": 10,
+                "damage": 26,
                 "anchor_pick": "farthest",
                 "shockwave": {
                   "speed": 300,
                   "width": 36,
                   "max_radius": 380,
-                  "damage": 6
+                  "damage": 16
                 }
               },
               "big": false,
@@ -975,10 +978,10 @@
               "speed": 260,
               "thickness": 64,
               "gap_width": 96,
-              "damage": 10,
+              "damage": 24,
               "channel": "water",
               "status": "wet",
-              "warn_ticks": 60,
+              "warn_ticks": 36,
               "first_ticks": 300,
               "every_ticks": 900
             }
@@ -995,7 +998,7 @@
             },
             {
               "pattern": "storm_pulse",
-              "weight": 3,
+              "weight": 1,
               "big": true
             },
             {
@@ -1010,17 +1013,17 @@
               "move": {
                 "mode": "submerge",
                 "exit": "pool",
-                "telegraph_ticks": 40,
+                "telegraph_ticks": 36,
                 "submerged_ticks": 45,
-                "emerge_telegraph_ticks": 40,
+                "emerge_telegraph_ticks": 36,
                 "radius": 110,
-                "damage": 10,
+                "damage": 26,
                 "anchor_pick": "farthest",
                 "shockwave": {
                   "speed": 300,
                   "width": 36,
                   "max_radius": 380,
-                  "damage": 6
+                  "damage": 16
                 }
               },
               "big": false,
