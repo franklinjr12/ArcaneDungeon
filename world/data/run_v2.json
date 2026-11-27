@@ -190,6 +190,36 @@
     "shot_spread": 0,
     "telegraph_radius": 190
   },
+  "shrine": {
+    "enabled": true,
+    "interact_radius": 72,
+    "room_art_key": "shrine.room",
+    "altar": {
+      "art_key": "shrine.altar",
+      "prompt": "Kneel at the altar",
+      "position": [
+        480,
+        320
+      ]
+    },
+    "statue": {
+      "art_key": "shrine.statue",
+      "prompt": "Offer coins to the Divine Statue",
+      "position": [
+        760,
+        320
+      ]
+    },
+    "practice_idol": {
+      "art_key": "shrine.idol",
+      "prompt": "Strike the practice idol",
+      "position": [
+        1000,
+        560
+      ],
+      "optional": true
+    }
+  },
   "merchant": {
     "rune_price": 40,
     "max_hp_upgrade_price": 35,
