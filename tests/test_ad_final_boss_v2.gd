@@ -22,6 +22,7 @@ const Elite = preload("res://combat/boss_moves/elite_patterns.gd")
 const MANIFEST := "res://art/export/actors/actors_manifest.json"
 const PAGES := {"hp":6,"radius":14,"speed":150,"turn_deg_per_tick":2,"lifetime_ticks":300,"damage":7,"cap":5,"count":3,"spread_degrees":40}
 const CONDUCT := {"duration_ticks":200,"damage":6,"interval_ticks":10}
+const Bots = preload("res://tests/bench/ad258_archivist_bots.gd")
 
 func run(t) -> void:
 	_emerge_other_pool(t)
@@ -37,6 +38,7 @@ func run(t) -> void:
 	_unfrozen_pool_no_stun(t)
 	_legacy_submerge_unchanged(t)
 	_validate(t)
+	_ad258_punish_cycle(t)
 	_page_throw_queues(t)
 	_page_cap(t)
 	_page_flight_and_hit(t)
@@ -66,6 +68,11 @@ func run(t) -> void:
 	test_ad_256_a_electrify_full_cistern_frame_budget(t)
 	test_ad_256_b_simplified_visual(t)
 	test_ad_256_c_damage_ticks_unchanged(t)
+	test_ad_258_a_phase_pressure(t)
+	test_ad_258_b_bench_bots(t)
+	test_ad_258_c_telegraphs_readable(t)
+	test_ad_258_d_fight_length(t)
+	test_ad_258_guard_rest_scale(t)
 
 func _move(extra: Dictionary = {}) -> Dictionary:
 	return {"mode":"submerge","exit":"pool","telegraph_ticks":40,"submerged_ticks":60,"emerge_telegraph_ticks":40,"radius":110,"damage":MOVE_DAMAGE}.merged(extra,true)
@@ -318,6 +325,51 @@ func _validate(t) -> void:
 	var no_anchors: Dictionary = good.duplicate(true)
 	no_anchors.erase("anchors")
 	t.check(not codes.call(no_anchors).has("BOSS_MOVE_ANCHORS"),"AD-201 a pool exit does not need anchors")
+	var phase_keys := func(extra: Dictionary, big: bool = true) -> Dictionary:
+		var cfg: Dictionary = good.duplicate(true)
+		cfg["phases"][0].merge(extra,true)
+		cfg["phases"][0]["pool"][1]["big"] = big
+		return cfg
+	t.equal(BossCombat.validate(phase_keys.call({"recovery_ticks":30,"punish_cycle":true})),[],"AD-258 phase recovery_ticks and punish_cycle with one big entry validate")
+	t.check(codes.call(phase_keys.call({"recovery_ticks":0})).has("BOSS_ARCHIVIST_PARAM"),"AD-258 a phase recovery_ticks below 1 is rejected")
+	t.check(codes.call(phase_keys.call({"recovery_ticks":2.5})).has("BOSS_ARCHIVIST_PARAM"),"AD-258 a fractional phase recovery_ticks is rejected")
+	t.check(codes.call(phase_keys.call({"punish_cycle":1})).has("BOSS_ARCHIVIST_PARAM"),"AD-258 a non-bool punish_cycle is rejected")
+	t.check(codes.call(phase_keys.call({"punish_cycle":true},false)).has("BOSS_ARCHIVIST_PARAM"),"AD-258 punish_cycle without a big entry is rejected")
+	var no_stagger_cycle: Dictionary = phase_keys.call({"punish_cycle":true})
+	no_stagger_cycle.erase("stagger")
+	no_stagger_cycle.erase("freeze_stun")
+	t.check(codes.call(no_stagger_cycle).has("BOSS_ARCHIVIST_PARAM"),"AD-258 punish_cycle without a stagger block is rejected")
+
+## AD-258: punish_cycle forces the single big entry at the latest every pool-size picks; a phase recovery_ticks overrides the boss one.
+func _ad258_punish_cycle(t) -> void:
+	var pool := [{"pattern":"radial","big":true,"weight":1},{"pattern":"fan","weight":1000},{"pattern":"targeted","weight":1000}]
+	var cfg := _cfg({},{"recovery_ticks":50,"phases":[{"threshold":1.0,"windup_ticks":40,"recovery_ticks":12,"punish_cycle":true,"pool":pool}]})
+	t.equal(BossCombat.validate(cfg),[],"AD-258 punish-cycle test config validates")
+	var pair := _fresh(cfg,Vector2(150,450),false)
+	var s = pair[0]
+	var boss = pair[1]
+	var picks := 0
+	var since := 0
+	var worst := 0
+	var staggers := 0
+	var last: String = boss.state
+	for i in 4000:
+		s.step()
+		if boss.state != last:
+			if boss.state == "windup":
+				picks += 1
+				since += 1
+			if boss.state == "stagger":
+				staggers += 1
+				worst = maxi(worst,since)
+				since = 0
+			last = boss.state
+	t.check(picks >= 9 and staggers >= picks/3 and worst <= 3,"AD-258 punish_cycle: a stagger at least every 3 picks of a 3-entry pool (%d picks, %d staggers, worst %d)" % [picks,staggers,worst])
+	var waits: Array = []
+	for tr in boss.transitions.filter(func(x): return x["from"] == "recover"):
+		var into: Array = boss.transitions.filter(func(x): return x["to"] == "recover" and x["tick"] < tr["tick"])
+		waits.append(int(tr["tick"])-int(into.back()["tick"]))
+	t.check(not waits.is_empty() and waits.all(func(w): return w == 12),"AD-258 the phase recovery_ticks (12) overrides the boss-wide one (waits %s)" % str(waits))
 
 # --- step 2: book pages, wisp shield, conducting storm pulse ---
 
@@ -836,7 +888,7 @@ func _live_data(t) -> void:
 	t.equal(int(cfg["hp"]),2400,"AD-201 live cistern_boss keeps 2400 hp")
 	t.equal(BossCombat.validate(cfg),[],"AD-201 live cistern_boss validates")
 	t.equal(cfg["phases"].map(func(p): return float(p["threshold"])),[1.0,0.66,0.33],"AD-201 live phase thresholds are 100/66/33 percent")
-	t.check(cfg["pools"].size() == 3 and cfg["freeze_stun"]["ticks"] == 120 and cfg["stagger"]["ticks"] == 120,"AD-201 live data has 3 pools and a 2 s freeze-stun")
+	t.check(cfg["pools"].size() == 3 and cfg["freeze_stun"]["ticks"] == 120 and cfg["stagger"]["ticks"] == 60,"AD-201 live data has 3 pools and a 2 s freeze-stun (AD-258: 1 s big-entry stagger)")
 	t.check(cfg["phases"].all(func(p): return p["pool"].filter(func(e): return e.has("pattern")).size() >= 3),"AD-201 every live pool keeps 3+ distinct patterns")
 	t.check(not bool(_live_dive_move(1).get("big",false)),"AD-201 the phase 2 dive is not a big move (the freeze is its stagger window)")
 
@@ -860,8 +912,8 @@ func _live_dive(t) -> void:
 	var boss = pair[1]
 	var first := _dive(s,boss)
 	t.check(first["to"] != first["from"] and _live()["pools"].any(func(p): return Vector2(p[0],p[1]) == first["to"]),"AD-201 the live P1 dive emerges at a pool away from where it dove")
-	t.equal(first["telegraph"],40,"AD-201 the live emerge ripple telegraph is 40 ticks")
-	t.check(first["ripple"] == true and first["ticks"] == 40 and first["landing"] == first["to"],"AD-201 the live emerge windup carries the ripple at the exit pool")
+	t.equal(first["telegraph"],36,"AD-201 the live emerge ripple telegraph is 36 ticks (AD-258: 0.3-0.6 s)")
+	t.check(first["ripple"] == true and first["ticks"] == 36 and first["landing"] == first["to"],"AD-201 the live emerge windup carries the ripple at the exit pool")
 	var second := _dive(s,boss)
 	t.check(second["to"] != second["from"],"AD-201 the live boss surfaces at a different pool on its next dive (%s -> %s)" % [str(second["from"]),str(second["to"])])
 
@@ -911,7 +963,7 @@ func _live_shield(t) -> void:
 func _live_tide(t) -> void:
 	var cfg := _live()
 	var spec: Dictionary = cfg["phases"][1]["hazards"][0]
-	t.check(spec["type"] == "tide_wave" and int(spec["gap_width"]) == 96 and float(spec["thickness"]) <= 80.0 and int(spec["warn_ticks"]) >= 40,"AD-201 live tide wave: gap 96, thickness <= 80, warning >= 40 ticks")
+	t.check(spec["type"] == "tide_wave" and int(spec["gap_width"]) == 96 and float(spec["thickness"]) <= 80.0 and _ad258_readable(int(spec["warn_ticks"])),"AD-201 live tide wave: gap 96, thickness <= 80, warning 18..36 ticks (AD-258)")
 	var pair := _live_fresh(_live_with_pool(1,[{"pattern":"water_bolt"}],true),Vector2(300,800))
 	var s = pair[0]
 	var boss = pair[1]
@@ -1125,3 +1177,169 @@ func test_ad_256_c_damage_ticks_unchanged(t) -> void:
 		expected += 1 if tick%20 == 0 else 0
 	var loss := _shock_loss(s,100)
 	t.check(expected >= 4 and is_equal_approx(loss,float(expected)*dmg),"AD-256 test_ad_256_c_damage_ticks_unchanged: player in water loses %d x %.2f over 100 ticks (lost %.2f)" % [expected,dmg,loss])
+
+# ---- AD-258 Archivist rebalance: threat, not HP. Bots: tests/bench/ad258_archivist_bots.gd (live data, fixed seeds). ----
+
+## 0.3-0.6 s at 60 ticks/s. Final thresholds: never weaken.
+const AD258_TELEGRAPH_MIN := 18
+const AD258_TELEGRAPH_MAX := 36
+const AD258_AVERAGE_DEATH_RATE := 0.8
+const AD258_SKILLED_WIN_RATE := 0.5
+const AD258_FIGHT_MIN_TICKS := 5400
+const AD258_FIGHT_MAX_TICKS := 10800
+
+func _ad258_has_flood(entry: Dictionary) -> bool:
+	return str(entry.get("pattern","")) == "flood" or (entry.get("combo",[]) as Array).has("flood")
+
+## Ticks from one pattern's start to the next in phase `index`: recovery (per phase if set) + windup.
+func _ad258_gap(cfg: Dictionary, index: int) -> int:
+	var entry: Dictionary = cfg["phases"][index]
+	return int(entry.get("recovery_ticks",cfg["recovery_ticks"]))+int(entry["windup_ticks"])
+
+func _ad258_mean(values: Array) -> float:
+	if values.is_empty():
+		return INF
+	var total := 0.0
+	for v in values:
+		total += float(v)
+	return total/float(values.size())
+
+## Per-phase sums over the skilled runs of a per-phase dictionary field.
+func _ad258_phase_sum(runs: Array, field: String) -> Dictionary:
+	var sums := {1:0,2:0,3:0}
+	for r in runs:
+		for p in sums:
+			sums[p] = int(sums[p])+int(r[field][p])
+	return sums
+
+func test_ad_258_a_phase_pressure(t) -> void:
+	var cfg := _live()
+	var phases: Array = cfg["phases"]
+	var gaps: Array = range(phases.size()).map(func(i): return _ad258_gap(cfg,i))
+	print("INFO AD258_A data gaps(recovery+windup) per phase=%s" % str(gaps))
+	t.check(phases.size() == 3,"AD-258 test_ad_258_a_phase_pressure: the live Archivist has 3 phases (%d)" % phases.size())
+	if phases.size() < 3:
+		return
+	for i in [1,2]:
+		t.check(int(gaps[i]) < int(gaps[0]),"AD-258 test_ad_258_a_phase_pressure: phase %d gap between patterns (%d ticks) is shorter than phase 1's (%d)" % [i+1,gaps[i],gaps[0]])
+		var pool: Array = phases[i].get("pool",[])
+		var flood: bool = pool.any(func(e): return _ad258_has_flood(e))
+		var paired: bool = not phases[i].get("hazards",[]).is_empty() or pool.any(func(e): return (e.get("combo",[]) as Array).has("flood") and (e["combo"] as Array).size() >= 2)
+		t.check(flood and paired,"AD-258 test_ad_258_a_phase_pressure: phase %d has a flood (AD-252 flood sets) that overlaps another hazard/pattern (flood %s, overlap %s)" % [i+1,str(flood),str(paired)])
+	t.check(cfg.has("stagger"),"AD-258 test_ad_258_a_phase_pressure: the live Archivist has a stagger block (punish window)")
+	for i in phases.size():
+		var bigs: int = (phases[i].get("pool",[]) as Array).filter(func(e): return bool(e.get("big",false))).size()
+		t.equal(bigs,1,"AD-258 test_ad_258_a_phase_pressure: phase %d pool has exactly one punish window (one big entry -> stagger) per cycle" % (i+1))
+	# Measured in the skilled bot runs.
+	var runs := Bots.run_all("skilled")
+	var mean_gaps: Array = []
+	var all_gaps := {1:[],2:[],3:[]}
+	for r in runs:
+		for p in all_gaps:
+			all_gaps[p].append_array(r["gaps"][p])
+	for p in [1,2,3]:
+		mean_gaps.append(_ad258_mean(all_gaps[p]))
+	var starts := _ad258_phase_sum(runs,"starts")
+	var punish := _ad258_phase_sum(runs,"punish")
+	var overlap := _ad258_phase_sum(runs,"flood_overlap")
+	print("INFO AD258_A bot mean_ticks_between_pattern_starts=%s starts=%s punish_windows=%s flood_overlap_ticks=%s" % [str(mean_gaps),str(starts),str(punish),str(overlap)])
+	t.check(mean_gaps[0] < INF and mean_gaps[1] < mean_gaps[0] and mean_gaps[2] < mean_gaps[1],"AD-258 test_ad_258_a_phase_pressure: bot mean ticks between pattern starts strictly decrease phase 1 > 2 > 3 (%s)" % str(mean_gaps))
+	for p in [1,2,3]:
+		var cycle_len := maxi(1,(phases[p-1].get("pool",[]) as Array).size())
+		var cycles := maxi(1,int(starts[p])/cycle_len)
+		t.check(int(punish[p]) >= cycles,"AD-258 test_ad_258_a_phase_pressure: phase %d bot runs show >= 1 punish window per cycle (%d windows, %d starts, cycle %d)" % [p,punish[p],starts[p],cycle_len])
+	for p in [2,3]:
+		t.check(int(overlap[p]) > 0,"AD-258 test_ad_258_a_phase_pressure: phase %d bot runs see a flood overlapping another hazard (%d ticks)" % [p,overlap[p]])
+
+func test_ad_258_b_bench_bots(t) -> void:
+	var counts := {}
+	for policy in ["average","skilled"]:
+		var died := 0
+		var won := 0
+		for r in Bots.run_all(policy):
+			died += 1 if bool(r["died"]) else 0
+			won += 1 if bool(r["won"]) else 0
+			print("INFO AD258_BENCH policy=%s seed=%d won=%s died=%s seconds=%.1f player_hp=%.0f boss_hp=%.2f phase=%d dashes=%d unavoidable=%d" % [policy,r["seed"],str(r["won"]),str(r["died"]),r["seconds"],r["player_hp"],r["boss_hp_fraction"],r["max_phase"],r["dashes"],r["unavoidable_damage_events"]])
+		counts[policy] = {"died":died,"won":won}
+		print("INFO AD258_BENCH_SUMMARY policy=%s runs=%d died=%d won=%d" % [policy,Bots.AD258_SEEDS.size(),died,won])
+	var n := float(Bots.AD258_SEEDS.size())
+	t.check(float(counts["average"]["died"])/n >= AD258_AVERAGE_DEATH_RATE,"AD-258 test_ad_258_b_bench_bots: the 'average' bot dies in >= 80%% of runs (%d/%d)" % [counts["average"]["died"],int(n)])
+	t.check(float(counts["skilled"]["won"])/n >= AD258_SKILLED_WIN_RATE,"AD-258 test_ad_258_b_bench_bots: the 'skilled' bot wins >= 50%% of runs (%d/%d)" % [counts["skilled"]["won"],int(n)])
+
+func _ad258_readable(ticks: int) -> bool:
+	return ticks >= AD258_TELEGRAPH_MIN and ticks <= AD258_TELEGRAPH_MAX
+
+func test_ad_258_c_telegraphs_readable(t) -> void:
+	# Engine-effective telegraphs: the spawned boss applies Difficulty scaling and the min_telegraph_ticks floor.
+	var boss = _live_fresh(_live(),Vector2(150,450))[1]
+	var declared: Array = []
+	for i in boss.tuning["phases"].size():
+		var entry: Dictionary = boss.tuning["phases"][i]
+		declared.append(["phase %d windup (water_bolt/page_throw/wet_zone/flood/storm_pulse/summon)" % (i+1),int(entry["windup_ticks"])])
+		for pooled in entry.get("pool",[]):
+			if pooled.has("move"):
+				for key in ["telegraph_ticks","emerge_telegraph_ticks"]:
+					if pooled["move"].has(key):
+						declared.append(["phase %d %s %s" % [i+1,str(pooled["move"]["mode"]),key],int(pooled["move"][key])])
+		for hazard in entry.get("hazards",[]):
+			if hazard.has("warn_ticks"):
+				declared.append(["phase %d %s warn_ticks" % [i+1,str(hazard["type"])],int(hazard["warn_ticks"])])
+	print("INFO AD258_C engine telegraphs=%s" % str(declared))
+	for d in declared:
+		t.check(_ad258_readable(int(d[1])),"AD-258 test_ad_258_c_telegraphs_readable: %s is %d ticks, must be 18..36 (0.3-0.6 s)" % [d[0],d[1]])
+	# Measured intent telegraphs and tide warnings in the bot runs.
+	var by_kind := {}
+	var bad := {}
+	var tide: Array = []
+	for policy in ["average","skilled"]:
+		for r in Bots.run_all(policy):
+			for tel in r["telegraphs"]:
+				var kind := str(tel["kind"])
+				var ticks := int(tel["measured"])
+				by_kind[kind] = Vector2i(mini(by_kind.get(kind,Vector2i(ticks,ticks)).x,ticks),maxi(by_kind.get(kind,Vector2i(ticks,ticks)).y,ticks))
+				if not _ad258_readable(ticks):
+					bad[kind] = true
+			for w in r["tide_warns"]:
+				tide.append(int(w["warn"]))
+	print("INFO AD258_C measured telegraph ticks min/max by kind=%s tide_warns=%s" % [str(by_kind),str(tide)])
+	t.check(not by_kind.is_empty(),"AD-258 test_ad_258_c_telegraphs_readable: the bot runs measured boss telegraphs")
+	t.check(bad.is_empty(),"AD-258 test_ad_258_c_telegraphs_readable: every measured Archivist telegraph lasts 18..36 ticks (out of range: %s)" % str(bad.keys()))
+	t.check(tide.all(func(w): return _ad258_readable(w)),"AD-258 test_ad_258_c_telegraphs_readable: every measured tide wave warning lasts 18..36 ticks (%s)" % str(tide))
+	var unavoidable: Array = []
+	for r in Bots.run_all("skilled"):
+		unavoidable.append_array(r["unavoidable"].map(func(e): return "seed %d %s@%d warn %d" % [r["seed"],e["source"],e["tick"],e["warn_ticks"]]))
+	print("INFO AD258_C skilled unavoidable_damage_events=%d %s" % [unavoidable.size(),str(unavoidable.slice(0,8))])
+	t.check(unavoidable.is_empty(),"AD-258 test_ad_258_c_telegraphs_readable: the skilled bot takes 0 unavoidable damage events (%d: %s)" % [unavoidable.size(),str(unavoidable.slice(0,4))])
+
+func test_ad_258_d_fight_length(t) -> void:
+	var ticks: Array = []
+	for r in Bots.run_all("skilled"):
+		if bool(r["won"]):
+			ticks.append(roundi(float(r["seconds"])*60.0))
+	var med: float = Bots.median(ticks)
+	print("INFO AD258_D skilled winning fight ticks=%s median=%.0f (%.1f s)" % [str(ticks),med,med/60.0])
+	t.check(not ticks.is_empty() and med >= AD258_FIGHT_MIN_TICKS and med <= AD258_FIGHT_MAX_TICKS,"AD-258 test_ad_258_d_fight_length: skilled winning fights median 90-180 s / 5400-10800 ticks (%d wins, median %.1f s)" % [ticks.size(),med/60.0])
+
+## AD-258 guard: the live boss rests at guard.damage_taken_multiplier, takes the stagger 1.5x in a punish window, then returns to the guard.
+func test_ad_258_guard_rest_scale(t) -> void:
+	var cfg := _live_with_pool(0,[{"pattern":"water_bolt","big":true}])
+	var guard := float(cfg["guard"]["damage_taken_multiplier"])
+	t.check(guard > 0.0 and guard < 1.0,"AD-258 test_ad_258_guard_rest_scale: live guard is in (0,1) (%.2f)" % guard)
+	var pair := _live_fresh(cfg,Vector2(150,450))
+	var s = pair[0]
+	var boss = pair[1]
+	t.check(is_equal_approx(boss.target.damage_scale,guard),"AD-258 test_ad_258_guard_rest_scale: a fresh boss rests at the guard (%.2f)" % boss.target.damage_scale)
+	var seen_stagger := false
+	for i in 600:
+		boss.advance(s)
+		if boss.staggered:
+			seen_stagger = true
+			t.check(is_equal_approx(boss.target.damage_scale,float(cfg["stagger"]["damage_taken_multiplier"])),"AD-258 test_ad_258_guard_rest_scale: the punish window takes the stagger multiplier")
+			while boss.staggered:
+				boss.advance(s)
+			break
+	t.check(seen_stagger and is_equal_approx(boss.target.damage_scale,guard),"AD-258 test_ad_258_guard_rest_scale: after the stagger the boss returns to the guard (%.2f)" % boss.target.damage_scale)
+	for bad_value in [0.0,1.5]:
+		var bad := _live()
+		bad["guard"]["damage_taken_multiplier"] = bad_value
+		t.check(BossCombat.validate(bad).any(func(i): return i["path"] == "guard.damage_taken_multiplier"),"AD-258 test_ad_258_guard_rest_scale: guard %.1f is rejected" % bad_value)

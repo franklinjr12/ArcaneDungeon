@@ -36,6 +36,8 @@ var _rng: RandomNumberGenerator
 var _last_key := ""
 var _combo_queue: Array = []
 var _combo_gap := 0
+## AD-258: pool picks since the phase's `big` entry last fired (phase key `punish_cycle`).
+var _since_big := 0
 var _current_entry: Dictionary = {}
 ## AD-198 movement: `submerged` is a sim + presentation flag (the renderer hides the boss); the rest is the move in progress.
 var submerged := false
@@ -127,6 +129,7 @@ func _init(target_entity, settings: Dictionary) -> void:
 	tuning["color"] = str(settings.get("color","#e8c38b"))
 	tuning["attack_range"] = float(settings["telegraph_radius"])
 	tuning["telegraph_ticks"] = int(tuning["windup_ticks"])
+	target.damage_scale = Archivist.rest_scale(tuning)
 
 ## AD-142: per-phase windups and the new damage keys get the same Difficulty scaling and telegraph floor as the 2-phase path.
 func _init_phases(elite_damage: float, floor_ticks: int) -> void:
@@ -246,18 +249,18 @@ func advance(session) -> void:
 		"stagger":
 			if state_tick >= _stagger_ticks:
 				staggered = false
-				target.damage_scale = 1.0
+				target.damage_scale = Archivist.rest_scale(tuning)
 				_start_windup(session)
 		"recover":
 			_walk(session)
-			var wait := _combo_gap if not _combo_queue.is_empty() else int(tuning["recovery_ticks"])
+			var wait := _combo_gap if not _combo_queue.is_empty() else _recovery_ticks()
 			if state_tick >= wait:
 				_start_windup(session)
 	if tuning.has("wisp_shield"):
 		_refresh_shield(session)
 
 ## AD-201: once per advance, after the state logic. The shield beats stagger (and the plain 1.0 a finished stagger writes); the roar's 0 stays.
-## When the last wisp dies the multiplier returns to the stagger one if staggered, else 1.0.
+## When the last wisp dies the multiplier returns to the stagger one if staggered, else the AD-258 guard (1.0 without one).
 func _refresh_shield(session) -> void:
 	if state == "roar":
 		return
@@ -266,7 +269,7 @@ func _refresh_shield(session) -> void:
 		target.damage_scale = float(tuning["wisp_shield"]["damage_taken_multiplier"])
 	elif shielded:
 		shielded = false
-		target.damage_scale = float(tuning["stagger"]["damage_taken_multiplier"]) if staggered and tuning.has("stagger") else 1.0
+		target.damage_scale = float(tuning["stagger"]["damage_taken_multiplier"]) if staggered and tuning.has("stagger") else Archivist.rest_scale(tuning)
 
 ## Continuous phase movement; only called from acquire/recover so a telegraph never moves.
 func _walk(session) -> void:
@@ -311,6 +314,7 @@ func _update_phase(hp_fraction: float, tick: int, session) -> void:
 	phase = reached
 	_summon_age = 0
 	_combo_queue.clear()
+	_since_big = 0
 	_last_key = ""
 	_current_entry = {}
 	_pending_roar = false
@@ -406,7 +410,7 @@ func _place_props(session, props: Array) -> void:
 			body.position = session.world.nearest_open_point(body.position,anchors,body.radius,body.position)
 
 func _end_roar(session) -> void:
-	target.damage_scale = 1.0
+	target.damage_scale = Archivist.rest_scale(tuning)
 	if _pending_roar:
 		_begin_roar(session,0)
 		return
@@ -425,6 +429,12 @@ func _after_move_or_attack(session) -> void:
 		session._notify("STAGGERED",target.position)
 	else:
 		_state("recover",session.sim.clock.tick)
+
+## AD-258: a pool phase may override the boss-wide recovery_ticks.
+func _recovery_ticks() -> int:
+	if tuning.has("phases"):
+		return int(tuning["phases"][phase-1].get("recovery_ticks",tuning["recovery_ticks"]))
+	return int(tuning["recovery_ticks"])
 
 func _range_key(attack: String) -> String:
 	match attack:
@@ -446,7 +456,12 @@ func _pool_attack(session) -> String:
 	for entry in pool:
 		if (entry.has("max_range") and distance > float(entry["max_range"])) or (entry.has("min_range") and distance < float(entry["min_range"])):
 			blocked.append(Pool.entry_key(entry))
+	if bool(tuning["phases"][phase-1].get("punish_cycle",false)) and _since_big >= pool.size()-1:
+		for entry in pool:
+			if not bool(entry.get("big",false)):
+				blocked.append(Pool.entry_key(entry))
 	_current_entry = Pool.pick(pool,_last_key,blocked,rng(session))
+	_since_big = 0 if bool(_current_entry.get("big",false)) else _since_big+1
 	if _current_entry.has("move"):
 		return Pool.entry_key(_current_entry)
 	if not _current_entry.has("combo"):
