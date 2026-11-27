@@ -548,7 +548,7 @@
       ]
     },
     "cistern_boss": {
-      "_note": "AD-142 PROPOSED numbers (Demo Plan default 'Drowned Archivist', pending Franklin). AD-201 PROPOSED redesign: pool dive + ripple, pages, tide wave, wisp shield, conducting storm pulse; hp unchanged at 2400, no HP raised. Bot bench is INFO only. AD-258 PROPOSED threat rebalance (hp still 2400): telegraphs 36 ticks, ~2.5x hit damage, 3 pages, guard 0.12 outside punish windows, one big entry per cycle (weight 1), 1 s stagger at 1.5x, lightning weakness -0.05; gated by tests/bench/ad258_archivist_bots.gd. AD-265 PROPOSED: AD-201 pins restored (stagger 120 ticks, dive/emerge telegraphs and tide warning 40 ticks); emerge splash ring faster per phase (360/480/540 px/s, max radius 380/360/300) so it lands inside each phase recovery and adds pressure.",
+      "_note": "AD-142 PROPOSED numbers (Demo Plan default 'Drowned Archivist', pending Franklin). AD-201 PROPOSED redesign: pool dive + ripple, pages, tide wave, wisp shield, conducting storm pulse; hp unchanged at 2400, no HP raised. Bot bench is INFO only. AD-258 PROPOSED threat rebalance (hp still 2400): telegraphs 36 ticks, ~2.5x hit damage, 3 pages, guard 0.12 outside punish windows, one big entry per cycle (weight 1), 1 s stagger at 1.5x, lightning weakness -0.05; gated by tests/bench/ad258_archivist_bots.gd. AD-265 PROPOSED: AD-201 pins restored (stagger 120 ticks, dive/emerge telegraphs and tide warning 40 ticks); emerge splash ring faster per phase (360/480/540 px/s, max radius 380/360/300) so it lands inside each phase recovery and adds pressure; phase 2/3 transition roars 180 ticks (3 s cap) for pacing.",
       "kind": "drowned_archivist",
       "display_name": "Drowned Archivist",
       "hp": 2400,
@@ -792,7 +792,7 @@
           "recovery_ticks": 30,
           "punish_cycle": true,
           "transition": {
-            "roar_ticks": 90,
+            "roar_ticks": 180,
             "arena_change": {
               "water": [
                 {
@@ -911,7 +911,7 @@
           "recovery_ticks": 18,
           "punish_cycle": true,
           "transition": {
-            "roar_ticks": 90,
+            "roar_ticks": 180,
             "arena_change": {
               "water": [
                 {
