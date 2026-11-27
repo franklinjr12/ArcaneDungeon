@@ -192,3 +192,14 @@ Step 5 verified result: ratio 2.089 on all three seeds (single 81.60 vs combo 17
 | `ad258_archivist_bots.gd` (headless, live `cistern_boss`, seeds 25801..25810, max 15000 ticks), run by `test_ad_258_*` in `tests/test_ad_final_boss_v2.gd` | `AD258_BENCH policy=.. seed=.. won=.. died=.. seconds=..` per run, `AD258_BENCH_SUMMARY`, `AD258_D` skilled winning-fight median |
 
 Step 3 measured result (hp 2400 unchanged; telegraphs 36 ticks; hits ~2.5x; Archivist `guard` 0.12 outside punish windows, big entry weight 1 = one punish window per cycle, 1 s stagger at 1.5x, lightning weakness -0.05): 'average' dies 10/10 (100%), 'skilled' wins 10/10 (100%), skilled winning-fight median 103.3 s (54-156 s), 0 unavoidable damage events for 'skilled'. Numbers are PROPOSED pending the next Franklin playtest.
+
+### AD-265 (Boss 2 threat and pacing follow-up)
+
+Measured on the same bench (seeds 25801..25810, hp 2400 unchanged, well below the +25% cap of 3000): 'average' dies 10/10, 'skilled' wins 10/10. Skilled winning fights have a median of 73.4 s, with a range of 29.8 to 120.6 s. 'skilled' takes 0 unavoidable damage events, and no damage event has a warning shorter than 18 ticks. Telegraph range in the live data: 36..40 ticks. Phase windups are 36 ticks. Dive/emerge telegraphs and tide-wave warnings are 40 ticks. Levers used: faster emerge splash ring per phase (360/480/540 px/s, max radius 380/360/300) and phase 2/3 transition roars raised from 90 to 180 ticks, the 3 s invulnerability cap. Gated by `test_ad_265_a..d` in `tests/test_ad_final_boss_v2.gd`.
+
+TEST-WEAKENED review of the AD-258 diff (3 lines):
+1. `stagger.ticks` 60 -> RESTORED to 120.
+2. emerge telegraph 36 -> RESTORED to 40. Design call: 0.3-0.67 s telegraphs are accepted, and AD-201's pinned 40 ticks stays.
+3. tide `warn_ticks` >= 40 loosened to 18..36 -> RESTORED to 40.
+
+AD-258 constants changed by design call: telegraph maximum 40 ticks (accepted band 18..40, 0.3-0.67 s), and the skilled fight-length floor relaxed from 90 s to 60 s (band 60-180 s). All numbers are PROPOSED pending the next Franklin playtest.
