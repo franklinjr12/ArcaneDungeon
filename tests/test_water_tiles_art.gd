@@ -157,6 +157,7 @@ func test_ad_261_a3_renderer_edge_frames(t) -> void:
 	t.check(w.edge_builds == before and w.edge_cache() == edges, "AD-261 a3: draw lookups do not rebuild the edge cache")
 
 func test_ad_268_a_overlay_full_opacity(t) -> void:
+	print("AD-268 test_ad_268_a_overlay_full_opacity")
 	t.equal(float(ART.get_script_constant_map().get("ELEC_OVERLAY_ALPHA", -1.0)), 1.0, "AD-268 electrified overlay alpha is 1.0")
 	var has_fn: bool = ART.has_method("water_electric_cells")
 	t.check(has_fn, "AD-268 renderer has static water_electric_cells")
@@ -180,6 +181,7 @@ func _find_key(node, key: String):
 	return null
 
 func test_ad_268_b_spark_count_rule(t) -> void:
+	print("AD-268 test_ad_268_b_spark_count_rule")
 	var has_count: bool = ART.has_method("water_electric_spark_count")
 	t.check(has_count, "AD-268 renderer has static water_electric_spark_count")
 	if has_count:
